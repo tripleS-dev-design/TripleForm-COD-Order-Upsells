@@ -1,0 +1,70 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:dev.sqlite"
+}
+
+model Session {
+  id            String    @id
+  shop          String
+  state         String
+  isOnline      Boolean   @default(false)
+  scope         String?
+  expires       DateTime?
+  accessToken   String
+  userId        BigInt?
+  firstName     String?
+  lastName      String?
+  email         String?
+  accountOwner  Boolean   @default(false)
+  locale        String?
+  collaborator  Boolean?  @default(false)
+  emailVerified Boolean?  @default(false)
+}
+
+/**
+ * ===== NEW: billing + usage state par boutique =====
+ */
+model Shop {
+  id         Int    @id @default(autoincrement())
+  shopDomain String @unique
+
+  // Billing
+  billingPlan      String? // "starter" | "basic" | "premium"
+  billingTerm      String? // "monthly" | "annual"
+  billingStatus    String? // "active" | "pending" | "cancelled"
+  subscriptionId   String? // ID d’abonnement Shopify
+  unitAmount       Float? // montant du plan (USD)
+  currentPeriodEnd DateTime? // fin de période (si dispo)
+
+  // Usage (compteur commandes/mois pour Google Sheets)
+  usageMonth String? // "YYYY-MM"
+  usageCount Int     @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+model ShopGoogleSettings {
+  id               Int      @id @default(autoincrement())
+  shopDomain       String   @unique
+
+  googleUserId     String?
+  googleEmail      String?
+  accessToken      String?
+  refreshToken     String?
+  scope            String?
+  tokenType        String?
+  tokenExpiryDate  DateTime?
+
+  // Toute la config de Section3 (cfg) en JSON
+  sheetsConfigJson String?
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}

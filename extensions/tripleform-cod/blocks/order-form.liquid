@@ -1,0 +1,272 @@
+{% comment %}
+Tripleform COD – App block (product template)
+Lit la config form depuis:
+- product.metafields.tripleform_cod.settings (prioritaire)
+- shop.metafields.tripleform_cod.settings (fallback)
+
+Lit la config OFFRES / UPSELL depuis:
+- product.metafields.tripleform_cod.offers (prioritaire)
+- shop.metafields.tripleform_cod.offers (fallback)
+{% endcomment %}
+
+{%- assign tf_prod_val = product.metafields.tripleform_cod.settings.value -%}
+{%- assign tf_shop_val = shop.metafields.tripleform_cod.settings.value -%}
+
+{%- if tf_prod_val and tf_prod_val != blank -%}
+  {%- assign tf_json = tf_prod_val -%}
+{%- elsif tf_shop_val and tf_shop_val != blank -%}
+  {%- assign tf_json = tf_shop_val -%}
+{%- else -%}
+  {%- capture tf_json -%}
+  {
+    "meta": {
+      "version": 1,
+      "preset": "CleanWhite",
+      "fieldsOrder": ["name","phone","quantity","address","city","province","notes"]
+    },
+    "form": {
+      "style": "inline",
+      "title": "Order form",
+      "subtitle": "Please enter your contact information",
+      "buttonText": "Order now",
+      "successText": "Thanks! We'll contact you"
+    },
+    "design": {
+      "bg": "#FFFFFF",
+      "text": "#0F172A",
+      "border": "#E5E7EB",
+      "radius": 12,
+      "padding": 16,
+      "inputBg": "#FFFFFF",
+      "inputBorder": "#E5E7EB",
+      "placeholder": "#94A3B8",
+      "btnBg": "#111827",
+      "btnText": "#FFFFFF",
+      "btnBorder": "#111827",
+      "btnHeight": 46,
+      "btnRadius": 10,
+      "shadow": true,
+      "glow": false,
+      "glowPx": 18,
+      "cartBg": "#FFFFFF",
+      "cartBorder": "#E5E7EB",
+      "cartRowBg": "#FFFFFF",
+      "cartRowBorder": "#E5E7EB",
+      "cartTitleColor": "#0F172A",
+      "cartTextColor": "#0F172A",
+
+      "direction": "ltr",
+      "fontSize": 14,
+      "titleAlign": "left",
+      "fieldAlign": "left"
+    },
+    "behavior": {
+      "requireGDPR": false,
+      "gdprLabel": "I accept the privacy policy",
+      "whatsappOptIn": false,
+      "whatsappLabel": "Receive confirmation on WhatsApp",
+      "openDelayMs": 0,
+      "closeOnOutside": true,
+      "effect": "none",
+      "glowPx": 18,
+      "stickyType": "none",
+      "stickyLabel": "Order now",
+      "drawerDirection": "right",
+      "drawerSize": "md",
+      "overlayColor": "#020617",
+      "overlayOpacity": 70,
+
+      "country": "DZ",
+      "codCountry": "DZ",
+      "provinceKey": "",
+      "cityKey": ""
+    },
+    "fields": {
+      "name": {
+        "on": true,
+        "required": true,
+        "type": "text",
+        "label": "Full name",
+        "ph": "Your full name"
+      },
+      "phone": {
+        "on": true,
+        "required": true,
+        "type": "tel",
+        "label": "Phone (WhatsApp)",
+        "ph": "Phone number",
+        "prefix": "+213"
+      },
+      "quantity": {
+        "on": true,
+        "required": true,
+        "type": "number",
+        "label": "Quantity",
+        "ph": "1",
+        "min": 1,
+        "max": 10
+      },
+      "province": {
+        "on": true,
+        "required": false,
+        "type": "text",
+        "label": "Wilaya / Province",
+        "ph": "Select province"
+      },
+      "city": {
+        "on": true,
+        "required": false,
+        "type": "text",
+        "label": "City",
+        "ph": "Select city"
+      },
+      "address": {
+        "on": false,
+        "required": false,
+        "type": "text",
+        "label": "Address",
+        "ph": "Full address"
+      },
+      "notes": {
+        "on": false,
+        "required": false,
+        "type": "textarea",
+        "label": "Notes",
+        "ph": "(optional)"
+      }
+    },
+    "cartTitles": {
+      "top": "Order summary",
+      "price": "Product price",
+      "shipping": "Shipping price",
+      "total": "Total"
+    },
+    "uiTitles": {
+      "applyCoupon": "Apply",
+      "orderNow": "Order now",
+      "totalSuffix": "Total:"
+    }
+  }
+  {%- endcapture -%}
+{%- endif -%}
+
+{%- comment %}
+OFFRES / UPSELL
+Ces données sont écrites par /api/save-offers dans:
+- product.metafields.tripleform_cod.offers
+ou
+- shop.metafields.tripleform_cod.offers
+{%- endcomment -%}
+
+{%- assign tf_offers_prod_val = product.metafields.tripleform_cod.offers.value -%}
+{%- assign tf_offers_shop_val = shop.metafields.tripleform_cod.offers.value -%}
+
+{%- if tf_offers_prod_val and tf_offers_prod_val != blank -%}
+  {%- assign tf_offers_json = tf_offers_prod_val -%}
+{%- elsif tf_offers_shop_val and tf_offers_shop_val != blank -%}
+  {%- assign tf_offers_json = tf_offers_shop_val -%}
+{%- else -%}
+  {%- capture tf_offers_json -%}
+  {
+    "global": { "enabled": false, "currency": "dh", "rounding": "none" },
+    "themePreset": "light",
+    "theme": {
+      "statusBarBg": "#020617",
+      "statusBarText": "#E5E7EB",
+      "offerBg": "#FFFFFF",
+      "upsellBg": "#FFFFFF",
+      "ctaBg": "#111827",
+      "ctaText": "#F9FAFB",
+      "ctaBorder": "#000000"
+    },
+    "display": {
+      "style": "style4",
+      "showDiscountLine": true,
+      "showUpsellLine": true
+    },
+    "discount": {
+      "enabled": false,
+      "previewTitle": "",
+      "previewDescription": "",
+      "imageUrl": "",
+      "iconEmoji": "",
+      "iconUrl": ""
+    },
+    "upsell": {
+      "enabled": false,
+      "previewTitle": "",
+      "previewDescription": "",
+      "imageUrl": "",
+      "iconEmoji": "",
+      "iconUrl": ""
+    }
+  }
+  {%- endcapture -%}
+{%- endif -%}
+
+
+{%- assign current_variant = product.selected_or_first_available_variant -%}
+
+<div
+  id="tripleform-cod-{{ section.id }}"
+  class="tripleform-cod"
+  data-settings='{{ tf_json | escape }}'
+  data-offers='{{ tf_offers_json | escape }}'
+  data-product-id='{{ product.id }}'
+  data-variant-id='{{ current_variant.id }}'
+  data-currency='{{ cart.currency.iso_code | default: shop.currency }}'
+  data-locale='{{ request.locale.iso_code }}'
+
+  {%- comment -%}
+    GEO / SHIPPING
+    - active le calcul de livraison via app proxy
+    - country = pays boutique (MA / DZ / TN…)
+    - endpoint = route proxy `proxy.api.geo.calc.jsx`
+  {%- endcomment -%}
+  data-geo-enabled="true"
+  data-geo-country="{{ shop.country_code | default: 'MA' }}"
+  data-geo-endpoint="/apps/tripleform-cod/api/geo/calc"
+>
+  <noscript>Enable JavaScript to use the COD form.</noscript>
+  <div style="font:14px/1.4 system-ui, sans-serif; color:#6b7280">
+    Loading COD form…
+  </div>
+</div>
+
+
+
+<script type="application/json" id="tf-product-json-{{ section.id }}">
+  {{ product | json }}
+</script>
+
+<script>
+  (function () {
+    function boot() {
+      if (window.TripleformCOD && typeof window.TripleformCOD.boot === 'function') {
+        window.TripleformCOD.boot('{{ section.id }}');
+      }
+    }
+    document.addEventListener('DOMContentLoaded', boot);
+    document.addEventListener('shopify:section:load', boot);
+    document.addEventListener('shopify:section:select', boot);
+    document.addEventListener('shopify:block:select', boot);
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "Tripleform COD form",
+  "target": "section",
+  "enabled_on": { "templates": ["product"] },
+  "stylesheet": "tripleform-cod.css",
+  "javascript": "tripleform.js",
+  "settings": [
+    {
+      "type": "text",
+      "id": "note",
+      "label": "Note (facultatif côté thème)",
+      "default": "Tripleform COD"
+    }
+  ]
+}
+{% endschema %}

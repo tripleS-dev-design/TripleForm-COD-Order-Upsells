@@ -1,0 +1,119 @@
+/* ===== FAQ PRO styling ===== */
+
+/* Chaque item FAQ */
+.tf-faq-item {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #E5E7EB;
+  border-radius: 12px;
+  padding: 14px 16px;
+  background: #FFFFFF;
+}
+
+/* Ligne question + flèche */
+.tf-faq-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;  /* centre verticalement texte + icône */
+  width: 100%;
+  cursor: pointer;
+  padding: 0;
+  background: transparent;
+  border: none;
+  text-align: left;
+}
+
+/* Zone texte à gauche */
+.tf-faq-header-label {
+  flex: 1;
+}
+
+/* Icône à droite parfaitement centrée */
+.tf-faq-header-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Flèche : taille propre, pas de transform */
+.tf-faq-header-icon svg {
+  width: 18px !important;
+  height: 18px !important;
+  display: block;
+  flex-shrink: 0;
+}
+
+/* Zone réponse */
+.tf-faq-answer {
+  margin-top: 12px;
+  animation: faqFade 0.25s ease;
+}
+
+@keyframes faqFade {
+  from { opacity: 0; transform: translateY(-3px); }
+  to   { opacity: 1; transform: translateY(0px); }
+}
+
+/* Panel avec scroll interne */
+.tf-faq-scroll {
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+/* Scrollbar propre (Chrome/Edge) */
+.tf-faq-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.tf-faq-scroll::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 3px;
+}
+.tf-faq-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.35);
+}
+
+/* Tabs catégories */
+.tf-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.tf-tab {
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: 1px solid #E5E7EB;
+  background: #ffffff;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+/* Couleur active = bleu/bordeaux de ton logo */
+.tf-tab[data-active="1"] {
+  background: linear-gradient(135deg,#0B3B82,#7D0031);
+  color: #ffffff;
+  border-color: transparent;
+}
+
+
+/* Supprimer l’espace en haut dans l’iframe Shopify */
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
+/* Enlever le padding / marge par défaut Polaris en haut */
+.Polaris-Page,
+.Polaris-Page__Content,
+.Polaris-Page--fullWidth {
+  padding-top: 0 !important;
+  margin-top: 0 !important;
+}
+
+/* Dans certains layouts, le contenu principal a aussi du padding-top */
+.Polaris-Page__Content .Polaris-Layout {
+  margin-top: 0 !important;
+}
+
