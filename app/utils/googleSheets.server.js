@@ -3,19 +3,54 @@ import {
   getSheetsConfigForShop,
   ensureValidAccessToken,
   testSheetConnection,
-  appendValuesToSpreadsheet, // optional helper from services if available
 } from "../services/google.server";
 
 /**
  * Colonnes par défaut si l’utilisateur n’a encore rien configuré
  */
 const DEFAULT_COLUMNS = [
-  { id: "c1", idx: 1, header: "Order date", type: "datetime", appField: "order.date" },
-  { id: "c2", idx: 2, header: "Order ID", type: "string", appField: "order.id" },
-  { id: "c3", idx: 3, header: "Nom complet", type: "string", appField: "customer.name" },
-  { id: "c4", idx: 4, header: "Téléphone", type: "phone", appField: "customer.phone" },
-  { id: "c5", idx: 5, header: "Total commande", type: "currency", appField: "cart.totalWithShipping" },
-  { id: "c6", idx: 6, header: "Ville", type: "string", appField: "customer.city" },
+  {
+    id: "c1",
+    idx: 1,
+    header: "Order date",
+    type: "datetime",
+    appField: "order.date",
+  },
+  {
+    id: "c2",
+    idx: 2,
+    header: "Order ID",
+    type: "string",
+    appField: "order.id",
+  },
+  {
+    id: "c3",
+    idx: 3,
+    header: "Nom complet",
+    type: "string",
+    appField: "customer.name",
+  },
+  {
+    id: "c4",
+    idx: 4,
+    header: "Téléphone",
+    type: "phone",
+    appField: "customer.phone",
+  },
+  {
+    id: "c5",
+    idx: 5,
+    header: "Total commande",
+    type: "currency",
+    appField: "cart.totalWithShipping",
+  },
+  {
+    id: "c6",
+    idx: 6,
+    header: "Ville",
+    type: "string",
+    appField: "customer.city",
+  },
 ];
 
 function getDeep(obj, path) {
@@ -26,6 +61,9 @@ function getDeep(obj, path) {
   }, obj);
 }
 
+/**
+ * Transforme un appField en vraie valeur à partir de l’objet order
+ */
 function resolveAppField(order, appField) {
   const o = order || {};
   const customer = o.customer || {};
@@ -98,7 +136,6 @@ function resolveAppField(order, appField) {
 
 export async function testGoogleSheetsConnection({ shop, sheet, kind = "orders" }) {
   const effectiveSheet = sheet || {};
-  // kind n’est pas encore utilisé, mais on le garde pour logs / évolutions
   return testSheetConnection(shop, effectiveSheet);
 }
 
@@ -110,7 +147,7 @@ export async function appendOrderToSheet({ shop, admin, order }) {
   if (!shop) throw new Error("Missing shop");
   if (!order) throw new Error("Missing order payload");
 
-  // 1) lire la config depuis la DB (via service)
+  // 1) lire la config depuis la DB
   let cfg = await getSheetsConfigForShop(shop);
   if (!cfg) cfg = {};
 
@@ -127,9 +164,10 @@ export async function appendOrderToSheet({ shop, admin, order }) {
     return val == null ? "" : String(val);
   });
 
-  // 3) choisir la feuille (config UI ou fallback env pour transition)
+  // 3) choisir la feuille
   const fallbackSheetId = process.env.GOOGLE_SHEET_ID || "";
-  const spreadsheetId = cfg.sheet?.spreadsheetId || fallbackSheetId;
+  const spreadsheetId =
+    cfg.sheet?.spreadsheetId || fallbackSheetId;
 
   if (!spreadsheetId) {
     throw new Error(
@@ -140,23 +178,13 @@ export async function appendOrderToSheet({ shop, admin, order }) {
   const tabName = cfg.sheet?.tabName || "Orders";
   const range = `${tabName}!A:Z`;
 
-  // 4) access token Google (OAuth boutique)
+  // 4) access token Google OAuth
   const settings = await ensureValidAccessToken(shop);
   const accessToken = settings.accessToken;
   if (!accessToken) {
-    throw new Error(
-      "Aucun access token Google valide pour cette boutique (Google non connecté ?)"
-    );
+    throw new Error("Aucun access token Google valide pour cette boutique.");
   }
 
-  // 5) utiliser helper appendValuesToSpreadsheet si disponible (dans services) sinon faire fetch direct
-  if (typeof appendValuesToSpreadsheet === "function") {
-    // appendValuesToSpreadsheet(spreadsheetId, range, values, accessToken)
-    await appendValuesToSpreadsheet(spreadsheetId, range, [row], accessToken);
-    return true;
-  }
-
-  // fallback: appel direct à l'API Google Sheets
   const params = new URLSearchParams({
     valueInputOption: "USER_ENTERED",
     insertDataOption: "INSERT_ROWS",
@@ -177,18 +205,9 @@ export async function appendOrderToSheet({ shop, admin, order }) {
 
   const json = await res.json().catch(() => null);
   if (!res.ok) {
-    const msg =
-      json?.error?.message || json?.error || "Erreur Google Sheets (append)";
+    const msg = json?.error?.message || json?.error || "Erreur Google Sheets (append)";
     throw new Error(msg);
   }
 
   return true;
 }
-
-/* ------------------------------------------------------------------ */
-/* Export par défaut (optionnel)                                       */
-/* ------------------------------------------------------------------ */
-export default {
-  testGoogleSheetsConnection,
-  appendOrderToSheet,
-};
