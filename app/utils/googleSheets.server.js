@@ -3,7 +3,7 @@ import {
   getSheetsConfigForShop,
   ensureValidAccessToken,
   testSheetConnection,
-} from "../services/google.server";
+} from "../services/google.server.js";
 
 /**
  * Colonnes par défaut si l’utilisateur n’a encore rien configuré
