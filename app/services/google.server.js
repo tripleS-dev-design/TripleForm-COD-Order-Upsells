@@ -1,5 +1,5 @@
 // ===== File: app/services/google.server.js =====
-import { prisma } from "../db.server";
+import prisma from "../db.server";
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
@@ -313,3 +313,4 @@ export async function handleGoogleCallback(code, rawState) {
 
   return { shop, target, userEmail: user.email || null };
 }
+
