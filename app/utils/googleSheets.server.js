@@ -1,6 +1,5 @@
 // ===== File: app/utils/googleSheets.server.js =====
 import {
-  
   ensureValidAccessToken,
 } from "../services/google.server";
 
@@ -62,7 +61,6 @@ function getDeep(obj, path) {
 
 /**
  * Transforme un appField en vraie valeur à partir de l’objet order
- * order = { createdAt, order:{}, customer:{}, cart:{}, meta:{}, ... }
  */
 function resolveAppField(order, appField) {
   const o = order || {};
@@ -131,58 +129,41 @@ function resolveAppField(order, appField) {
 }
 
 /* ------------------------------------------------------------------ */
-/* Test Google Sheets (bouton "Tester la connexion")                  */
-/* ------------------------------------------------------------------ */
-
-
-/* ------------------------------------------------------------------ */
-/* Append d’une commande vers Google Sheets (production OAuth)        */
+/* Append d’une commande vers Google Sheets                            */
 /* ------------------------------------------------------------------ */
 
 export async function appendOrderToSheet({ shop, admin, order }) {
   if (!shop) throw new Error("Missing shop");
   if (!order) throw new Error("Missing order payload");
 
-  // 1) lire la config depuis la DB
-  let cfg = await getSheetsConfigForShop(shop);
-  if (!cfg) cfg = {};
+  // 👉 PAS DE DB (version safe)
+  const cfg = {};
 
-  const columnsRaw =
-    cfg && Array.isArray(cfg.columns) && cfg.columns.length
-      ? cfg.columns
-      : DEFAULT_COLUMNS;
-
-  const columns = [...columnsRaw].sort(
+  const columns = [...DEFAULT_COLUMNS].sort(
     (a, b) => (a.idx || 0) - (b.idx || 0)
   );
 
-  // 2) construire la ligne
+  // Construire la ligne
   const row = columns.map((col) => {
     const val = resolveAppField(order, col.appField || "");
     return val == null ? "" : String(val);
   });
 
-  // 3) choisir la feuille (config UI ou fallback env pour transition)
-  const fallbackSheetId = process.env.GOOGLE_SHEET_ID || "";
-  const spreadsheetId =
-    cfg.sheet?.spreadsheetId || fallbackSheetId;
-
+  // Spreadsheet ID (ENV obligatoire)
+  const spreadsheetId = process.env.GOOGLE_SHEET_ID;
   if (!spreadsheetId) {
-    throw new Error(
-      "Aucun Spreadsheet ID configuré (cfg.sheet.spreadsheetId ou GOOGLE_SHEET_ID)."
-    );
+    throw new Error("GOOGLE_SHEET_ID manquant dans les variables d’environnement");
   }
 
-  const tabName = cfg.sheet?.tabName || "Orders";
+  const tabName = "Orders";
   const range = `${tabName}!A:Z`;
 
-  // 4) access token Google (OAuth boutique)
+  // Access token Google (OAuth boutique)
   const settings = await ensureValidAccessToken(shop);
-  const accessToken = settings.accessToken;
+  const accessToken = settings?.accessToken;
+
   if (!accessToken) {
-    throw new Error(
-      "Aucun access token Google valide pour cette boutique (Google non connecté ?)"
-    );
+    throw new Error("Aucun access token Google valide pour cette boutique");
   }
 
   const params = new URLSearchParams({
@@ -204,10 +185,11 @@ export async function appendOrderToSheet({ shop, admin, order }) {
   });
 
   const json = await res.json().catch(() => null);
+
   if (!res.ok) {
-    const msg =
-      json?.error?.message || json?.error || "Erreur Google Sheets (append)";
-    throw new Error(msg);
+    throw new Error(
+      json?.error?.message || "Erreur Google Sheets (append)"
+    );
   }
 
   return true;
