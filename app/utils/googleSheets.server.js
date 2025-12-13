@@ -135,11 +135,6 @@ function resolveAppField(order, appField) {
 /* Test Google Sheets (bouton "Tester la connexion")                  */
 /* ------------------------------------------------------------------ */
 
-export async function testGoogleSheetsConnection({ shop, sheet, kind = "orders" }) {
-  const effectiveSheet = sheet || {};
-  // kind n’est pas encore utilisé, mais on le garde pour logs / évolutions
-  return testSheetConnection(shop, effectiveSheet);
-}
 
 /* ------------------------------------------------------------------ */
 /* Append d’une commande vers Google Sheets (production OAuth)        */
