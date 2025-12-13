@@ -21,7 +21,7 @@ WORKDIR /app
 COPY . .
 
 # Générer Prisma Client et appliquer les migrations
-RUN npx prisma generate && npx prisma migrate deploy
+RUN npm run setup
 
 # Build Remix pour la production
 RUN npm run build
@@ -45,5 +45,5 @@ EXPOSE 3000
 # Définir NODE_ENV
 ENV NODE_ENV=production
 
-# Lancer Remix
-CMD ["npx", "remix-serve", "build/server/index.js"]
+# Lancer Remix via le script npm (plus sûr sur Render)
+CMD ["npm", "run", "docker-start"]
