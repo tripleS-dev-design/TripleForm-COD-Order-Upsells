@@ -2,7 +2,6 @@
 import {
   getSheetsConfigForShop,
   ensureValidAccessToken,
-  testSheetConnection,
 } from "../services/google.server";
 
 /**
