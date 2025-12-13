@@ -2,12 +2,12 @@
 
 client_id = "ac6bf0c04b992f852be8538ab90a4691"
 name = "Tripleform-COD"
-application_url = "https://cornell-andrea-redhead-sleeps.trycloudflare.com"
+application_url = "https://tripleform-cod-order-upsells.onrender.com"
 embedded = true
 handle = "tripleform-cod"
 
 [app_proxy]
-url = "https://music-recommended-alphabetical-structural.trycloudflare.com/proxy"
+url = "https://tripleform-cod-order-upsells.onrender.com/proxy"
 subpath = "tripleform-cod"
 prefix = "apps"
 
@@ -31,7 +31,7 @@ api_version = "2025-07"
 scopes = "read_products,write_products,read_orders,read_customers,write_draft_orders,read_content,write_content"
 
 [auth]
-redirect_urls = ["https://cornell-andrea-redhead-sleeps.trycloudflare.com/auth/callback", "https://cornell-andrea-redhead-sleeps.trycloudflare.com/auth/shopify/callback", "https://cornell-andrea-redhead-sleeps.trycloudflare.com/api/auth/callback"]
+redirect_urls = ["https://tripleform-cod-order-upsells.onrender.com/auth/callback", "https://tripleform-cod-order-upsells.onrender.com/auth/shopify/callback", "https://tripleform-cod-order-upsells.onrender.com/api/auth/callback"]
 
 [pos]
 embedded = false
