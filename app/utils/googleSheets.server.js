@@ -1,6 +1,6 @@
 // ===== File: app/utils/googleSheets.server.js =====
 import {
-  getSheetsConfigForShop,
+  
   ensureValidAccessToken,
 } from "../services/google.server";
 
