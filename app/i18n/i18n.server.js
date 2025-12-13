@@ -1,7 +1,8 @@
 // app/i18n/i18n.server.js
 import { createCookie } from "@remix-run/node";
 
-export const langCookie = createCookie("tripleform-lang", {
+// Cookie pour la langue
+export const languageCookie = createCookie("tripleform-lang", {
   // IMPORTANT : path global pour toutes les routes
   path: "/",
   httpOnly: false,
@@ -13,17 +14,17 @@ export const langCookie = createCookie("tripleform-lang", {
 // Lire la langue depuis le cookie
 export async function getRequestLocale(request) {
   const cookieHeader = request.headers.get("Cookie");
-  const localeFromCookie = await langCookie.parse(cookieHeader);
+  const localeFromCookie = await languageCookie.parse(cookieHeader);
 
   // si pas de cookie → français par défaut
   return localeFromCookie || "fr";
 }
 
-// Écrire le cookie
+// Écrire la langue dans le cookie
 export async function commitLocale(locale) {
   const safeLocale = ["fr", "en", "es", "ar"].includes(locale)
     ? locale
     : "fr";
 
-  return langCookie.serialize(safeLocale);
+  return languageCookie.serialize(safeLocale);
 }
