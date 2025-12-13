@@ -1,15 +1,15 @@
 # --- Étape 1 : base Node ---
 FROM node:18-alpine AS base
 
-# Installer openssl nécessaire pour certaines dépendances
-RUN apk add --no-cache openssl
+# Installer openssl et bash (souvent utile pour scripts npm)
+RUN apk add --no-cache openssl bash
 
 WORKDIR /app
 
-# Copier uniquement les fichiers nécessaires pour installer les deps
+# Copier uniquement package.json et package-lock.json pour installer deps
 COPY package.json package-lock.json* ./
 
-# Installer toutes les dépendances (dev + prod) pour pouvoir faire prisma migrate
+# Installer toutes les dépendances (dev + prod)
 RUN npm ci
 
 # --- Étape 2 : Build ---
@@ -35,15 +35,16 @@ WORKDIR /app
 COPY package.json package-lock.json* ./
 RUN npm ci --omit=dev && npm cache clean --force
 
-# Copier le build depuis l’étape précédente
+# Copier le build et Prisma depuis l'étape précédente
 COPY --from=build /app/build ./build
 COPY --from=build /app/prisma ./prisma
+COPY --from=build /app/node_modules ./node_modules
 
-# Exposer le port par défaut
+# Exposer le port
 EXPOSE 3000
 
 # Définir NODE_ENV
 ENV NODE_ENV=production
 
-# Lancer Remix via le script npm (plus sûr sur Render)
-CMD ["npm", "run", "docker-start"]
+# CMD avec sh -c pour s'assurer que npm est trouvé
+CMD ["sh", "-c", "npm run docker-start"]
