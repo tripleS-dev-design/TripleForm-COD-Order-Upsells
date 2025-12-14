@@ -15,15 +15,18 @@ redirect_urls = [
   "https://tripleform-cod-order-upsells.onrender.com/api/auth/callback"
 ]
 
-[webhooks]
-# ⚠️ REMPLACE "2025-07" par une version qui existe !
-api_version = "2024-10"
+[[webhooks.subscriptions]]
+topics = ["app/uninstalled", "app/scopes_update"]
+uri = "/webhooks"
 
 [[webhooks.subscriptions]]
-# Tous les webhooks vont au MÊME endpoint
-topics = [ "app/uninstalled", "app/scopes_update" ]
-compliance_topics = [ "customers/redact", "customers/data_request", "shop/redact" ]
-uri = "/webhooks"
+compliance_topics = [
+  "customers/data_request",
+  "customers/redact",
+  "shop/redact"
+]
+uri = "/webhooks/compliance"
+
 
 [access_scopes]
 scopes = "read_products, write_products, read_orders, read_customers, write_draft_orders, read_content, write_content"
