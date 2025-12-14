@@ -1,36 +1,40 @@
-// ===== File: app/routes/webhooks.jsx =====
 import { authenticate } from "../shopify.server";
-import { setBillingInactive, prisma } from "../models/shop.server.js";
+import db from "../db.server";
+// Si tu as un modèle pour le billing, sinon enlève cette ligne
+// import { setBillingInactive } from "../models/shop.server.js";
 
-// Shopify enverra des POST webhooks sur cette route
 export const action = async ({ request }) => {
-  const { shop, topic /*, session, payload */ } = await authenticate.webhook(request);
-
-  console.log(`[Webhook] ${topic} for ${shop}`);
-
+  console.log('🔔 Webhook APP_UNINSTALLED reçu');
+  
   try {
-    if (topic === "APP_UNINSTALLED") {
-      // 1) Désactiver le billing pour ce shop
-      await setBillingInactive(shop).catch(() => {});
-
-      // 2) Supprimer toutes les sessions OAuth liées à ce shop
-      await prisma.session.deleteMany({ where: { shop } }).catch(() => {});
-
-      // (Optionnels)
-      // // Reset usage:
-      // await prisma.shop.update({ where: { shopDomain: shop }, data: { usageMonth: null, usageCount: 0 }});
-      // // Purge autres configs si tu veux:
-      // await prisma.googleSheetConfig?.deleteMany({ where: { shopDomain: shop }});
-      // await prisma.pixelConfig?.deleteMany({ where: { shopDomain: shop }});
-    }
-  } catch (err) {
-    console.error("Webhook handling error:", err);
-    // On renvoie 200 pour ack le webhook (Shopify réessaie sinon)
+    // Cette ligne valide automatiquement le HMAC
+    const { topic, shop } = await authenticate.webhook(request);
+    
+    console.log(`✅ Webhook ${topic} pour ${shop} validé`);
+    
+    // 1. Supprimer les sessions pour ce shop
+    await db.session.deleteMany({
+      where: { shop }
+    });
+    
+    console.log(`🗑️ Sessions supprimées pour ${shop}`);
+    
+    // 2. Si tu as un système de billing, le désactiver
+    // await setBillingInactive(shop);
+    
+    // 3. Optionnel: Supprimer d'autres données liées à ce shop
+    // (Si tu as d'autres tables dans ta base de données)
+    
+    return new Response(null, { status: 200 });
+    
+  } catch (error) {
+    console.error('❌ Erreur webhook APP_UNINSTALLED:', error);
+    // Toujours retourner 200 pour éviter les retries de Shopify
     return new Response(null, { status: 200 });
   }
-
-  return new Response(null, { status: 200 });
 };
 
 // Bloque les GET accidentels
-export const loader = () => new Response("Not found", { status: 404 });
+export const loader = () => {
+  return new Response("Not found", { status: 404 });
+};
