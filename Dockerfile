@@ -1,41 +1,29 @@
-# ---------------------------
-# Stage 1: Builder
-# ---------------------------
-FROM node:20-alpine AS builder
+FROM node:20-alpine
 
-RUN apk add --no-cache bash openssl
+# Needed by Shopify + Prisma
+RUN apk add --no-cache openssl
+
+EXPOSE 3000
+
 WORKDIR /app
-
-COPY package.json package-lock.json* ./
-RUN npm ci --omit=dev
-
-COPY prisma ./prisma/
-RUN npx prisma generate
-
-COPY . .
-
-RUN npm run build
-
-# ---------------------------
-# Stage 2: Runner
-# ---------------------------
-FROM node:20-alpine AS runner
-
-RUN apk add --no-cache bash openssl
-WORKDIR /app
-RUN mkdir -p /app/data
-
-COPY --from=builder /app/build ./build
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./package.json
-COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/remix.config.js ./remix.config.js
 
 ENV NODE_ENV=production
-ENV DATABASE_URL="file:/app/data/dev.sqlite"
-ENV WEB_CONCURRENCY=1
 ENV HOST=0.0.0.0
 
+# Copy deps
+COPY package.json package-lock.json* ./
 
-# Run Prisma migrations at runtime
-CMD npx prisma migrate deploy && node build/server/index.js
+# Install prod deps only
+RUN npm ci --omit=dev && npm cache clean --force
+
+# Remove Shopify CLI (ما محتاجاهش ف prod)
+RUN npm remove @shopify/cli
+
+# Copy app source
+COPY . .
+
+# Build Remix
+RUN npm run build
+
+# Prisma migrate + start server
+CMD ["sh", "-c", "npx prisma migrate deploy && npm run start"]
