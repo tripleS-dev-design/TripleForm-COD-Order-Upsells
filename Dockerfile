@@ -1,5 +1,5 @@
 # --- Build Stage ---
-FROM node:18-alpine AS build
+FROM node:20-alpine AS build  # ⬅️ CHANGÉ : Node 18 → 20 (nécessaire pour Shopify Polaris)
 
 RUN apk add --no-cache bash openssl
 
@@ -17,7 +17,7 @@ RUN npm run setup
 RUN npm run build
 
 # --- Production Stage ---
-FROM node:18-alpine AS production
+FROM node:20-alpine AS production  # ⬅️ CHANGÉ : Node 18 → 20
 
 WORKDIR /app
 
@@ -31,4 +31,5 @@ COPY --from=build /app/node_modules ./node_modules
 EXPOSE 3000
 ENV NODE_ENV=production
 
-CMD ["npm", "run", "docker-start"]
+# ⬇️ AJOUTER CETTE LIGNE OBLIGATOIRE ⬇️
+CMD ["node", "build/server/index.js"]  # ✅ Commande pour démarrer l'application
