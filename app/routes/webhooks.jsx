@@ -3,7 +3,7 @@ import { authenticate } from "../shopify.server";
 
 export const action = async ({ request }) => {
   try {
-    // 1️⃣ Vérification automatique du HMAC par Shopify
+    // 1️⃣ Vérification HMAC automatique
     const result = await authenticate.webhook(request);
     
     const topic = result.topic;
@@ -11,93 +11,67 @@ export const action = async ({ request }) => {
     const session = result.session;
     const payload = result.payload;
 
-    console.log(`🔔 Webhook reçu : ${topic} pour ${shop}`);
+    console.log(`🔔 Webhook ${topic} reçu pour ${shop}`);
 
-    // 2️⃣ Importer la base de données (uniquement côté serveur)
-    const dbModule = await import("../db.server");
-    const db = dbModule.default || dbModule;
+    // 2️⃣ Importer la DB (ton db.server.js est bon)
+    const db = await import("../db.server");
+    // Pas besoin de .default car tu exportes directement prisma
 
-    // 3️⃣ Traiter chaque type de webhook
+    // 3️⃣ Traiter les webhooks
     switch (topic) {
-      // ========== WEBHOOKS DE CONFORMITÉ (RGPD) ==========
+      // Webhooks de conformité RGPD
       case "customers/data_request":
-        console.log(`📋 Demande de données pour : ${payload?.customer?.email}`);
-        // Ici, tu dois compiler les données que tu as sur ce client
-        // et les envoyer à payload.data_request?.contact_email
+        console.log(`📋 Demande de données client: ${payload?.customer?.email}`);
+        // Tu n'as pas de données à fournir
         break;
 
       case "customers/redact":
-        if (payload?.customer?.id) {
-          // Supprime les données client si tu en stockes
-          await db.customerData?.deleteMany({
-            where: {
-              shop: shop,
-              customerId: payload.customer.id.toString()
-            }
-          });
-          console.log(`✅ Données client supprimées pour ${shop}`);
-        }
+        console.log(`🗑️ Suppression client: ${payload?.customer?.email}`);
+        // Tu n'as pas de données à supprimer
         break;
 
       case "shop/redact":
-        // Supprime TOUTES les données de cette boutique
-        await db.session.deleteMany({ where: { shop } });
-        await db.customerData?.deleteMany({ where: { shop } });
-        console.log(`✅ Toutes les données supprimées pour la boutique ${shop}`);
+        console.log(`🏬 Suppression boutique: ${shop}`);
+        await db.default.session.deleteMany({ where: { shop } });
+        console.log("✅ Sessions supprimées");
         break;
 
-      // ========== WEBHOOKS D'APPLICATION ==========
+      // Webhooks d'application
       case "app/uninstalled":
-        await db.session.deleteMany({ where: { shop } });
-        await db.customerData?.deleteMany({ where: { shop } });
-        console.log(`🚨 App désinstallée - données nettoyées pour ${shop}`);
+        console.log(`🚨 App désinstallée de: ${shop}`);
+        await db.default.session.deleteMany({ where: { shop } });
+        console.log("✅ Sessions supprimées");
         break;
 
       case "app/scopes_update":
-        console.log(`🔄 Scopes mis à jour pour ${shop} :`, payload?.current);
+        console.log(`🔄 Scopes mis à jour pour: ${shop}`);
         if (session && payload?.current) {
-          await db.session.update({
+          await db.default.session.update({
             where: { id: session.id },
             data: { scope: payload.current.toString() }
           });
-          console.log(`✅ Scopes mis à jour en base pour ${shop}`);
+          console.log("✅ Scopes mis à jour");
         }
         break;
 
       default:
-        console.warn(`⚠️ Topic non géré : ${topic}`);
+        console.warn(`⚠️ Topic non géré: ${topic}`);
     }
 
-    // 4️⃣ TOUJOURS répondre 200 OK
+    // 4️⃣ TOUJOURS répondre 200
     return new Response(null, { status: 200 });
 
   } catch (error) {
-    console.error("❌ Erreur webhook :", error.message);
-    // 401 si HMAC invalide, 500 pour les autres erreurs
+    console.error("❌ Erreur webhook:", error.message);
     const status = error.message.includes("HMAC") ? 401 : 500;
     return new Response(error.message, { status });
   }
 };
 
-// 5️⃣ Gestion des requêtes HEAD/GET
+// Gestion HEAD/GET
 export const loader = ({ request }) => {
-  // Shopify teste d'abord avec HEAD, il faut répondre 200
-  if (request.method.toUpperCase() === "HEAD") {
+  if (request.method === "HEAD") {
     return new Response(null, { status: 200 });
   }
-  
-  // Pour les GET, retourner 405
-  return new Response(
-    JSON.stringify({ 
-      error: "Méthode non autorisée. Utilisez POST.",
-      success: false 
-    }), 
-    { 
-      status: 405,
-      headers: { 
-        'Content-Type': 'application/json',
-        'Allow': 'POST, HEAD'
-      }
-    }
-  );
+  return new Response("Méthode non autorisée", { status: 405 });
 };
