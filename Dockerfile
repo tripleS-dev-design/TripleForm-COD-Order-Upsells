@@ -3,12 +3,11 @@ FROM node:20-alpine
 # Needed by Shopify + Prisma
 RUN apk add --no-cache openssl
 
+WORKDIR /app
 EXPOSE 3000
 
-WORKDIR /app
-
 ENV NODE_ENV=production
-ENV HOST=0.0.0.0
+
 
 # Copy deps
 COPY package.json package-lock.json* ./
@@ -21,6 +20,9 @@ RUN npm remove @shopify/cli
 
 # Copy app source
 COPY . .
+
+# ✅ Generate Prisma client (ضروري)
+RUN npx prisma generate
 
 # Build Remix
 RUN npm run build
