@@ -16,16 +16,19 @@ redirect_urls = [
 ]
 
 [[webhooks.subscriptions]]
-topics = ["app/uninstalled", "app/scopes_update"]
-uri = "/webhooks"
+topics = [
+  "app/uninstalled",
+  "app/scopes_update"
+]
 
-[[webhooks.subscriptions]]
 compliance_topics = [
   "customers/data_request",
   "customers/redact",
   "shop/redact"
 ]
-uri = "/webhooks/compliance"
+
+uri = "/webhooks"
+
 
 
 [access_scopes]
