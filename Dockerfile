@@ -1,59 +1,41 @@
-# ---------------------------
-# Stage 1: Builder
-# ---------------------------
+# --- Build Stage ---
 FROM node:20-alpine AS builder
 
-# Install dependencies
 RUN apk add --no-cache bash openssl
-
-# Set working directory
 WORKDIR /app
 
-# Copy package files and install
+# 1. Copier et installer TOUTES les dépendances (dont dev) pour le build
 COPY package.json package-lock.json* ./
-RUN npm ci --omit=dev
+RUN npm ci  # Note : PAS de --omit=dev ici
 
-# Copy Prisma schema
+# 2. Copier le schéma Prisma AVANT le reste et générer le client
 COPY prisma ./prisma/
-
-# Generate Prisma client
 RUN npx prisma generate
 
-# Run migrations (create tables including Session)
-RUN npx prisma migrate deploy
-
-# Copy all source code
+# 3. Copier toute l'application et builder
 COPY . .
-
-# Build Remix app
 RUN npm run build
 
-# ---------------------------
-# Stage 2: Runner
-# ---------------------------
+# --- Production Stage ---
 FROM node:20-alpine AS runner
 
-# Install runtime dependencies
-RUN apk add --no-cache bash openssl
-
-# Set working directory
 WORKDIR /app
 
-# Create data folder (for SQLite persistence if needed)
-RUN mkdir -p /app/data
+# 4. Créer le dossier de base de données en tant que root
+RUN mkdir -p /app/data && chown -R node:node /app/data
+ENV DATABASE_URL="file:/app/data/dev.sqlite"
 
-# Copy build and node_modules from builder
-COPY --from=builder /app/build ./build
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./package.json
-COPY --from=builder /app/prisma ./prisma
+# 5. Copier uniquement les fichiers nécessaires pour l'exécution
+COPY --from=builder --chown=node:node /app/build ./build
+COPY --from=builder --chown=node:node /app/node_modules ./node_modules
+COPY --from=builder --chown=node:node /app/package.json ./package.json
+COPY --from=builder --chown=node:node /app/prisma ./prisma
 
-# Expose port
+# 6. Passer à l'utilisateur non-root pour la sécurité
+USER node
+
 EXPOSE 3000
-
-# Set NODE_ENV
 ENV NODE_ENV=production
-ENV WEB_CONCURRENCY=1
 
-# Start the app
-CMD ["node", "build/index.js"]
+# 7. POINT D'ENTRÉE CORRECT POUR REMIX/SHOPIFY
+CMD ["node", "build/server/index.js"]
