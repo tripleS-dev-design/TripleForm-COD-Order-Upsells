@@ -26,5 +26,5 @@ RUN npx prisma generate
 # Build Remix pour la production
 RUN npm run build
 
-# Commande finale pour démarrer l'app avec server.js
-CMD ["sh", "-c", "npx prisma migrate deploy && node server.js"]
+# Remplace la dernière ligne par :
+CMD ["sh", "-c", "echo '=== DÉMARRAGE ===' && npx prisma migrate deploy && echo '=== MIGRATIONS TERMINÉES ===' && echo '=== LANCEMENT SERVER.JS ===' && node server.js"]
