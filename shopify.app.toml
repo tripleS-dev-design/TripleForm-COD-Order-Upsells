@@ -16,9 +16,11 @@ redirect_urls = [
 ]
 
 [webhooks]
-api_version = "2025-07"
+# ⚠️ REMPLACE "2025-07" par une version qui existe !
+api_version = "2024-10"
 
 [[webhooks.subscriptions]]
+# Tous les webhooks vont au MÊME endpoint
 topics = [ "app/uninstalled", "app/scopes_update" ]
 compliance_topics = [ "customers/redact", "customers/data_request", "shop/redact" ]
 uri = "/webhooks"
