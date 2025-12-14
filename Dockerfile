@@ -34,6 +34,8 @@ COPY --from=builder /app/remix.config.js ./remix.config.js
 ENV NODE_ENV=production
 ENV DATABASE_URL="file:/app/data/dev.sqlite"
 ENV WEB_CONCURRENCY=1
+ENV HOST=0.0.0.0
+
 
 # Run Prisma migrations at runtime
 CMD npx prisma migrate deploy && node build/server/index.js
