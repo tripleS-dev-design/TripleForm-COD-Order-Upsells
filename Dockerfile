@@ -1,24 +1,5 @@
-# --- Build Stage ---
-FROM node:20-alpine AS build
-
-RUN apk add --no-cache bash openssl
-
-WORKDIR /app
-
-COPY package.json package-lock.json* ./
-RUN npm ci
-
-COPY . .
-
-# Générer Prisma Client et appliquer migrations
-RUN npm run setup
-
-# Build Remix
-RUN npm run build
-
 # --- Production Stage ---
 FROM node:20-alpine AS production
-
 WORKDIR /app
 
 COPY package.json package-lock.json* ./
@@ -26,9 +7,18 @@ RUN npm ci --omit=dev
 
 COPY --from=build /app/build ./build
 COPY --from=build /app/prisma ./prisma
-COPY --from=build /app/node_modules ./node_modules
+# Ne copiez PAS node_modules depuis le build, installez-les ici pour les bonnes archs.
+# COPY --from=build /app/node_modules ./node_modules
+
+# 1. Créez un répertoire pour la DB et donnez les permissions
+RUN mkdir -p /app/data && chown -R node:node /app/data
+ENV DATABASE_URL="file:/app/data/dev.sqlite"
+
+# 2. Passez à l'utilisateur non-root pour plus de sécurité
+USER node
 
 EXPOSE 3000
 ENV NODE_ENV=production
 
-CMD ["node", "build/server/index.js"]
+# 3. Appliquez les migrations AU DÉMARRAGE (nécessaire si le fichier n'existe pas)
+CMD npx prisma migrate deploy && node build/server/index.js
