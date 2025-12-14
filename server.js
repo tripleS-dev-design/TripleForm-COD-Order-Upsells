@@ -2,38 +2,31 @@ import { createRequestHandler } from "@remix-run/express";
 import express from "express";
 import compression from "compression";
 import morgan from "morgan";
-import { fileURLToPath } from "url";
-import { dirname } from "path";
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
+console.log('=== SERVER.JS DÉMARRÉ ===');
+console.log('Port:', process.env.PORT);
+console.log('Node env:', process.env.NODE_ENV);
 
 const app = express();
 
-// Middleware de logging
 app.use(morgan("tiny"));
-
-// Middleware de compression
 app.use(compression());
-
-// Servir les fichiers statiques
 app.use(express.static("public"));
-app.use("/assets", express.static("build/client/assets"));
 
-// Handler pour Remix
-app.all(
-  "*",
-  createRequestHandler({
-    build: await import("./build/server/index.js"),
-    mode: process.env.NODE_ENV,
-  })
-);
+// Vérifier si le build existe
+try {
+  console.log('=== IMPORT DU BUILD ===');
+  const build = await import("./build/server/index.js");
+  console.log('=== BUILD IMPORTÉ AVEC SUCCÈS ===');
+  
+  app.all("*", createRequestHandler({ build }));
+} catch (error) {
+  console.error('=== ERREUR D\'IMPORT DU BUILD ===', error);
+  process.exit(1);
+}
 
-// Démarrer le serveur
 const port = process.env.PORT || 3000;
-
 app.listen(port, () => {
-  console.log(`✅ TripleForm COD démarré sur le port ${port}`);
-  console.log(`✅ Environnement: ${process.env.NODE_ENV}`);
-  console.log(`✅ Shopify App URL: ${process.env.SHOPIFY_APP_URL || "Non défini"}`);
-  console.log(`✅ Base URL: ${process.env.DATABASE_URL ? "Connectée" : "Non connectée"}`);
+  console.log(`🚀 TripleForm COD démarré sur le port ${port}`);
+  console.log(`✅ Prêt à recevoir des requêtes`);
 });
