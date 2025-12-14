@@ -6,8 +6,8 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = "file:dev.sqlite"
+  provider = "postgresql"
+  url      = env("DATABASE_URL") // utilise la variable d'environnement sur Render
 }
 
 model Session {
@@ -17,7 +17,7 @@ model Session {
   isOnline      Boolean   @default(false)
   scope         String?
   expires       DateTime?
-  accessToken   String
+  accessToken   String?
   userId        BigInt?
   firstName     String?
   lastName      String?
@@ -50,6 +50,7 @@ model Shop {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
 model ShopGoogleSettings {
   id               Int      @id @default(autoincrement())
   shopDomain       String   @unique
