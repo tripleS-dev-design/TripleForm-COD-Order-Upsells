@@ -45,11 +45,15 @@ export default function Root() {
       polarisLocale = es;
       break;
     case "fr":
-    case "ar": // Polaris n’a pas de pack AR → fallback FR
+    case "ar":
     default:
       polarisLocale = fr;
       break;
   }
+
+  // --- DEV MODE Polaris visible hors Shopify ---
+  const isDevMode = process.env.NODE_ENV !== "production";
+  const effectiveHost = host || (isDevMode ? "dummy-shop.myshopify.com" : "");
 
   return (
     <html lang={locale}>
@@ -60,9 +64,12 @@ export default function Root() {
         <Links />
       </head>
       <body style={{ margin: 0 }}>
-        <ShopifyAppProvider apiKey={apiKey} host={host} isEmbeddedApp>
+        <ShopifyAppProvider
+          apiKey={apiKey}
+          host={effectiveHost}
+          isEmbeddedApp={!isDevMode} // si dev, pas embedded
+        >
           <PolarisAppProvider i18n={polarisLocale}>
-            {/* ✅ Tout ton app est sous I18nProvider */}
             <I18nProvider locale={locale}>
               <Outlet />
             </I18nProvider>
