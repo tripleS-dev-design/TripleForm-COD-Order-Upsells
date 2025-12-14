@@ -2,22 +2,33 @@ import { createRequestHandler } from "@remix-run/express";
 import express from "express";
 import compression from "compression";
 import morgan from "morgan";
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 
-console.log("=== SERVER.JS DÉMARRÉ ===");
-console.log("Port:", process.env.PORT);
-console.log("Node env:", process.env.NODE_ENV);
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+console.log('🚀 Server.js démarré');
+console.log('📁 Répertoire actuel:', __dirname);
+console.log('🔧 Port:', process.env.PORT);
 
 const app = express();
 
-app.use(morgan("tiny"));
+// Middleware
 app.use(compression());
-app.use(express.static("public"));
+app.use(morgan("tiny"));
 
+// Fichiers statiques CRITIQUES pour Remix
+app.use(express.static(join(__dirname, "public")));
+app.use("/build", express.static(join(__dirname, "build/client")));
+app.use("/assets", express.static(join(__dirname, "build/client/assets")));
+
+// Handler Remix
+console.log('📦 Import du build Remix...');
 try {
-  console.log("=== IMPORT DU BUILD ===");
   const build = await import("./build/server/index.js");
-  console.log("=== BUILD IMPORTÉ AVEC SUCCÈS ===");
-
+  console.log('✅ Build importé avec succès');
+  
   app.all(
     "*",
     createRequestHandler({
@@ -26,14 +37,14 @@ try {
     })
   );
 } catch (error) {
-  console.error("=== ERREUR D'IMPORT DU BUILD ===", error);
+  console.error('❌ Erreur d\'import du build:', error);
   process.exit(1);
 }
 
+// Démarrer le serveur
 const port = process.env.PORT || 3000;
-
-// 🔥 IMPORTANT POUR RENDER
-app.listen(port, "0.0.0.0", () => {
-  console.log(`🚀 TripleForm COD démarré sur le port ${port}`);
-  console.log("✅ Prêt à recevoir des requêtes");
+app.listen(port, () => {
+  console.log(`✅ TripleForm COD en ligne sur le port ${port}`);
+  console.log(`🌍 URL: ${process.env.SHOPIFY_APP_URL}`);
+  console.log(`📂 Build path: ${join(__dirname, "build")}`);
 });
