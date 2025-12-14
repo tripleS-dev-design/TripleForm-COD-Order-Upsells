@@ -36,4 +36,4 @@ ENV DATABASE_URL="file:/app/data/dev.sqlite"
 ENV WEB_CONCURRENCY=1
 
 # Run Prisma migrations at runtime
-CMD npx prisma migrate deploy && node build/index.js
+CMD npx prisma migrate deploy && node build/server/index.js
