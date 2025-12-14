@@ -26,5 +26,5 @@ RUN npx prisma generate
 # Build Remix pour la production
 RUN npm run build
 
-# Commande finale pour démarrer l'app
-CMD ["npm", "run", "docker-start"]
+# Commande finale pour démarrer l'app avec server.js
+CMD ["sh", "-c", "npx prisma migrate deploy && node server.js"]
