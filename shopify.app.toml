@@ -20,14 +20,13 @@ redirect_urls = [
   "https://tripleform-cod-order-upsells.onrender.com/api/auth/callback"
 ]
 
-# 🔴 OBLIGATOIRE POUR LES WEBHOOKS (HMAC + RGPD)
 [webhooks]
 api_version = "2024-10"
 
 [[webhooks.subscriptions]]
 topics = [
-  "APP_UNINSTALLED",
-  "APP_SCOPES_UPDATE"
+  "app/uninstalled",
+  "app/scopes_update"
 ]
 
 compliance_topics = [
@@ -37,6 +36,7 @@ compliance_topics = [
 ]
 
 uri = "/webhooks"
+
 
 
 [access_scopes]
