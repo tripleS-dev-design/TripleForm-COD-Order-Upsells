@@ -1,8 +1,13 @@
-# Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
+# Learn more about configuring your app at
+# https://shopify.dev/docs/apps/tools/cli/configuration
 
 name = "Tripleform-COD"
 client_id = "ac6bf0c04b992f852be8538ab90a4691"
 handle = "tripleform-cod"
+
+# 🔴 OBLIGATOIRE pour que Shopify accepte les webhooks
+application_url = "https://tripleform-cod-order-upsells.onrender.com"
+embedded = true
 
 [build]
 include_config_on_deploy = true
@@ -15,21 +20,24 @@ redirect_urls = [
   "https://tripleform-cod-order-upsells.onrender.com/api/auth/callback"
 ]
 
+# 🔴 OBLIGATOIRE POUR LES WEBHOOKS (HMAC + RGPD)
+[webhooks]
+api_version = "2024-10"
+
+# Webhooks applicatifs + RGPD (UN SEUL ENDPOINT)
 [[webhooks.subscriptions]]
 topics = [
-  "app/uninstalled",
-  "app/scopes_update"
+  "APP_UNINSTALLED",
+  "APP_SCOPES_UPDATE"
 ]
 
 compliance_topics = [
-  "customers/data_request",
-  "customers/redact",
-  "shop/redact"
+  "CUSTOMERS_DATA_REQUEST",
+  "CUSTOMERS_REDACT",
+  "SHOP_REDACT"
 ]
 
 uri = "/webhooks"
-
-
 
 [access_scopes]
 scopes = "read_products, write_products, read_orders, read_customers, write_draft_orders, read_content, write_content"
@@ -39,18 +47,6 @@ url = "https://tripleform-cod-order-upsells.onrender.com"
 subpath = "tripleform-cod"
 prefix = "apps"
 
-# Paramètres pour l'UI embarquée
-embedded = true
-application_url = "https://tripleform-cod-order-upsells.onrender.com"
-
-# Optionnel : pour POS si nécessaire
+# Optionnel : POS
 [pos]
 embedded = false
-
-# Optionnel : configuration de la navigation
-# [[navigation.sections]]
-# label = "Tripleform COD"
-# items = [
-#   { label = "Dashboard", uri = "/app" },
-#   { label = "Settings", uri = "/app/settings" }
-# ]
