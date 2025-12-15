@@ -24,7 +24,6 @@ redirect_urls = [
 [webhooks]
 api_version = "2024-10"
 
-# Webhooks applicatifs + RGPD (UN SEUL ENDPOINT)
 [[webhooks.subscriptions]]
 topics = [
   "APP_UNINSTALLED",
@@ -32,12 +31,13 @@ topics = [
 ]
 
 compliance_topics = [
-  "CUSTOMERS_DATA_REQUEST",
-  "CUSTOMERS_REDACT",
-  "SHOP_REDACT"
+  "customers/data_request",
+  "customers/redact",
+  "shop/redact"
 ]
 
 uri = "/webhooks"
+
 
 [access_scopes]
 scopes = "read_products, write_products, read_orders, read_customers, write_draft_orders, read_content, write_content"
