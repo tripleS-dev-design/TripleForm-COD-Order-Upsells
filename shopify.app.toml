@@ -11,22 +11,21 @@ handle = "tripleform-cod"
 automatically_update_urls_on_dev = false
 include_config_on_deploy = true
 
-[webhooks]
-api_version = "2025-07"
+   [webhooks]
+   api_version = "2024-10"
 
-# Toutes les URLs de webhooks pointent maintenant vers votre URL Render stable
-[[webhooks.subscriptions]]
-uri = "https://tripleform-cod-order-upsells.onrender.com/webhooks/compliance"
-compliance_topics = [ "customers/data_request", "customers/redact", "shop/redact" ]
+   [[webhooks.subscriptions]]
+   uri = "/webhooks/compliance"
+   compliance_topics = [ "customers/data_request", "customers/redact", "shop/redact" ]
 
-[[webhooks.subscriptions]]
-topics = [ "app/scopes_update" ]
-uri = "https://tripleform-cod-order-upsells.onrender.com/webhooks/app/scopes_update"
+   [[webhooks.subscriptions]]
+   topics = [ "app/scopes_update" ]
+   uri = "/webhooks/app/scopes_update"
 
-[[webhooks.subscriptions]]
-topics = [ "app/uninstalled" ]
-uri = "https://tripleform-cod-order-upsells.onrender.com/webhooks/app/uninstalled"
-
+   [[webhooks.subscriptions]]
+   topics = [ "app/uninstalled" ]
+   uri = "/webhooks/app/uninstalled"
+   
 [access_scopes]
 scopes = "read_customers,write_draft_orders,read_orders,write_products,read_content,write_content"
 optional_scopes = [ ]
