@@ -1,40 +1,45 @@
+# Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
-
-name = "Tripleform-COD"
 client_id = "ac6bf0c04b992f852be8538ab90a4691"
-handle = "tripleform-cod"
-
+name = "TripleForm COD Order - Upsells"
 application_url = "https://tripleform-cod-order-upsells.onrender.com"
 embedded = true
+handle = "tripleform-cod"
 
 [build]
-include_config_on_deploy = true
 automatically_update_urls_on_dev = true
+include_config_on_deploy = true
+
+[webhooks]
+api_version = "2025-07"
+
+  [[webhooks.subscriptions]]
+  uri = "https://omissions-perceived-wilderness-citizenship.trycloudflare.com/webhooks/compliance"
+  compliance_topics = [ "customers/data_request", "customers/redact", "shop/redact" ]
+
+  [[webhooks.subscriptions]]
+  topics = [ "app/scopes_update" ]
+  uri = "https://omissions-perceived-wilderness-citizenship.trycloudflare.com/webhooks/app/scopes_update"
+
+  [[webhooks.subscriptions]]
+  topics = [ "app/uninstalled" ]
+  uri = "https://omissions-perceived-wilderness-citizenship.trycloudflare.com/webhooks/app/uninstalled"
+
+[access_scopes]
+# Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
+scopes = "read_customers,write_draft_orders,read_orders,write_products,read_content,write_content"
+optional_scopes = [ ]
+use_legacy_install_flow = false
 
 [auth]
 redirect_urls = [
   "https://tripleform-cod-order-upsells.onrender.com/auth/callback",
-  "https://tripleform-cod-order-upsells.onrender.com/auth/shopify/callback",
-  "https://tripleform-cod-order-upsells.onrender.com/api/auth/callback"
+  "https://tripleform-cod-order-upsells.onrender.com/api/auth/callback",
+  "https://trigleiform-cod-order-ugseils.onrender.com/privacy"
 ]
 
-[webhooks]
-api_version = "2024-10"
-
-[[webhooks.subscriptions]]
-topics = [ "app/uninstalled" ]
-uri = "https://omissions-perceived-wilderness-citizenship.trycloudflare.com/webhooks/app/uninstalled"
-
-[[webhooks.subscriptions]]
-topics = [ "app/scopes_update" ]
-uri = "https://omissions-perceived-wilderness-citizenship.trycloudflare.com/webhooks/app/scopes_update"
-
-[[webhooks.subscriptions]]
-uri = "https://omissions-perceived-wilderness-citizenship.trycloudflare.com/webhooks/compliance"
-compliance_topics = [ "customers/data_request", "customers/redact", "shop/redact" ]
-
 [app_proxy]
-url = "https://omissions-perceived-wilderness-citizenship.trycloudflare.com"
+url = "https://tripleform-cod-order-upsells.onrender.com/proxy"
 subpath = "tripleform-cod"
 prefix = "apps"
 
