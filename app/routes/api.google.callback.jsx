@@ -15,40 +15,23 @@ export const loader = async ({ request }) => {
       <html>
         <head>
           <title>Google OAuth Error</title>
-          <style>
-            body {
-              font-family: Arial, sans-serif;
-              display: flex;
-              justify-content: center;
-              align-items: center;
-              height: 100vh;
-              margin: 0;
-              background: #f6f7f9;
+          <script>
+            if (window.opener) {
+              window.opener.postMessage({
+                type: 'GOOGLE_OAUTH_ERROR',
+                error: '${error.replace(/'/g, "\\'")}'
+              }, '*');
             }
-            .container {
-              text-align: center;
-              padding: 20px;
-              background: white;
-              border-radius: 8px;
-              box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            }
-          </style>
+            setTimeout(() => window.close(), 1000);
+          </script>
         </head>
         <body>
-          <div class="container">
-            <h2>Erreur Google OAuth</h2>
-            <p>${error}</p>
-            <button onclick="window.close()">Fermer</button>
-          </div>
+          <p>Erreur Google OAuth: ${error}</p>
+          <p>Fermeture automatique...</p>
         </body>
       </html>
       `,
-      { 
-        headers: { 
-          "Content-Type": "text/html",
-          "X-Frame-Options": "DENY"
-        } 
-      }
+      { headers: { "Content-Type": "text/html" } }
     );
   }
 
@@ -59,8 +42,6 @@ export const loader = async ({ request }) => {
       <html>
         <head>
           <title>Google OAuth - Missing parameters</title>
-        </head>
-        <body>
           <script>
             if (window.opener) {
               window.opener.postMessage({
@@ -70,6 +51,9 @@ export const loader = async ({ request }) => {
             }
             setTimeout(() => window.close(), 1000);
           </script>
+        </head>
+        <body>
+          <p>Paramètres manquants</p>
         </body>
       </html>
       `,
@@ -93,43 +77,22 @@ export const loader = async ({ request }) => {
       <html>
         <head>
           <title>Google OAuth Success</title>
-          <style>
-            body {
-              font-family: Arial, sans-serif;
-              display: flex;
-              justify-content: center;
-              align-items: center;
-              height: 100vh;
-              margin: 0;
-              background: #f6f7f9;
-            }
-            .container {
-              text-align: center;
-              padding: 20px;
-              background: white;
-              border-radius: 8px;
-              box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            }
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            <h2>Connexion Google réussie !</h2>
-            <p>Compte connecté : ${userEmail || ''}</p>
-            <p>Cette fenêtre va se fermer automatiquement...</p>
-          </div>
           <script>
             if (window.opener) {
               window.opener.postMessage({
                 type: 'GOOGLE_OAUTH_SUCCESS',
                 email: '${(userEmail || '').replace(/'/g, "\\'")}',
-                timestamp: ${Date.now()}
+                shop: '${shop}'
               }, '*');
             }
             setTimeout(() => {
               window.close();
-            }, 2000);
+            }, 1000);
           </script>
+        </head>
+        <body>
+          <p>Connexion Google réussie !</p>
+          <p>Fermeture automatique...</p>
         </body>
       </html>
       `,
@@ -143,8 +106,6 @@ export const loader = async ({ request }) => {
       <html>
         <head>
           <title>Google OAuth Error</title>
-        </head>
-        <body>
           <script>
             if (window.opener) {
               window.opener.postMessage({
@@ -154,6 +115,9 @@ export const loader = async ({ request }) => {
             }
             setTimeout(() => window.close(), 1000);
           </script>
+        </head>
+        <body>
+          <p>Erreur: ${e?.message || "Erreur Google OAuth"}</p>
         </body>
       </html>
       `,

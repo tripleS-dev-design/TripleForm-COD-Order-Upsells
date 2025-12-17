@@ -586,32 +586,34 @@ export default function Section3Sheets() {
   // Écoute les messages de la popup Google OAuth
   useEffect(() => {
     const handleMessage = (event) => {
+      console.log("Message reçu de la popup:", event.data);
+      
       if (event.data && event.data.type === 'GOOGLE_OAUTH_SUCCESS') {
-        console.log("Message de succès reçu de la popup");
+        console.log("Connexion Google réussie pour:", event.data.email);
+        
         // Rafraîchir le statut Google
-        setTimeout(() => {
-          fetch("/api/google/status", {
-            credentials: "include"
-          })
-          .then(r => r.json())
-          .then(j => {
-            setGoogleStatus({
-              loading: false,
-              connected: !!j.connected,
-              accountEmail: j.accountEmail || null,
-              mainSheetName: j.mainSheetName || null,
-              abandonedSheetName: j.abandonedSheetName || null,
-            });
-            
-            // Afficher un message de succès
-            alert(t("section3.connection.success"));
-          })
-          .catch((e) => {
-            console.error("Erreur lors du rafraîchissement du statut Google:", e);
+        fetch("/api/google/status", {
+          credentials: "include"
+        })
+        .then(r => r.json())
+        .then(j => {
+          setGoogleStatus({
+            loading: false,
+            connected: !!j.connected,
+            accountEmail: j.accountEmail || null,
+            mainSheetName: j.mainSheetName || null,
+            abandonedSheetName: j.abandonedSheetName || null,
           });
-        }, 500);
+          
+          // Afficher un message de succès
+          alert(t("section3.connection.success"));
+        })
+        .catch((e) => {
+          console.error("Erreur lors du rafraîchissement du statut Google:", e);
+        });
       }
       else if (event.data && event.data.type === 'GOOGLE_OAUTH_ERROR') {
+        console.error("Erreur Google OAuth:", event.data.error);
         alert(t("section3.connection.testError", { error: event.data.error }));
       }
     };
@@ -754,18 +756,44 @@ export default function Section3Sheets() {
     }
   };
 
-  const startGoogleConnect = (target) => {
+  const startGoogleConnect = async (target) => {
     try {
-      // Récupérer l'URL complète de l'API Google connect
-      const url = `/api/google/connect?target=${encodeURIComponent(
-        target || "orders"
-      )}`;
+      console.log("Début de la connexion Google pour target:", target);
       
-      console.log("Ouverture de la popup Google OAuth:", url);
+      // 1. Appeler l'API pour obtenir l'URL Google OAuth
+      const response = await fetch(
+        `/api/google/connect?target=${encodeURIComponent(target || "orders")}`,
+        {
+          method: "GET",
+          credentials: "include",
+          headers: {
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+          }
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        if (data.requiresReauth) {
+          // Session Shopify expirée
+          alert("Votre session Shopify a expiré. Veuillez rafraîchir la page.");
+          window.location.reload();
+          return;
+        }
+        throw new Error(data.error || "Erreur lors de la connexion à Google");
+      }
+
+      if (!data.url) {
+        throw new Error("URL Google OAuth non reçue");
+      }
+
+      console.log("URL Google OAuth reçue:", data.url);
       
-      // Ouvre une popup avec TOUS les paramètres nécessaires pour l'authentification Shopify
+      // 2. Ouvrir la popup avec l'URL Google OAuth
       const popup = window.open(
-        url,
+        data.url,
         "Google OAuth",
         "width=600,height=700,menubar=no,toolbar=no,location=yes,status=no,scrollbars=yes,resizable=yes"
       );
@@ -775,16 +803,48 @@ export default function Section3Sheets() {
         return;
       }
       
-      // Vérifier si la popup est bloquée après un court délai
+      // 3. Vérifier si la popup est bloquée
       setTimeout(() => {
         if (popup.closed || popup.innerHeight === 0) {
           alert(t("section3.connection.popupBlockedAfterOpen"));
         }
       }, 1000);
-      
-    } catch (e) {
-      console.error("Erreur lors de l'ouverture de la popup Google:", e);
-      alert(t("section3.connection.error", { error: e.message }));
+
+      // 4. Surveiller la fermeture de la popup pour rafraîchir les données
+      const checkPopup = setInterval(() => {
+        if (popup.closed) {
+          clearInterval(checkPopup);
+          
+          // Rafraîchir le statut Google après un délai
+          setTimeout(() => {
+            fetch("/api/google/status", {
+              credentials: "include"
+            })
+            .then(r => r.json())
+            .then(j => {
+              setGoogleStatus({
+                loading: false,
+                connected: !!j.connected,
+                accountEmail: j.accountEmail || null,
+                mainSheetName: j.mainSheetName || null,
+                abandonedSheetName: j.abandonedSheetName || null,
+              });
+              
+              // Afficher un message de succès
+              if (j.connected) {
+                alert(t("section3.connection.success"));
+              }
+            })
+            .catch((e) => {
+              console.error("Erreur lors du rafraîchissement du statut Google:", e);
+            });
+          }, 1000);
+        }
+      }, 500);
+
+    } catch (error) {
+      console.error("Erreur lors de la connexion Google:", error);
+      alert(t("section3.connection.error", { error: error.message }));
     }
   };
 
