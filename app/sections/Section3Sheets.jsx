@@ -583,6 +583,43 @@ export default function Section3Sheets() {
 
   const [saving, setSaving] = useState(false);
 
+  // Écoute les messages de la popup Google OAuth
+  useEffect(() => {
+    const handleMessage = (event) => {
+      if (event.data && event.data.type === 'GOOGLE_OAUTH_SUCCESS') {
+        console.log("Message de succès reçu de la popup");
+        // Rafraîchir le statut Google
+        setTimeout(() => {
+          fetch("/api/google/status", {
+            credentials: "include"
+          })
+          .then(r => r.json())
+          .then(j => {
+            setGoogleStatus({
+              loading: false,
+              connected: !!j.connected,
+              accountEmail: j.accountEmail || null,
+              mainSheetName: j.mainSheetName || null,
+              abandonedSheetName: j.abandonedSheetName || null,
+            });
+            
+            // Afficher un message de succès
+            alert(t("section3.connection.success"));
+          })
+          .catch((e) => {
+            console.error("Erreur lors du rafraîchissement du statut Google:", e);
+          });
+        }, 500);
+      }
+      else if (event.data && event.data.type === 'GOOGLE_OAUTH_ERROR') {
+        alert(t("section3.connection.testError", { error: event.data.error }));
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
+
   useEffect(() => {
     (async () => {
       try {
@@ -719,12 +756,35 @@ export default function Section3Sheets() {
 
   const startGoogleConnect = (target) => {
     try {
+      // Récupérer l'URL complète de l'API Google connect
       const url = `/api/google/connect?target=${encodeURIComponent(
         target || "orders"
       )}`;
-      window.location.href = url;
+      
+      console.log("Ouverture de la popup Google OAuth:", url);
+      
+      // Ouvre une popup avec TOUS les paramètres nécessaires pour l'authentification Shopify
+      const popup = window.open(
+        url,
+        "Google OAuth",
+        "width=600,height=700,menubar=no,toolbar=no,location=yes,status=no,scrollbars=yes,resizable=yes"
+      );
+      
+      if (!popup) {
+        alert(t("section3.connection.popupBlocked"));
+        return;
+      }
+      
+      // Vérifier si la popup est bloquée après un court délai
+      setTimeout(() => {
+        if (popup.closed || popup.innerHeight === 0) {
+          alert(t("section3.connection.popupBlockedAfterOpen"));
+        }
+      }, 1000);
+      
     } catch (e) {
-      console.error("google connect error", e);
+      console.error("Erreur lors de l'ouverture de la popup Google:", e);
+      alert(t("section3.connection.error", { error: e.message }));
     }
   };
 
@@ -1111,7 +1171,6 @@ export default function Section3Sheets() {
                 <Text tone="subdued" as="p">
                   {t("section3.rail.filters.description")}
                 </Text>
-                {/* ancien bouton Save local supprimé, le Save global est dans le header */}
               </BlockStack>
             </div>
           </div>
