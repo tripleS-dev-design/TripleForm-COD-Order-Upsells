@@ -9,7 +9,6 @@ handle = "tripleform-cod"
 [build]
 # DÉSACTIVÉ pour éviter que le CLI n'écrase vos URLs stables
 automatically_update_urls_on_dev = false
-include_config_on_deploy = true
 
    [webhooks]
    api_version = "2024-10"
