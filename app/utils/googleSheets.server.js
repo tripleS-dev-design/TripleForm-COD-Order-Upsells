@@ -3,7 +3,7 @@ import {
   getSheetsConfigForShop,
   ensureValidAccessToken,
   testSheetConnection,
-} from "../services/google.server.js";
+} from "../services/google.server";
 
 /**
  * Colonnes par défaut si l’utilisateur n’a encore rien configuré
@@ -63,6 +63,7 @@ function getDeep(obj, path) {
 
 /**
  * Transforme un appField en vraie valeur à partir de l’objet order
+ * order = { createdAt, order:{}, customer:{}, cart:{}, meta:{}, ... }
  */
 function resolveAppField(order, appField) {
   const o = order || {};
@@ -136,6 +137,7 @@ function resolveAppField(order, appField) {
 
 export async function testGoogleSheetsConnection({ shop, sheet, kind = "orders" }) {
   const effectiveSheet = sheet || {};
+  // kind n’est pas encore utilisé, mais on le garde pour logs / évolutions
   return testSheetConnection(shop, effectiveSheet);
 }
 
@@ -156,7 +158,9 @@ export async function appendOrderToSheet({ shop, admin, order }) {
       ? cfg.columns
       : DEFAULT_COLUMNS;
 
-  const columns = [...columnsRaw].sort((a, b) => (a.idx || 0) - (b.idx || 0));
+  const columns = [...columnsRaw].sort(
+    (a, b) => (a.idx || 0) - (b.idx || 0)
+  );
 
   // 2) construire la ligne
   const row = columns.map((col) => {
@@ -164,7 +168,7 @@ export async function appendOrderToSheet({ shop, admin, order }) {
     return val == null ? "" : String(val);
   });
 
-  // 3) choisir la feuille
+  // 3) choisir la feuille (config UI ou fallback env pour transition)
   const fallbackSheetId = process.env.GOOGLE_SHEET_ID || "";
   const spreadsheetId =
     cfg.sheet?.spreadsheetId || fallbackSheetId;
@@ -178,11 +182,13 @@ export async function appendOrderToSheet({ shop, admin, order }) {
   const tabName = cfg.sheet?.tabName || "Orders";
   const range = `${tabName}!A:Z`;
 
-  // 4) access token Google OAuth
+  // 4) access token Google (OAuth boutique)
   const settings = await ensureValidAccessToken(shop);
   const accessToken = settings.accessToken;
   if (!accessToken) {
-    throw new Error("Aucun access token Google valide pour cette boutique.");
+    throw new Error(
+      "Aucun access token Google valide pour cette boutique (Google non connecté ?)"
+    );
   }
 
   const params = new URLSearchParams({
@@ -205,7 +211,8 @@ export async function appendOrderToSheet({ shop, admin, order }) {
 
   const json = await res.json().catch(() => null);
   if (!res.ok) {
-    const msg = json?.error?.message || json?.error || "Erreur Google Sheets (append)";
+    const msg =
+      json?.error?.message || json?.error || "Erreur Google Sheets (append)";
     throw new Error(msg);
   }
 

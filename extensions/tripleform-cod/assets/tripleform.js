@@ -85,7 +85,7 @@ window.TripleformCOD = (function () {
   }
 
   /* ------------------------------------------------------------------ */
-  /* Pays / wilayas / villes                                            */
+  /* Pays / wilayas / villes COMPLET                                    */
   /* ------------------------------------------------------------------ */
 
   const COUNTRY_DATA = {
@@ -94,72 +94,78 @@ window.TripleformCOD = (function () {
       phonePrefix: "+212",
       provinces: [
         {
-          id: "casablanca",
+          id: "CASABLANCA",
           name: "Casablanca-Settat",
           cities: [
-            "Casablanca",
-            "Mohammedia",
-            "Settat",
-            "Berrechid",
-            "El Jadida",
-          ],
+            "Casablanca", "Mohammedia", "Settat", "Berrechid", "El Jadida",
+            "Benslimane", "Nouaceur", "Médiouna", "Sidi Bennour", "Dar Bouazza",
+            "Lahraouyine", "Had Soualem", "Sidi Rahal", "Oulad Abbou"
+          ]
         },
         {
-          id: "rabat",
+          id: "RABAT",
           name: "Rabat-Salé-Kénitra",
-          cities: ["Rabat", "Salé", "Kénitra", "Témara", "Khémisset"],
+          cities: [
+            "Rabat", "Salé", "Kénitra", "Témara", "Skhirat", "Khémisset",
+            "Sidi Slimane", "Sidi Kacem", "Tiflet", "Ain Aouda", "Harhoura",
+            "Sidi Yahya Zaer", "Oulmès", "Sidi Allal El Bahraoui"
+          ]
         },
         {
-          id: "tanger",
+          id: "TANGER",
           name: "Tanger-Tétouan-Al Hoceïma",
-          cities: ["Tanger", "Tétouan", "Al Hoceïma", "Larache", "Martil"],
+          cities: [
+            "Tanger", "Tétouan", "Al Hoceïma", "Larache", "Chefchaouen",
+            "Ouazzane", "Fnideq", "M'diq", "Martil", "Ksar El Kebir", "Asilah",
+            "Bni Bouayach", "Imzouren", "Bni Hadifa"
+          ]
         },
         {
-          id: "fes",
-          name: "Fès-Meknès",
-          cities: ["Fès", "Meknès", "Ifrane", "Sefrou"],
-        },
-        {
-          id: "marrakech",
+          id: "MARRAKECH",
           name: "Marrakech-Safi",
-          cities: ["Marrakech", "Safi", "Essaouira", "Chichaoua"],
+          cities: [
+            "Marrakech", "Safi", "El Kelâa des Sraghna", "Essaouira", "Rehamna",
+            "Youssoufia", "Chichaoua", "Al Haouz", "Rhamna", "Benguerir",
+            "Sidi Bennour", "Smimou", "Tamanar", "Imintanoute"
+          ]
         },
         {
-          id: "oriental",
-          name: "L'Oriental",
-          cities: ["Oujda", "Nador", "Berkane"],
+          id: "FES",
+          name: "Fès-Meknès",
+          cities: [
+            "Fès", "Meknès", "Ifrane", "Taza", "Sefrou", "Boulemane", "Taounate",
+            "Guercif", "Moulay Yacoub", "El Hajeb", "Moulay Idriss Zerhoun",
+            "Ouazzane", "Bhalil", "Aïn Cheggag"
+          ]
         },
         {
-          id: "souss",
+          id: "ORIENTAL",
+          name: "Région de l'Oriental",
+          cities: [
+            "Oujda", "Nador", "Berkane", "Taourirt", "Jerada", "Figuig",
+            "Bouarfa", "Ahfir", "Driouch", "Beni Ensar", "Selouane",
+            "Bouhdila", "Talsint", "Debdou"
+          ]
+        },
+        {
+          id: "SUSS",
           name: "Souss-Massa",
-          cities: ["Agadir", "Inezgane", "Taroudant"],
+          cities: [
+            "Agadir", "Inezgane", "Taroudant", "Tiznit", "Oulad Teima",
+            "Biougra", "Ait Melloul", "Dcheira", "Temsia", "Ait Baha",
+            "Chtouka Ait Baha", "Tafraout", "Aoulouz", "El Guerdane"
+          ]
         },
         {
-          id: "beni-mellal",
-          name: "Béni Mellal-Khénifra",
-          cities: ["Béni Mellal", "Khénifra"],
-        },
-        {
-          id: "draa-tafilalet",
+          id: "DRAATAF",
           name: "Drâa-Tafilalet",
-          cities: ["Errachidia", "Ouarzazate", "Zagora"],
-        },
-        {
-          id: "guelmim",
-          name: "Guelmim-Oued Noun",
-          cities: ["Guelmim"],
-        },
-        {
-          id: "laayoune",
-          name: "Laâyoune-Sakia El Hamra",
-          cities: ["Laâyoune", "Boujdour"],
-        },
-        {
-          id: "dakhla",
-          name: "Dakhla-Oued Ed Dahab",
-          cities: ["Dakhla"],
-        },
-      ],
+          cities: [
+            "Errachidia", "Ouarzazate", "Tinghir", "Midelt", "Zagora",
+            "Rissani", "Alnif", "Boumalne Dades", "Kelaat M'Gouna", "Tinejdad",
+            "Goulmima", "Jorf", "M'semrir", "Aït Benhaddou"
+          ]
+        }
+      ]
     },
 
     dz: {
@@ -167,72 +173,657 @@ window.TripleformCOD = (function () {
       phonePrefix: "+213",
       provinces: [
         {
-          id: "alger",
+          id: "ALGER",
           name: "Alger",
-          cities: ["Alger", "Bab Ezzouar", "Kouba", "Hussein Dey"],
+          cities: [
+            "Alger Centre", "Bab El Oued", "El Harrach", "Kouba", "Hussein Dey",
+            "Bordj El Kiffan", "Dar El Beïda", "Bouzaréah", "Birkhadem", "Chéraga",
+            "Dellys", "Zeralda", "Staoueli", "Birtouta", "Ouled Fayet", "Draria", "Les Eucalyptus"
+          ]
         },
-        { id: "oran", name: "Oran", cities: ["Oran", "Es Senia", "Bir El Djir"] },
         {
-          id: "constantine",
+          id: "ORAN",
+          name: "Oran",
+          cities: [
+            "Oran", "Es-Sénia", "Bir El Djir", "Gdyel", "Aïn El Turck", "Arzew",
+            "Mers El Kébir", "Boutlelis", "Oued Tlelat", "Bethioua", "El Ançor",
+            "Hassi Bounif", "Messerghin", "Boufatis", "Tafraoui"
+          ]
+        },
+        {
+          id: "CONSTANTINE",
           name: "Constantine",
-          cities: ["Constantine", "El Khroub"],
+          cities: [
+            "Constantine", "El Khroub", "Hamma Bouziane", "Aïn Smara",
+            "Zighoud Youcef", "Didouche Mourad", "Ibn Ziad", "Messaoud Boudjeriou",
+            "Beni Hamidane", "Aïn Abid", "Ouled Rahmoun", "Ben Badis", "El Haria"
+          ]
         },
-        { id: "setif", name: "Sétif", cities: ["Sétif", "El Eulma"] },
         {
-          id: "blida",
+          id: "BLIDA",
           name: "Blida",
-          cities: ["Blida", "Boufarik", "Mouzaïa"],
+          cities: [
+            "Blida", "Boufarik", "El Affroun", "Mouzaïa", "Ouled Yaïch",
+            "Beni Mered", "Bouinan", "Soumaa", "Chebli", "Bougara",
+            "Guerrouaou", "Hammam Melouane", "Beni Tamou", "Ben Khlil"
+          ]
         },
-        { id: "annaba", name: "Annaba", cities: ["Annaba", "El Bouni"] },
-        { id: "tlemcen", name: "Tlemcen", cities: ["Tlemcen", "Maghnia"] },
-        { id: "bejaia", name: "Béjaïa", cities: ["Béjaïa", "Akbou"] },
-        { id: "batna", name: "Batna", cities: ["Batna"] },
-        { id: "tiaret", name: "Tiaret", cities: ["Tiaret"] },
-      ],
+        {
+          id: "SETIF",
+          name: "Sétif",
+          cities: [
+            "Sétif", "El Eulma", "Aïn Oulmene", "Bougaa", "Aïn Azel", "Amoucha",
+            "Béni Aziz", "Guellal", "Hammam Soukhna", "Bouandas", "Taya", "Tella",
+            "Babor", "Maoklane"
+          ]
+        },
+        {
+          id: "ANNABA",
+          name: "Annaba",
+          cities: [
+            "Annaba", "El Bouni", "Sidi Amar", "Berrahal", "Treat", "Cheurfa",
+            "Oued El Aneb", "Seraidi", "Ain Berda", "Chaiba", "El Hadjar", "Chetaibi"
+          ]
+        },
+        {
+          id: "BATNA",
+          name: "Batna",
+          cities: [
+            "Batna", "Barika", "Merouana", "Arris", "N'Gaous", "Tazoult",
+            "Aïn Touta", "Ouled Si Slimane", "Fesdis", "Timgad", "Ras El Aioun",
+            "Maafa", "Lazrou", "Ouled Ammar"
+          ]
+        }
+      ]
     },
 
     tn: {
       label: "Tunisie",
       phonePrefix: "+216",
       provinces: [
-        { id: "tunis", name: "Tunis", cities: ["Tunis", "La Marsa", "Carthage"] },
-        { id: "ariana", name: "Ariana", cities: ["Ariana", "Raoued"] },
         {
-          id: "ben-arous",
+          id: "TUNIS",
+          name: "Tunis",
+          cities: [
+            "Tunis", "La Marsa", "Carthage", "Le Bardo", "Le Kram", "Sidi Bou Said",
+            "Menzah", "Ariana", "El Menzah", "Mornaguia", "Mégrine", "Radès",
+            "Djedeida", "El Omrane", "Ettahrir", "El Kabaria"
+          ]
+        },
+        {
+          id: "ARIANA",
+          name: "Ariana",
+          cities: [
+            "Ariana", "Raoued", "La Soukra", "Kalaat El Andalous", "Sidi Thabet",
+            "Ettadhamen", "Mnihla", "Borj El Amri", "Kalâat el-Andalous",
+            "Sidi Amor", "El Battan", "Oued Ellil"
+          ]
+        },
+        {
+          id: "BEN_AROUS",
           name: "Ben Arous",
-          cities: ["Ben Arous", "Ezzahra"],
+          cities: [
+            "Ben Arous", "Ezzahra", "Rades", "Mégrine", "Hammam Lif", "Mornag",
+            "Fouchana", "Khalidia", "Mhamdia", "Hammam Chott", "Bou Mhel el-Bassatine",
+            "El Mida", "Mornaguia"
+          ]
         },
-        { id: "manouba", name: "Manouba", cities: ["Manouba", "Douar Hicher"] },
-        { id: "sfax", name: "Sfax", cities: ["Sfax", "Sakiet Ezzit"] },
         {
-          id: "sousse",
+          id: "SFAX",
+          name: "Sfax",
+          cities: [
+            "Sfax", "El Ain", "Agareb", "Mahres", "Sakiet Eddaïer", "Sakiet Ezzit",
+            "Ghraiba", "Bir Ali Ben Khalifa", "Jebeniana", "Kerkennah", "Skhira",
+            "Menzel Chaker", "Gremda", "Thyna"
+          ]
+        },
+        {
+          id: "SOUSSE",
           name: "Sousse",
-          cities: ["Sousse", "Hammam Sousse"],
+          cities: [
+            "Sousse", "Hammam Sousse", "Kalaa Kebira", "Kalaa Sghira", "Akouda",
+            "M'saken", "Enfidha", "Bouficha", "Hergla", "Kondar", "Zaouiet Sousse",
+            "Hammam Jedidi", "Sidi Bou Ali", "Messaadine"
+          ]
         },
         {
-          id: "monastir",
-          name: "Monastir",
-          cities: ["Monastir", "Sahline"],
-        },
-        { id: "nabeul", name: "Nabeul", cities: ["Nabeul", "Hammamet"] },
-        {
-          id: "bizerte",
+          id: "BIZERTE",
           name: "Bizerte",
-          cities: ["Bizerte", "Menzel Bourguiba"],
-        },
-        { id: "gabes", name: "Gabès", cities: ["Gabès"] },
-        { id: "gafsa", name: "Gafsa", cities: ["Gafsa"] },
-        { id: "kairouan", name: "Kairouan", cities: ["Kairouan"] },
-        { id: "kasserine", name: "Kasserine", cities: ["Kasserine"] },
-      ],
+          cities: [
+            "Bizerte", "Menzel Jemil", "Mateur", "Sejnane", "Ghar El Melh",
+            "Ras Jebel", "Menzel Abderrahmane", "El Alia", "Tinja", "Utique",
+            "Menzel Bourguiba", "Joumine", "Aousja", "Metline"
+          ]
+        }
+      ]
     },
+
+    eg: {
+      label: "Égypte",
+      phonePrefix: "+20",
+      provinces: [
+        {
+          id: "CAIRO",
+          name: "Le Caire",
+          cities: [
+            "Le Caire", "Nasr City", "Heliopolis", "Maadi", "Zamalek", "Dokki",
+            "Giza", "Shubra", "Al Haram", "Al Mohandessin", "6 Octobre", "New Cairo",
+            "Madinet Nasr", "Helwan", "Qalyub", "Shubra El Kheima", "Badr City"
+          ]
+        },
+        {
+          id: "ALEX",
+          name: "Alexandrie",
+          cities: [
+            "Alexandrie", "Borg El Arab", "Abu Qir", "Al Amriya", "Al Agamy",
+            "Montaza", "Al Mansheya", "Al Labban", "Kafr Abdo", "Sidi Gaber",
+            "Smouha", "Miami", "Stanley", "Laurent", "Gleem", "Camp Caesar"
+          ]
+        },
+        {
+          id: "GIZA",
+          name: "Gizeh",
+          cities: [
+            "Gizeh", "Sheikh Zayed City", "6th of October", "Al Haram",
+            "Al Badrasheen", "Al Ayat", "Al Wahat Al Bahariya", "Al Saff",
+            "Atfih", "Al Ayyat", "Awashim", "Kerdasa", "El Hawamdeya", "Osim"
+          ]
+        },
+        {
+          id: "SHARQIA",
+          name: "Sharqia",
+          cities: [
+            "Zagazig", "10th of Ramadan City", "Belbeis", "Minya Al Qamh",
+            "Al Ibrahimiyah", "Diarb Negm", "Husseiniya", "Mashtool El Souk",
+            "Abu Hammad", "Abu Kebir", "Faqous", "El Salheya El Gedida"
+          ]
+        }
+      ]
+    },
+
+    fr: {
+      label: "France",
+      phonePrefix: "+33",
+      provinces: [
+        {
+          id: "IDF",
+          name: "Île-de-France",
+          cities: [
+            "Paris", "Boulogne-Billancourt", "Saint-Denis", "Versailles", "Nanterre",
+            "Créteil", "Bobigny", "Montreuil", "Argenteuil", "Courbevoic",
+            "Asnières-sur-Seine", "Colombes", "Aubervilliers", "Saint-Maur-des-Fossés",
+            "Issy-les-Moulineaux", "Levallois-Perret"
+          ]
+        },
+        {
+          id: "PACA",
+          name: "Provence-Alpes-Côte d'Azur",
+          cities: [
+            "Marseille", "Nice", "Toulon", "Avignon", "Aix-en-Provence", "Antibes",
+            "Cannes", "La Seyne-sur-Mer", "Hyères", "Arles", "Martigues", "Grasse",
+            "Fréjus", "Antibes", "La Ciotat", "Cavaillon"
+          ]
+        },
+        {
+          id: "ARA",
+          name: "Auvergne-Rhône-Alpes",
+          cities: [
+            "Lyon", "Grenoble", "Saint-Étienne", "Annecy", "Clermont-Ferrand",
+            "Villeurbanne", "Valence", "Chambéry", "Roanne", "Bourg-en-Bresse",
+            "Vénissieux", "Saint-Priest", "Caluire-et-Cuire", "Vaulx-en-Velin", "Meyzieu"
+          ]
+        },
+        {
+          id: "OCCITANIE",
+          name: "Occitanie",
+          cities: [
+            "Toulouse", "Montpellier", "Nîmes", "Perpignan", "Béziers", "Montauban",
+            "Narbonne", "Carcassonne", "Albi", "Sète", "Lunel", "Agde", "Castres",
+            "Mende", "Millau", "Foix"
+          ]
+        }
+      ]
+    },
+
+    es: {
+      label: "España",
+      phonePrefix: "+34",
+      provinces: [
+        {
+          id: "MADRID",
+          name: "Comunidad de Madrid",
+          cities: [
+            "Madrid", "Alcalá de Henares", "Getafe", "Leganés", "Móstoles",
+            "Fuenlabrada", "Alcorcón", "Parla", "Torrejón de Ardoz", "Coslada",
+            "Las Rozas", "San Sebastián de los Reyes", "Alcobendas", "Pozuelo de Alarcón",
+            "Rivas-Vaciamadrid"
+          ]
+        },
+        {
+          id: "CATALUNYA",
+          name: "Cataluña",
+          cities: [
+            "Barcelona", "L'Hospitalet de Llobregat", "Badalona", "Tarragona",
+            "Sabadell", "Lleida", "Mataró", "Santa Coloma de Gramenet", "Reus",
+            "Girona", "Sant Cugat", "Cornellà", "Sant Boi de Llobregat", "Rubí", "Manresa"
+          ]
+        },
+        {
+          id: "ANDALUCIA",
+          name: "Andalucía",
+          cities: [
+            "Sevilla", "Málaga", "Granada", "Córdoba", "Jerez de la Frontera",
+            "Almería", "Huelva", "Marbella", "Dos Hermanas", "Algeciras",
+            "Cádiz", "Jaén", "Almería", "Mijas", "Fuengirola", "Chiclana de la Frontera"
+          ]
+        },
+        {
+          id: "VALENCIA",
+          name: "Comunidad Valenciana",
+          cities: [
+            "Valencia", "Alicante", "Castellón de la Plana", "Elche", "Torrevieja",
+            "Orihuela", "Gandia", "Benidorm", "Paterna", "Sagunto", "Alcoy",
+            "Elda", "San Vicente del Raspeig", "Vila-real", "Burjassot"
+          ]
+        }
+      ]
+    },
+
+    sa: {
+      label: "Arabie Saoudite",
+      phonePrefix: "+966",
+      provinces: [
+        {
+          id: "RIYADH",
+          name: "Riyadh",
+          cities: [
+            "Riyadh", "Al Kharj", "Al Majma'ah", "Dhurma", "Al Duwadimi",
+            "Al Quway'iyah", "Al Muzahmiyah", "Wadi ad-Dawasir", "Al Hariq",
+            "Al Sulayyil", "Al Aflaj", "Hotat Bani Tamim", "Al Diriyah", "Thadiq", "Huraymila"
+          ]
+        },
+        {
+          id: "MAKKAH",
+          name: "Makkah",
+          cities: [
+            "Makkah", "Jeddah", "Taif", "Al Qunfudhah", "Al Lith", "Al Jumum",
+            "Khulais", "Rabigh", "Turubah", "Al Kamel", "Bahra", "Adham",
+            "Al Jumum", "Al Khurma", "Al Muwayh"
+          ]
+        },
+        {
+          id: "MADINAH",
+          name: "Madinah",
+          cities: [
+            "Madinah", "Yanbu", "Al Ula", "Badr", "Mahd adh Dhahab", "Al Hinakiyah",
+            "Wadi al-Fara'", "Al-Mahd", "Khaybar", "Al Henakiyah", "Al Suqiyah",
+            "Al-Mahd", "Al-Ais", "Hegrah"
+          ]
+        },
+        {
+          id: "EASTERN",
+          name: "Eastern Province",
+          cities: [
+            "Dammam", "Khobar", "Dhahran", "Jubail", "Qatif", "Hafr al-Batin",
+            "Al Khafji", "Ras Tanura", "Abqaiq", "Al-'Udayd", "Nu'ayriyah",
+            "Udhailiyah", "Al Qaryah", "Al Mubarraz", "Al Awamiyah"
+          ]
+        }
+      ]
+    },
+
+    ae: {
+      label: "Émirats Arabes Unis",
+      phonePrefix: "+971",
+      provinces: [
+        {
+          id: "DUBAI",
+          name: "Dubai",
+          cities: [
+            "Dubai", "Jebel Ali", "Hatta", "Al Awir", "Al Lusayli", "Margham",
+            "Al Khawaneej", "Al Qusais", "Al Barsha", "Al Warqaa", "Mirdif",
+            "Nad Al Sheba", "Al Quoz", "Jumeirah", "Business Bay", "Dubai Marina"
+          ]
+        },
+        {
+          id: "ABU_DHABI",
+          name: "Abu Dhabi",
+          cities: [
+            "Abu Dhabi", "Al Ain", "Madinat Zayed", "Gharbia", "Liwa Oasis",
+            "Al Ruwais", "Al Mirfa", "Al Dhafra", "Al Samha", "Al Shawamekh",
+            "Bani Yas", "Khalifa City", "Mohammed Bin Zayed City", "Shahama", "Al Wathba"
+          ]
+        },
+        {
+          id: "SHARJAH",
+          name: "Sharjah",
+          cities: [
+            "Sharjah", "Khor Fakkan", "Kalba", "Dhaid", "Al Dhaid", "Al Hamriyah",
+            "Al Madam", "Al Batayeh", "Al Sajaa", "Al Ghail", "Wasit", "Mleiha",
+            "Al Nahda", "Al Qasimia", "Al Majaz"
+          ]
+        },
+        {
+          id: "AJMAN",
+          name: "Ajman",
+          cities: [
+            "Ajman", "Masfout", "Manama", "Al Hamidiyah", "Al Zorah", "Al Mowaihat",
+            "Al Jurf", "Al Hamidiya", "Al Rawda", "Al Nuaimiya"
+          ]
+        }
+      ]
+    },
+
+    us: {
+      label: "United States",
+      phonePrefix: "+1",
+      provinces: [
+        {
+          id: "CALIFORNIA",
+          name: "California",
+          cities: [
+            "Los Angeles", "San Francisco", "San Diego", "San Jose", "Sacramento",
+            "Fresno", "Long Beach", "Oakland", "Bakersfield", "Anaheim",
+            "Santa Ana", "Riverside", "Stockton", "Chula Vista", "Irvine", "Modesto"
+          ]
+        },
+        {
+          id: "NEW_YORK",
+          name: "New York",
+          cities: [
+            "New York City", "Buffalo", "Rochester", "Yonkers", "Syracuse",
+            "Albany", "New Rochelle", "Mount Vernon", "Schenectady", "Utica",
+            "White Plains", "Troy", "Niagara Falls", "Binghamton"
+          ]
+        },
+        {
+          id: "TEXAS",
+          name: "Texas",
+          cities: [
+            "Houston", "Dallas", "Austin", "San Antonio", "Fort Worth", "El Paso",
+            "Arlington", "Corpus Christi", "Plano", "Laredo", "Lubbock", "Garland",
+            "Irving", "Amarillo", "Grand Prairie"
+          ]
+        },
+        {
+          id: "FLORIDA",
+          name: "Florida",
+          cities: [
+            "Miami", "Orlando", "Tampa", "Jacksonville", "Tallahassee", "St. Petersburg",
+            "Hialeah", "Port St. Lucie", "Cape Coral", "Fort Lauderdale",
+            "Pembroke Pines", "Hollywood", "Miramar", "Gainesville"
+          ]
+        }
+      ]
+    },
+
+    ng: {
+      label: "Nigeria",
+      phonePrefix: "+234",
+      provinces: [
+        {
+          id: "LAGOS",
+          name: "Lagos",
+          cities: [
+            "Lagos", "Ikeja", "Surulere", "Apapa", "Lekki", "Victoria Island",
+            "Ajah", "Badagry", "Epe", "Ikorodu", "Agege", "Alimosho", "Kosofe",
+            "Mushin", "Oshodi", "Somolu"
+          ]
+        },
+        {
+          id: "ABUJA",
+          name: "Abuja",
+          cities: [
+            "Abuja", "Garki", "Wuse", "Maitama", "Asokoro", "Gwarinpa", "Kubwa",
+            "Jahi", "Lugbe", "Karu", "Nyanya", "Bwari", "Kuje", "Gwagwalada", "Kwali"
+          ]
+        },
+        {
+          id: "KANO",
+          name: "Kano",
+          cities: [
+            "Kano", "Nassarawa", "Tarauni", "Dala", "Fagge", "Gwale", "Kumbotso",
+            "Ungogo", "Dawakin Tofa", "Tofa", "Rimin Gado", "Bagwai", "Gezawa",
+            "Gabasawa", "Minjibir"
+          ]
+        },
+        {
+          id: "RIVERS",
+          name: "Rivers",
+          cities: [
+            "Port Harcourt", "Obio-Akpor", "Ikwerre", "Eleme", "Oyigbo", "Etche",
+            "Omuma", "Okrika", "Ogu–Bolo", "Bonny", "Degema", "Asari-Toru",
+            "Akuku-Toru", "Abua–Odual", "Ahoada"
+          ]
+        }
+      ]
+    },
+
+    pk: {
+      label: "Pakistan",
+      phonePrefix: "+92",
+      provinces: [
+        {
+          id: "PUNJAB",
+          name: "Punjab",
+          cities: [
+            "Lahore", "Faisalabad", "Rawalpindi", "Gujranwala", "Multan",
+            "Sialkot", "Bahawalpur", "Sargodha", "Sheikhupura", "Jhelum",
+            "Gujrat", "Sahiwal", "Wah Cantonment", "Kasur", "Okara", "Chiniot"
+          ]
+        },
+        {
+          id: "SINDH",
+          name: "Sindh",
+          cities: [
+            "Karachi", "Hyderabad", "Sukkur", "Larkana", "Nawabshah", "Mirpur Khas",
+            "Jacobabad", "Shikarpur", "Khairpur", "Dadu", "Tando Allahyar",
+            "Tando Adam", "Badin", "Thatta", "Kotri"
+          ]
+        },
+        {
+          id: "KHYBER",
+          name: "Khyber Pakhtunkhwa",
+          cities: [
+            "Peshawar", "Mardan", "Abbottabad", "Mingora", "Kohat", "Bannu",
+            "Swabi", "Dera Ismail Khan", "Charsadda", "Nowshera", "Mansehra",
+            "Haripur", "Timergara", "Tank", "Hangu"
+          ]
+        },
+        {
+          id: "BALOCHISTAN",
+          name: "Balochistan",
+          cities: [
+            "Quetta", "Turbat", "Khuzdar", "Chaman", "Gwadar", "Dera Murad Jamali",
+            "Dera Allah Yar", "Usta Mohammad", "Sibi", "Loralai", "Zhob", "Pasni",
+            "Qila Saifullah", "Khost", "Hub"
+          ]
+        }
+      ]
+    },
+
+    in: {
+      label: "India",
+      phonePrefix: "+91",
+      provinces: [
+        {
+          id: "DELHI",
+          name: "Delhi",
+          cities: [
+            "New Delhi", "Delhi", "Dwarka", "Karol Bagh", "Rohini", "Pitampura",
+            "Janakpuri", "Laxmi Nagar", "Saket", "Hauz Khas", "Malviya Nagar",
+            "Patel Nagar", "Rajouri Garden", "Kalkaji", "Sarita Vihar", "Vasant Kunj"
+          ]
+        },
+        {
+          id: "MAHARASHTRA",
+          name: "Maharashtra",
+          cities: [
+            "Mumbai", "Pune", "Nagpur", "Nashik", "Aurangabad", "Solapur",
+            "Bhiwandi", "Amravati", "Nanded", "Kolhapur", "Ulhasnagar", "Sangli",
+            "Malegaon", "Jalgaon", "Akola", "Latur"
+          ]
+        },
+        {
+          id: "KARNATAKA",
+          name: "Karnataka",
+          cities: [
+            "Bengaluru", "Mysuru", "Hubballi", "Mangaluru", "Belagavi", "Davanagere",
+            "Ballari", "Tumakuru", "Shivamogga", "Raichur", "Bidar", "Hospet",
+            "Udupi", "Gadag-Betageri", "Robertson Pet", "Hassan"
+          ]
+        },
+        {
+          id: "TAMIL_NADU",
+          name: "Tamil Nadu",
+          cities: [
+            "Chennai", "Coimbatore", "Madurai", "Tiruchirappalli", "Salem",
+            "Tirunelveli", "Tiruppur", "Vellore", "Erode", "Thoothukudi",
+            "Dindigul", "Thanjavur", "Hosur", "Nagercoil", "Kanchipuram", "Kumarapalayam"
+          ]
+        }
+      ]
+    },
+
+    id: {
+      label: "Indonesia",
+      phonePrefix: "+62",
+      provinces: [
+        {
+          id: "JAKARTA",
+          name: "Jakarta",
+          cities: [
+            "Jakarta", "Central Jakarta", "South Jakarta", "West Jakarta",
+            "East Jakarta", "North Jakarta", "Thousand Islands", "Kebayoran Baru",
+            "Tebet", "Cilandak", "Pasar Minggu", "Mampang", "Cengkareng",
+            "Tanjung Priok", "Kelapa Gading"
+          ]
+        },
+        {
+          id: "WEST_JAVA",
+          name: "West Java",
+          cities: [
+            "Bandung", "Bekasi", "Depok", "Bogor", "Cimahi", "Sukabumi",
+            "Cirebon", "Tasikmalaya", "Karawang", "Purwakarta", "Subang",
+            "Sumedang", "Garut", "Majalengka", "Cianjur", "Banjar"
+          ]
+        },
+        {
+          id: "CENTRAL_JAVA",
+          name: "Central Java",
+          cities: [
+            "Semarang", "Surakarta", "Tegal", "Pekalongan", "Salatiga",
+            "Magelang", "Kudus", "Jepara", "Rembang", "Blora", "Batang", "Pati",
+            "Wonosobo", "Temanggung", "Boyolali", "Klaten"
+          ]
+        },
+        {
+          id: "EAST_JAVA",
+          name: "East Java",
+          cities: [
+            "Surabaya", "Malang", "Kediri", "Mojokerto", "Jember", "Banyuwangi",
+            "Madiun", "Pasuruan", "Probolinggo", "Blitar", "Lumajang", "Bondowoso",
+            "Situbondo", "Tulungagung", "Tuban", "Lamongan"
+          ]
+        }
+      ]
+    },
+
+    tr: {
+      label: "Türkiye",
+      phonePrefix: "+90",
+      provinces: [
+        {
+          id: "ISTANBUL",
+          name: "Istanbul",
+          cities: [
+            "Istanbul", "Kadıköy", "Beşiktaş", "Şişli", "Fatih", "Üsküdar",
+            "Bakırköy", "Esenler", "Küçükçekmece", "Beyoğlu", "Zeytinburnu",
+            "Maltepe", "Sarıyer", "Pendik", "Kartal", "Beylikdüzü"
+          ]
+        },
+        {
+          id: "ANKARA",
+          name: "Ankara",
+          cities: [
+            "Ankara", "Çankaya", "Keçiören", "Yenimahalle", "Mamak", "Sincan",
+            "Altındağ", "Etimesgut", "Polatlı", "Gölbaşı", "Pursaklar", "Akyurt",
+            "Kahramankazan", "Elmadağ", "Bala", "Ayaş"
+          ]
+        },
+        {
+          id: "IZMIR",
+          name: "İzmir",
+          cities: [
+            "İzmir", "Bornova", "Karşıyaka", "Konak", "Buca", "Bayraklı",
+            "Çiğli", "Balçova", "Narlıdere", "Gaziemir", "Güzelbahçe", "Urla",
+            "Seferihisar", "Menderes", "Torbalı", "Bergama"
+          ]
+        },
+        {
+          id: "ANTALYA",
+          name: "Antalya",
+          cities: [
+            "Antalya", "Muratpaşa", "Kepez", "Konyaaltı", "Alanya", "Manavgat",
+            "Serik", "Kumluca", "Kaş", "Korkuteli", "Finike", "Gazipaşa",
+            "Demre", "Akseki", "Elmalı", "Gündoğmuş"
+          ]
+        }
+      ]
+    },
+
+    br: {
+      label: "Brazil",
+      phonePrefix: "+55",
+      provinces: [
+        {
+          id: "SAO_PAULO",
+          name: "São Paulo",
+          cities: [
+            "São Paulo", "Guarulhos", "Campinas", "São Bernardo do Campo",
+            "Santo André", "Osasco", "Sorocaba", "Ribeirão Preto", "São José dos Campos",
+            "Santos", "Mauá", "Diadema", "Jundiaí", "Barueri", "São Vicente", "Carapicuíba"
+          ]
+        },
+        {
+          id: "RIO_JANEIRO",
+          name: "Rio de Janeiro",
+          cities: [
+            "Rio de Janeiro", "São Gonçalo", "Duque de Caxias", "Nova Iguaçu",
+            "Niterói", "Belford Roxo", "Campos dos Goytacazes", "São João de Meriti",
+            "Petrópolis", "Volta Redonda", "Magé", "Itaboraí", "Macaé", "Mesquita",
+            "Teresópolis", "Nilópolis"
+          ]
+        },
+        {
+          id: "MINAS_GERAIS",
+          name: "Minas Gerais",
+          cities: [
+            "Belo Horizonte", "Uberlândia", "Contagem", "Juiz de Fora", "Betim",
+            "Montes Claros", "Ribeirão das Neves", "Uberaba", "Governador Valadares",
+            "Ipatinga", "Sete Lagoas", "Divinópolis", "Santa Luzia", "Ibirité",
+            "Poços de Caldas", "Patos de Minas"
+          ]
+        },
+        {
+          id: "BAHIA",
+          name: "Bahia",
+          cities: [
+            "Salvador", "Feira de Santana", "Vitória da Conquista", "Camaçari",
+            "Itabuna", "Juazeiro", "Lauro de Freitas", "Ilhéus", "Jequié",
+            "Alagoinhas", "Teixeira de Freitas", "Barreiras", "Porto Seguro",
+            "Simões Filho", "Paulo Afonso", "Eunápolis"
+          ]
+        }
+      ]
+    }
   };
 
   function getCountryDef(beh) {
     const raw =
       beh && (beh.country || beh.codCountry)
         ? beh.country || beh.codCountry
-        : "ma";
+        : "MA";
 
     const code = String(raw).toLowerCase();
     const def = COUNTRY_DATA[code] || COUNTRY_DATA.ma;
@@ -1422,7 +2013,7 @@ window.TripleformCOD = (function () {
       const city = getFieldValueByLabel("city");
 
       try {
-        // Construire l’URL avec query string
+        // Construire l'URL avec query string
         const url = new URL(geoEndpoint, window.location.origin);
         url.searchParams.set("country", geoCountryAttr || "");
         url.searchParams.set("province", province || "");
