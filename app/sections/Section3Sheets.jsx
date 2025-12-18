@@ -567,52 +567,9 @@ function SheetConfigSection({
   onTest,
   onOpen,
   isConnected,
-  sheetType
+  isLoading
 }) {
   const { t } = useI18n();
-  
-  // Fonction pour obtenir la liste des feuilles disponibles
-  const [availableSheets, setAvailableSheets] = useState([]);
-  const [loadingSheets, setLoadingSheets] = useState(false);
-
-  const loadAvailableSheets = async () => {
-    if (!sheetConfig.spreadsheetId || !isConnected) return;
-    
-    setLoadingSheets(true);
-    try {
-      const res = await fetch(`/api/google-sheets/list-tabs?spreadsheetId=${encodeURIComponent(sheetConfig.spreadsheetId)}`, {
-        credentials: "include"
-      });
-      
-      if (res.ok) {
-        const data = await res.json();
-        if (data.ok && data.sheets) {
-          setAvailableSheets(data.sheets);
-        }
-      }
-    } catch (error) {
-      console.error("Erreur lors du chargement des feuilles:", error);
-    } finally {
-      setLoadingSheets(false);
-    }
-  };
-
-  // Charger les feuilles disponibles lorsque l'ID du spreadsheet change
-  useEffect(() => {
-    if (sheetConfig.spreadsheetId && isConnected) {
-      loadAvailableSheets();
-    } else {
-      setAvailableSheets([]);
-    }
-  }, [sheetConfig.spreadsheetId, isConnected]);
-
-  const options = [
-    { label: t("section3.sheetsConfiguration.selectSheet"), value: "" },
-    ...availableSheets.map(sheet => ({
-      label: sheet,
-      value: sheet
-    }))
-  ];
 
   return (
     <div className="tf-sheet-config">
@@ -625,30 +582,18 @@ function SheetConfigSection({
           onChange={(value) => onConfigChange({ ...sheetConfig, spreadsheetId: value })}
           placeholder="1ABC123xyz..."
           autoComplete="off"
-          disabled={!isConnected}
+          disabled={!isConnected || isLoading}
         />
         
-        {/* Sélecteur de feuille avec option de rechargement */}
-        <InlineStack gap="200" blockAlign="end">
-          <div style={{ flex: 1 }}>
-            <Select
-              label={t("section3.sheetsConfiguration.tabName")}
-              helpText={t("section3.sheetsConfiguration.tabNameHelp")}
-              options={options}
-              value={sheetConfig.tabName || ""}
-              onChange={(value) => onConfigChange({ ...sheetConfig, tabName: value })}
-              disabled={!isConnected || !sheetConfig.spreadsheetId || loadingSheets}
-            />
-          </div>
-          <Button
-            size="slim"
-            onClick={loadAvailableSheets}
-            loading={loadingSheets}
-            disabled={!isConnected || !sheetConfig.spreadsheetId}
-          >
-            {t("section3.sheetsConfiguration.refreshSheets")}
-          </Button>
-        </InlineStack>
+        <TextField
+          label={t("section3.sheetsConfiguration.tabName")}
+          helpText={t("section3.sheetsConfiguration.tabNameHelp")}
+          value={sheetConfig.tabName || ""}
+          onChange={(value) => onConfigChange({ ...sheetConfig, tabName: value })}
+          placeholder="Orders"
+          autoComplete="off"
+          disabled={!isConnected || isLoading}
+        />
         
         <RangeSlider
           label={`${t("section3.sheetsConfiguration.headerRow")} (${sheetConfig.headerRowIndex || 1})`}
@@ -658,21 +603,22 @@ function SheetConfigSection({
           output
           value={sheetConfig.headerRowIndex || 1}
           onChange={(value) => onConfigChange({ ...sheetConfig, headerRowIndex: value })}
-          disabled={!isConnected}
+          disabled={!isConnected || isLoading}
         />
         
         <InlineStack gap="200">
           <Button
             variant="primary"
             onClick={onTest}
-            disabled={!isConnected || !sheetConfig.spreadsheetId}
+            disabled={!isConnected || !sheetConfig.spreadsheetId || isLoading}
+            loading={isLoading}
           >
             {t("section3.sheetsConfiguration.testConnection")}
           </Button>
           
           <Button
             onClick={onOpen}
-            disabled={!isConnected || !sheetConfig.spreadsheetId}
+            disabled={!isConnected || !sheetConfig.spreadsheetId || isLoading}
           >
             {t("section3.sheetsConfiguration.openSheet")}
           </Button>
@@ -718,6 +664,7 @@ export default function Section3Sheets() {
   });
 
   const [saving, setSaving] = useState(false);
+  const [testing, setTesting] = useState(false);
 
   // Tabs pour basculer entre commandes normales et abandonnées dans la vue "sheets"
   const [sheetTab, setSheetTab] = useState(0);
@@ -745,25 +692,7 @@ export default function Section3Sheets() {
         console.log("Connexion Google réussie pour:", event.data.email);
         
         // Rafraîchir le statut Google
-        fetch("/api/google/status", {
-          credentials: "include"
-        })
-        .then(r => r.json())
-        .then(j => {
-          setGoogleStatus({
-            loading: false,
-            connected: !!j.connected,
-            accountEmail: j.accountEmail || null,
-            mainSheetName: j.mainSheetName || null,
-            abandonedSheetName: j.abandonedSheetName || null,
-          });
-          
-          // Afficher un message de succès
-          alert(t("section3.connection.success"));
-        })
-        .catch((e) => {
-          console.error("Erreur lors du rafraîchissement du statut Google:", e);
-        });
+        fetchGoogleStatus();
       }
       else if (event.data && event.data.type === 'GOOGLE_OAUTH_ERROR') {
         console.error("Erreur Google OAuth:", event.data.error);
@@ -774,6 +703,27 @@ export default function Section3Sheets() {
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
   }, []);
+
+  // Fonction pour rafraîchir le statut Google
+  const fetchGoogleStatus = async () => {
+    try {
+      const r = await fetch("/api/google/status", {
+        credentials: "include",
+      });
+      const j = await r.json().catch(() => null);
+      if (!r.ok || !j) throw new Error("bad status");
+      setGoogleStatus({
+        loading: false,
+        connected: !!j.connected,
+        accountEmail: j.accountEmail || null,
+        mainSheetName: j.mainSheetName || j.sheetName || null,
+        abandonedSheetName: j.abandonedSheetName || null,
+      });
+    } catch (e) {
+      console.error("google/status error", e);
+      setGoogleStatus(prev => ({ ...prev, loading: false }));
+    }
+  };
 
   useEffect(() => {
     (async () => {
@@ -793,25 +743,7 @@ export default function Section3Sheets() {
   }, []);
 
   useEffect(() => {
-    (async () => {
-      try {
-        const r = await fetch("/api/google/status", {
-          credentials: "include",
-        });
-        const j = await r.json().catch(() => null);
-        if (!r.ok || !j) throw new Error("bad status");
-        setGoogleStatus({
-          loading: false,
-          connected: !!j.connected,
-          accountEmail: j.accountEmail || null,
-          mainSheetName: j.mainSheetName || j.sheetName || null,
-          abandonedSheetName: j.abandonedSheetName || null,
-        });
-      } catch (e) {
-        console.error("google/status error", e);
-        setGoogleStatus((prev) => ({ ...prev, loading: false }));
-      }
-    })();
+    fetchGoogleStatus();
   }, []);
 
   async function loadDashboard() {
@@ -959,35 +891,6 @@ export default function Section3Sheets() {
         }
       }, 1000);
 
-      const checkPopup = setInterval(() => {
-        if (popup.closed) {
-          clearInterval(checkPopup);
-          
-          setTimeout(() => {
-            fetch("/api/google/status", {
-              credentials: "include"
-            })
-            .then(r => r.json())
-            .then(j => {
-              setGoogleStatus({
-                loading: false,
-                connected: !!j.connected,
-                accountEmail: j.accountEmail || null,
-                mainSheetName: j.mainSheetName || null,
-                abandonedSheetName: j.abandonedSheetName || null,
-              });
-              
-              if (j.connected) {
-                alert(t("section3.connection.success"));
-              }
-            })
-            .catch((e) => {
-              console.error("Erreur lors du rafraîchissement du statut Google:", e);
-            });
-          }, 1000);
-        }
-      }, 500);
-
     } catch (error) {
       console.error("Erreur lors de la connexion Google:", error);
       alert(t("section3.connection.error", { error: error.message }));
@@ -995,7 +898,16 @@ export default function Section3Sheets() {
   };
 
   const testSheetConnection = async (sheet, kind) => {
+    setTesting(true);
     try {
+      // Rafraîchir d'abord le statut Google
+      await fetchGoogleStatus();
+      
+      if (!googleStatus.connected) {
+        alert(t("section3.connection.notConnected"));
+        return;
+      }
+
       const res = await fetch("/api/google-sheets/test", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -1010,6 +922,8 @@ export default function Section3Sheets() {
       }
     } catch (e) {
       alert(t("section3.sheetsConfiguration.testError", { error: e.message }));
+    } finally {
+      setTesting(false);
     }
   };
 
@@ -1499,12 +1413,20 @@ export default function Section3Sheets() {
                           </Button>
 
                           {googleStatus.connected && (
-                            <Button
-                              tone="critical"
-                              onClick={disconnectGoogle}
-                            >
-                              {t("section3.sheetsConfiguration.disconnect")}
-                            </Button>
+                            <>
+                              <Button
+                                onClick={fetchGoogleStatus}
+                                disabled={googleStatus.loading}
+                              >
+                                {t("section3.connection.refresh")}
+                              </Button>
+                              <Button
+                                tone="critical"
+                                onClick={disconnectGoogle}
+                              >
+                                {t("section3.sheetsConfiguration.disconnect")}
+                              </Button>
+                            </>
                           )}
                         </InlineStack>
                       </>
@@ -1530,7 +1452,7 @@ export default function Section3Sheets() {
                           onTest={() => testSheetConnection(cfg.sheet, "orders")}
                           onOpen={() => openSheet(cfg.sheet.spreadsheetId)}
                           isConnected={googleStatus.connected}
-                          sheetType="orders"
+                          isLoading={testing}
                         />
                       </div>
                     )}
@@ -1546,7 +1468,7 @@ export default function Section3Sheets() {
                           onTest={() => testSheetConnection(cfg.abandonedSheet, "abandons")}
                           onOpen={() => openSheet(cfg.abandonedSheet.spreadsheetId)}
                           isConnected={googleStatus.connected}
-                          sheetType="abandoned"
+                          isLoading={testing}
                         />
                       </div>
                     )}
@@ -1885,12 +1807,20 @@ export default function Section3Sheets() {
                           </Button>
 
                           {googleStatus.connected && (
-                            <Button
-                              tone="critical"
-                              onClick={disconnectGoogle}
-                            >
-                              {t("section3.sheetsConfiguration.disconnect")}
-                            </Button>
+                            <>
+                              <Button
+                                onClick={fetchGoogleStatus}
+                                disabled={googleStatus.loading}
+                              >
+                                {t("section3.connection.refresh")}
+                              </Button>
+                              <Button
+                                tone="critical"
+                                onClick={disconnectGoogle}
+                              >
+                                {t("section3.sheetsConfiguration.disconnect")}
+                              </Button>
+                            </>
                           )}
                         </InlineStack>
                       </>
