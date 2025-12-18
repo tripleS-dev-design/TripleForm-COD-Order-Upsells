@@ -8,7 +8,12 @@ const GOOGLE_OAUTH_REDIRECT_URL = process.env.GOOGLE_OAUTH_REDIRECT_URL;
 const GOOGLE_AUTH_BASE = "https://accounts.google.com/o/oauth2/v2/auth";
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
 const GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v2/userinfo";
-const SHEETS_SCOPE = "https://www.googleapis.com/auth/spreadsheets";
+
+// ✅ Scopes corrigés pour Sheets + email
+const SHEETS_SCOPES = [
+  "https://www.googleapis.com/auth/spreadsheets",
+  "https://www.googleapis.com/auth/userinfo.email"
+].join(" ");
 
 // ---------- helpers state (shop + target dans l’URL Google) ----------
 function encodeState(payload) {
@@ -38,7 +43,7 @@ export function buildGoogleAuthUrl({ shop, target = "orders" }) {
     client_id: GOOGLE_CLIENT_ID || "",
     redirect_uri: GOOGLE_OAUTH_REDIRECT_URL || "",
     response_type: "code",
-    scope: SHEETS_SCOPE,
+    scope: SHEETS_SCOPES,
     access_type: "offline",
     prompt: "consent",
     include_granted_scopes: "true",
@@ -114,15 +119,13 @@ async function fetchGoogleUser(accessToken) {
 // ---------- enregistrer / mettre à jour le compte Google pour une boutique ----------
 async function upsertGoogleAccountForShop(shop, tokens, user) {
   const expiresIn = tokens.expires_in ? Number(tokens.expires_in) : null;
-  const expiryDate = expiresIn
-    ? new Date(Date.now() + expiresIn * 1000)
-    : null;
+  const expiryDate = expiresIn ? new Date(Date.now() + expiresIn * 1000) : null;
 
   const baseUpdate = {
     googleUserId: user.id || user.sub || null,
     googleEmail: user.email || null,
     accessToken: tokens.access_token || null,
-    scope: tokens.scope || SHEETS_SCOPE,
+    scope: tokens.scope || SHEETS_SCOPES,
     tokenType: tokens.token_type || "Bearer",
     tokenExpiryDate: expiryDate,
   };
@@ -215,19 +218,13 @@ export async function ensureValidAccessToken(shop) {
   }
 
   const now = Date.now();
-  const expiryMs = row.tokenExpiryDate
-    ? row.tokenExpiryDate.getTime()
-    : null;
+  const expiryMs = row.tokenExpiryDate ? row.tokenExpiryDate.getTime() : null;
 
   if (expiryMs && expiryMs - 60_000 < now && row.refreshToken) {
     const newTokens = await refreshAccessToken(row.refreshToken);
 
-    const expiresIn = newTokens.expires_in
-      ? Number(newTokens.expires_in)
-      : null;
-    const newExpiry = expiresIn
-      ? new Date(Date.now() + expiresIn * 1000)
-      : null;
+    const expiresIn = newTokens.expires_in ? Number(newTokens.expires_in) : null;
+    const newExpiry = expiresIn ? new Date(Date.now() + expiresIn * 1000) : null;
 
     const updated = await prisma.shopGoogleSettings.update({
       where: { shopDomain: shop },
@@ -313,4 +310,3 @@ export async function handleGoogleCallback(code, rawState) {
 
   return { shop, target, userEmail: user.email || null };
 }
-
