@@ -924,8 +924,10 @@ const EN = {
 "section3.connection.error": "Connection error: {error}",
 "section3.connection.popupBlocked": "The popup was blocked. Please allow popups for this site.",
 "section3.connection.popupBlockedAfterOpen": "The popup was closed or blocked. Please try again.",
-
-// Section 4 — Pixels & Tracking
+"section3.sheetsConfiguration.selectSpreadsheet": "Select spreadsheet",
+"section3.sheetsConfiguration.selectSpreadsheetHelp": "Choose the Google Sheets spreadsheet to use",
+"section3.sheetsConfiguration.selectTab": "Select tab",
+"section3.sheetsConfiguration.selectTabHelp": "Choose the tab in the spreadsheet",// Section 4 — Pixels & Tracking
 "section4.header.appTitle": "TripleForm COD · Pixels & Suivi",
 "section4.header.appSubtitle": "Connecte Google, Facebook (Pixel & Conversions API) et TikTok pour suivre tes commandes COD.",
 "section4.header.pill": "Pixels & tracking hub",
@@ -1257,6 +1259,8 @@ const EN = {
 "section6.guide.step3": "3. Configure rates: add provinces/cities with fees, or create price brackets (0-299 = X, 300+ = free).",
 "section6.guide.step4": "4. Use advanced options for default rate, free threshold, min order, COD extra fee.",
 "section6.guide.step5": "5. Save → rates will be calculated automatically in your COD form.",
+
+
 };
 
 /* ========================================================================
@@ -2164,6 +2168,10 @@ const FR = {
 "section3.connection.error": "Erreur de connexion : {error}",
 "section3.connection.popupBlocked": "La fenêtre popup a été bloquée. Veuillez autoriser les popups pour ce site.",
 "section3.connection.popupBlockedAfterOpen": "La fenêtre popup a été fermée ou bloquée. Veuillez réessayer.",
+"section3.sheetsConfiguration.selectSpreadsheet": "Sélectionner une feuille",
+"section3.sheetsConfiguration.selectSpreadsheetHelp": "Choisissez la feuille Google Sheets à utiliser",
+"section3.sheetsConfiguration.selectTab": "Sélectionner un onglet",
+"section3.sheetsConfiguration.selectTabHelp": "Choisissez l'onglet dans la feuille",
 // Section 4 — Pixels & Tracking
 "section4.header.appTitle": "TripleForm COD · Pixels & Tracking",
 "section4.header.appSubtitle": "Connecte Google, Facebook (Pixel & Conversions API) et TikTok pour suivre tes commandes COD.",
@@ -3414,7 +3422,10 @@ const ES = {
 "section3.connection.error": "Error de conexión: {error}",
 "section3.connection.popupBlocked": "La ventana emergente fue bloqueada. Por favor permite las ventanas emergentes para este sitio.",
 "section3.connection.popupBlockedAfterOpen": "La ventana emergente fue cerrada o bloqueada. Por favor intenta de nuevo.",
-
+"section3.sheetsConfiguration.selectSpreadsheet": "Seleccionar hoja",
+"section3.sheetsConfiguration.selectSpreadsheetHelp": "Elige la hoja de Google Sheets a utilizar",
+"section3.sheetsConfiguration.selectTab": "Seleccionar pestaña",
+"section3.sheetsConfiguration.selectTabHelp": "Elige la pestaña en la hoja",
 // Section 4 — Pixels & Tracking
 "section4.header.appTitle": "TripleForm COD · Píxeles y Seguimiento",
 "section4.header.appSubtitle": "Conecta Google, Facebook (Pixel y Conversions API) y TikTok para rastrear tus pedidos COD.",
@@ -4663,7 +4674,10 @@ const AR = {
 "section3.connection.error": "خطأ في الاتصال: {error}",
 "section3.connection.popupBlocked": "تم حظر النافذة المنبثقة. يرجى السماح بالنوافذ المنبثقة لهذا الموقع.",
 "section3.connection.popupBlockedAfterOpen": "تم إغلاق النافذة المنبثقة أو حظرها. يرجى المحاولة مرة أخرى.",
-
+"section3.sheetsConfiguration.selectSpreadsheet": "اختر جدول البيانات",
+"section3.sheetsConfiguration.selectSpreadsheetHelp": "اختر جدول بيانات جوجل للاستخدام",
+"section3.sheetsConfiguration.selectTab": "اختر علامة تبويب",
+"section3.sheetsConfiguration.selectTabHelp": "اختر علامة التبويب في جدول البيانات",
 // Section 4 — Pixels & Tracking
 "section4.header.appTitle": "TripleForm COD · بكسلز وتتبع",
 "section4.header.appSubtitle": "اتصل بـ Google و Facebook (Pixel و Conversions API) و TikTok لتتبع طلبات COD الخاصة بك.",
