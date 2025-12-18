@@ -194,14 +194,71 @@ export async function ensureValidAccessToken(shop) {
   return row.accessToken; // ← Token encore valide
 }
 
-// ---------- test connexion feuille ----------
+// ---------- statut simplifié pour le front (UI Section3) ----------
+export async function getGoogleStatusForShop(shop) {
+  const row = await getGoogleSettingsForShop(shop);
+  if (!row) {
+    return {
+      connected: false,
+      accountEmail: null,
+      mainSheetName: null,
+      abandonedSheetName: null,
+    };
+  }
+
+  let cfg = null;
+  try {
+    cfg = row.sheetsConfigJson ? JSON.parse(row.sheetsConfigJson) : null;
+  } catch {
+    cfg = null;
+  }
+
+  const mainSheetName = cfg?.sheet?.tabName || null;
+  const abandonedSheetName = cfg?.abandonedSheet?.tabName || null;
+
+  return {
+    connected: !!row.accessToken,
+    accountEmail: row.googleEmail || null,
+    mainSheetName,
+    abandonedSheetName,
+  };
+}
+
+// ---------- config Sheets (cfg) ----------
+export async function getSheetsConfigForShop(shop) {
+  const row = await getGoogleSettingsForShop(shop);
+  if (!row?.sheetsConfigJson) return null;
+  try {
+    return JSON.parse(row.sheetsConfigJson);
+  } catch (e) {
+    console.warn("[Sheets] JSON invalide pour", shop, e);
+    return null;
+  }
+}
+
+export async function saveSheetsConfigForShop(shop, cfg) {
+  const json = JSON.stringify(cfg || {});
+  return prisma.shopGoogleSettings.upsert({
+    where: { shopDomain: shop },
+    create: {
+      shopDomain: shop,
+      sheetsConfigJson: json,
+    },
+    update: {
+      sheetsConfigJson: json,
+    },
+  });
+}
+
+// ---------- test connexion feuille (VERSION CORRIGÉE) ----------
 export async function testSheetConnection(shop, sheet) {
   if (!sheet?.spreadsheetId) {
     throw new Error("Spreadsheet ID manquant");
   }
 
-  const settings = await ensureValidAccessToken(shop);
-  const accessToken = settings.accessToken;
+  // CORRECTION : ensureValidAccessToken retourne DIRECTEMENT le token string
+  const accessToken = await ensureValidAccessToken(shop);
+  
   if (!accessToken) {
     throw new Error("Aucun token Google valide pour cette boutique");
   }
@@ -262,3 +319,15 @@ export async function handleGoogleCallback(code, rawState) {
 
   return { shop, target, userEmail: user.email || null };
 }
+
+// ---------- EXPORTS ----------
+export {
+  buildGoogleAuthUrl,
+  getGoogleSettingsForShop,
+  getSheetsConfigForShop,
+  saveSheetsConfigForShop,
+  getGoogleStatusForShop,
+  ensureValidAccessToken,
+  testSheetConnection,
+  handleGoogleCallback,
+};
