@@ -302,23 +302,48 @@ async function upsertGoogleAccountForShop(shop, tokens, user) {
   };
 }
 
-// ---------- callback Google (après OAuth) ----------
-async function handleGoogleCallback(code, rawState) {
+// ---------- callback Google (VERSION FINALE CORRIGÉE) ----------
+export async function handleGoogleCallback(code, rawState) {
+  // 1️⃣ Décoder le state
   const state = decodeState(rawState);
+
   if (!state || !state.shop) {
-    throw new Error("State Google invalide ou manquant");
+    console.error("[Google OAuth] State invalide:", rawState);
+    throw new Error("State Google invalide ou shop manquant");
   }
 
   const shop = state.shop;
   const target = state.target || "orders";
 
+  // 2️⃣ Échange code → tokens Google
   const tokens = await exchangeCodeForTokens(code);
+
+  if (!tokens?.access_token) {
+    throw new Error("Access token Google manquant");
+  }
+
+  // 3️⃣ Récupérer l’utilisateur Google (email)
   const user = await fetchGoogleUser(tokens.access_token);
 
+  if (!user?.email) {
+    throw new Error("Impossible de récupérer l’email Google");
+  }
+
+  // 4️⃣ Sauvegarde / mise à jour en DB (ShopGoogleSettings)
   await upsertGoogleAccountForShop(shop, tokens, user);
 
-  return { shop, target, userEmail: user.email || null };
+  console.log(
+    `[Google OAuth] Connexion réussie : shop=${shop}, email=${user.email}`
+  );
+
+  // 5️⃣ Retour utilisé par api.google.callback.jsx
+  return {
+    shop,
+    target,
+    userEmail: user.email,
+  };
 }
+
 
 // ---------- EXPORTS ----------
 export {

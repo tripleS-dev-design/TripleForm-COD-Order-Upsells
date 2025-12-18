@@ -567,7 +567,11 @@ function SheetConfigSection({
   onTest,
   onOpen,
   isConnected,
-  isLoading
+  isLoading,
+  googleSpreadsheets,
+  availableTabs,
+  loadingSpreadsheets,
+  loadingTabs
 }) {
   const { t } = useI18n();
 
@@ -575,26 +579,46 @@ function SheetConfigSection({
     <div className="tf-sheet-config">
       <Text variant="headingMd" fontWeight="bold">{t(title)}</Text>
       <BlockStack gap="300" marginBlockStart="300">
-        <TextField
-          label={t("section3.sheetsConfiguration.spreadsheetId")}
-          helpText={t("section3.sheetsConfiguration.spreadsheetIdHelp")}
+        {/* Sélection du Google Spreadsheet */}
+        <Select
+          label={t("section3.sheetsConfiguration.selectSpreadsheet")}
+          helpText={t("section3.sheetsConfiguration.selectSpreadsheetHelp")}
+          options={[
+            { label: t("section3.sheetsConfiguration.chooseSpreadsheet"), value: "" },
+            ...googleSpreadsheets.map(sheet => ({
+              label: sheet.name,
+              value: sheet.id
+            }))
+          ]}
           value={sheetConfig.spreadsheetId || ""}
-          onChange={(value) => onConfigChange({ ...sheetConfig, spreadsheetId: value })}
-          placeholder="1ABC123xyz..."
-          autoComplete="off"
-          disabled={!isConnected || isLoading}
+          onChange={(value) => {
+            const newConfig = { ...sheetConfig, spreadsheetId: value };
+            onConfigChange(newConfig);
+            // Si une valeur est sélectionnée, on peut charger les onglets
+            // Cette fonction sera passée depuis le parent
+          }}
+          disabled={!isConnected || isLoading || loadingSpreadsheets}
         />
-        
-        <TextField
-          label={t("section3.sheetsConfiguration.tabName")}
-          helpText={t("section3.sheetsConfiguration.tabNameHelp")}
-          value={sheetConfig.tabName || ""}
-          onChange={(value) => onConfigChange({ ...sheetConfig, tabName: value })}
-          placeholder="Orders"
-          autoComplete="off"
-          disabled={!isConnected || isLoading}
-        />
-        
+
+        {/* Sélection de l'onglet si un spreadsheet est sélectionné */}
+        {sheetConfig.spreadsheetId && (
+          <Select
+            label={t("section3.sheetsConfiguration.selectTab")}
+            helpText={t("section3.sheetsConfiguration.selectTabHelp")}
+            options={[
+              { label: t("section3.sheetsConfiguration.chooseTab"), value: "" },
+              ...availableTabs.map(tab => ({
+                label: tab.name,
+                value: tab.name
+              }))
+            ]}
+            value={sheetConfig.tabName || ""}
+            onChange={(value) => onConfigChange({ ...sheetConfig, tabName: value })}
+            disabled={!isConnected || isLoading || loadingTabs}
+          />
+        )}
+
+        {/* Configuration de la ligne d'en-tête */}
         <RangeSlider
           label={`${t("section3.sheetsConfiguration.headerRow")} (${sheetConfig.headerRowIndex || 1})`}
           helpText={t("section3.sheetsConfiguration.headerRowHelp")}
@@ -663,6 +687,12 @@ export default function Section3Sheets() {
     abandonedSheetName: null,
   });
 
+  // 🔥 NOUVEAUX ÉTATS POUR LES SPREADSHEETS ET ONGLETS
+  const [googleSpreadsheets, setGoogleSpreadsheets] = useState([]);
+  const [loadingSpreadsheets, setLoadingSpreadsheets] = useState(false);
+  const [availableTabs, setAvailableTabs] = useState([]);
+  const [loadingTabs, setLoadingTabs] = useState(false);
+
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
 
@@ -693,6 +723,8 @@ export default function Section3Sheets() {
         
         // Rafraîchir le statut Google
         fetchGoogleStatus();
+        // Recharger la liste des spreadsheets
+        loadGoogleSpreadsheets();
       }
       else if (event.data && event.data.type === 'GOOGLE_OAUTH_ERROR') {
         console.error("Erreur Google OAuth:", event.data.error);
@@ -725,24 +757,75 @@ export default function Section3Sheets() {
     }
   };
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const res = await fetch("/api/load-sheets", { credentials: "include" });
-        const j = await res.json().catch(() => null);
-        if (j?.ok && j.sheets) {
-          setCfg((prev) => ({
+  // Fonction pour charger les Google Sheets disponibles
+  const loadGoogleSpreadsheets = async () => {
+    setLoadingSpreadsheets(true);
+    try {
+      const res = await fetch("/api/load-sheets", { credentials: "include" });
+      const data = await res.json();
+      
+      if (data.ok) {
+        // 1️⃣ Charger la liste des spreadsheets
+        setGoogleSpreadsheets(data.spreadsheets || []);
+        
+        // 2️⃣ Charger la config existante si elle existe
+        if (data.config) {
+          setCfg(prev => ({
             ...prev,
-            ...j.sheets,
+            ...data.config
+          }));
+          
+          // Si un spreadsheet est configuré, charger ses onglets
+          if (data.config.sheet?.spreadsheetId) {
+            loadSpreadsheetTabs(data.config.sheet.spreadsheetId);
+          }
+        }
+      } else {
+        console.error("Erreur /api/load-sheets:", data.error);
+      }
+    } catch (error) {
+      console.error("Erreur lors du chargement des sheets:", error);
+    } finally {
+      setLoadingSpreadsheets(false);
+    }
+  };
+
+  // Fonction pour charger les onglets d'un spreadsheet
+  const loadSpreadsheetTabs = async (spreadsheetId) => {
+    if (!spreadsheetId) return;
+    
+    setLoadingTabs(true);
+    try {
+      const res = await fetch(`/api/google-sheets/tabs?spreadsheetId=${encodeURIComponent(spreadsheetId)}`, {
+        credentials: "include"
+      });
+      const data = await res.json();
+      
+      if (data.ok && data.tabs) {
+        setAvailableTabs(data.tabs);
+        
+        // Si aucun onglet n'est sélectionné, choisir le premier
+        if (!cfg.sheet.tabName && data.tabs.length > 0) {
+          setCfg(prev => ({
+            ...prev,
+            sheet: {
+              ...prev.sheet,
+              tabName: data.tabs[0].name
+            }
           }));
         }
-      } catch (e) {
-        console.error("Erreur load-sheets (front):", e);
       }
-    })();
-  }, []);
+    } catch (error) {
+      console.error("Erreur lors du chargement des onglets:", error);
+      setAvailableTabs([]);
+    } finally {
+      setLoadingTabs(false);
+    }
+  };
 
+  // Charger les spreadsheets au montage
   useEffect(() => {
+    loadGoogleSpreadsheets();
     fetchGoogleStatus();
   }, []);
 
@@ -885,11 +968,17 @@ export default function Section3Sheets() {
         return;
       }
       
-      setTimeout(() => {
-        if (popup.closed || popup.innerHeight === 0) {
-          alert(t("section3.connection.popupBlockedAfterOpen"));
+      // Vérifier si la popup a été bloquée
+      const popupCheck = setInterval(() => {
+        if (popup.closed) {
+          clearInterval(popupCheck);
+          // Après fermeture de la popup, rafraîchir le statut et les sheets
+          setTimeout(() => {
+            fetchGoogleStatus();
+            loadGoogleSpreadsheets();
+          }, 1000);
         }
-      }, 1000);
+      }, 500);
 
     } catch (error) {
       console.error("Erreur lors de la connexion Google:", error);
@@ -953,6 +1042,10 @@ export default function Section3Sheets() {
           mainSheetName: null,
           abandonedSheetName: null
         });
+        
+        // Vider la liste des spreadsheets
+        setGoogleSpreadsheets([]);
+        setAvailableTabs([]);
         
         alert(t("section3.sheetsConfiguration.disconnected"));
       } catch (error) {
@@ -1446,13 +1539,21 @@ export default function Section3Sheets() {
                         <SheetConfigSection
                           title="section3.sheetsConfiguration.ordersSheet"
                           sheetConfig={cfg.sheet}
-                          onConfigChange={(newSheetConfig) =>
-                            setCfg((c) => ({ ...c, sheet: newSheetConfig }))
-                          }
+                          onConfigChange={(newSheetConfig) => {
+                            setCfg((c) => ({ ...c, sheet: newSheetConfig }));
+                            // Si le spreadsheet change, charger les onglets
+                            if (newSheetConfig.spreadsheetId && newSheetConfig.spreadsheetId !== cfg.sheet.spreadsheetId) {
+                              loadSpreadsheetTabs(newSheetConfig.spreadsheetId);
+                            }
+                          }}
                           onTest={() => testSheetConnection(cfg.sheet, "orders")}
                           onOpen={() => openSheet(cfg.sheet.spreadsheetId)}
                           isConnected={googleStatus.connected}
                           isLoading={testing}
+                          googleSpreadsheets={googleSpreadsheets}
+                          availableTabs={availableTabs}
+                          loadingSpreadsheets={loadingSpreadsheets}
+                          loadingTabs={loadingTabs}
                         />
                       </div>
                     )}
@@ -1462,13 +1563,23 @@ export default function Section3Sheets() {
                         <SheetConfigSection
                           title="section3.sheetsConfiguration.abandonedSheet"
                           sheetConfig={cfg.abandonedSheet}
-                          onConfigChange={(newSheetConfig) =>
-                            setCfg((c) => ({ ...c, abandonedSheet: newSheetConfig }))
-                          }
+                          onConfigChange={(newSheetConfig) => {
+                            setCfg((c) => ({ ...c, abandonedSheet: newSheetConfig }));
+                            // Si le spreadsheet change, charger les onglets
+                            if (newSheetConfig.spreadsheetId && newSheetConfig.spreadsheetId !== cfg.abandonedSheet.spreadsheetId) {
+                              // Pour la feuille abandonnée, on pourrait aussi charger les onglets
+                              // Mais pour l'instant, on utilise la même fonction
+                              loadSpreadsheetTabs(newSheetConfig.spreadsheetId);
+                            }
+                          }}
                           onTest={() => testSheetConnection(cfg.abandonedSheet, "abandons")}
                           onOpen={() => openSheet(cfg.abandonedSheet.spreadsheetId)}
                           isConnected={googleStatus.connected}
                           isLoading={testing}
+                          googleSpreadsheets={googleSpreadsheets}
+                          availableTabs={availableTabs}
+                          loadingSpreadsheets={loadingSpreadsheets}
+                          loadingTabs={loadingTabs}
                         />
                       </div>
                     )}
