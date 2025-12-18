@@ -147,7 +147,7 @@ async function upsertGoogleAccountForShop(shop, tokens, user) {
 }
 
 // ---------- lecture des settings Google ----------
-export async function getGoogleSettingsForShop(shop) {
+ async function getGoogleSettingsForShop(shop) {
   if (!shop) return null;
   return prisma.shopGoogleSettings.findUnique({
     where: { shopDomain: shop },
@@ -155,7 +155,7 @@ export async function getGoogleSettingsForShop(shop) {
 }
 
 // ---------- config Sheets (cfg) ----------
-export async function ensureValidAccessToken(shop) {
+ async function ensureValidAccessToken(shop) {
   const row = await getGoogleSettingsForShop(shop);
   
   if (!row || !row.accessToken) {
@@ -195,7 +195,7 @@ export async function ensureValidAccessToken(shop) {
 }
 
 // ---------- statut simplifié pour le front (UI Section3) ----------
-export async function getGoogleStatusForShop(shop) {
+ async function getGoogleStatusForShop(shop) {
   const row = await getGoogleSettingsForShop(shop);
   if (!row) {
     return {
@@ -225,7 +225,7 @@ export async function getGoogleStatusForShop(shop) {
 }
 
 // ---------- config Sheets (cfg) ----------
-export async function getSheetsConfigForShop(shop) {
+ async function getSheetsConfigForShop(shop) {
   const row = await getGoogleSettingsForShop(shop);
   if (!row?.sheetsConfigJson) return null;
   try {
@@ -236,7 +236,7 @@ export async function getSheetsConfigForShop(shop) {
   }
 }
 
-export async function saveSheetsConfigForShop(shop, cfg) {
+ async function saveSheetsConfigForShop(shop, cfg) {
   const json = JSON.stringify(cfg || {});
   return prisma.shopGoogleSettings.upsert({
     where: { shopDomain: shop },
@@ -251,7 +251,7 @@ export async function saveSheetsConfigForShop(shop, cfg) {
 }
 
 // ---------- test connexion feuille (VERSION CORRIGÉE) ----------
-export async function testSheetConnection(shop, sheet) {
+ async function testSheetConnection(shop, sheet) {
   if (!sheet?.spreadsheetId) {
     throw new Error("Spreadsheet ID manquant");
   }
@@ -303,7 +303,7 @@ export async function testSheetConnection(shop, sheet) {
 }
 
 // ---------- callback Google (après OAuth) ----------
-export async function handleGoogleCallback(code, rawState) {
+async function handleGoogleCallback(code, rawState) {
   const state = decodeState(rawState);
   if (!state || !state.shop) {
     throw new Error("State Google invalide ou manquant");
