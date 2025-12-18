@@ -1,32 +1,26 @@
-// ===== File: app/routes/api.google-sheets.test.jsx =====
 import { json } from "@remix-run/node";
 import { authenticate } from "../shopify.server";
-import { testGoogleSheetsConnection } from "../utils/googleSheets.server";
-
-export const loader = () => {
-  return json({ ok: true, where: "api.google-sheets.test" });
-};
+import { testSheetConnection } from "../services/google.server";
 
 export const action = async ({ request }) => {
+  const { shop } = await authenticate.admin(request);
+  
   try {
-    const { session } = await authenticate.admin(request);
-    const shop = session.shop;
-
-    const body = await request.json().catch(() => ({}));
-    const sheet = body?.sheet || null;
-    const kind = body?.kind || "orders";
-
-    const result = await testGoogleSheetsConnection({ shop, sheet, kind });
-
-    return json({ ok: true, ...result });
-  } catch (e) {
-    console.error("Erreur /api/google-sheets/test:", e);
-    return json(
-      {
-        ok: false,
-        error: e?.message || String(e),
-      },
-      { status: 500 }
-    );
+    const body = await request.json();
+    const { sheet, kind } = body;
+    
+    const result = await testSheetConnection(shop, sheet);
+    
+    return json({
+      ok: true,
+      spreadsheetTitle: result.spreadsheetTitle,
+      tabChecked: result.tabChecked
+    });
+  } catch (error) {
+    console.error("Google Sheets test error:", error);
+    return json({
+      ok: false,
+      error: error.message || "Erreur de connexion à Google Sheets"
+    }, { status: 500 });
   }
 };

@@ -11,6 +11,7 @@ import {
   Button,
   RangeSlider,
   Badge,
+  Tabs,
 } from "@shopify/polaris";
 import { useI18n } from "../i18n/react";
 import PlanUsageWidget from "../components/PlanUsageWidget";
@@ -274,6 +275,18 @@ const LAYOUT_CSS = `
     line-height:1.5;
     margin:0 0 6px 0;
     white-space:normal;
+  }
+
+  .tf-sheet-config {
+    background:#f8fafc;
+    border:1px solid #e2e8f0;
+    border-radius:8px;
+    padding:16px;
+    margin-bottom:16px;
+  }
+
+  .tf-tabs {
+    margin-bottom:20px;
   }
 
   @media (max-width: 980px) {
@@ -546,6 +559,73 @@ function PageShell({ children, onSave, saving }) {
   );
 }
 
+// Composant pour la configuration d'une feuille Google Sheets
+function SheetConfigSection({ 
+  title, 
+  sheetConfig, 
+  onConfigChange,
+  onTest,
+  onOpen,
+  isConnected
+}) {
+  const { t } = useI18n();
+
+  return (
+    <div className="tf-sheet-config">
+      <Text variant="headingMd" fontWeight="bold">{t(title)}</Text>
+      <BlockStack gap="300" marginBlockStart="300">
+        <TextField
+          label={t("section3.sheetsConfiguration.spreadsheetId")}
+          helpText={t("section3.sheetsConfiguration.spreadsheetIdHelp")}
+          value={sheetConfig.spreadsheetId || ""}
+          onChange={(value) => onConfigChange({ ...sheetConfig, spreadsheetId: value })}
+          placeholder="1ABC123xyz..."
+          autoComplete="off"
+          disabled={!isConnected}
+        />
+        
+        <TextField
+          label={t("section3.sheetsConfiguration.tabName")}
+          helpText={t("section3.sheetsConfiguration.tabNameHelp")}
+          value={sheetConfig.tabName || ""}
+          onChange={(value) => onConfigChange({ ...sheetConfig, tabName: value })}
+          placeholder="Orders"
+          autoComplete="off"
+          disabled={!isConnected}
+        />
+        
+        <RangeSlider
+          label={`${t("section3.sheetsConfiguration.headerRow")} (${sheetConfig.headerRowIndex || 1})`}
+          helpText={t("section3.sheetsConfiguration.headerRowHelp")}
+          min={1}
+          max={10}
+          output
+          value={sheetConfig.headerRowIndex || 1}
+          onChange={(value) => onConfigChange({ ...sheetConfig, headerRowIndex: value })}
+          disabled={!isConnected}
+        />
+        
+        <InlineStack gap="200">
+          <Button
+            variant="primary"
+            onClick={onTest}
+            disabled={!isConnected || !sheetConfig.spreadsheetId}
+          >
+            {t("section3.sheetsConfiguration.testConnection")}
+          </Button>
+          
+          <Button
+            onClick={onOpen}
+            disabled={!isConnected || !sheetConfig.spreadsheetId}
+          >
+            {t("section3.sheetsConfiguration.openSheet")}
+          </Button>
+        </InlineStack>
+      </BlockStack>
+    </div>
+  );
+}
+
 export default function Section3Sheets() {
   const { t } = useI18n();
   useInjectCss();
@@ -582,6 +662,23 @@ export default function Section3Sheets() {
   });
 
   const [saving, setSaving] = useState(false);
+
+  // Tabs pour basculer entre commandes normales et abandonnées dans la vue "sheets"
+  const [sheetTab, setSheetTab] = useState(0);
+  const sheetTabs = [
+    {
+      id: 'orders',
+      content: t('section3.sheetsTabs.orders'),
+      accessibilityLabel: t('section3.sheetsTabs.orders'),
+      panelID: 'orders-panel',
+    },
+    {
+      id: 'abandoned',
+      content: t('section3.sheetsTabs.abandoned'),
+      accessibilityLabel: t('section3.sheetsTabs.abandoned'),
+      panelID: 'abandoned-panel',
+    },
+  ];
 
   // Écoute les messages de la popup Google OAuth
   useEffect(() => {
@@ -760,7 +857,6 @@ export default function Section3Sheets() {
     try {
       console.log("Début de la connexion Google pour target:", target);
       
-      // 1. Appeler l'API pour obtenir l'URL Google OAuth
       const response = await fetch(
         `/api/google/connect?target=${encodeURIComponent(target || "orders")}`,
         {
@@ -777,7 +873,6 @@ export default function Section3Sheets() {
 
       if (!response.ok) {
         if (data.requiresReauth) {
-          // Session Shopify expirée
           alert("Votre session Shopify a expiré. Veuillez rafraîchir la page.");
           window.location.reload();
           return;
@@ -791,7 +886,6 @@ export default function Section3Sheets() {
 
       console.log("URL Google OAuth reçue:", data.url);
       
-      // 2. Ouvrir la popup avec l'URL Google OAuth
       const popup = window.open(
         data.url,
         "Google OAuth",
@@ -803,19 +897,16 @@ export default function Section3Sheets() {
         return;
       }
       
-      // 3. Vérifier si la popup est bloquée
       setTimeout(() => {
         if (popup.closed || popup.innerHeight === 0) {
           alert(t("section3.connection.popupBlockedAfterOpen"));
         }
       }, 1000);
 
-      // 4. Surveiller la fermeture de la popup pour rafraîchir les données
       const checkPopup = setInterval(() => {
         if (popup.closed) {
           clearInterval(checkPopup);
           
-          // Rafraîchir le statut Google après un délai
           setTimeout(() => {
             fetch("/api/google/status", {
               credentials: "include"
@@ -830,7 +921,6 @@ export default function Section3Sheets() {
                 abandonedSheetName: j.abandonedSheetName || null,
               });
               
-              // Afficher un message de succès
               if (j.connected) {
                 alert(t("section3.connection.success"));
               }
@@ -845,6 +935,59 @@ export default function Section3Sheets() {
     } catch (error) {
       console.error("Erreur lors de la connexion Google:", error);
       alert(t("section3.connection.error", { error: error.message }));
+    }
+  };
+
+  const testSheetConnection = async (sheet, kind) => {
+    try {
+      const res = await fetch("/api/google-sheets/test", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ sheet, kind }),
+      });
+      const j = await res.json();
+      if (j.ok) {
+        alert(t("section3.sheetsConfiguration.testSuccess"));
+      } else {
+        alert(t("section3.sheetsConfiguration.testError", { error: j.error }));
+      }
+    } catch (e) {
+      alert(t("section3.sheetsConfiguration.testError", { error: e.message }));
+    }
+  };
+
+  const openSheet = (spreadsheetId) => {
+    if (spreadsheetId) {
+      window.open(
+        `https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit`,
+        "_blank"
+      );
+    } else {
+      alert(t("section3.sheetsConfiguration.noSpreadsheetId"));
+    }
+  };
+
+  const disconnectGoogle = async () => {
+    if (confirm(t("section3.sheetsConfiguration.disconnectConfirm"))) {
+      try {
+        await fetch("/api/google/disconnect", {
+          method: "POST",
+          credentials: "include"
+        });
+        
+        setGoogleStatus({
+          loading: false,
+          connected: false,
+          accountEmail: null,
+          mainSheetName: null,
+          abandonedSheetName: null
+        });
+        
+        alert(t("section3.sheetsConfiguration.disconnected"));
+      } catch (error) {
+        alert(t("section3.sheetsConfiguration.disconnectError", { error: error.message }));
+      }
     }
   };
 
@@ -1239,7 +1382,8 @@ export default function Section3Sheets() {
         <div className="tf-main-col">
           {view === "sheets" && (
             <div className="tf-panel">
-              <BlockStack gap="300">
+              <BlockStack gap="400">
+                {/* Section Connexion Google */}
                 <GroupCard title="section3.connection.title">
                   <BlockStack gap="150">
                     {googleStatus.loading ? (
@@ -1298,75 +1442,60 @@ export default function Section3Sheets() {
                             </InlineStack>
                           </Button>
 
-                          {cfg.sheet.spreadsheetId && (
+                          {googleStatus.connected && (
                             <Button
-                              url={`https://docs.google.com/spreadsheets/d/${encodeURIComponent(
-                                cfg.sheet.spreadsheetId
-                              )}/edit`}
-                              external
+                              tone="critical"
+                              onClick={disconnectGoogle}
                             >
-                              {t("section3.connection.openSheet")}
+                              {t("section3.sheetsConfiguration.disconnect")}
                             </Button>
                           )}
-
-                          <Button
-                            size="slim"
-                            onClick={async () => {
-                              try {
-                                const res = await fetch(
-                                  "/api/google-sheets/test",
-                                  {
-                                    method: "POST",
-                                    headers: {
-                                      "Content-Type": "application/json",
-                                    },
-                                    credentials: "include",
-                                    body: JSON.stringify({
-                                      sheet: cfg.sheet,
-                                      kind: "orders",
-                                    }),
-                                  }
-                                );
-                                const j =
-                                  await res.json().catch(() => null);
-                                alert(
-                                  j?.ok
-                                    ? t(
-                                        "section3.connection.testSuccess"
-                                      )
-                                    : t(
-                                        "section3.connection.testError",
-                                        {
-                                          error:
-                                            j?.error ||
-                                            "",
-                                        }
-                                      )
-                                );
-                              } catch (e) {
-                                alert(
-                                  t(
-                                    "section3.connection.testError",
-                                    {
-                                      error:
-                                        e?.message ||
-                                        t(
-                                          "section3.connection.unknownError"
-                                        ),
-                                    }
-                                  )
-                                );
-                              }
-                            }}
-                          >
-                            {t("section3.connection.test")}
-                          </Button>
                         </InlineStack>
                       </>
                     )}
                   </BlockStack>
                 </GroupCard>
 
+                {/* Configuration des deux feuilles Google Sheets */}
+                <GroupCard title="section3.sheetsConfiguration.title">
+                  <Tabs
+                    tabs={sheetTabs}
+                    selected={sheetTab}
+                    onSelect={setSheetTab}
+                  >
+                    {sheetTab === 0 && (
+                      <div style={{ marginTop: '16px' }}>
+                        <SheetConfigSection
+                          title="section3.sheetsConfiguration.ordersSheet"
+                          sheetConfig={cfg.sheet}
+                          onConfigChange={(newSheetConfig) =>
+                            setCfg((c) => ({ ...c, sheet: newSheetConfig }))
+                          }
+                          onTest={() => testSheetConnection(cfg.sheet, "orders")}
+                          onOpen={() => openSheet(cfg.sheet.spreadsheetId)}
+                          isConnected={googleStatus.connected}
+                        />
+                      </div>
+                    )}
+                    
+                    {sheetTab === 1 && (
+                      <div style={{ marginTop: '16px' }}>
+                        <SheetConfigSection
+                          title="section3.sheetsConfiguration.abandonedSheet"
+                          sheetConfig={cfg.abandonedSheet}
+                          onConfigChange={(newSheetConfig) =>
+                            setCfg((c) => ({ ...c, abandonedSheet: newSheetConfig }))
+                          }
+                          onTest={() => testSheetConnection(cfg.abandonedSheet, "abandons")}
+                          onOpen={() => openSheet(cfg.abandonedSheet.spreadsheetId)}
+                          isConnected={googleStatus.connected}
+                        />
+                      </div>
+                    )}
+                  </Tabs>
+                </GroupCard>
+
+                {/* Mapping des colonnes */}
                 <GroupCard title="section3.mapping.title">
                   <InlineStack gap="200" wrap={false}>
                     <Select
@@ -1554,6 +1683,7 @@ export default function Section3Sheets() {
                   </div>
                 </GroupCard>
 
+                {/* Configuration de l'affichage */}
                 <GroupCard title="section3.display.title">
                   <Grid3>
                     <Select
@@ -1696,71 +1826,14 @@ export default function Section3Sheets() {
                             </InlineStack>
                           </Button>
 
-                          {cfg.abandonedSheet.spreadsheetId && (
+                          {googleStatus.connected && (
                             <Button
-                              url={`https://docs.google.com/spreadsheets/d/${encodeURIComponent(
-                                cfg.abandonedSheet
-                                  .spreadsheetId
-                              )}/edit`}
-                              external
+                              tone="critical"
+                              onClick={disconnectGoogle}
                             >
-                              {t("section3.abandoned.openSheet")}
+                              {t("section3.sheetsConfiguration.disconnect")}
                             </Button>
                           )}
-
-                          <Button
-                            size="slim"
-                            onClick={async () => {
-                              try {
-                                const res = await fetch(
-                                  "/api/google-sheets/test",
-                                  {
-                                    method: "POST",
-                                    headers: {
-                                      "Content-Type":
-                                        "application/json",
-                                    },
-                                    credentials: "include",
-                                    body: JSON.stringify({
-                                      sheet: cfg.abandonedSheet,
-                                      kind: "abandons",
-                                    }),
-                                  }
-                                );
-                                const j =
-                                  await res.json().catch(() => null);
-                                alert(
-                                  j?.ok
-                                    ? t(
-                                        "section3.abandoned.testSuccess"
-                                      )
-                                    : t(
-                                        "section3.connection.testError",
-                                        {
-                                          error:
-                                            j?.error ||
-                                            "",
-                                        }
-                                      )
-                                );
-                              } catch (e) {
-                                alert(
-                                  t(
-                                    "section3.connection.testError",
-                                    {
-                                      error:
-                                        e?.message ||
-                                        t(
-                                          "section3.connection.unknownError"
-                                        ),
-                                    }
-                                  )
-                                );
-                              }
-                            }}
-                          >
-                            {t("section3.connection.test")}
-                          </Button>
                         </InlineStack>
                       </>
                     )}
