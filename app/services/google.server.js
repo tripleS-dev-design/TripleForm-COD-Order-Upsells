@@ -303,7 +303,7 @@ async function upsertGoogleAccountForShop(shop, tokens, user) {
 }
 
 // ---------- callback Google (VERSION FINALE CORRIGÉE) ----------
-export async function handleGoogleCallback(code, rawState) {
+async function handleGoogleCallback(code, rawState) {
   // 1️⃣ Décoder le state
   const state = decodeState(rawState);
 
