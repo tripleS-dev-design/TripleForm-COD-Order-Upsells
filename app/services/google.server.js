@@ -9,13 +9,14 @@ const GOOGLE_AUTH_BASE = "https://accounts.google.com/o/oauth2/v2/auth";
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
 const GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v2/userinfo";
 
-// ✅ Scopes corrigés pour Sheets + email
+// ✅ CORRIGÉ : AJOUT DU SCOPE DRIVE POUR LISTER LES FICHIERS
 const SHEETS_SCOPES = [
-  "https://www.googleapis.com/auth/spreadsheets",
-  "https://www.googleapis.com/auth/userinfo.email"
+  "https://www.googleapis.com/auth/spreadsheets",      // Lire/écrire dans les Sheets
+  "https://www.googleapis.com/auth/drive.readonly",    // LISTER les fichiers (CRITIQUE !)
+  "https://www.googleapis.com/auth/userinfo.email"     // Récupérer l'email
 ].join(" ");
 
-// ---------- helpers state (shop + target dans l’URL Google) ----------
+// ---------- helpers state ----------
 function encodeState(payload) {
   return Buffer.from(JSON.stringify(payload)).toString("base64url");
 }
@@ -30,7 +31,7 @@ function decodeState(state) {
 }
 
 // ---------- URL OAuth Google ----------
- function buildGoogleAuthUrl({ shop, target = "orders" }) {
+function buildGoogleAuthUrl({ shop, target = "orders" }) {
   if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET || !GOOGLE_OAUTH_REDIRECT_URL) {
     console.warn(
       "[Google OAuth] GOOGLE_CLIENT_ID / SECRET / OAUTH_REDIRECT_URL manquants dans .env"
@@ -43,7 +44,7 @@ function decodeState(state) {
     client_id: GOOGLE_CLIENT_ID || "",
     redirect_uri: GOOGLE_OAUTH_REDIRECT_URL || "",
     response_type: "code",
-    scope: SHEETS_SCOPES,
+    scope: SHEETS_SCOPES,  // ✅ Utilise les scopes complets
     access_type: "offline",
     prompt: "consent",
     include_granted_scopes: "true",
@@ -113,7 +114,7 @@ async function fetchGoogleUser(accessToken) {
   if (!res.ok || !json) {
     throw new Error("Impossible de récupérer le compte Google");
   }
-  return json; // { id, email, name, ... }
+  return json;
 }
 
 // ---------- enregistrer / mettre à jour le compte Google pour une boutique ----------
@@ -147,7 +148,7 @@ async function upsertGoogleAccountForShop(shop, tokens, user) {
 }
 
 // ---------- lecture des settings Google ----------
- async function getGoogleSettingsForShop(shop) {
+async function getGoogleSettingsForShop(shop) {
   if (!shop) return null;
   return prisma.shopGoogleSettings.findUnique({
     where: { shopDomain: shop },
@@ -155,7 +156,7 @@ async function upsertGoogleAccountForShop(shop, tokens, user) {
 }
 
 // ---------- config Sheets (cfg) ----------
- async function ensureValidAccessToken(shop) {
+async function ensureValidAccessToken(shop) {
   const row = await getGoogleSettingsForShop(shop);
   
   if (!row || !row.accessToken) {
@@ -168,7 +169,7 @@ async function upsertGoogleAccountForShop(shop, tokens, user) {
   // Si pas de date d'expiration, on utilise quand même le token
   if (!expiryMs) {
     console.warn(`[Google] Pas de date d'expiration pour ${shop}, on utilise le token actuel`);
-    return row.accessToken; // ← Retourne DIRECTEMENT le token string
+    return row.accessToken;
   }
 
   // Si expiré ou proche expiration, on rafraîchit
@@ -188,14 +189,14 @@ async function upsertGoogleAccountForShop(shop, tokens, user) {
       },
     });
 
-    return newTokens.access_token; // ← Retourne le NOUVEAU token string
+    return newTokens.access_token;
   }
 
-  return row.accessToken; // ← Token encore valide
+  return row.accessToken;
 }
 
 // ---------- statut simplifié pour le front (UI Section3) ----------
- async function getGoogleStatusForShop(shop) {
+async function getGoogleStatusForShop(shop) {
   const row = await getGoogleSettingsForShop(shop);
   if (!row) {
     return {
@@ -225,7 +226,7 @@ async function upsertGoogleAccountForShop(shop, tokens, user) {
 }
 
 // ---------- config Sheets (cfg) ----------
- async function getSheetsConfigForShop(shop) {
+async function getSheetsConfigForShop(shop) {
   const row = await getGoogleSettingsForShop(shop);
   if (!row?.sheetsConfigJson) return null;
   try {
@@ -236,7 +237,7 @@ async function upsertGoogleAccountForShop(shop, tokens, user) {
   }
 }
 
- async function saveSheetsConfigForShop(shop, cfg) {
+async function saveSheetsConfigForShop(shop, cfg) {
   const json = JSON.stringify(cfg || {});
   return prisma.shopGoogleSettings.upsert({
     where: { shopDomain: shop },
@@ -250,13 +251,12 @@ async function upsertGoogleAccountForShop(shop, tokens, user) {
   });
 }
 
-// ---------- test connexion feuille (VERSION CORRIGÉE) ----------
- async function testSheetConnection(shop, sheet) {
+// ---------- test connexion feuille ----------
+async function testSheetConnection(shop, sheet) {
   if (!sheet?.spreadsheetId) {
     throw new Error("Spreadsheet ID manquant");
   }
 
-  // CORRECTION : ensureValidAccessToken retourne DIRECTEMENT le token string
   const accessToken = await ensureValidAccessToken(shop);
   
   if (!accessToken) {
@@ -279,7 +279,7 @@ async function upsertGoogleAccountForShop(shop, tokens, user) {
     const msg =
       json?.error?.message ||
       json?.error ||
-      "Impossible d’accéder à cette feuille Google Sheets";
+      "Impossible d'accéder à cette feuille Google Sheets";
     throw new Error(msg);
   }
 
@@ -290,7 +290,7 @@ async function upsertGoogleAccountForShop(shop, tokens, user) {
     );
     if (!ok) {
       throw new Error(
-        `L’onglet “${tabName}” n’existe pas dans cette feuille Google Sheets`
+        `L'onglet "${tabName}" n'existe pas dans cette feuille Google Sheets`
       );
     }
   }
@@ -302,9 +302,8 @@ async function upsertGoogleAccountForShop(shop, tokens, user) {
   };
 }
 
-// ---------- callback Google (VERSION FINALE CORRIGÉE) ----------
+// ---------- callback Google ----------
 async function handleGoogleCallback(code, rawState) {
-  // 1️⃣ Décoder le state
   const state = decodeState(rawState);
 
   if (!state || !state.shop) {
@@ -315,35 +314,30 @@ async function handleGoogleCallback(code, rawState) {
   const shop = state.shop;
   const target = state.target || "orders";
 
-  // 2️⃣ Échange code → tokens Google
   const tokens = await exchangeCodeForTokens(code);
 
   if (!tokens?.access_token) {
     throw new Error("Access token Google manquant");
   }
 
-  // 3️⃣ Récupérer l’utilisateur Google (email)
   const user = await fetchGoogleUser(tokens.access_token);
 
   if (!user?.email) {
-    throw new Error("Impossible de récupérer l’email Google");
+    throw new Error("Impossible de récupérer l'email Google");
   }
 
-  // 4️⃣ Sauvegarde / mise à jour en DB (ShopGoogleSettings)
   await upsertGoogleAccountForShop(shop, tokens, user);
 
   console.log(
     `[Google OAuth] Connexion réussie : shop=${shop}, email=${user.email}`
   );
 
-  // 5️⃣ Retour utilisé par api.google.callback.jsx
   return {
     shop,
     target,
     userEmail: user.email,
   };
 }
-
 
 // ---------- EXPORTS ----------
 export {

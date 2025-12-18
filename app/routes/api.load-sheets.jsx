@@ -6,13 +6,32 @@ import {
   getSheetsConfigForShop,
 } from "../services/google.server";
 
-// helper robuste pour récupérer le shop
+// Helper robuste pour récupérer le shop
 function getShopFromRequest(request, session, admin) {
-  return (
-    session?.shop ||
-    admin?.rest?.session?.shop ||
-    new URL(request.url).searchParams.get("shop")
-  );
+  // 1. Depuis la session
+  if (session?.shop) return session.shop;
+  
+  // 2. Depuis admin.rest.session
+  if (admin?.rest?.session?.shop) return admin.rest.session.shop;
+  
+  // 3. Depuis les paramètres URL
+  const url = new URL(request.url);
+  const shopParam = url.searchParams.get("shop");
+  if (shopParam) return shopParam;
+  
+  // 4. Depuis le referer (pour les app embedded Shopify)
+  const referer = request.headers.get("referer");
+  if (referer) {
+    try {
+      const refererUrl = new URL(referer);
+      const refererShop = refererUrl.searchParams.get("shop");
+      if (refererShop) return refererShop;
+    } catch (e) {
+      console.warn("Impossible de parser le referer:", referer);
+    }
+  }
+  
+  return null;
 }
 
 export const loader = async ({ request }) => {
@@ -21,8 +40,18 @@ export const loader = async ({ request }) => {
     const shop = getShopFromRequest(request, session, admin);
 
     if (!shop) {
-      throw new Error("Shop introuvable dans /api/load-sheets");
+      console.error("[API Load Sheets] Shop introuvable:", {
+        sessionShop: session?.shop,
+        adminShop: admin?.rest?.session?.shop,
+        url: request.url
+      });
+      return json(
+        { ok: false, error: "Shop introuvable. Veuillez rafraîchir la page." },
+        { status: 400 }
+      );
     }
+
+    console.log(`[API Load Sheets] Shop identifié: ${shop}`);
 
     // 1️⃣ Token Google valide
     const accessToken = await ensureValidAccessToken(shop);
@@ -43,9 +72,25 @@ export const loader = async ({ request }) => {
     const driveJson = await driveRes.json().catch(() => null);
 
     if (!driveRes.ok) {
+      // Erreur spécifique pour les scopes manquants
+      if (driveRes.status === 403 || driveRes.status === 401) {
+        const errorMsg = driveJson?.error?.message || "Permissions Google insuffisantes";
+        console.error("[API Load Sheets] Erreur Google API:", errorMsg);
+        
+        // Si c'est une erreur de scope, proposer de se reconnecter
+        if (errorMsg.includes("insufficient authentication scopes") || 
+            errorMsg.includes("Request had insufficient authentication scopes")) {
+          return json({
+            ok: false,
+            error: "Permissions Google insuffisantes. Veuillez vous déconnecter et vous reconnecter à Google.",
+            needsReauth: true
+          }, { status: 403 });
+        }
+      }
+      
       throw new Error(
         driveJson?.error?.message ||
-          "Impossible de charger les Google Sheets"
+        "Impossible de charger les Google Sheets"
       );
     }
 
@@ -55,7 +100,9 @@ export const loader = async ({ request }) => {
         name: f.name,
       })) || [];
 
-    // 3️⃣ Charger la config existante (si déjà sauvegardée)
+    console.log(`[API Load Sheets] ${spreadsheets.length} feuilles trouvées pour ${shop}`);
+
+    // 3️⃣ Charger la config existante
     const cfg = await getSheetsConfigForShop(shop);
 
     return json({
