@@ -895,6 +895,36 @@ const EN = {
 "section3.fields.cart.currency": "Currency",
 "section3.fields.order.id": "Order ID",
 "section3.fields.order.date": "Order date",
+// Section 3 — Google Sheets (clés manquantes)
+"section3.sheetsConfiguration.title": "Google Sheets configuration",
+"section3.sheetsConfiguration.ordersSheet": "Orders sheet",
+"section3.sheetsConfiguration.abandonedSheet": "Abandoned sheet",
+"section3.sheetsConfiguration.spreadsheetId": "Spreadsheet ID",
+"section3.sheetsConfiguration.spreadsheetIdHelp": "The ID from your Google Sheets URL (between /d/ and /edit)",
+"section3.sheetsConfiguration.tabName": "Tab/Sheet name",
+"section3.sheetsConfiguration.tabNameHelp": "Name of the tab where orders will be written",
+"section3.sheetsConfiguration.headerRow": "Header row",
+"section3.sheetsConfiguration.headerRowHelp": "Row number where column headers are located (usually 1)",
+"section3.sheetsConfiguration.testConnection": "Test connection",
+"section3.sheetsConfiguration.openSheet": "Open sheet",
+"section3.sheetsConfiguration.testSuccess": "✓ Connection test successful",
+"section3.sheetsConfiguration.testError": "✗ Test failed: {error}",
+"section3.sheetsConfiguration.noSpreadsheetId": "Please enter a spreadsheet ID first",
+"section3.sheetsConfiguration.disconnect": "Disconnect",
+"section3.sheetsConfiguration.disconnectConfirm": "Are you sure you want to disconnect Google account? This will stop sending orders to Google Sheets.",
+"section3.sheetsConfiguration.disconnected": "Google account disconnected",
+"section3.sheetsConfiguration.disconnectError": "Disconnect error: {error}",
+
+// Sheets tabs
+"section3.sheetsTabs.orders": "Orders",
+"section3.sheetsTabs.abandoned": "Abandoned",
+
+// Connection messages
+"section3.connection.success": "Google account successfully connected",
+"section3.connection.error": "Connection error: {error}",
+"section3.connection.popupBlocked": "The popup was blocked. Please allow popups for this site.",
+"section3.connection.popupBlockedAfterOpen": "The popup was closed or blocked. Please try again.",
+
 // Section 4 — Pixels & Tracking
 "section4.header.appTitle": "TripleForm COD · Pixels & Suivi",
 "section4.header.appSubtitle": "Connecte Google, Facebook (Pixel & Conversions API) et TikTok pour suivre tes commandes COD.",
@@ -2105,6 +2135,35 @@ const FR = {
 "section3.fields.cart.currency": "Devise",
 "section3.fields.order.id": "Order ID",
 "section3.fields.order.date": "Order date",
+// Section 3 — Google Sheets (clés manquantes)
+"section3.sheetsConfiguration.title": "Configuration Google Sheets",
+"section3.sheetsConfiguration.ordersSheet": "Feuille commandes",
+"section3.sheetsConfiguration.abandonedSheet": "Feuille abandons",
+"section3.sheetsConfiguration.spreadsheetId": "ID de la feuille",
+"section3.sheetsConfiguration.spreadsheetIdHelp": "L'ID depuis l'URL de votre Google Sheets (entre /d/ et /edit)",
+"section3.sheetsConfiguration.tabName": "Nom de l'onglet",
+"section3.sheetsConfiguration.tabNameHelp": "Nom de l'onglet où les commandes seront écrites",
+"section3.sheetsConfiguration.headerRow": "Ligne d'en-tête",
+"section3.sheetsConfiguration.headerRowHelp": "Numéro de ligne où se trouvent les en-têtes de colonnes (généralement 1)",
+"section3.sheetsConfiguration.testConnection": "Tester la connexion",
+"section3.sheetsConfiguration.openSheet": "Ouvrir la feuille",
+"section3.sheetsConfiguration.testSuccess": "✓ Test de connexion réussi",
+"section3.sheetsConfiguration.testError": "✗ Test échoué : {error}",
+"section3.sheetsConfiguration.noSpreadsheetId": "Veuillez d'abord entrer un ID de feuille",
+"section3.sheetsConfiguration.disconnect": "Déconnecter",
+"section3.sheetsConfiguration.disconnectConfirm": "Êtes-vous sûr de vouloir déconnecter le compte Google ? Cela arrêtera l'envoi des commandes vers Google Sheets.",
+"section3.sheetsConfiguration.disconnected": "Compte Google déconnecté",
+"section3.sheetsConfiguration.disconnectError": "Erreur de déconnexion : {error}",
+
+// Sheets tabs
+"section3.sheetsTabs.orders": "Commandes",
+"section3.sheetsTabs.abandoned": "Abandons",
+
+// Connection messages
+"section3.connection.success": "Compte Google connecté avec succès",
+"section3.connection.error": "Erreur de connexion : {error}",
+"section3.connection.popupBlocked": "La fenêtre popup a été bloquée. Veuillez autoriser les popups pour ce site.",
+"section3.connection.popupBlockedAfterOpen": "La fenêtre popup a été fermée ou bloquée. Veuillez réessayer.",
 // Section 4 — Pixels & Tracking
 "section4.header.appTitle": "TripleForm COD · Pixels & Tracking",
 "section4.header.appSubtitle": "Connecte Google, Facebook (Pixel & Conversions API) et TikTok pour suivre tes commandes COD.",
@@ -3326,6 +3385,36 @@ const ES = {
 "section3.fields.cart.currency": "Moneda",
 "section3.fields.order.id": "Order ID",
 "section3.fields.order.date": "Order date",
+// Section 3 — Google Sheets (clés manquantes)
+"section3.sheetsConfiguration.title": "Configuración Google Sheets",
+"section3.sheetsConfiguration.ordersSheet": "Hoja pedidos",
+"section3.sheetsConfiguration.abandonedSheet": "Hoja abandonados",
+"section3.sheetsConfiguration.spreadsheetId": "ID de la hoja",
+"section3.sheetsConfiguration.spreadsheetIdHelp": "El ID desde la URL de tu Google Sheets (entre /d/ y /edit)",
+"section3.sheetsConfiguration.tabName": "Nombre de la pestaña",
+"section3.sheetsConfiguration.tabNameHelp": "Nombre de la pestaña donde se escribirán los pedidos",
+"section3.sheetsConfiguration.headerRow": "Fila de encabezado",
+"section3.sheetsConfiguration.headerRowHelp": "Número de fila donde están los encabezados de columnas (generalmente 1)",
+"section3.sheetsConfiguration.testConnection": "Probar conexión",
+"section3.sheetsConfiguration.openSheet": "Abrir hoja",
+"section3.sheetsConfiguration.testSuccess": "✓ Prueba de conexión exitosa",
+"section3.sheetsConfiguration.testError": "✗ Prueba fallida: {error}",
+"section3.sheetsConfiguration.noSpreadsheetId": "Por favor ingresa primero un ID de hoja",
+"section3.sheetsConfiguration.disconnect": "Desconectar",
+"section3.sheetsConfiguration.disconnectConfirm": "¿Estás seguro de que quieres desconectar la cuenta de Google? Esto detendrá el envío de pedidos a Google Sheets.",
+"section3.sheetsConfiguration.disconnected": "Cuenta de Google desconectada",
+"section3.sheetsConfiguration.disconnectError": "Error de desconexión: {error}",
+
+// Sheets tabs
+"section3.sheetsTabs.orders": "Pedidos",
+"section3.sheetsTabs.abandoned": "Abandonados",
+
+// Connection messages
+"section3.connection.success": "Cuenta de Google conectada con éxito",
+"section3.connection.error": "Error de conexión: {error}",
+"section3.connection.popupBlocked": "La ventana emergente fue bloqueada. Por favor permite las ventanas emergentes para este sitio.",
+"section3.connection.popupBlockedAfterOpen": "La ventana emergente fue cerrada o bloqueada. Por favor intenta de nuevo.",
+
 // Section 4 — Pixels & Tracking
 "section4.header.appTitle": "TripleForm COD · Píxeles y Seguimiento",
 "section4.header.appSubtitle": "Conecta Google, Facebook (Pixel y Conversions API) y TikTok para rastrear tus pedidos COD.",
@@ -4545,6 +4634,35 @@ const AR = {
 "section3.fields.cart.currency": "العملة",
 "section3.fields.order.id": "معرف الطلب",
 "section3.fields.order.date": "تاريخ الطلب",
+// Section 3 — Google Sheets (clés manquantes)
+"section3.sheetsConfiguration.title": "إعدادات جوجل شيتس",
+"section3.sheetsConfiguration.ordersSheet": "ورقة الطلبات",
+"section3.sheetsConfiguration.abandonedSheet": "ورقة المتروكة",
+"section3.sheetsConfiguration.spreadsheetId": "معرف الورقة",
+"section3.sheetsConfiguration.spreadsheetIdHelp": "المعرف من رابط جوجل شيتس (بين /d/ و /edit)",
+"section3.sheetsConfiguration.tabName": "اسم التبويب",
+"section3.sheetsConfiguration.tabNameHelp": "اسم التبويب حيث ستُكتب الطلبات",
+"section3.sheetsConfiguration.headerRow": "صف العناوين",
+"section3.sheetsConfiguration.headerRowHelp": "رقم الصف الذي توجد به عناوين الأعمدة (عادة 1)",
+"section3.sheetsConfiguration.testConnection": "اختبار الاتصال",
+"section3.sheetsConfiguration.openSheet": "فتح الورقة",
+"section3.sheetsConfiguration.testSuccess": "✓ نجح اختبار الاتصال",
+"section3.sheetsConfiguration.testError": "✗ فشل الاختبار: {error}",
+"section3.sheetsConfiguration.noSpreadsheetId": "الرجاء إدخال معرف الورقة أولاً",
+"section3.sheetsConfiguration.disconnect": "فصل الاتصال",
+"section3.sheetsConfiguration.disconnectConfirm": "هل أنت متأكد من أنك تريد فصل حساب جوجل؟ هذا سيوقف إرسال الطلبات إلى جوجل شيتس.",
+"section3.sheetsConfiguration.disconnected": "تم فصل حساب جوجل",
+"section3.sheetsConfiguration.disconnectError": "خطأ في الفصل: {error}",
+
+// Sheets tabs
+"section3.sheetsTabs.orders": "الطلبات",
+"section3.sheetsTabs.abandoned": "المتروكة",
+
+// Connection messages
+"section3.connection.success": "تم توصيل حساب جوجل بنجاح",
+"section3.connection.error": "خطأ في الاتصال: {error}",
+"section3.connection.popupBlocked": "تم حظر النافذة المنبثقة. يرجى السماح بالنوافذ المنبثقة لهذا الموقع.",
+"section3.connection.popupBlockedAfterOpen": "تم إغلاق النافذة المنبثقة أو حظرها. يرجى المحاولة مرة أخرى.",
 
 // Section 4 — Pixels & Tracking
 "section4.header.appTitle": "TripleForm COD · بكسلز وتتبع",
@@ -4880,7 +4998,7 @@ const AR = {
 "section6.guide.step5": "5. احفظ → سيتم حساب الأسعار تلقائيًا في استمارة الدفع عند الاستلام الخاصة بك.",
 };
 
-// ===== Country labels for Section 1 =====
+/// ===== Country labels for Section 1 =====
 
 // EN
 Object.assign(EN, {
@@ -4892,6 +5010,13 @@ Object.assign(EN, {
   "countries.SA": "Saudi Arabia",
   "countries.AE": "United Arab Emirates",
   "countries.EG": "Egypt",
+  "countries.US": "United States",
+  "countries.NG": "Nigeria",
+  "countries.PK": "Pakistan",
+  "countries.IN": "India",
+  "countries.ID": "Indonesia",
+  "countries.TR": "Turkey",
+  "countries.BR": "Brazil",
 });
 
 // FR
@@ -4904,6 +5029,13 @@ Object.assign(FR, {
   "countries.SA": "Arabie Saoudite",
   "countries.AE": "Émirats Arabes Unis",
   "countries.EG": "Égypte",
+  "countries.US": "États-Unis",
+  "countries.NG": "Nigéria",
+  "countries.PK": "Pakistan",
+  "countries.IN": "Inde",
+  "countries.ID": "Indonésie",
+  "countries.TR": "Turquie",
+  "countries.BR": "Brésil",
 });
 
 // ES
@@ -4916,6 +5048,13 @@ Object.assign(ES, {
   "countries.SA": "Arabia Saudita",
   "countries.AE": "Emiratos Árabes Unidos",
   "countries.EG": "Egipto",
+  "countries.US": "Estados Unidos",
+  "countries.NG": "Nigeria",
+  "countries.PK": "Pakistán",
+  "countries.IN": "India",
+  "countries.ID": "Indonesia",
+  "countries.TR": "Turquía",
+  "countries.BR": "Brasil",
 });
 
 // AR / Darija
@@ -4928,6 +5067,13 @@ Object.assign(AR, {
   "countries.SA": "السعودية",
   "countries.AE": "الإمارات",
   "countries.EG": "مصر",
+  "countries.US": "الولايات المتحدة",
+  "countries.NG": "نيجيريا",
+  "countries.PK": "باكستان",
+  "countries.IN": "الهند",
+  "countries.ID": "إندونيسيا",
+  "countries.TR": "تركيا",
+  "countries.BR": "البرازيل",
 });
 
 /* ========================================================================
