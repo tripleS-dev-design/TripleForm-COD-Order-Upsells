@@ -155,64 +155,9 @@ export async function getGoogleSettingsForShop(shop) {
 }
 
 // ---------- config Sheets (cfg) ----------
-export async function getSheetsConfigForShop(shop) {
-  const row = await getGoogleSettingsForShop(shop);
-  if (!row?.sheetsConfigJson) return null;
-  try {
-    return JSON.parse(row.sheetsConfigJson);
-  } catch (e) {
-    console.warn("[Sheets] JSON invalide pour", shop, e);
-    return null;
-  }
-}
-
-export async function saveSheetsConfigForShop(shop, cfg) {
-  const json = JSON.stringify(cfg || {});
-  return prisma.shopGoogleSettings.upsert({
-    where: { shopDomain: shop },
-    create: {
-      shopDomain: shop,
-      sheetsConfigJson: json,
-    },
-    update: {
-      sheetsConfigJson: json,
-    },
-  });
-}
-
-// ---------- statut simplifié pour le front (UI Section3) ----------
-export async function getGoogleStatusForShop(shop) {
-  const row = await getGoogleSettingsForShop(shop);
-  if (!row) {
-    return {
-      connected: false,
-      accountEmail: null,
-      mainSheetName: null,
-      abandonedSheetName: null,
-    };
-  }
-
-  let cfg = null;
-  try {
-    cfg = row.sheetsConfigJson ? JSON.parse(row.sheetsConfigJson) : null;
-  } catch {
-    cfg = null;
-  }
-
-  const mainSheetName = cfg?.sheet?.tabName || null;
-  const abandonedSheetName = cfg?.abandonedSheet?.tabName || null;
-
-  return {
-    connected: !!row.accessToken,
-    accountEmail: row.googleEmail || null,
-    mainSheetName,
-    abandonedSheetName,
-  };
-}
-
-// ---------- s’assurer qu’on a un accessToken valide ----------
 export async function ensureValidAccessToken(shop) {
   const row = await getGoogleSettingsForShop(shop);
+  
   if (!row || !row.accessToken) {
     throw new Error("Aucun compte Google connecté pour cette boutique");
   }
@@ -220,26 +165,33 @@ export async function ensureValidAccessToken(shop) {
   const now = Date.now();
   const expiryMs = row.tokenExpiryDate ? row.tokenExpiryDate.getTime() : null;
 
-  if (expiryMs && expiryMs - 60_000 < now && row.refreshToken) {
+  // Si pas de date d'expiration, on utilise quand même le token
+  if (!expiryMs) {
+    console.warn(`[Google] Pas de date d'expiration pour ${shop}, on utilise le token actuel`);
+    return row.accessToken; // ← Retourne DIRECTEMENT le token string
+  }
+
+  // Si expiré ou proche expiration, on rafraîchit
+  if (expiryMs - 60_000 < now && row.refreshToken) {
+    console.log(`[Google] Rafraîchissement token pour ${shop}`);
     const newTokens = await refreshAccessToken(row.refreshToken);
+    
+    const expiresIn = newTokens.expires_in ? Number(newTokens.expires_in) : 3600;
+    const newExpiry = new Date(Date.now() + expiresIn * 1000);
 
-    const expiresIn = newTokens.expires_in ? Number(newTokens.expires_in) : null;
-    const newExpiry = expiresIn ? new Date(Date.now() + expiresIn * 1000) : null;
-
-    const updated = await prisma.shopGoogleSettings.update({
+    await prisma.shopGoogleSettings.update({
       where: { shopDomain: shop },
       data: {
-        accessToken: newTokens.access_token || row.accessToken,
-        tokenExpiryDate: newExpiry || row.tokenExpiryDate,
-        scope: newTokens.scope || row.scope,
-        tokenType: newTokens.token_type || row.tokenType,
+        accessToken: newTokens.access_token,
+        tokenExpiryDate: newExpiry,
+        refreshToken: newTokens.refresh_token || row.refreshToken,
       },
     });
 
-    return updated;
+    return newTokens.access_token; // ← Retourne le NOUVEAU token string
   }
 
-  return row;
+  return row.accessToken; // ← Token encore valide
 }
 
 // ---------- test connexion feuille ----------
