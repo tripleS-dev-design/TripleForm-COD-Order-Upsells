@@ -30,7 +30,7 @@ function decodeState(state) {
 }
 
 // ---------- URL OAuth Google ----------
-export function buildGoogleAuthUrl({ shop, target = "orders" }) {
+ function buildGoogleAuthUrl({ shop, target = "orders" }) {
   if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET || !GOOGLE_OAUTH_REDIRECT_URL) {
     console.warn(
       "[Google OAuth] GOOGLE_CLIENT_ID / SECRET / OAUTH_REDIRECT_URL manquants dans .env"
