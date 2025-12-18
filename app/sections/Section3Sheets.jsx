@@ -566,9 +566,53 @@ function SheetConfigSection({
   onConfigChange,
   onTest,
   onOpen,
-  isConnected
+  isConnected,
+  sheetType
 }) {
   const { t } = useI18n();
+  
+  // Fonction pour obtenir la liste des feuilles disponibles
+  const [availableSheets, setAvailableSheets] = useState([]);
+  const [loadingSheets, setLoadingSheets] = useState(false);
+
+  const loadAvailableSheets = async () => {
+    if (!sheetConfig.spreadsheetId || !isConnected) return;
+    
+    setLoadingSheets(true);
+    try {
+      const res = await fetch(`/api/google-sheets/list-tabs?spreadsheetId=${encodeURIComponent(sheetConfig.spreadsheetId)}`, {
+        credentials: "include"
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        if (data.ok && data.sheets) {
+          setAvailableSheets(data.sheets);
+        }
+      }
+    } catch (error) {
+      console.error("Erreur lors du chargement des feuilles:", error);
+    } finally {
+      setLoadingSheets(false);
+    }
+  };
+
+  // Charger les feuilles disponibles lorsque l'ID du spreadsheet change
+  useEffect(() => {
+    if (sheetConfig.spreadsheetId && isConnected) {
+      loadAvailableSheets();
+    } else {
+      setAvailableSheets([]);
+    }
+  }, [sheetConfig.spreadsheetId, isConnected]);
+
+  const options = [
+    { label: t("section3.sheetsConfiguration.selectSheet"), value: "" },
+    ...availableSheets.map(sheet => ({
+      label: sheet,
+      value: sheet
+    }))
+  ];
 
   return (
     <div className="tf-sheet-config">
@@ -584,15 +628,27 @@ function SheetConfigSection({
           disabled={!isConnected}
         />
         
-        <TextField
-          label={t("section3.sheetsConfiguration.tabName")}
-          helpText={t("section3.sheetsConfiguration.tabNameHelp")}
-          value={sheetConfig.tabName || ""}
-          onChange={(value) => onConfigChange({ ...sheetConfig, tabName: value })}
-          placeholder="Orders"
-          autoComplete="off"
-          disabled={!isConnected}
-        />
+        {/* Sélecteur de feuille avec option de rechargement */}
+        <InlineStack gap="200" blockAlign="end">
+          <div style={{ flex: 1 }}>
+            <Select
+              label={t("section3.sheetsConfiguration.tabName")}
+              helpText={t("section3.sheetsConfiguration.tabNameHelp")}
+              options={options}
+              value={sheetConfig.tabName || ""}
+              onChange={(value) => onConfigChange({ ...sheetConfig, tabName: value })}
+              disabled={!isConnected || !sheetConfig.spreadsheetId || loadingSheets}
+            />
+          </div>
+          <Button
+            size="slim"
+            onClick={loadAvailableSheets}
+            loading={loadingSheets}
+            disabled={!isConnected || !sheetConfig.spreadsheetId}
+          >
+            {t("section3.sheetsConfiguration.refreshSheets")}
+          </Button>
+        </InlineStack>
         
         <RangeSlider
           label={`${t("section3.sheetsConfiguration.headerRow")} (${sheetConfig.headerRowIndex || 1})`}
@@ -1474,6 +1530,7 @@ export default function Section3Sheets() {
                           onTest={() => testSheetConnection(cfg.sheet, "orders")}
                           onOpen={() => openSheet(cfg.sheet.spreadsheetId)}
                           isConnected={googleStatus.connected}
+                          sheetType="orders"
                         />
                       </div>
                     )}
@@ -1489,6 +1546,7 @@ export default function Section3Sheets() {
                           onTest={() => testSheetConnection(cfg.abandonedSheet, "abandons")}
                           onOpen={() => openSheet(cfg.abandonedSheet.spreadsheetId)}
                           isConnected={googleStatus.connected}
+                          sheetType="abandoned"
                         />
                       </div>
                     )}
