@@ -811,7 +811,7 @@ export default function Section6Geo() {
         // sync localStorage
         try {
           window.localStorage.setItem(
-            "tripleform_cod_geo_min_v2",
+            "tripleform_cod_geo",
             JSON.stringify(updatedGeo)
           );
         } catch {
@@ -833,7 +833,7 @@ export default function Section6Geo() {
     if (typeof window === "undefined") return;
     try {
       window.localStorage.setItem(
-        "tripleform_cod_geo_min_v2",
+        "tripleform_cod_geo",
         JSON.stringify(cfg)
       );
     } catch {

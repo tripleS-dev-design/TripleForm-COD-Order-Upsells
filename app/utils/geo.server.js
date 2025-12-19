@@ -2,7 +2,7 @@
 
 // Namespace / key pour le metafield GEO
 export const GEO_META_NAMESPACE = "tripleform_cod";
-export const GEO_META_KEY = "geo_min_v2";
+export const GEO_META_KEY ="geo";
 
 // Petit helper pour générer des IDs pour les paliers / provinces / villes
 const newId = () => Math.random().toString(36).slice(2, 8);
