@@ -166,7 +166,7 @@ export const action = async ({ request }) => {
     const country = body.country || "MA";
     const province = body.province || "";
     const city = body.city || "";
-    const cartTotalCents = Number(body.cartTotalCents || 0);
+    const cartTotalCents = Number(body.subtotalCents || body.cartTotalCents || 0);
     const totalMoney = cartTotalCents / 100; // centimes → devise
 
     // Admin non authentifié (app proxy)
