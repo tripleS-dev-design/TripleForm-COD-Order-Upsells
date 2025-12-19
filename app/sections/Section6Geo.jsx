@@ -752,7 +752,7 @@ export default function Section6Geo() {
 
     // 1) localStorage (rapide)
     try {
-      const s = window.localStorage.getItem("tripleform_cod_geo_min_v2");
+      const s = window.localStorage.getItem("tripleform_cod_geo");
       if (s) {
         const parsed = JSON.parse(s);
         if (parsed && typeof parsed === "object") {
