@@ -9,11 +9,11 @@ export const action = async ({ request }) => {
   try {
     const { admin } = await authenticate.admin(request);
     
-    // 1. Lire l'ancien métafield "geo_min_v2"
+    // 1. Lire l'ancien métafield "geo"
     const oldQuery = `
       query GetOldGeoConfig {
         shop {
-          metafield(namespace: "${GEO_META_NAMESPACE}", key: "geo_min_v2") {
+          metafield(namespace: "${GEO_META_NAMESPACE}", key: "geo") {
             value
           }
         }
@@ -24,7 +24,7 @@ export const action = async ({ request }) => {
     const oldResult = await oldResponse.json();
     const oldValue = oldResult?.data?.shop?.metafield?.value;
     
-    console.log('[GEO MIGRATE] Ancienne valeur (geo_min_v2):', oldValue);
+    console.log('[GEO MIGRATE] Ancienne valeur (geo):', oldValue);
     
     // 2. Si existe, copier vers "geo"
     if (oldValue) {
@@ -65,7 +65,7 @@ export const action = async ({ request }) => {
     const checkQuery = `
       query CheckGeoConfigs {
         shop {
-          old: metafield(namespace: "${GEO_META_NAMESPACE}", key: "geo_min_v2") {
+          old: metafield(namespace: "${GEO_META_NAMESPACE}", key: "geo") {
             key
             value
           }
