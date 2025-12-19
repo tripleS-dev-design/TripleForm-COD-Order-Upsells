@@ -629,7 +629,7 @@ function defaultCfg() {
     currency: "MAD",
 
     // Livraison globale
-    isFree: true,
+    isFree: false ,
     mode: "province", // price | province | city
 
     // Tarifs "par prix"

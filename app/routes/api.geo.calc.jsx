@@ -2,9 +2,6 @@
 import { json } from "@remix-run/node";
 import { unauthenticated } from "../shopify.server";
 
-/**
- * Récupère le shop depuis l'URL (?shop=) ou les headers d'app proxy
- */
 function getShopFromExternalRequest(request) {
   const url = new URL(request.url);
   const qsShop = url.searchParams.get("shop");
@@ -33,49 +30,65 @@ function calcShippingFromConfig(cfg, input) {
   } = input || {};
   const orderTotal = Number(total) || 0;
 
+  console.log("=== CALC SHIPPING DEBUG ===");
+  console.log("Configuration reçue:", cfg);
+  console.log("Paramètres d'entrée:", { countryIn, province, city, orderTotal });
+
   if (!cfg || typeof cfg !== "object") {
+    console.log("DEBUG: Aucune configuration GEO trouvée");
     return {
       amount: 0,
       currency: "MAD",
-      baseRate: 0,
-      codExtraFee: 0,
       final: 0,
-      note: "",
-      minOrderAmount: 0,
-      freeThreshold: null,
-      mode: "price",
       isFree: true,
-      canSubmit: true,
-      blockReason: null,
+    };
+  }
+
+  // ✅ CORRECTION : S'assurer que isFree est défini
+  const isFreeGlobal = cfg.isFree === true;
+  
+  console.log("DEBUG: isFreeGlobal:", isFreeGlobal);
+  console.log("DEBUG: Mode:", cfg.mode || "province");
+
+  // Si livraison globale gratuite, retourner 0
+  if (isFreeGlobal) {
+    console.log("DEBUG: Livraison globale gratuite activée");
+    return {
+      amount: 0,
+      currency: cfg.currency || "MAD",
+      final: 0,
+      isFree: true,
     };
   }
 
   const country = (countryIn || cfg.country || "MA").toUpperCase().slice(0, 2);
   const currency = cfg.currency || "MAD";
   const adv = cfg.advanced || {};
-  const mode = cfg.mode || "price";
+  const mode = cfg.mode || "province";
 
   let baseRate = 0;
 
-  // --- 1) Livraison globale gratuite ---
-  if (cfg.isFree) {
-    baseRate = 0;
-  }
-  // --- 2) Mode par prix ---
-  else if (mode === "price") {
+  // --- 1) Mode par prix ---
+  if (mode === "price") {
+    console.log("DEBUG: Mode prix, montant commande:", orderTotal);
     const brackets = cfg.priceBrackets || [];
+    
     for (const b of brackets) {
       const min = b.min == null ? -Infinity : Number(b.min);
       const max = b.max == null ? Infinity : Number(b.max);
+      
       if (orderTotal >= min && orderTotal < max) {
         baseRate = Number(b.rate || 0);
+        console.log("DEBUG: Tranche trouvée, taux:", baseRate);
         break;
       }
     }
   }
-  // --- 3) Mode par province / wilaya ---
+  // --- 2) Mode par province / wilaya ---
   else if (mode === "province") {
+    console.log("DEBUG: Mode province, province cherchée:", province);
     const arr = (cfg.provinceRates && cfg.provinceRates[country]) || [];
+    
     const nProvince = normalizeStr(province);
     const match = arr.find((p) => {
       const nName = normalizeStr(p.name);
@@ -86,31 +99,40 @@ function calcShippingFromConfig(cfg, input) {
       );
     });
     baseRate = match ? Number(match.rate || 0) : 0;
+    console.log("DEBUG: Province match:", match, "taux:", baseRate);
   }
-  // --- 4) Mode par ville --- (CORRECTION APPLIQUÉE)
+  // --- 3) Mode par ville ---
   else if (mode === "city") {
+    console.log("DEBUG: Mode ville, ville:", city, "province:", province);
     const arr = (cfg.cityRates && cfg.cityRates[country]) || [];
+    
     const nCity = normalizeStr(city);
     const nProvince = normalizeStr(province);
     
-    // Chercher la ville avec le bon nom ET la bonne province
     const match = arr.find((c) => 
       normalizeStr(c.name) === nCity && 
       normalizeStr(c.province) === nProvince
     );
-    
     baseRate = match ? Number(match.rate || 0) : 0;
+    console.log("DEBUG: Ville match:", match, "taux:", baseRate);
   }
 
-  // Tarif par défaut si rien trouvé
-  if (!cfg.isFree && baseRate === 0 && adv.defaultRate != null) {
-    baseRate = Number(adv.defaultRate || 0);
+  // ✅ CORRECTION : Utiliser le taux par défaut seulement si pas de match
+  if (baseRate === 0 && adv.defaultRate != null) {
+    const defaultRate = Number(adv.defaultRate || 0);
+    if (defaultRate > 0) {
+      console.log("DEBUG: Utilisation taux par défaut:", defaultRate);
+      baseRate = defaultRate;
+    }
   }
 
-  // Seuil de livraison gratuite
-  if (!cfg.isFree && adv.freeThreshold != null) {
+  // ✅ CORRECTION : Seuil de livraison gratuite
+  if (adv.freeThreshold != null) {
     const thr = Number(adv.freeThreshold);
+    console.log("DEBUG: Seuil gratuit:", thr, "Montant commande:", orderTotal);
+    
     if (!Number.isNaN(thr) && thr > 0 && orderTotal >= thr) {
+      console.log("DEBUG: Seuil atteint, livraison gratuite");
       baseRate = 0;
     }
   }
@@ -119,38 +141,21 @@ function calcShippingFromConfig(cfg, input) {
   let codExtraFee = 0;
   if (isCod && adv.codExtraFee != null) {
     codExtraFee = Number(adv.codExtraFee || 0);
+    console.log("DEBUG: Frais COD:", codExtraFee);
   }
 
-  const final = cfg.isFree ? 0 : baseRate + codExtraFee;
-
-  // Minimum de commande
-  let canSubmit = true;
-  let blockReason = null;
-  if (adv.minOrderAmount != null) {
-    const minOrder = Number(adv.minOrderAmount || 0);
-    if (!Number.isNaN(minOrder) && minOrder > 0 && orderTotal < minOrder) {
-      canSubmit = false;
-      blockReason = `Montant minimum de commande : ${minOrder.toFixed(
-        2
-      )} ${currency}`;
-    }
-  }
-
-  const isFreeShipping = !!cfg.isFree || final === 0;
+  const final = baseRate + codExtraFee;
+  const isFreeShipping = final === 0;
+  
+  console.log("DEBUG: Total frais:", final, "Devise:", currency);
+  console.log("DEBUG: Livraison gratuite ?", isFreeShipping);
 
   return {
     amount: final,
     currency,
-    baseRate,
-    codExtraFee,
     final,
-    note: adv.note || "",
-    minOrderAmount: adv.minOrderAmount || 0,
-    freeThreshold: adv.freeThreshold ?? null,
-    mode,
     isFree: isFreeShipping,
-    canSubmit,
-    blockReason,
+    note: adv.note || "",
   };
 }
 
@@ -162,24 +167,40 @@ export const action = async ({ request }) => {
   try {
     const shop = getShopFromExternalRequest(request);
     if (!shop) {
+      console.error("GEO CALC ERREUR: Shop manquant");
       return json(
         { ok: false, error: "Missing shop parameter" },
         { status: 400 }
       );
     }
 
-    // Payload envoyé par tripleform.js (recalcGeo)
-    const body = await request.json().catch(() => ({}));
+    // Récupérer les données du frontend
+    let body = {};
+    if (request.method === "POST") {
+      body = await request.json().catch(() => ({}));
+    } else {
+      const url = new URL(request.url);
+      body = {
+        country: url.searchParams.get("country"),
+        province: url.searchParams.get("province"),
+        city: url.searchParams.get("city"),
+        subtotalCents: url.searchParams.get("subtotalCents"),
+      };
+    }
+
     const country = body.country || "MA";
     const province = body.province || "";
     const city = body.city || "";
-    const cartTotalCents = Number(body.subtotalCents || body.cartTotalCents || 0);
+    const cartTotalCents = Number(body.subtotalCents || 0);
     const totalMoney = cartTotalCents / 100; // centimes → devise
 
-    // Admin non authentifié (app proxy)
+    console.log("=== REQUÊTE GEO CALC ===");
+    console.log("Shop:", shop);
+    console.log("Paramètres:", { country, province, city, cartTotalCents, totalMoney });
+
+    // Récupérer la configuration GEO
     const { admin } = await unauthenticated.admin(shop);
 
-    // ❗ Correction GraphQL : metafield sur "shop", pas à la racine
     const q = await admin.graphql(`
       query GetGeoConfigForCalc {
         shop {
@@ -197,6 +218,9 @@ export const action = async ({ request }) => {
     const raw = payload?.data?.shop?.metafield?.value;
     const cfg = raw ? JSON.parse(raw) : null;
 
+    console.log("Configuration GEO chargée:", cfg);
+
+    // Calculer les frais
     const shipping = calcShippingFromConfig(cfg, {
       country,
       province,
@@ -205,38 +229,50 @@ export const action = async ({ request }) => {
       isCod: true,
     });
 
-    const labelAmount = (shipping.amount || 0)
-      .toFixed(2)
-      .replace(".", ",");
-    const label = shipping.isFree
-      ? "Livraison gratuite"
-      : `${labelAmount} ${shipping.currency}`;
+    console.log("Résultat calcul shipping:", shipping);
 
-    return json({
+    // ✅ CORRECTION CRITIQUE: Convertir en centimes pour le frontend
+    const shippingAmountInCents = Math.round(shipping.final * 100);
+    
+    // ✅ RETOURNER LES DEUX FORMATS pour compatibilité
+    const response = {
       ok: true,
+      // Format pour nouveau JS (conversion en centimes côté serveur)
+      shippingAmount: shippingAmountInCents,
+      
+      // Format pour ancien JS
       shipping: {
-        amount: shipping.amount, // ex: 29
+        amount: shipping.final, // en devise
         currency: shipping.currency,
-        label,                    // ex: "29,00 MAD"
-        baseRate: shipping.baseRate,
-        codExtraFee: shipping.codExtraFee,
-        note: shipping.note,
+        note: shipping.note || "",
       },
-      rules: {
-        minOrderAmount: shipping.minOrderAmount,
-        freeThreshold: shipping.freeThreshold,
-      },
-      canSubmit: shipping.canSubmit,
-      blockReason: shipping.blockReason,
-    });
+      
+      // Informations de debug
+      debug: {
+        configExists: !!cfg,
+        isFreeGlobal: cfg?.isFree === true,
+        mode: cfg?.mode || "province",
+        originalAmount: shipping.final,
+        convertedToCents: shippingAmountInCents,
+        currency: shipping.currency,
+      }
+    };
+
+    console.log("Réponse envoyée:", response);
+    return json(response);
+
   } catch (e) {
     console.error("geo.calc error", e);
     return json(
-      { ok: false, error: String(e?.message || e) },
+      { 
+        ok: false, 
+        error: String(e?.message || e),
+        shippingAmount: 0 // Retourner 0 en cas d'erreur
+      },
       { status: 500 }
     );
   }
 };
 
-// facultatif : permet de tester en GET dans le navigateur
+// Permet de tester en GET
 export const loader = (args) => action(args);
