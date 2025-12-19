@@ -3,7 +3,7 @@ import { json } from "@remix-run/node";
 import { unauthenticated } from "../shopify.server";
 
 /**
- * Récupère le shop depuis l’URL (?shop=) ou les headers d’app proxy
+ * Récupère le shop depuis l'URL (?shop=) ou les headers d'app proxy
  */
 function getShopFromExternalRequest(request) {
   const url = new URL(request.url);
@@ -87,11 +87,18 @@ function calcShippingFromConfig(cfg, input) {
     });
     baseRate = match ? Number(match.rate || 0) : 0;
   }
-  // --- 4) Mode par ville ---
+  // --- 4) Mode par ville --- (CORRECTION APPLIQUÉE)
   else if (mode === "city") {
     const arr = (cfg.cityRates && cfg.cityRates[country]) || [];
     const nCity = normalizeStr(city);
-    const match = arr.find((c) => normalizeStr(c.name) === nCity);
+    const nProvince = normalizeStr(province);
+    
+    // Chercher la ville avec le bon nom ET la bonne province
+    const match = arr.find((c) => 
+      normalizeStr(c.name) === nCity && 
+      normalizeStr(c.province) === nProvince
+    );
+    
     baseRate = match ? Number(match.rate || 0) : 0;
   }
 
