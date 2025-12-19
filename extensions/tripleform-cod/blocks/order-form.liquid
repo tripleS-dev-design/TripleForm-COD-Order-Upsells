@@ -17,6 +17,81 @@ Lit la config OFFRES / UPSELL depuis:
 {%- elsif tf_shop_val and tf_shop_val != blank -%}
   {%- assign tf_json = tf_shop_val -%}
 {%- else -%}
+  {%- comment -%}Déterminer le pays et les valeurs par défaut basées sur la boutique{%- endcomment -%}
+  {%- assign shop_country_code = shop.country_code | default: 'MA' -%}
+  
+  {%- comment -%}Déterminer le préfixe téléphonique et les labels basés sur le pays{%- endcomment -%}
+  {%- assign phone_prefix = '+212' -%}
+  {%- assign province_label = 'Province' -%}
+  {%- assign province_placeholder = 'Select province' -%}
+  
+  {%- case shop_country_code -%}
+    {%- when 'MA' -%}
+      {%- assign phone_prefix = '+212' -%}
+      {%- assign province_label = 'Province' -%}
+      {%- assign province_placeholder = 'Select province' -%}
+    {%- when 'DZ' -%}
+      {%- assign phone_prefix = '+213' -%}
+      {%- assign province_label = 'Wilaya' -%}
+      {%- assign province_placeholder = 'Select wilaya' -%}
+    {%- when 'TN' -%}
+      {%- assign phone_prefix = '+216' -%}
+      {%- assign province_label = 'Gouvernorat' -%}
+      {%- assign province_placeholder = 'Select gouvernorat' -%}
+    {%- when 'EG' -%}
+      {%- assign phone_prefix = '+20' -%}
+      {%- assign province_label = 'Governorate' -%}
+      {%- assign province_placeholder = 'Select governorate' -%}
+    {%- when 'FR' -%}
+      {%- assign phone_prefix = '+33' -%}
+      {%- assign province_label = 'Région' -%}
+      {%- assign province_placeholder = 'Select region' -%}
+    {%- when 'ES' -%}
+      {%- assign phone_prefix = '+34' -%}
+      {%- assign province_label = 'Provincia' -%}
+      {%- assign province_placeholder = 'Select provincia' -%}
+    {%- when 'SA' -%}
+      {%- assign phone_prefix = '+966' -%}
+      {%- assign province_label = 'Province' -%}
+      {%- assign province_placeholder = 'Select province' -%}
+    {%- when 'AE' -%}
+      {%- assign phone_prefix = '+971' -%}
+      {%- assign province_label = 'Emirate' -%}
+      {%- assign province_placeholder = 'Select emirate' -%}
+    {%- when 'US' -%}
+      {%- assign phone_prefix = '+1' -%}
+      {%- assign province_label = 'State' -%}
+      {%- assign province_placeholder = 'Select state' -%}
+    {%- when 'NG' -%}
+      {%- assign phone_prefix = '+234' -%}
+      {%- assign province_label = 'State' -%}
+      {%- assign province_placeholder = 'Select state' -%}
+    {%- when 'PK' -%}
+      {%- assign phone_prefix = '+92' -%}
+      {%- assign province_label = 'Province' -%}
+      {%- assign province_placeholder = 'Select province' -%}
+    {%- when 'IN' -%}
+      {%- assign phone_prefix = '+91' -%}
+      {%- assign province_label = 'State' -%}
+      {%- assign province_placeholder = 'Select state' -%}
+    {%- when 'ID' -%}
+      {%- assign phone_prefix = '+62' -%}
+      {%- assign province_label = 'Province' -%}
+      {%- assign province_placeholder = 'Select province' -%}
+    {%- when 'TR' -%}
+      {%- assign phone_prefix = '+90' -%}
+      {%- assign province_label = 'Province' -%}
+      {%- assign province_placeholder = 'Select province' -%}
+    {%- when 'BR' -%}
+      {%- assign phone_prefix = '+55' -%}
+      {%- assign province_label = 'State' -%}
+      {%- assign province_placeholder = 'Select state' -%}
+    {%- else -%}
+      {%- assign phone_prefix = '+212' -%}
+      {%- assign province_label = 'Province' -%}
+      {%- assign province_placeholder = 'Select province' -%}
+  {%- endcase -%}
+  
   {%- capture tf_json -%}
   {
     "meta": {
@@ -76,8 +151,8 @@ Lit la config OFFRES / UPSELL depuis:
       "overlayColor": "#020617",
       "overlayOpacity": 70,
 
-      "country": "DZ",
-      "codCountry": "DZ",
+      "country": "{{ shop_country_code }}",
+      "codCountry": "{{ shop_country_code }}",
       "provinceKey": "",
       "cityKey": ""
     },
@@ -95,7 +170,7 @@ Lit la config OFFRES / UPSELL depuis:
         "type": "tel",
         "label": "Phone (WhatsApp)",
         "ph": "Phone number",
-        "prefix": "+213"
+        "prefix": "{{ phone_prefix }}"
       },
       "quantity": {
         "on": true,
@@ -110,8 +185,8 @@ Lit la config OFFRES / UPSELL depuis:
         "on": true,
         "required": false,
         "type": "text",
-        "label": "Wilaya / Province",
-        "ph": "Select province"
+        "label": "{{ province_label }}",
+        "ph": "{{ province_placeholder }}"
       },
       "city": {
         "on": true,
@@ -153,9 +228,8 @@ Lit la config OFFRES / UPSELL depuis:
 {%- comment %}
 OFFRES / UPSELL
 Ces données sont écrites par /api/save-offers dans:
-- product.metafields.tripleform_cod.offers
-ou
-- shop.metafields.tripleform_cod.offers
+- product.metafields.tripleform_cod.offers (prioritaire)
+- shop.metafields.tripleform_cod.offers (fallback)
 {%- endcomment -%}
 
 {%- assign tf_offers_prod_val = product.metafields.tripleform_cod.offers.value -%}
@@ -168,7 +242,11 @@ ou
 {%- else -%}
   {%- capture tf_offers_json -%}
   {
-    "global": { "enabled": false, "currency": "dh", "rounding": "none" },
+    "global": { 
+      "enabled": false, 
+      "currency": "{{ shop.currency | default: 'MAD' | downcase }}", 
+      "rounding": "none" 
+    },
     "themePreset": "light",
     "theme": {
       "statusBarBg": "#020617",
