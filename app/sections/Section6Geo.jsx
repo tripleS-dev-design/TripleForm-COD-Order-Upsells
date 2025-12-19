@@ -156,177 +156,402 @@ function useInjectCss() {
 }
 
 /* ======================= Catalogue pays / wilayas / villes ======================= */
-// Même logique que le front : MA / DZ / TN avec provinces + villes
-const GEO_COUNTRIES = {
+const COUNTRY_DATA = {
+  // ========== MAROC (MA) ==========
   MA: {
     label: "Maroc",
-    provinces: [
-      {
-        id: "casablanca",
-        name: "Casablanca-Settat",
-        cities: ["Casablanca", "Mohammedia", "Settat", "Berrechid", "El Jadida"],
+    provinces: {
+      CASABLANCA: { 
+        label: "Casablanca-Settat", 
+        cities: ["Casablanca", "Mohammedia", "Settat", "Berrechid", "El Jadida", "Benslimane", "Nouaceur", "Médiouna", "Sidi Bennour", "Dar Bouazza", "Lahraouyine", "Had Soualem", "Sidi Rahal", "Oulad Abbou"] 
       },
-      {
-        id: "rabat",
-        name: "Rabat-Salé-Kénitra",
-        cities: ["Rabat", "Salé", "Kénitra", "Témara", "Khémisset"],
+      RABAT: { 
+        label: "Rabat-Salé-Kénitra", 
+        cities: ["Rabat", "Salé", "Kénitra", "Témara", "Skhirat", "Khémisset", "Sidi Slimane", "Sidi Kacem", "Tiflet", "Ain Aouda", "Harhoura", "Sidi Yahya Zaer", "Oulmès", "Sidi Allal El Bahraoui"] 
       },
-      {
-        id: "tanger",
-        name: "Tanger-Tétouan-Al Hoceïma",
-        cities: ["Tanger", "Tétouan", "Al Hoceïma", "Larache", "Martil"],
+      TANGER: { 
+        label: "Tanger-Tétouan-Al Hoceïma", 
+        cities: ["Tanger", "Tétouan", "Al Hoceïma", "Larache", "Chefchaouen", "Ouazzane", "Fnideq", "M'diq", "Martil", "Ksar El Kebir", "Asilah", "Bni Bouayach", "Imzouren", "Bni Hadifa"] 
       },
-      {
-        id: "fes",
-        name: "Fès-Meknès",
-        cities: ["Fès", "Meknès", "Ifrane", "Sefrou"],
+      MARRAKECH: { 
+        label: "Marrakech-Safi", 
+        cities: ["Marrakech", "Safi", "El Kelâa des Sraghna", "Essaouira", "Rehamna", "Youssoufia", "Chichaoua", "Al Haouz", "Rhamna", "Benguerir", "Sidi Bennour", "Smimou", "Tamanar", "Imintanoute"] 
       },
-      {
-        id: "marrakech",
-        name: "Marrakech-Safi",
-        cities: ["Marrakech", "Safi", "Essaouira", "Chichaoua"],
+      FES: { 
+        label: "Fès-Meknès", 
+        cities: ["Fès", "Meknès", "Ifrane", "Taza", "Sefrou", "Boulemane", "Taounate", "Guercif", "Moulay Yacoub", "El Hajeb", "Moulay Idriss Zerhoun", "Ouazzane", "Bhalil", "Aïn Cheggag"] 
       },
-      {
-        id: "oriental",
-        name: "L'Oriental",
-        cities: ["Oujda", "Nador", "Berkane"],
+      ORIENTAL: { 
+        label: "Région de l'Oriental", 
+        cities: ["Oujda", "Nador", "Berkane", "Taourirt", "Jerada", "Figuig", "Bouarfa", "Ahfir", "Driouch", "Beni Ensar", "Selouane", "Bouhdila", "Talsint", "Debdou"] 
       },
-      {
-        id: "souss",
-        name: "Souss-Massa",
-        cities: ["Agadir", "Inezgane", "Taroudant"],
+      SUSS: { 
+        label: "Souss-Massa", 
+        cities: ["Agadir", "Inezgane", "Taroudant", "Tiznit", "Oulad Teima", "Biougra", "Ait Melloul", "Dcheira", "Temsia", "Ait Baha", "Chtouka Ait Baha", "Tafraout", "Aoulouz", "El Guerdane"] 
       },
-      {
-        id: "beni-mellal",
-        name: "Béni Mellal-Khénifra",
-        cities: ["Béni Mellal", "Khénifra"],
-      },
-      {
-        id: "draa-tafilalet",
-        name: "Drâa-Tafilalet",
-        cities: ["Errachidia", "Ouarzazate", "Zagora"],
-      },
-      {
-        id: "guelmim",
-        name: "Guelmim-Oued Noun",
-        cities: ["Guelmim"],
-      },
-      {
-        id: "laayoune",
-        name: "Laâyoune-Sakia El Hamra",
-        cities: ["Laâyoune", "Boujdour"],
-      },
-      {
-        id: "dakhla",
-        name: "Dakhla-Oued Ed Dahab",
-        cities: ["Dakhla"],
-      },
-    ],
+      DRAATAF: { 
+        label: "Drâa-Tafilalet", 
+        cities: ["Errachidia", "Ouarzazate", "Tinghir", "Midelt", "Zagora", "Rissani", "Alnif", "Boumalne Dades", "Kelaat M'Gouna", "Tinejdad", "Goulmima", "Jorf", "M'semrir", "Aït Benhaddou"] 
+      }
+    }
   },
 
+  // ========== ALGÉRIE (DZ) ==========
   DZ: {
     label: "Algérie",
-    provinces: [
-      {
-        id: "alger",
-        name: "Alger",
-        cities: ["Alger", "Bab Ezzouar", "Kouba", "Hussein Dey"],
+    provinces: {
+      ALGER: { 
+        label: "Alger", 
+        cities: ["Alger Centre", "Bab El Oued", "El Harrach", "Kouba", "Hussein Dey", "Bordj El Kiffan", "Dar El Beïda", "Bouzaréah", "Birkhadem", "Chéraga", "Dellys", "Zeralda", "Staoueli", "Birtouta", "Ouled Fayet", "Draria", "Les Eucalyptus"] 
       },
-      {
-        id: "oran",
-        name: "Oran",
-        cities: ["Oran", "Es Senia", "Bir El Djir"],
+      ORAN: { 
+        label: "Oran", 
+        cities: ["Oran", "Es-Sénia", "Bir El Djir", "Gdyel", "Aïn El Turck", "Arzew", "Mers El Kébir", "Boutlelis", "Oued Tlelat", "Bethioua", "El Ançor", "Hassi Bounif", "Messerghin", "Boufatis", "Tafraoui"] 
       },
-      {
-        id: "constantine",
-        name: "Constantine",
-        cities: ["Constantine", "El Khroub"],
+      CONSTANTINE: { 
+        label: "Constantine", 
+        cities: ["Constantine", "El Khroub", "Hamma Bouziane", "Aïn Smara", "Zighoud Youcef", "Didouche Mourad", "Ibn Ziad", "Messaoud Boudjeriou", "Beni Hamidane", "Aïn Abid", "Ouled Rahmoun", "Ben Badis", "El Haria"] 
       },
-      {
-        id: "setif",
-        name: "Sétif",
-        cities: ["Sétif", "El Eulma"],
+      BLIDA: { 
+        label: "Blida", 
+        cities: ["Blida", "Boufarik", "El Affroun", "Mouzaïa", "Ouled Yaïch", "Beni Mered", "Bouinan", "Soumaa", "Chebli", "Bougara", "Guerrouaou", "Hammam Melouane", "Beni Tamou", "Ben Khlil"] 
       },
-      {
-        id: "blida",
-        name: "Blida",
-        cities: ["Blida", "Boufarik", "Mouzaïa"],
+      SETIF: { 
+        label: "Sétif", 
+        cities: ["Sétif", "El Eulma", "Aïn Oulmene", "Bougaa", "Aïn Azel", "Amoucha", "Béni Aziz", "Guellal", "Hammam Soukhna", "Bouandas", "Taya", "Tella", "Babor", "Maoklane"] 
       },
-      {
-        id: "annaba",
-        name: "Annaba",
-        cities: ["Annaba", "El Bouni"],
+      ANNABA: { 
+        label: "Annaba", 
+        cities: ["Annaba", "El Bouni", "Sidi Amar", "Berrahal", "Treat", "Cheurfa", "Oued El Aneb", "Seraidi", "Ain Berda", "Chaiba", "El Hadjar", "Chetaibi"] 
       },
-      {
-        id: "tlemcen",
-        name: "Tlemcen",
-        cities: ["Tlemcen", "Maghnia"],
-      },
-      {
-        id: "bejaia",
-        name: "Béjaïa",
-        cities: ["Béjaïa", "Akbou"],
-      },
-      { id: "batna", name: "Batna", cities: ["Batna"] },
-      { id: "tiaret", name: "Tiaret", cities: ["Tiaret"] },
-    ],
+      BATNA: { 
+        label: "Batna", 
+        cities: ["Batna", "Barika", "Merouana", "Arris", "N'Gaous", "Tazoult", "Aïn Touta", "Ouled Si Slimane", "Fesdis", "Timgad", "Ras El Aioun", "Maafa", "Lazrou", "Ouled Ammar"] 
+      }
+    }
   },
 
+  // ========== TUNISIE (TN) ==========
   TN: {
     label: "Tunisie",
-    provinces: [
-      {
-        id: "tunis",
-        name: "Tunis",
-        cities: ["Tunis", "La Marsa", "Carthage"],
+    provinces: {
+      TUNIS: { 
+        label: "Tunis", 
+        cities: ["Tunis", "La Marsa", "Carthage", "Le Bardo", "Le Kram", "Sidi Bou Said", "Menzah", "Ariana", "El Menzah", "Mornaguia", "Mégrine", "Radès", "Djedeida", "El Omrane", "Ettahrir", "El Kabaria"] 
       },
-      {
-        id: "ariana",
-        name: "Ariana",
-        cities: ["Ariana", "Raoued"],
+      ARIANA: { 
+        label: "Ariana", 
+        cities: ["Ariana", "Raoued", "La Soukra", "Kalaat El Andalous", "Sidi Thabet", "Ettadhamen", "Mnihla", "Borj El Amri", "Kalâat el-Andalous", "Sidi Amor", "El Battan", "Oued Ellil"] 
       },
-      {
-        id: "ben-arous",
-        name: "Ben Arous",
-        cities: ["Ben Arous", "Ezzahra"],
+      BEN_AROUS: { 
+        label: "Ben Arous", 
+        cities: ["Ben Arous", "Ezzahra", "Rades", "Mégrine", "Hammam Lif", "Mornag", "Fouchana", "Khalidia", "Mhamdia", "Hammam Chott", "Bou Mhel el-Bassatine", "El Mida", "Mornaguia"] 
       },
-      {
-        id: "manouba",
-        name: "Manouba",
-        cities: ["Manouba", "Douar Hicher"],
+      SFAX: { 
+        label: "Sfax", 
+        cities: ["Sfax", "El Ain", "Agareb", "Mahres", "Sakiet Eddaïer", "Sakiet Ezzit", "Ghraiba", "Bir Ali Ben Khalifa", "Jebeniana", "Kerkennah", "Skhira", "Menzel Chaker", "Gremda", "Thyna"] 
       },
-      {
-        id: "sfax",
-        name: "Sfax",
-        cities: ["Sfax", "Sakiet Ezzit"],
+      SOUSSE: { 
+        label: "Sousse", 
+        cities: ["Sousse", "Hammam Sousse", "Kalaa Kebira", "Kalaa Sghira", "Akouda", "M'saken", "Enfidha", "Bouficha", "Hergla", "Kondar", "Zaouiet Sousse", "Hammam Jedidi", "Sidi Bou Ali", "Messaadine"] 
       },
-      {
-        id: "sousse",
-        name: "Sousse",
-        cities: ["Sousse", "Hammam Sousse"],
-      },
-      {
-        id: "monastir",
-        name: "Monastir",
-        cities: ["Monastir", "Sahline"],
-      },
-      {
-        id: "nabeul",
-        name: "Nabeul",
-        cities: ["Nabeul", "Hammamet"],
-      },
-      {
-        id: "bizerte",
-        name: "Bizerte",
-        cities: ["Bizerte", "Menzel Bourguiba"],
-      },
-      { id: "gabes", name: "Gabès", cities: ["Gabès"] },
-      { id: "gafsa", name: "Gafsa", cities: ["Gafsa"] },
-      { id: "kairouan", name: "Kairouan", cities: ["Kairouan"] },
-      { id: "kasserine", name: "Kasserine", cities: ["Kasserine"] },
-    ],
+      BIZERTE: { 
+        label: "Bizerte", 
+        cities: ["Bizerte", "Menzel Jemil", "Mateur", "Sejnane", "Ghar El Melh", "Ras Jebel", "Menzel Abderrahmane", "El Alia", "Tinja", "Utique", "Menzel Bourguiba", "Joumine", "Aousja", "Metline"] 
+      }
+    }
   },
+
+  // ========== ÉGYPTE (EG) ==========
+  EG: {
+    label: "Égypte",
+    provinces: {
+      CAIRO: { 
+        label: "Le Caire", 
+        cities: ["Le Caire", "Nasr City", "Heliopolis", "Maadi", "Zamalek", "Dokki", "Giza", "Shubra", "Al Haram", "Al Mohandessin", "6 Octobre", "New Cairo", "Madinet Nasr", "Helwan", "Qalyub", "Shubra El Kheima", "Badr City"] 
+      },
+      ALEX: { 
+        label: "Alexandrie", 
+        cities: ["Alexandrie", "Borg El Arab", "Abu Qir", "Al Amriya", "Al Agamy", "Montaza", "Al Mansheya", "Al Labban", "Kafr Abdo", "Sidi Gaber", "Smouha", "Miami", "Stanley", "Laurent", "Gleem", "Camp Caesar"] 
+      },
+      GIZA: { 
+        label: "Gizeh", 
+        cities: ["Gizeh", "Sheikh Zayed City", "6th of October", "Al Haram", "Al Badrasheen", "Al Ayat", "Al Wahat Al Bahariya", "Al Saff", "Atfih", "Al Ayyat", "Awashim", "Kerdasa", "El Hawamdeya", "Osim"] 
+      },
+      SHARQIA: { 
+        label: "Sharqia", 
+        cities: ["Zagazig", "10th of Ramadan City", "Belbeis", "Minya Al Qamh", "Al Ibrahimiyah", "Diarb Negm", "Husseiniya", "Mashtool El Souk", "Abu Hammad", "Abu Kebir", "Faqous", "El Salheya El Gedida"] 
+      }
+    }
+  },
+
+  // ========== FRANCE (FR) ==========
+  FR: {
+    label: "France",
+    provinces: {
+      IDF: { 
+        label: "Île-de-France", 
+        cities: ["Paris", "Boulogne-Billancourt", "Saint-Denis", "Versailles", "Nanterre", "Créteil", "Bobigny", "Montreuil", "Argenteuil", "Courbevoic", "Asnières-sur-Seine", "Colombes", "Aubervilliers", "Saint-Maur-des-Fossés", "Issy-les-Moulineaux", "Levallois-Perret"] 
+      },
+      PACA: { 
+        label: "Provence-Alpes-Côte d'Azur", 
+        cities: ["Marseille", "Nice", "Toulon", "Avignon", "Aix-en-Provence", "Antibes", "Cannes", "La Seyne-sur-Mer", "Hyères", "Arles", "Martigues", "Grasse", "Fréjus", "Antibes", "La Ciotat", "Cavaillon"] 
+      },
+      ARA: { 
+        label: "Auvergne-Rhône-Alpes", 
+        cities: ["Lyon", "Grenoble", "Saint-Étienne", "Annecy", "Clermont-Ferrand", "Villeurbanne", "Valence", "Chambéry", "Roanne", "Bourg-en-Bresse", "Vénissieux", "Saint-Priest", "Caluire-et-Cuire", "Vaulx-en-Velin", "Meyzieu"] 
+      },
+      OCCITANIE: { 
+        label: "Occitanie", 
+        cities: ["Toulouse", "Montpellier", "Nîmes", "Perpignan", "Béziers", "Montauban", "Narbonne", "Carcassonne", "Albi", "Sète", "Lunel", "Agde", "Castres", "Mende", "Millau", "Foix"] 
+      }
+    }
+  },
+
+  // ========== ESPAGNE (ES) ==========
+  ES: {
+    label: "España",
+    provinces: {
+      MADRID: { 
+        label: "Comunidad de Madrid", 
+        cities: ["Madrid", "Alcalá de Henares", "Getafe", "Leganés", "Móstoles", "Fuenlabrada", "Alcorcón", "Parla", "Torrejón de Ardoz", "Coslada", "Las Rozas", "San Sebastián de los Reyes", "Alcobendas", "Pozuelo de Alarcón", "Rivas-Vaciamadrid"] 
+      },
+      CATALUNYA: { 
+        label: "Cataluña", 
+        cities: ["Barcelona", "L'Hospitalet de Llobregat", "Badalona", "Tarragona", "Sabadell", "Lleida", "Mataró", "Santa Coloma de Gramenet", "Reus", "Girona", "Sant Cugat", "Cornellà", "Sant Boi de Llobregat", "Rubí", "Manresa"] 
+      },
+      ANDALUCIA: { 
+        label: "Andalucía", 
+        cities: ["Sevilla", "Málaga", "Granada", "Córdoba", "Jerez de la Frontera", "Almería", "Huelva", "Marbella", "Dos Hermanas", "Algeciras", "Cádiz", "Jaén", "Almería", "Mijas", "Fuengirola", "Chiclana de la Frontera"] 
+      },
+      VALENCIA: { 
+        label: "Comunidad Valenciana", 
+        cities: ["Valencia", "Alicante", "Castellón de la Plana", "Elche", "Torrevieja", "Orihuela", "Gandia", "Benidorm", "Paterna", "Sagunto", "Alcoy", "Elda", "San Vicente del Raspeig", "Vila-real", "Burjassot"] 
+      }
+    }
+  },
+
+  // ========== ARABIE SAOUDITE (SA) ==========
+  SA: {
+    label: "Arabie Saoudite",
+    provinces: {
+      RIYADH: { 
+        label: "Riyadh", 
+        cities: ["Riyadh", "Al Kharj", "Al Majma'ah", "Dhurma", "Al Duwadimi", "Al Quway'iyah", "Al Muzahmiyah", "Wadi ad-Dawasir", "Al Hariq", "Al Sulayyil", "Al Aflaj", "Hotat Bani Tamim", "Al Diriyah", "Thadiq", "Huraymila"] 
+      },
+      MAKKAH: { 
+        label: "Makkah", 
+        cities: ["Makkah", "Jeddah", "Taif", "Al Qunfudhah", "Al Lith", "Al Jumum", "Khulais", "Rabigh", "Turubah", "Al Kamel", "Bahra", "Adham", "Al Jumum", "Al Khurma", "Al Muwayh"] 
+      },
+      MADINAH: { 
+        label: "Madinah", 
+        cities: ["Madinah", "Yanbu", "Al Ula", "Badr", "Mahd adh Dhahab", "Al Hinakiyah", "Wadi al-Fara'", "Al-Mahd", "Khaybar", "Al Henakiyah", "Al Suqiyah", "Al-Mahd", "Al-Ais", "Hegrah"] 
+      },
+      EASTERN: { 
+        label: "Eastern Province", 
+        cities: ["Dammam", "Khobar", "Dhahran", "Jubail", "Qatif", "Hafr al-Batin", "Al Khafji", "Ras Tanura", "Abqaiq", "Al-'Udayd", "Nu'ayriyah", "Udhailiyah", "Al Qaryah", "Al Mubarraz", "Al Awamiyah"] 
+      }
+    }
+  },
+
+  // ========== ÉMIRATS ARABES UNIS (AE) ==========
+  AE: {
+    label: "Émirats Arabes Unis",
+    provinces: {
+      DUBAI: { 
+        label: "Dubai", 
+        cities: ["Dubai", "Jebel Ali", "Hatta", "Al Awir", "Al Lusayli", "Margham", "Al Khawaneej", "Al Qusais", "Al Barsha", "Al Warqaa", "Mirdif", "Nad Al Sheba", "Al Quoz", "Jumeirah", "Business Bay", "Dubai Marina"] 
+      },
+      ABU_DHABI: { 
+        label: "Abu Dhabi", 
+        cities: ["Abu Dhabi", "Al Ain", "Madinat Zayed", "Gharbia", "Liwa Oasis", "Al Ruwais", "Al Mirfa", "Al Dhafra", "Al Samha", "Al Shawamekh", "Bani Yas", "Khalifa City", "Mohammed Bin Zayed City", "Shahama", "Al Wathba"] 
+      },
+      SHARJAH: { 
+        label: "Sharjah", 
+        cities: ["Sharjah", "Khor Fakkan", "Kalba", "Dhaid", "Al Dhaid", "Al Hamriyah", "Al Madam", "Al Batayeh", "Al Sajaa", "Al Ghail", "Wasit", "Mleiha", "Al Nahda", "Al Qasimia", "Al Majaz"] 
+      },
+      AJMAN: { 
+        label: "Ajman", 
+        cities: ["Ajman", "Masfout", "Manama", "Al Hamidiyah", "Al Zorah", "Al Mowaihat", "Al Jurf", "Al Hamidiya", "Al Rawda", "Al Nuaimiya"] 
+      }
+    }
+  },
+
+  // ========== ÉTATS-UNIS (US) ==========
+  US: {
+    label: "United States",
+    provinces: {
+      CALIFORNIA: { 
+        label: "California", 
+        cities: ["Los Angeles", "San Francisco", "San Diego", "San Jose", "Sacramento", "Fresno", "Long Beach", "Oakland", "Bakersfield", "Anaheim", "Santa Ana", "Riverside", "Stockton", "Chula Vista", "Irvine", "Modesto"] 
+      },
+      NEW_YORK: { 
+        label: "New York", 
+        cities: ["New York City", "Buffalo", "Rochester", "Yonkers", "Syracuse", "Albany", "New Rochelle", "Mount Vernon", "Schenectady", "Utica", "White Plains", "Troy", "Niagara Falls", "Binghamton"] 
+      },
+      TEXAS: { 
+        label: "Texas", 
+        cities: ["Houston", "Dallas", "Austin", "San Antonio", "Fort Worth", "El Paso", "Arlington", "Corpus Christi", "Plano", "Laredo", "Lubbock", "Garland", "Irving", "Amarillo", "Grand Prairie"] 
+      },
+      FLORIDA: { 
+        label: "Florida", 
+        cities: ["Miami", "Orlando", "Tampa", "Jacksonville", "Tallahassee", "St. Petersburg", "Hialeah", "Port St. Lucie", "Cape Coral", "Fort Lauderdale", "Pembroke Pines", "Hollywood", "Miramar", "Gainesville"] 
+      }
+    }
+  },
+
+  // ========== NIGERIA (NG) ==========
+  NG: {
+    label: "Nigeria",
+    provinces: {
+      LAGOS: { 
+        label: "Lagos", 
+        cities: ["Lagos", "Ikeja", "Surulere", "Apapa", "Lekki", "Victoria Island", "Ajah", "Badagry", "Epe", "Ikorodu", "Agege", "Alimosho", "Kosofe", "Mushin", "Oshodi", "Somolu"] 
+      },
+      ABUJA: { 
+        label: "Abuja", 
+        cities: ["Abuja", "Garki", "Wuse", "Maitama", "Asokoro", "Gwarinpa", "Kubwa", "Jahi", "Lugbe", "Karu", "Nyanya", "Bwari", "Kuje", "Gwagwalada", "Kwali"] 
+      },
+      KANO: { 
+        label: "Kano", 
+        cities: ["Kano", "Nassarawa", "Tarauni", "Dala", "Fagge", "Gwale", "Kumbotso", "Ungogo", "Dawakin Tofa", "Tofa", "Rimin Gado", "Bagwai", "Gezawa", "Gabasawa", "Minjibir"] 
+      },
+      RIVERS: { 
+        label: "Rivers", 
+        cities: ["Port Harcourt", "Obio-Akpor", "Ikwerre", "Eleme", "Oyigbo", "Etche", "Omuma", "Okrika", "Ogu–Bolo", "Bonny", "Degema", "Asari-Toru", "Akuku-Toru", "Abua–Odual", "Ahoada"] 
+      }
+    }
+  },
+
+  // ========== PAKISTAN (PK) ==========
+  PK: {
+    label: "Pakistan",
+    provinces: {
+      PUNJAB: { 
+        label: "Punjab", 
+        cities: ["Lahore", "Faisalabad", "Rawalpindi", "Gujranwala", "Multan", "Sialkot", "Bahawalpur", "Sargodha", "Sheikhupura", "Jhelum", "Gujrat", "Sahiwal", "Wah Cantonment", "Kasur", "Okara", "Chiniot"] 
+      },
+      SINDH: { 
+        label: "Sindh", 
+        cities: ["Karachi", "Hyderabad", "Sukkur", "Larkana", "Nawabshah", "Mirpur Khas", "Jacobabad", "Shikarpur", "Khairpur", "Dadu", "Tando Allahyar", "Tando Adam", "Badin", "Thatta", "Kotri"] 
+      },
+      KHYBER: { 
+        label: "Khyber Pakhtunkhwa", 
+        cities: ["Peshawar", "Mardan", "Abbottabad", "Mingora", "Kohat", "Bannu", "Swabi", "Dera Ismail Khan", "Charsadda", "Nowshera", "Mansehra", "Haripur", "Timergara", "Tank", "Hangu"] 
+      },
+      BALOCHISTAN: { 
+        label: "Balochistan", 
+        cities: ["Quetta", "Turbat", "Khuzdar", "Chaman", "Gwadar", "Dera Murad Jamali", "Dera Allah Yar", "Usta Mohammad", "Sibi", "Loralai", "Zhob", "Pasni", "Qila Saifullah", "Khost", "Hub"] 
+      }
+    }
+  },
+
+  // ========== INDE (IN) ==========
+  IN: {
+    label: "India",
+    provinces: {
+      DELHI: { 
+        label: "Delhi", 
+        cities: ["New Delhi", "Delhi", "Dwarka", "Karol Bagh", "Rohini", "Pitampura", "Janakpuri", "Laxmi Nagar", "Saket", "Hauz Khas", "Malviya Nagar", "Patel Nagar", "Rajouri Garden", "Kalkaji", "Sarita Vihar", "Vasant Kunj"] 
+      },
+      MAHARASHTRA: { 
+        label: "Maharashtra", 
+        cities: ["Mumbai", "Pune", "Nagpur", "Nashik", "Aurangabad", "Solapur", "Bhiwandi", "Amravati", "Nanded", "Kolhapur", "Ulhasnagar", "Sangli", "Malegaon", "Jalgaon", "Akola", "Latur"] 
+      },
+      KARNATAKA: { 
+        label: "Karnataka", 
+        cities: ["Bengaluru", "Mysuru", "Hubballi", "Mangaluru", "Belagavi", "Davanagere", "Ballari", "Tumakuru", "Shivamogga", "Raichur", "Bidar", "Hospet", "Udupi", "Gadag-Betageri", "Robertson Pet", "Hassan"] 
+      },
+      TAMIL_NADU: { 
+        label: "Tamil Nadu", 
+        cities: ["Chennai", "Coimbatore", "Madurai", "Tiruchirappalli", "Salem", "Tirunelveli", "Tiruppur", "Vellore", "Erode", "Thoothukudi", "Dindigul", "Thanjavur", "Hosur", "Nagercoil", "Kanchipuram", "Kumarapalayam"] 
+      }
+    }
+  },
+
+  // ========== INDONÉSIE (ID) ==========
+  ID: {
+    label: "Indonesia",
+    provinces: {
+      JAKARTA: { 
+        label: "Jakarta", 
+        cities: ["Jakarta", "Central Jakarta", "South Jakarta", "West Jakarta", "East Jakarta", "North Jakarta", "Thousand Islands", "Kebayoran Baru", "Tebet", "Cilandak", "Pasar Minggu", "Mampang", "Cengkareng", "Tanjung Priok", "Kelapa Gading"] 
+      },
+      WEST_JAVA: { 
+        label: "West Java", 
+        cities: ["Bandung", "Bekasi", "Depok", "Bogor", "Cimahi", "Sukabumi", "Cirebon", "Tasikmalaya", "Karawang", "Purwakarta", "Subang", "Sumedang", "Garut", "Majalengka", "Cianjur", "Banjar"] 
+      },
+      CENTRAL_JAVA: { 
+        label: "Central Java", 
+        cities: ["Semarang", "Surakarta", "Tegal", "Pekalongan", "Salatiga", "Magelang", "Kudus", "Jepara", "Rembang", "Blora", "Batang", "Pati", "Wonosobo", "Temanggung", "Boyolali", "Klaten"] 
+      },
+      EAST_JAVA: { 
+        label: "East Java", 
+        cities: ["Surabaya", "Malang", "Kediri", "Mojokerto", "Jember", "Banyuwangi", "Madiun", "Pasuruan", "Probolinggo", "Blitar", "Lumajang", "Bondowoso", "Situbondo", "Tulungagung", "Tuban", "Lamongan"] 
+      }
+    }
+  },
+
+  // ========== TURQUIE (TR) ==========
+  TR: {
+    label: "Türkiye",
+    provinces: {
+      ISTANBUL: { 
+        label: "Istanbul", 
+        cities: ["Istanbul", "Kadıköy", "Beşiktaş", "Şişli", "Fatih", "Üsküdar", "Bakırköy", "Esenler", "Küçükçekmece", "Beyoğlu", "Zeytinburnu", "Maltepe", "Sarıyer", "Pendik", "Kartal", "Beylikdüzü"] 
+      },
+      ANKARA: { 
+        label: "Ankara", 
+        cities: ["Ankara", "Çankaya", "Keçiören", "Yenimahalle", "Mamak", "Sincan", "Altındağ", "Etimesgut", "Polatlı", "Gölbaşı", "Pursaklar", "Akyurt", "Kahramankazan", "Elmadağ", "Bala", "Ayaş"] 
+      },
+      IZMIR: { 
+        label: "İzmir", 
+        cities: ["İzmir", "Bornova", "Karşıyaka", "Konak", "Buca", "Bayraklı", "Çiğli", "Balçova", "Narlıdere", "Gaziemir", "Güzelbahçe", "Urla", "Seferihisar", "Menderes", "Torbalı", "Bergama"] 
+      },
+      ANTALYA: { 
+        label: "Antalya", 
+        cities: ["Antalya", "Muratpaşa", "Kepez", "Konyaaltı", "Alanya", "Manavgat", "Serik", "Kumluca", "Kaş", "Korkuteli", "Finike", "Gazipaşa", "Demre", "Akseki", "Elmalı", "Gündoğmuş"] 
+      }
+    }
+  },
+
+  // ========== BRÉSIL (BR) ==========
+  BR: {
+    label: "Brazil",
+    provinces: {
+      SAO_PAULO: { 
+        label: "São Paulo", 
+        cities: ["São Paulo", "Guarulhos", "Campinas", "São Bernardo do Campo", "Santo André", "Osasco", "Sorocaba", "Ribeirão Preto", "São José dos Campos", "Santos", "Mauá", "Diadema", "Jundiaí", "Barueri", "São Vicente", "Carapicuíba"] 
+      },
+      RIO_JANEIRO: { 
+        label: "Rio de Janeiro", 
+        cities: ["Rio de Janeiro", "São Gonçalo", "Duque de Caxias", "Nova Iguaçu", "Niterói", "Belford Roxo", "Campos dos Goytacazes", "São João de Meriti", "Petrópolis", "Volta Redonda", "Magé", "Itaboraí", "Macaé", "Mesquita", "Teresópolis", "Nilópolis"] 
+      },
+      MINAS_GERAIS: { 
+        label: "Minas Gerais", 
+        cities: ["Belo Horizonte", "Uberlândia", "Contagem", "Juiz de Fora", "Betim", "Montes Claros", "Ribeirão das Neves", "Uberaba", "Governador Valadares", "Ipatinga", "Sete Lagoas", "Divinópolis", "Santa Luzia", "Ibirité", "Poços de Caldas", "Patos de Minas"] 
+      },
+      BAHIA: { 
+        label: "Bahia", 
+        cities: ["Salvador", "Feira de Santana", "Vitória da Conquista", "Camaçari", "Itabuna", "Juazeiro", "Lauro de Freitas", "Ilhéus", "Jequié", "Alagoinhas", "Teixeira de Freitas", "Barreiras", "Porto Seguro", "Simões Filho", "Paulo Afonso", "Eunápolis"] 
+      }
+    }
+  }
 };
+
+// Convert COUNTRY_DATA to GEO_COUNTRIES format
+const GEO_COUNTRIES = Object.keys(COUNTRY_DATA).reduce((acc, countryCode) => {
+  const country = COUNTRY_DATA[countryCode];
+  acc[countryCode] = {
+    label: country.label,
+    provinces: Object.entries(country.provinces).map(([key, province]) => ({
+      id: key.toLowerCase().replace(/_/g, '-'),
+      name: province.label,
+      cities: province.cities
+    }))
+  };
+  return acc;
+}, {});
 
 function getCountryDef(code) {
   const c = (code || "MA").toUpperCase();
@@ -395,6 +620,8 @@ const newId = () => Math.random().toString(36).slice(2, 8);
 
 /* ============================== config par défaut ============================== */
 function defaultCfg() {
+  const allCountries = Object.keys(GEO_COUNTRIES);
+  
   return {
     meta: { version: 2 },
 
@@ -411,19 +638,11 @@ function defaultCfg() {
       { id: newId(), min: 299, max: null, rate: 0 },
     ],
 
-    // Tarifs par province / wilaya
-    provinceRates: {
-      MA: [],
-      DZ: [],
-      TN: [],
-    },
+    // Tarifs par province / wilaya - initialiser pour tous les pays
+    provinceRates: Object.fromEntries(allCountries.map(c => [c, []])),
 
-    // Tarifs par ville / baladiya
-    cityRates: {
-      MA: [],
-      DZ: [],
-      TN: [],
-    },
+    // Tarifs par ville / baladiya - initialiser pour tous les pays
+    cityRates: Object.fromEntries(allCountries.map(c => [c, []])),
 
     // Options avancées
     advanced: {
@@ -537,7 +756,24 @@ export default function Section6Geo() {
       if (s) {
         const parsed = JSON.parse(s);
         if (parsed && typeof parsed === "object") {
-          setCfg((old) => ({ ...old, ...parsed }));
+          // S'assurer que tous les pays ont des tableaux dans provinceRates et cityRates
+          const allCountries = Object.keys(GEO_COUNTRIES);
+          const updated = { ...parsed };
+          
+          if (!updated.provinceRates) updated.provinceRates = {};
+          if (!updated.cityRates) updated.cityRates = {};
+          
+          // Ajouter les pays manquants
+          allCountries.forEach(country => {
+            if (!updated.provinceRates[country]) {
+              updated.provinceRates[country] = [];
+            }
+            if (!updated.cityRates[country]) {
+              updated.cityRates[country] = [];
+            }
+          });
+          
+          setCfg((old) => ({ ...old, ...updated }));
         }
       }
     } catch {
@@ -553,13 +789,30 @@ export default function Section6Geo() {
         });
         const json = await res.json().catch(() => ({}));
         if (!json?.ok || !json.geo || cancelled) return;
-        setCfg((old) => ({ ...old, ...json.geo }));
+        
+        // S'assurer que tous les pays ont des tableaux dans provinceRates et cityRates
+        const allCountries = Object.keys(GEO_COUNTRIES);
+        const updatedGeo = { ...json.geo };
+        
+        if (!updatedGeo.provinceRates) updatedGeo.provinceRates = {};
+        if (!updatedGeo.cityRates) updatedGeo.cityRates = {};
+        
+        allCountries.forEach(country => {
+          if (!updatedGeo.provinceRates[country]) {
+            updatedGeo.provinceRates[country] = [];
+          }
+          if (!updatedGeo.cityRates[country]) {
+            updatedGeo.cityRates[country] = [];
+          }
+        });
+        
+        setCfg((old) => ({ ...old, ...updatedGeo }));
 
         // sync localStorage
         try {
           window.localStorage.setItem(
             "tripleform_cod_geo_min_v2",
-            JSON.stringify(json.geo)
+            JSON.stringify(updatedGeo)
           );
         } catch {
           /* ignore */
@@ -698,7 +951,12 @@ export default function Section6Geo() {
       {enabled ? t("section6.status.enabled") : t("section6.status.disabled")}
     </Badge>
   );
-  // (statusBadge gardé si tu veux l'utiliser plus tard)
+
+  // Obtenir la liste des pays pour le sélecteur
+  const countryOptions = Object.entries(GEO_COUNTRIES).map(([code, data]) => ({
+    label: data.label,
+    value: code,
+  }));
 
   /* ===================== RENDER ===================== */
   return (
@@ -811,17 +1069,10 @@ export default function Section6Geo() {
                   onChange={setCountry}
                   options={[
                     {
-                      label: t("section6.general.countries.MA"),
-                      value: "MA",
+                      label: t("section6.general.countries.selectPlaceholder"),
+                      value: "",
                     },
-                    {
-                      label: t("section6.general.countries.DZ"),
-                      value: "DZ",
-                    },
-                    {
-                      label: t("section6.general.countries.TN"),
-                      value: "TN",
-                    },
+                    ...countryOptions
                   ]}
                   helpText={t("section6.general.countryHelp")}
                 />
