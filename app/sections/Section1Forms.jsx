@@ -629,6 +629,73 @@ const PHONE_PREFIX_BY_COUNTRY = {
   ID: "+62", TR: "+90", BR: "+55"
 };
 
+// Fonction pour obtenir la devise en fonction du pays
+const getCurrencyByCountry = (countryCode) => {
+  const map = {
+    'MA': 'MAD',
+    'DZ': 'DZD',
+    'TN': 'TND',
+    'EG': 'EGP',
+    'FR': 'EUR',
+    'ES': 'EUR',
+    'SA': 'SAR',
+    'AE': 'AED',
+    'US': 'USD',
+    'NG': 'NGN',
+    'PK': 'PKR',
+    'IN': 'INR',
+    'ID': 'IDR',
+    'TR': 'TRY',
+    'BR': 'BRL',
+  };
+  return map[countryCode] || 'MAD';
+};
+
+// Fonction pour obtenir des exemples de prix de livraison par ville
+const getShippingExample = (city, countryCode) => {
+  const shippingExamples = {
+    "MA": {
+      "Casablanca": { amount: 29, note: "Livraison standard" },
+      "Rabat": { amount: 25, note: "Livraison standard" },
+      "Marrakech": { amount: 35, note: "Livraison express" },
+      "Fès": { amount: 30, note: "Livraison standard" },
+      "Tanger": { amount: 40, note: "Livraison express" },
+      "Agadir": { amount: 45, note: "Livraison express" },
+      "Oujda": { amount: 50, note: "Livraison express" }
+    },
+    "DZ": {
+      "Alger": { amount: 45, note: "Livraison standard" },
+      "Oran": { amount: 40, note: "Livraison standard" },
+      "Constantine": { amount: 50, note: "Livraison express" },
+      "Annaba": { amount: 55, note: "Livraison express" }
+    },
+    "FR": {
+      "Paris": { amount: 8.5, note: "Livraison standard" },
+      "Lyon": { amount: 7.5, note: "Livraison standard" },
+      "Marseille": { amount: 8, note: "Livraison standard" },
+      "Toulouse": { amount: 9, note: "Livraison standard" }
+    },
+    "ES": {
+      "Madrid": { amount: 6.5, note: "Livraison standard" },
+      "Barcelona": { amount: 7, note: "Livraison standard" },
+      "Valencia": { amount: 7.5, note: "Livraison standard" }
+    }
+  };
+  
+  const countryData = shippingExamples[countryCode] || shippingExamples["MA"];
+  const cityData = countryData[city];
+  
+  if (cityData) {
+    return cityData;
+  }
+  
+  // Valeur par défaut
+  return {
+    amount: countryCode === "MA" ? 30 : countryCode === "FR" ? 8 : 10,
+    note: "Livraison standard"
+  };
+};
+
 /* ============================== Contexte ============================== */
 const FormsCtx = createContext(null);
 const useForms = () => useContext(FormsCtx);
@@ -2016,6 +2083,10 @@ function PreviewPanel() {
     t,
   } = useForms();
 
+  // États pour le prix de livraison dans la prévisualisation
+  const [shippingPrice, setShippingPrice] = useState(null);
+  const [shippingNote, setShippingNote] = useState("");
+
   const countryKey = config.behavior.country || "";
   const country = COUNTRY_DATA[countryKey];
   const provincesEntries = country ? Object.entries(country.provinces || {}) : [];
@@ -2036,64 +2107,88 @@ function PreviewPanel() {
     ];
   }, [config.meta?.fieldsOrder, fieldKeys]);
 
-  const examplePrice = t("section1.preview.priceExample");
-  const freeShipping = t("section1.preview.freeShipping");
+  // Prix fixe pour la prévisualisation
+  const productPrice = 99.99;
+  const currency = getCurrencyByCountry(countryKey);
 
   const fieldAlignRaw = config.design?.fieldAlign || "left";
   const fieldAlign = ["left", "center", "right"].includes(fieldAlignRaw)
     ? fieldAlignRaw
     : "left";
 
-  const renderCartBox = () => (
-    <div style={cartBoxCSS} dir={config.design.direction || "ltr"}>
-      <div
-        style={{
-          textAlign: titleAlign,
-          fontWeight: 700,
-          marginBottom: 10,
-          color: config.design.cartTitleColor,
-        }}
-      >
-        {sStr(config.cartTitles.top)}
+  // Réinitialiser le prix de livraison quand la province change
+  useEffect(() => {
+    setShippingPrice(null);
+    setShippingNote("");
+  }, [selectedProvinceKey]);
+
+  // Fonction pour simuler le prix de livraison quand la ville change
+  const handleCityChange = (city) => {
+    if (!city) {
+      setShippingPrice(null);
+      setShippingNote("");
+      return;
+    }
+
+    // Simulation du prix de livraison
+    const shippingData = getShippingExample(city, countryKey);
+    setShippingPrice(shippingData.amount);
+    setShippingNote(`${t("section1.preview.shippingTo")} ${city} - ${shippingData.note}`);
+  };
+
+  const renderCartBox = () => {
+    const shippingDisplay = shippingPrice === null 
+      ? (countryKey ? t("section1.preview.shippingToCalculate") : "Gratuit")
+      : `${shippingPrice.toFixed(2)} ${currency}`;
+    
+    const total = productPrice + (shippingPrice || 0);
+
+    return (
+      <div style={cartBoxCSS} dir={config.design.direction || "ltr"}>
+        <div
+          style={{
+            textAlign: titleAlign,
+            fontWeight: 700,
+            marginBottom: 10,
+            color: config.design.cartTitleColor,
+          }}
+        >
+          {sStr(config.cartTitles.top)}
+        </div>
+        <div style={{ display: "grid", gap: 8 }}>
+          <div style={cartRowCSS}>
+            <div>{sStr(config.cartTitles.price)}</div>
+            <div style={{ fontWeight: 700 }}>{productPrice.toFixed(2)} {currency}</div>
+          </div>
+          <div style={cartRowCSS}>
+            <div>
+              <div>{sStr(config.cartTitles.shipping)}</div>
+              {shippingNote && (
+                <div style={{ fontSize: 10, opacity: 0.8, marginTop: 2 }}>
+                  {shippingNote}
+                </div>
+              )}
+            </div>
+            <div style={{ fontWeight: 700 }}>{shippingDisplay}</div>
+          </div>
+          <div style={cartRowCSS}>
+            <div>{sStr(config.cartTitles.total)}</div>
+            <div style={{ fontWeight: 700 }}>{total.toFixed(2)} {currency}</div>
+          </div>
+        </div>
       </div>
-      <div style={{ display: "grid", gap: 8 }}>
-        <div style={cartRowCSS}>
-          <div>{sStr(config.cartTitles.price)}</div>
-          <div style={{ fontWeight: 700 }}>{examplePrice}</div>
-        </div>
-        <div style={cartRowCSS}>
-          <div>{sStr(config.cartTitles.shipping)}</div>
-          <div style={{ fontWeight: 700 }}>{freeShipping}</div>
-        </div>
-        <div style={cartRowCSS}>
-          <div>{sStr(config.cartTitles.total)}</div>
-          <div style={{ fontWeight: 700 }}>{examplePrice}</div>
-        </div>
-      </div>
-    </div>
-  );
+    );
+  };
 
   const renderProvinceField = (f) => {
     if (!f?.on) return null;
-    const labelEl = (
-      <span
-        style={{
-          fontSize: 13,
-          color: "#475569",
-          textAlign: fieldAlign,
-          display: "block",
-        }}
-      >
-        {sStr(f.label)}
-        {f.required ? " *" : ""}
-      </span>
-    );
-
-    const placeholder = f.ph || t("section1.preview.provincePlaceholder");
-
+    
     return (
-      <label key="province" style={{ display: "grid", gap: 6 }}>
-        {labelEl}
+      <label key="province" style={{ display: "grid", gap: 6, textAlign: fieldAlign }}>
+        <span style={{ fontSize: 13, color: "#475569" }}>
+          {sStr(f.label)}
+          {f.required ? " *" : ""}
+        </span>
         <select
           style={inputBase}
           value={selectedProvinceKey}
@@ -2102,7 +2197,7 @@ function PreviewPanel() {
             setBehav({ provinceKey: v, cityKey: "" });
           }}
         >
-          <option value="">{placeholder}</option>
+          <option value="">{f.ph || t("section1.preview.provincePlaceholder")}</option>
           {provincesEntries.map(([key, p]) => (
             <option key={key} value={key}>
               {p.label}
@@ -2115,6 +2210,108 @@ function PreviewPanel() {
 
   const renderCityField = (f) => {
     if (!f?.on) return null;
+    
+    return (
+      <label key="city" style={{ display: "grid", gap: 6, textAlign: fieldAlign }}>
+        <span style={{ fontSize: 13, color: "#475569" }}>
+          {sStr(f.label)}
+          {f.required ? " *" : ""}
+        </span>
+        <select
+          style={{
+            ...inputBase,
+            backgroundColor: selectedProvinceKey ? inputBase.background : "#F3F4F6",
+          }}
+          value={config.behavior.cityKey || ""}
+          onChange={(e) => {
+            const city = e.target.value;
+            setBehav({ cityKey: city });
+            handleCityChange(city);
+          }}
+          disabled={!selectedProvinceKey}
+        >
+          <option value="">
+            {!selectedProvinceKey
+              ? t("section1.preview.cityPlaceholderNoProvince")
+              : f.ph || t("section1.preview.cityPlaceholder")}
+          </option>
+          {cities.map((c) => (
+            <option key={c} value={c}>
+              {c}
+            </option>
+          ))}
+        </select>
+      </label>
+    );
+  };
+
+  const renderFormCard = () => {
+    const total = productPrice + (shippingPrice || 0);
+    const orderLabel = sStr(config.uiTitles.orderNow || config.form?.buttonText || "Order now");
+    const suffix = sStr(config.uiTitles.totalSuffix || "Total:");
+
+    return (
+      <div style={cardCSS} dir={config.design.direction || "ltr"}>
+        {(config.form.title || config.form.subtitle) && (
+          <div style={{ marginBottom: 10, textAlign: titleAlign }}>
+            {config.form.title && (
+              <div style={{ fontWeight: 700 }}>
+                {sStr(config.form.title)}
+              </div>
+            )}
+            {config.form.subtitle && (
+              <div style={{ opacity: 0.8 }}>
+                {sStr(config.form.subtitle)}
+              </div>
+            )}
+          </div>
+        )}
+        <div style={{ display: "grid", gap: 10 }}>
+          {orderedFields.map((key) => {
+            const f = config.fields[key];
+            if (!f?.on) return null;
+            if (key === "province") return renderProvinceField(f);
+            if (key === "city") return renderCityField(f);
+            return renderField(f, inputBase, key);
+          })}
+
+          {config.behavior.requireGDPR && (
+            <label
+              style={{
+                display: "flex",
+                gap: 8,
+                alignItems: "center",
+                fontSize: 13,
+                color: "#374151",
+              }}
+            >
+              <input type="checkbox" /> {sStr(config.behavior.gdprLabel)}
+            </label>
+          )}
+          {config.behavior.whatsappOptIn && (
+            <label
+              style={{
+                display: "flex",
+                gap: 8,
+                alignItems: "center",
+                fontSize: 13,
+                color: "#374151",
+              }}
+            >
+              <input type="checkbox" /> {sStr(config.behavior.whatsappLabel)}
+            </label>
+          )}
+
+          <button type="button" style={btnCSS}>
+            {orderLabel} · {suffix} {total.toFixed(2)} {currency}
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  const renderField = (f, inputBase, key) => {
+    if (!f?.on) return null;
     const labelEl = (
       <span
         style={{
@@ -2128,105 +2325,138 @@ function PreviewPanel() {
         {f.required ? " *" : ""}
       </span>
     );
-
-    const placeholder = !selectedProvinceKey
-      ? t("section1.preview.cityPlaceholderNoProvince")
-      : f.ph || t("section1.preview.cityPlaceholder");
-
-    const hasProvince = !!selectedProvinceKey;
-
+    const common = { style: inputBase, placeholder: sStr(f.ph) };
     return (
-      <label key="city" style={{ display: "grid", gap: 6 }}>
+      <label key={key} style={{ display: "grid", gap: 6 }}>
         {labelEl}
-        <select
-          style={{
-            ...inputBase,
-            backgroundColor: hasProvince ? inputBase.background : "#F3F4F6",
-          }}
-          value={config.behavior.cityKey || ""}
-          onChange={(e) => setBehav({ cityKey: e.target.value })}
-          disabled={!hasProvince}
-        >
-          <option value="">{placeholder}</option>
-          {cities.map((c) => (
-            <option key={c} value={c}>
-              {c}
-            </option>
-          ))}
-        </select>
+        {f.type === "textarea" ? (
+          <textarea {...common} rows={3} />
+        ) : f.type === "tel" ? (
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: f.prefix ? "minmax(88px,130px) 1fr" : "1fr",
+              gap: 8,
+            }}
+          >
+            {f.prefix && (
+              <input
+                style={{
+                  ...inputBase,
+                  textAlign: "center",
+                }}
+                value={f.prefix}
+                readOnly
+              />
+            )}
+            <input type="tel" {...common} />
+          </div>
+        ) : (
+          <input
+            type={f.type === "number" ? "number" : "text"}
+            {...common}
+            min={f.type === "number" && f.min != null ? f.min : undefined}
+            max={f.type === "number" && f.max != null ? f.max : undefined}
+          />
+        )}
       </label>
     );
   };
 
-  const renderFormCard = () => (
-    <div style={cardCSS} dir={config.design.direction || "ltr"}>
-      {(config.form.title || config.form.subtitle) && (
-        <div style={{ marginBottom: 10 }}>
-          {config.form.title && (
-            <div
-              style={{
-                fontWeight: 700,
-                textAlign: titleAlign,
-              }}
-            >
-              {sStr(config.form.title)}
-            </div>
-          )}
-          {config.form.subtitle && (
-            <div
-              style={{
-                opacity: 0.8,
-                textAlign: titleAlign,
-              }}
-            >
-              {sStr(config.form.subtitle)}
-            </div>
-          )}
+  const StickyPreview = () => {
+    const type = config.behavior?.stickyType || "none";
+    if (type === "none") return null;
+
+    const styleType = config.form?.style || "inline";
+
+    let styleText;
+    if (styleType === "inline") {
+      styleText = t("section1.preview.style.inline");
+    } else if (styleType === "popup") {
+      styleText = t("section1.preview.style.popup");
+    } else if (styleType === "drawer") {
+      styleText = t("section1.preview.style.drawer");
+    } else {
+      styleText = styleType;
+    }
+
+    const label = sStr(
+      config.behavior?.stickyLabel || config.uiTitles?.orderNow || "Order now"
+    );
+
+    const miniBtnStyle = {
+      ...btnCSS,
+      width: "auto",
+      minWidth: 140,
+      height: 36,
+      fontSize: 13,
+      padding: "0 16px",
+    };
+
+    if (type === "bottom-bar") {
+      return (
+        <div
+          style={{
+            marginTop: 4,
+            position: "relative",
+            borderRadius: 999,
+            background: "#0F172A",
+            color: "#F9FAFB",
+            padding: "8px 14px",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            fontSize: 12,
+          }}
+        >
+          <span>
+            {t("section1.preview.stickyBarLabel")} · {styleText}
+          </span>
+          <button type="button" style={miniBtnStyle}>
+            {label}
+          </button>
         </div>
-      )}
-      <div style={{ display: "grid", gap: 10 }}>
-        {orderedFields.map((key) => {
-          const f = config.fields[key];
-          if (!f?.on) return null;
-          if (key === "province") return renderProvinceField(f);
-          if (key === "city") return renderCityField(f);
-          return renderField(f, inputBase, key);
-        })}
+      );
+    }
 
-        {config.behavior.requireGDPR && (
-          <label
+    if (type === "bubble-right" || type === "bubble-left") {
+      const isLeft = type === "bubble-left";
+      return (
+        <div style={{ marginTop: 8, position: "relative", height: 72 }}>
+          <div
             style={{
-              display: "flex",
-              gap: 8,
-              alignItems: "center",
-              fontSize: 13,
-              color: "#374151",
+              position: "absolute",
+              bottom: 4,
+              [isLeft ? "left" : "right"]: 4,
             }}
           >
-            <input type="checkbox" /> {sStr(config.behavior.gdprLabel)}
-          </label>
-        )}
-        {config.behavior.whatsappOptIn && (
-          <label
-            style={{
-              display: "flex",
-              gap: 8,
-              alignItems: "center",
-              fontSize: 13,
-              color: "#374151",
-            }}
-          >
-            <input type="checkbox" /> {sStr(config.behavior.whatsappLabel)}
-          </label>
-        )}
+            <button
+              type="button"
+              style={{
+                ...miniBtnStyle,
+                borderRadius: 999,
+                boxShadow: "0 8px 18px rgba(15,23,42,0.28)",
+              }}
+            >
+              {label}
+            </button>
+            <div
+              style={{
+                marginTop: 4,
+                fontSize: 11,
+                color: "#6B7280",
+                textAlign: isLeft ? "left" : "right",
+              }}
+            >
+              {t("section1.preview.stickyBubbleLabel")} · {styleText}
+            </div>
+          </div>
+        </div>
+      );
+    }
 
-        <button type="button" style={btnCSS}>
-          {sStr(config.uiTitles.orderNow)} · {sStr(config.uiTitles.totalSuffix)}{" "}
-          {examplePrice}
-        </button>
-      </div>
-    </div>
-  );
+    return null;
+  };
 
   return (
     <Card>
@@ -2247,162 +2477,11 @@ function PreviewPanel() {
             </div>
           </div>
         </div>
-
         <StickyPreview />
       </BlockStack>
     </Card>
   );
 }
 
-function StickyPreview() {
-  const { config, btnCSS, t } = useForms();
-  const type = config.behavior?.stickyType || "none";
-  if (type === "none") return null;
-
-  const styleType = config.form?.style || "inline";
-
-  let styleText;
-  if (styleType === "inline") {
-    styleText = t("section1.preview.style.inline");
-  } else if (styleType === "popup") {
-    styleText = t("section1.preview.style.popup");
-  } else if (styleType === "drawer") {
-    styleText = t("section1.preview.style.drawer");
-  } else {
-    styleText = styleType;
-  }
-
-  const label = sStr(
-    config.behavior?.stickyLabel || config.uiTitles?.orderNow || "Order now"
-  );
-
-  const miniBtnStyle = {
-    ...btnCSS,
-    width: "auto",
-    minWidth: 140,
-    height: 36,
-    fontSize: 13,
-    padding: "0 16px",
-  };
-
-  if (type === "bottom-bar") {
-    return (
-      <div
-        style={{
-          marginTop: 4,
-          position: "relative",
-          borderRadius: 999,
-          background: "#0F172A",
-          color: "#F9FAFB",
-          padding: "8px 14px",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          fontSize: 12,
-        }}
-      >
-        <span>
-          {t("section1.preview.stickyBarLabel")} · {styleText}
-        </span>
-        <button type="button" style={miniBtnStyle}>
-          {label}
-        </button>
-      </div>
-    );
-  }
-
-  if (type === "bubble-right" || type === "bubble-left") {
-    const isLeft = type === "bubble-left";
-    return (
-      <div style={{ marginTop: 8, position: "relative", height: 72 }}>
-        <div
-          style={{
-            position: "absolute",
-            bottom: 4,
-            [isLeft ? "left" : "right"]: 4,
-          }}
-        >
-          <button
-            type="button"
-            style={{
-              ...miniBtnStyle,
-              borderRadius: 999,
-              boxShadow: "0 8px 18px rgba(15,23,42,0.28)",
-            }}
-          >
-            {label}
-          </button>
-          <div
-            style={{
-              marginTop: 4,
-              fontSize: 11,
-              color: "#6B7280",
-              textAlign: isLeft ? "left" : "right",
-            }}
-          >
-            {t("section1.preview.stickyBubbleLabel")} · {styleText}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  return null;
-}
-
-function renderField(f, inputBase, key) {
-  if (!f?.on) return null;
-  const labelEl = (
-    <span
-      style={{
-        fontSize: 13,
-        color: "#475569",
-        textAlign: inputBase.textAlign || "left",
-        display: "block",
-      }}
-    >
-      {sStr(f.label)}
-      {f.required ? " *" : ""}
-    </span>
-  );
-  const common = { style: inputBase, placeholder: sStr(f.ph) };
-  return (
-    <label key={key} style={{ display: "grid", gap: 6 }}>
-      {labelEl}
-      {f.type === "textarea" ? (
-        <textarea {...common} rows={3} />
-      ) : f.type === "tel" ? (
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: f.prefix ? "minmax(88px,130px) 1fr" : "1fr",
-            gap: 8,
-          }}
-        >
-          {f.prefix && (
-            <input
-              style={{
-                ...inputBase,
-                textAlign: "center",
-              }}
-              value={f.prefix}
-              readOnly
-            />
-          )}
-          <input type="tel" {...common} />
-        </div>
-      ) : (
-        <input
-          type={f.type === "number" ? "number" : "text"}
-          {...common}
-          min={f.type === "number" && f.min != null ? f.min : undefined}
-          max={f.type === "number" && f.max != null ? f.max : undefined}
-        />
-      )}
-    </label>
-  );
-}
-
 // ============================== Export ==============================
 export default Section1FormsLayoutInner;
-
