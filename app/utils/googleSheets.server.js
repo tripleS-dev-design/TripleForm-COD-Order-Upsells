@@ -37,30 +37,56 @@ async function refreshGoogleToken(refreshToken) {
 async function getValidAccessTokenForShop(shop) {
   console.log(`[GoogleSheets] Récupération token pour shop: ${shop}`);
   
-  // CORRECTION : utiliser shopDomain au lieu de shop
   const shopSettings = await prisma.shopGoogleSettings.findUnique({
-    where: { shopDomain: shop }, // <-- ICI
+    where: { shopDomain: shop },
   });
 
-  if (!shopSettings || !shopSettings.googleAccessToken) {
+  if (!shopSettings) {
+    throw new Error('Aucun access token Google valide pour cette boutique (Google non connecté ?)');
+  }
+
+  // CORRECTION CRITIQUE : Vérifier d'abord les nouveaux champs, puis les anciens
+  let accessToken = shopSettings.googleAccessToken;
+  let refreshToken = shopSettings.googleRefreshToken;
+  let expiryDate = shopSettings.googleTokenExpiry;
+
+  // Si les nouveaux champs sont vides mais les anciens existent
+  if (!accessToken && shopSettings.accessToken) {
+    console.log(`[GoogleSheets] Migration des anciens tokens vers les nouveaux champs pour ${shop}`);
+    
+    accessToken = shopSettings.accessToken;
+    refreshToken = shopSettings.refreshToken;
+    expiryDate = shopSettings.tokenExpiryDate;
+
+    // Migrer automatiquement vers les nouveaux champs
+    await prisma.shopGoogleSettings.update({
+      where: { shopDomain: shop },
+      data: {
+        googleAccessToken: accessToken,
+        googleRefreshToken: refreshToken,
+        googleTokenExpiry: expiryDate,
+      },
+    });
+  }
+
+  if (!accessToken) {
     throw new Error('Aucun access token Google valide pour cette boutique (Google non connecté ?)');
   }
 
   const now = new Date();
-  const expiryDate = shopSettings.googleTokenExpiry ? new Date(shopSettings.googleTokenExpiry) : null;
+  const expiry = expiryDate ? new Date(expiryDate) : null;
   
-  if (expiryDate && expiryDate < now) {
+  if (expiry && expiry < now) {
     console.log(`[GoogleSheets] Token expiré pour ${shop}, rafraîchissement...`);
     
-    if (!shopSettings.googleRefreshToken) {
+    if (!refreshToken) {
       throw new Error('Token expiré et aucun refresh token disponible');
     }
 
-    const newTokens = await refreshGoogleToken(shopSettings.googleRefreshToken);
+    const newTokens = await refreshGoogleToken(refreshToken);
     
-    // CORRECTION : utiliser shopDomain au lieu de shop
     await prisma.shopGoogleSettings.update({
-      where: { shopDomain: shop }, // <-- ICI
+      where: { shopDomain: shop },
       data: {
         googleAccessToken: newTokens.access_token,
         googleRefreshToken: newTokens.refresh_token,
@@ -71,28 +97,48 @@ async function getValidAccessTokenForShop(shop) {
     return newTokens.access_token;
   }
 
-  return shopSettings.googleAccessToken;
+  return accessToken;
 }
 
 /**
  * Récupère la configuration Sheets pour une boutique
  */
 async function getSheetsConfigForShop(shop) {
-  // CORRECTION : utiliser shopDomain au lieu de shop
   const shopSettings = await prisma.shopGoogleSettings.findUnique({
-    where: { shopDomain: shop }, // <-- ICI
+    where: { shopDomain: shop },
   });
 
   if (!shopSettings) {
     return null;
   }
 
+  // CORRECTION : Utiliser spreadsheetId si disponible, sinon chercher dans sheetsConfigJson
+  let spreadsheetId = shopSettings.spreadsheetId;
+  let sheetName = shopSettings.sheetName || 'Orders';
+  let columns = shopSettings.columns ? JSON.parse(shopSettings.columns) : [];
+
+  // Si pas de spreadsheetId dans les nouveaux champs, essayer de le trouver dans sheetsConfigJson
+  if (!spreadsheetId && shopSettings.sheetsConfigJson) {
+    try {
+      const configJson = JSON.parse(shopSettings.sheetsConfigJson);
+      if (configJson?.sheet?.spreadsheetId) {
+        spreadsheetId = configJson.sheet.spreadsheetId;
+        sheetName = configJson.sheet.tabName || sheetName;
+      }
+      if (configJson?.columns) {
+        columns = configJson.columns;
+      }
+    } catch (error) {
+      console.error('Erreur parsing sheetsConfigJson:', error);
+    }
+  }
+
   return {
     sheet: {
-      spreadsheetId: shopSettings.spreadsheetId,
-      tabName: shopSettings.sheetName || 'Orders'
+      spreadsheetId: spreadsheetId,
+      tabName: sheetName
     },
-    columns: shopSettings.columns ? JSON.parse(shopSettings.columns) : []
+    columns: columns
   };
 }
 
@@ -278,7 +324,7 @@ export async function appendOrderToSheet({ shop, order }) {
   // 1) Récupérer la configuration
   let cfg = await getSheetsConfigForShop(shop);
   
-  if (!cfg) {
+  if (!cfg || !cfg.sheet || !cfg.sheet.spreadsheetId) {
     throw new Error("Aucune configuration Google Sheets trouvée pour cette boutique");
   }
 
@@ -297,15 +343,8 @@ export async function appendOrderToSheet({ shop, order }) {
   });
 
   // 3) Récupérer les IDs de feuille
-  const spreadsheetId = cfg.sheet?.spreadsheetId || process.env.GOOGLE_SHEET_ID || "";
-
-  if (!spreadsheetId) {
-    throw new Error(
-      "Aucun Spreadsheet ID configuré pour cette boutique."
-    );
-  }
-
-  const tabName = cfg.sheet?.tabName || "Orders";
+  const spreadsheetId = cfg.sheet.spreadsheetId;
+  const tabName = cfg.sheet.tabName || "Orders";
   const range = `${tabName}!A:Z`;
 
   // 4) Récupérer le token Google VALIDE
