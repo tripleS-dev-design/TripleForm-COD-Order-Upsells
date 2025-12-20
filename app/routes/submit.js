@@ -4,11 +4,11 @@ import { authenticate } from "../shopify.server";
 import { appendOrderToSheet } from "../utils/googleSheets.server";
 import { trackOrderWithPixels } from "../utils/pixels.server";
 
-const TF_TAG = "TripleForm COD"; // 👈 tag unique pour reconnaître les commandes de l’app
+const TF_TAG = "TripleForm COD"; // 👈 tag unique pour reconnaître les commandes de l'app
 
 /**
  * Essaie de reconstruire un numéro complet à partir de tous les champs.
- * - Cherche d’abord un champ déjà complet (fullPhone, phoneFull, whatsapp…)
+ * - Cherche d'abord un champ déjà complet (fullPhone, phoneFull, whatsapp…)
  * - Sinon, combine un préfixe (+212, +213, etc.) avec le champ numéro.
  */
 function buildFullPhone(fields = {}) {
@@ -27,7 +27,7 @@ function buildFullPhone(fields = {}) {
     if (s.length >= 6) return s;
   }
 
-  // 2) préfixe + numéro (on essaie d’être large sur les noms)
+  // 2) préfixe + numéro (on essaie d'être large sur les noms)
   const prefix =
     (f.phonePrefix ||
       f.prefix ||
@@ -66,7 +66,7 @@ function buildFullPhone(fields = {}) {
 async function resolveCountryCode(admin, fields = {}, body = {}) {
   const pick = (v) => (v == null ? "" : String(v)).trim();
 
-  // 1) D’abord ce que le front envoie explicitement
+  // 1) D'abord ce que le front envoie explicitement
   const fromBody = pick(body.countryCode || body.country || body.codCountry);
   if (fromBody) return fromBody.toUpperCase();
 
@@ -79,7 +79,7 @@ async function resolveCountryCode(admin, fields = {}, body = {}) {
   );
   if (fromFields) return fromFields.toUpperCase();
 
-  // 3) Sinon, on essaie de lire le pays par défaut du shop via l’Admin API
+  // 3) Sinon, on essaie de lire le pays par défaut du shop via l'Admin API
   if (admin) {
     try {
       const QUERY = `
@@ -162,7 +162,7 @@ async function loadAntibotConfig(admin) {
 }
 
 /**
- * Récupère l’IP client en respectant la config ipBlock.clientIpHeader si présent.
+ * Récupère l'IP client en respectant la config ipBlock.clientIpHeader si présent.
  */
 function getClientIpFromRequest(request, antibot) {
   const headers = request.headers;
@@ -255,7 +255,7 @@ function evaluateAntibot({
 
       // TODO: plus tard gérer les plages CIDR correctement
       if (!res.blocked && Array.isArray(cidrList) && cidrList.length > 0) {
-        // pour l’instant, on ne bloque pas sur CIDR (éviter faux positifs)
+        // pour l'instant, on ne bloque pas sur CIDR (éviter faux positifs)
       }
     }
   }
@@ -328,7 +328,7 @@ function evaluateAntibot({
         res.reasons.push(`Pays ${code} non autorisé (mode block)`);
       }
     } else if (mode === "challenge") {
-      // tant qu’on n’a pas branché reCAPTCHA, on traite "challenge" comme block
+      // tant qu'on n'a pas branché reCAPTCHA, on traite "challenge" comme block
       if (denyList.includes(code)) {
         res.blocked = true;
         res.reasons.push(`Pays ${code} bloqué (challenge + denyList)`);
@@ -420,7 +420,7 @@ export const action = async ({ request }) => {
         {
           ok: false,
           error:
-            "No session for this shop via app proxy. Ouvre l’app depuis l’admin une fois puis réessaie.",
+            "No session for this shop via app proxy. Ouvre l'app depuis l'admin une fois puis réessaie.",
         },
         { status: 401 }
       );
@@ -718,7 +718,10 @@ export const action = async ({ request }) => {
         },
       };
 
-      await appendOrderToSheet({ shop, admin, order: orderForSheet });
+      // CORRECTION CRITIQUE : Enlever 'admin' de l'appel
+      // Ancien : await appendOrderToSheet({ shop, admin, order: orderForSheet });
+      // Nouveau :
+      await appendOrderToSheet({ shop, order: orderForSheet });
     } catch (err) {
       console.error(
         "Erreur lors de l'envoi de la commande vers Google Sheets :",
