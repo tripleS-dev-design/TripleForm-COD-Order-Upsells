@@ -37,8 +37,9 @@ async function refreshGoogleToken(refreshToken) {
 async function getValidAccessTokenForShop(shop) {
   console.log(`[GoogleSheets] Récupération token pour shop: ${shop}`);
   
+  // CORRECTION : utiliser shopDomain au lieu de shop
   const shopSettings = await prisma.shopGoogleSettings.findUnique({
-    where: { shop },
+    where: { shopDomain: shop }, // <-- ICI
   });
 
   if (!shopSettings || !shopSettings.googleAccessToken) {
@@ -57,8 +58,9 @@ async function getValidAccessTokenForShop(shop) {
 
     const newTokens = await refreshGoogleToken(shopSettings.googleRefreshToken);
     
+    // CORRECTION : utiliser shopDomain au lieu de shop
     await prisma.shopGoogleSettings.update({
-      where: { shop },
+      where: { shopDomain: shop }, // <-- ICI
       data: {
         googleAccessToken: newTokens.access_token,
         googleRefreshToken: newTokens.refresh_token,
@@ -76,8 +78,9 @@ async function getValidAccessTokenForShop(shop) {
  * Récupère la configuration Sheets pour une boutique
  */
 async function getSheetsConfigForShop(shop) {
+  // CORRECTION : utiliser shopDomain au lieu de shop
   const shopSettings = await prisma.shopGoogleSettings.findUnique({
-    where: { shop },
+    where: { shopDomain: shop }, // <-- ICI
   });
 
   if (!shopSettings) {
