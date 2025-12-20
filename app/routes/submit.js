@@ -718,9 +718,7 @@ export const action = async ({ request }) => {
         },
       };
 
-      // CORRECTION CRITIQUE : Enlever 'admin' de l'appel
-      // Ancien : await appendOrderToSheet({ shop, admin, order: orderForSheet });
-      // Nouveau :
+      // ✅ CORRECTION CRITIQUE : Appel sans le paramètre 'admin'
       await appendOrderToSheet({ shop, order: orderForSheet });
     } catch (err) {
       console.error(

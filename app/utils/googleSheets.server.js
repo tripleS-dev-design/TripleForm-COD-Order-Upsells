@@ -1,12 +1,135 @@
 // ===== File: app/utils/googleSheets.server.js =====
-import {
-  getSheetsConfigForShop,
-  ensureValidAccessToken,
-  testSheetConnection,
-} from "../services/google.server";
+import prisma from '../db.server';
+import { google } from 'googleapis';
 
 /**
- * Colonnes par défaut si l’utilisateur n’a encore rien configuré
+ * Rafraîchit un token Google expiré
+ */
+async function refreshGoogleToken(refreshToken) {
+  if (!refreshToken) {
+    throw new Error('No refresh token available');
+  }
+
+  const oauth2Client = new google.auth.OAuth2(
+    process.env.GOOGLE_CLIENT_ID,
+    process.env.GOOGLE_CLIENT_SECRET,
+    process.env.GOOGLE_REDIRECT_URI
+  );
+
+  oauth2Client.setCredentials({ refresh_token: refreshToken });
+
+  try {
+    const { credentials } = await oauth2Client.refreshAccessToken();
+    return {
+      access_token: credentials.access_token,
+      refresh_token: credentials.refresh_token || refreshToken,
+      expiry_date: credentials.expiry_date,
+    };
+  } catch (error) {
+    console.error('Erreur refreshGoogleToken:', error);
+    throw new Error(`Impossible de rafraîchir le token Google: ${error.message}`);
+  }
+}
+
+/**
+ * Récupère un token Google valide pour une boutique
+ */
+async function getValidAccessTokenForShop(shop) {
+  console.log(`[GoogleSheets] Récupération token pour shop: ${shop}`);
+  
+  const shopSettings = await prisma.shopGoogleSettings.findUnique({
+    where: { shop },
+  });
+
+  if (!shopSettings || !shopSettings.googleAccessToken) {
+    throw new Error('Aucun access token Google valide pour cette boutique (Google non connecté ?)');
+  }
+
+  const now = new Date();
+  const expiryDate = shopSettings.googleTokenExpiry ? new Date(shopSettings.googleTokenExpiry) : null;
+  
+  if (expiryDate && expiryDate < now) {
+    console.log(`[GoogleSheets] Token expiré pour ${shop}, rafraîchissement...`);
+    
+    if (!shopSettings.googleRefreshToken) {
+      throw new Error('Token expiré et aucun refresh token disponible');
+    }
+
+    const newTokens = await refreshGoogleToken(shopSettings.googleRefreshToken);
+    
+    await prisma.shopGoogleSettings.update({
+      where: { shop },
+      data: {
+        googleAccessToken: newTokens.access_token,
+        googleRefreshToken: newTokens.refresh_token,
+        googleTokenExpiry: new Date(newTokens.expiry_date),
+      },
+    });
+
+    return newTokens.access_token;
+  }
+
+  return shopSettings.googleAccessToken;
+}
+
+/**
+ * Récupère la configuration Sheets pour une boutique
+ */
+async function getSheetsConfigForShop(shop) {
+  const shopSettings = await prisma.shopGoogleSettings.findUnique({
+    where: { shop },
+  });
+
+  if (!shopSettings) {
+    return null;
+  }
+
+  return {
+    sheet: {
+      spreadsheetId: shopSettings.spreadsheetId,
+      tabName: shopSettings.sheetName || 'Orders'
+    },
+    columns: shopSettings.columns ? JSON.parse(shopSettings.columns) : []
+  };
+}
+
+/**
+ * Teste la connexion à Google Sheets
+ */
+async function testSheetConnection(shop, sheetConfig) {
+  try {
+    const accessToken = await getValidAccessTokenForShop(shop);
+    
+    const auth = new google.auth.OAuth2();
+    auth.setCredentials({ access_token: accessToken });
+    const sheets = google.sheets({ version: 'v4', auth });
+
+    const spreadsheetId = sheetConfig?.spreadsheetId;
+    if (!spreadsheetId) {
+      throw new Error('Aucun spreadsheetId fourni');
+    }
+
+    const response = await sheets.spreadsheets.get({
+      spreadsheetId,
+      fields: 'properties.title,sheets.properties.title',
+    });
+
+    return {
+      success: true,
+      spreadsheetTitle: response.data.properties.title,
+      sheets: response.data.sheets.map(s => s.properties.title)
+    };
+  } catch (error) {
+    console.error('Erreur testSheetConnection:', error);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+}
+
+/**
+ * Colonnes par défaut
  */
 const DEFAULT_COLUMNS = [
   {
@@ -62,8 +185,7 @@ function getDeep(obj, path) {
 }
 
 /**
- * Transforme un appField en vraie valeur à partir de l’objet order
- * order = { createdAt, order:{}, customer:{}, cart:{}, meta:{}, ... }
+ * Transforme un appField en vraie valeur
  */
 function resolveAppField(order, appField) {
   const o = order || {};
@@ -137,84 +259,84 @@ function resolveAppField(order, appField) {
 
 export async function testGoogleSheetsConnection({ shop, sheet, kind = "orders" }) {
   const effectiveSheet = sheet || {};
-  // kind n’est pas encore utilisé, mais on le garde pour logs / évolutions
   return testSheetConnection(shop, effectiveSheet);
 }
 
 /* ------------------------------------------------------------------ */
-/* Append d’une commande vers Google Sheets (production OAuth)        */
+/* Append d'une commande vers Google Sheets (App Proxy compatible)    */
 /* ------------------------------------------------------------------ */
 
-export async function appendOrderToSheet({ shop, admin, order }) {
+export async function appendOrderToSheet({ shop, order }) {
+  console.log(`[GoogleSheets] appendOrderToSheet pour shop: ${shop}`);
+  
   if (!shop) throw new Error("Missing shop");
   if (!order) throw new Error("Missing order payload");
 
-  // 1) lire la config depuis la DB
+  // 1) Récupérer la configuration
   let cfg = await getSheetsConfigForShop(shop);
-  if (!cfg) cfg = {};
+  
+  if (!cfg) {
+    throw new Error("Aucune configuration Google Sheets trouvée pour cette boutique");
+  }
 
-  const columnsRaw =
-    cfg && Array.isArray(cfg.columns) && cfg.columns.length
-      ? cfg.columns
-      : DEFAULT_COLUMNS;
+  const columnsRaw = cfg && Array.isArray(cfg.columns) && cfg.columns.length
+    ? cfg.columns
+    : DEFAULT_COLUMNS;
 
   const columns = [...columnsRaw].sort(
     (a, b) => (a.idx || 0) - (b.idx || 0)
   );
 
-  // 2) construire la ligne
+  // 2) Construire la ligne
   const row = columns.map((col) => {
     const val = resolveAppField(order, col.appField || "");
     return val == null ? "" : String(val);
   });
 
-  // 3) choisir la feuille (config UI ou fallback env pour transition)
-  const fallbackSheetId = process.env.GOOGLE_SHEET_ID || "";
-  const spreadsheetId =
-    cfg.sheet?.spreadsheetId || fallbackSheetId;
+  // 3) Récupérer les IDs de feuille
+  const spreadsheetId = cfg.sheet?.spreadsheetId || process.env.GOOGLE_SHEET_ID || "";
 
   if (!spreadsheetId) {
     throw new Error(
-      "Aucun Spreadsheet ID configuré (cfg.sheet.spreadsheetId ou GOOGLE_SHEET_ID)."
+      "Aucun Spreadsheet ID configuré pour cette boutique."
     );
   }
 
   const tabName = cfg.sheet?.tabName || "Orders";
   const range = `${tabName}!A:Z`;
 
-  // 4) access token Google (OAuth boutique)
-  const settings = await ensureValidAccessToken(shop);
-  const accessToken = settings.accessToken;
-  if (!accessToken) {
-    throw new Error(
-      "Aucun access token Google valide pour cette boutique (Google non connecté ?)"
-    );
+  // 4) Récupérer le token Google VALIDE
+  const accessToken = await getValidAccessTokenForShop(shop);
+
+  // 5) Utiliser directement googleapis pour l'appel API
+  const auth = new google.auth.OAuth2();
+  auth.setCredentials({ access_token: accessToken });
+  const sheets = google.sheets({ version: 'v4', auth });
+
+  try {
+    const response = await sheets.spreadsheets.values.append({
+      spreadsheetId,
+      range,
+      valueInputOption: 'USER_ENTERED',
+      insertDataOption: 'INSERT_ROWS',
+      requestBody: { values: [row] },
+    });
+
+    console.log(`[GoogleSheets] Commande ajoutée avec succès à ${spreadsheetId}, onglet ${tabName}`);
+    console.log(`[GoogleSheets] Cellules mises à jour: ${response.data.updates?.updatedRange || 'N/A'}`);
+    
+    return true;
+  } catch (error) {
+    console.error('Erreur Google Sheets API:', error.message);
+    
+    if (error.code === 401 || error.message.includes('invalid_grant')) {
+      throw new Error('Token Google invalide ou expiré. Reconnectez Google dans l\'admin de l\'app.');
+    }
+    
+    if (error.code === 403) {
+      throw new Error('Permission refusée. Vérifiez que le compte Google a bien accès à cette feuille.');
+    }
+    
+    throw new Error(`Erreur Google Sheets: ${error.message}`);
   }
-
-  const params = new URLSearchParams({
-    valueInputOption: "USER_ENTERED",
-    insertDataOption: "INSERT_ROWS",
-  });
-
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(
-    spreadsheetId
-  )}/values/${encodeURIComponent(range)}:append?${params.toString()}`;
-
-  const res = await fetch(url, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ values: [row] }),
-  });
-
-  const json = await res.json().catch(() => null);
-  if (!res.ok) {
-    const msg =
-      json?.error?.message || json?.error || "Erreur Google Sheets (append)";
-    throw new Error(msg);
-  }
-
-  return true;
 }

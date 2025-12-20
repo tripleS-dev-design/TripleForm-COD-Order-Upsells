@@ -1,13 +1,10 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL") // utilise la variable d'environnement sur Render
+  url      = env("DATABASE_URL")
 }
 
 model Session {
@@ -28,33 +25,24 @@ model Session {
   emailVerified Boolean?  @default(false)
 }
 
-/**
- * ===== NEW: billing + usage state par boutique =====
- */
 model Shop {
-  id         Int    @id @default(autoincrement())
-  shopDomain String @unique
-
-  // Billing
-  billingPlan      String? // "starter" | "basic" | "premium"
-  billingTerm      String? // "monthly" | "annual"
-  billingStatus    String? // "active" | "pending" | "cancelled"
-  subscriptionId   String? // ID d’abonnement Shopify
-  unitAmount       Float? // montant du plan (USD)
-  currentPeriodEnd DateTime? // fin de période (si dispo)
-
-  // Usage (compteur commandes/mois pour Google Sheets)
-  usageMonth String? // "YYYY-MM"
-  usageCount Int     @default(0)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id               Int       @id @default(autoincrement())
+  shopDomain       String    @unique
+  billingPlan      String?
+  billingTerm      String?
+  billingStatus    String?
+  subscriptionId   String?
+  unitAmount       Float?
+  currentPeriodEnd DateTime?
+  usageMonth       String?
+  usageCount       Int       @default(0)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 }
 
 model ShopGoogleSettings {
-  id               Int      @id @default(autoincrement())
-  shopDomain       String   @unique
-
+  id               Int       @id @default(autoincrement())
+  shopDomain       String    @unique
   googleUserId     String?
   googleEmail      String?
   accessToken      String?
@@ -62,10 +50,16 @@ model ShopGoogleSettings {
   scope            String?
   tokenType        String?
   tokenExpiryDate  DateTime?
-
-  // Toute la config de Section3 (cfg) en JSON
   sheetsConfigJson String?
+  
+  // ✅ NOUVEAUX CHAMPS CRITIQUES pour Google Sheets
+  googleAccessToken   String?
+  googleRefreshToken  String?
+  googleTokenExpiry   DateTime?
+  spreadsheetId       String?
+  sheetName          String?   @default("Orders")
+  columns            String?
 
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 }
