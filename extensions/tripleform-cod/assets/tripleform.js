@@ -1603,7 +1603,7 @@ window.TripleformCOD = (function () {
                 <div>${css(t.shipping || "Shipping price")}</div>
                 <div data-tf="shipping-note" style="font-size:${tinyFontSize};opacity:.8;margin-top:2px;"></div>
               </div>
-              <div style="font-weight:700;" data-tf="shipping">Gratuit</div>
+                <div style="font-weight:700;" data-tf="shipping">${css(t.shippingToCalculate || "Gratuit")}</div>
             </div>
             <div style="${rowStyle}">
               <div>${css(t.total || "Total")}</div>
@@ -2168,9 +2168,9 @@ window.TripleformCOD = (function () {
         discountEls.forEach((el) => (el.textContent = txt));
       }
 
-      const shippingText = geoShippingCents
-        ? moneyFmt(geoShippingCents)
-        : "Gratuit";
+     const shippingText = geoShippingCents
+  ? moneyFmt(geoShippingCents)
+  : css(t.shippingToCalculate || "Gratuit");
 
       shippingEls.forEach((el) => (el.textContent = shippingText));
       shippingNoteEls.forEach((el) => {
