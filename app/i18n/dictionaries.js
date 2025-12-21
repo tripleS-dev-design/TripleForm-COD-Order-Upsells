@@ -1269,6 +1269,10 @@ const EN = {
 "section6.guide.step5": "5. Save → rates will be calculated automatically in your COD form.",
 
 
+"section1.preview.shippingToCalculate": "Shipping to calculate",
+"section3.sheetsConfiguration.chooseTab": "Choose tab",
+"section3.connection.refresh": "Refresh connection",
+
 };
 
 /* ========================================================================
@@ -2519,6 +2523,14 @@ const FR = {
 "section6.guide.step3": "3. Configurez les tarifs : ajoutez provinces/villes avec frais, ou créez des paliers de prix (0-299 = X, 300+ = gratuit).",
 "section6.guide.step4": "4. Utilisez les options avancées pour tarif par défaut, seuil gratuité, min commande, frais COD supplémentaire.",
 "section6.guide.step5": "5. Enregistrez → les tarifs seront calculés automatiquement dans votre formulaire COD.",
+
+
+"section1.preview.shippingToCalculate": "Livraison à calculer",
+"section3.sheetsConfiguration.chooseTab": "Choisir l'onglet",
+"section3.connection.refresh": "Rafraîchir la connexion",
+
+
+
 };
 
 /* ========================================================================
@@ -3779,6 +3791,12 @@ const ES = {
 "section6.guide.step3": "3. Configura tarifas: añade provincias/ciudades con costes, o crea rangos de precio (0-299 = X, 300+ = gratis).",
 "section6.guide.step4": "4. Usa opciones avanzadas para tarifa por defecto, umbral gratis, pedido mínimo, tarifa COD extra.",
 "section6.guide.step5": "5. Guarda → las tarifas se calcularán automáticamente en tu formulario COD.",
+
+"section1.preview.shippingToCalculate": "Envío a calcular",
+"section3.sheetsConfiguration.chooseTab": "Elegir pestaña",
+"section3.connection.refresh": "Actualizar conexión",
+
+
 };
 
 /* ========================================================================
@@ -5037,6 +5055,12 @@ const AR = {
 "section6.guide.step3": "3. اضبط الأسعار: أضف ولايات/مدن مع رسوم، أو أنشئ شرائح أسعار (0-299 = X، 300+ = مجاني).",
 "section6.guide.step4": "4. استخدم الخيارات المتقدمة للسعر الافتراضي، حد المجانية، الحد الأدنى للطلب، رسوم COD الإضافية.",
 "section6.guide.step5": "5. احفظ → سيتم حساب الأسعار تلقائيًا في استمارة الدفع عند الاستلام الخاصة بك.",
+
+"section1.preview.shippingToCalculate": "التوصيل لحسابه",
+"section3.sheetsConfiguration.chooseTab": "اختر علامة التبويب",
+"section3.connection.refresh": "تحديث الاتصال",
+
+
 };
 
 /// ===== Country labels for Section 1 =====
