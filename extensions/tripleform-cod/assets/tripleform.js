@@ -1327,7 +1327,7 @@ window.TripleformCOD = (function () {
         geoEnabledAttr === "yes");
 
     const geoEndpoint = geoEndpointAttr || "";
-    // ✅ Initialiser à null (pas à 0) - shipping non calculé au début
+    // ✅ CORRECTION CRITIQUE : Initialiser à null (pas à 0)
     let geoShippingCents = null;
     let geoNote = "";
     let geoRequestId = 0;
@@ -1582,6 +1582,7 @@ window.TripleformCOD = (function () {
     }
 
     function cartSummaryHTML() {
+      // ✅ CORRECTION : Toujours afficher "shipping to calculate" au début
       return `
         <div style="${cartBoxStyle}">
           <div style="${cartTitleStyle}">${css(t.top || "Order summary")}</div>
@@ -1605,11 +1606,7 @@ window.TripleformCOD = (function () {
                 <div data-tf="shipping-note" style="font-size:${tinyFontSize};opacity:.8;margin-top:2px;"></div>
               </div>
               <div style="font-weight:700;" data-tf="shipping">
-                ${
-                  geoShippingCents === 0 
-                    ? css(t.freeShipping || "Gratuit")
-                    : css(t.shippingToCalculate || "Shipping to calculate")
-                }
+                ${css(t.shippingToCalculate || "Shipping to calculate")}
               </div>
             </div>
             <div style="${rowStyle}">
@@ -2003,7 +2000,7 @@ window.TripleformCOD = (function () {
       };
     }
 
-    // ✅ CORRECTION CRITIQUE : Shipping GEO - ne pas mettre à 0 en cas d'erreur
+    // ✅ CORRECTION CRITIQUE : Shipping GEO - ne pas mettre à 0 en cas d'erreur ou de champs vides
     async function recalcGeo() {
       if (!geoEnabled || !geoEndpoint) {
         // ✅ Ne pas changer geoShippingCents, reste null
@@ -2020,8 +2017,8 @@ window.TripleformCOD = (function () {
         getFieldValueByLabel("wilaya") || getFieldValueByLabel("province");
       const city = getFieldValueByLabel("city");
 
-      // ✅ Si province et ville sont vides, ne pas appeler l'API, laisser null
-      if (!province && !city) {
+      // ✅ CORRECTION : Si province et ville sont vides, ne pas appeler l'API, laisser null
+      if (!province || !city) {
         if (reqId !== geoRequestId) return;
         geoShippingCents = null;
         geoNote = "";
@@ -2082,7 +2079,8 @@ window.TripleformCOD = (function () {
             json.message ||
             "";
 
-          // ✅ Seulement si l'API retourne un montant (0 ou > 0)
+          // ✅ CORRECTION IMPORTANTE : Seulement si l'API retourne un montant (0 ou > 0)
+          // Si shippingCents et codFeeCents sont tous les deux 0, alors geoShippingCents = 0
           geoShippingCents = shippingCents + codFeeCents;
         }
       } catch (e) {
@@ -2188,10 +2186,18 @@ window.TripleformCOD = (function () {
         discountEls.forEach((el) => (el.textContent = txt));
       }
 
-      // ✅ CORRECTION IMPORTANTE : Utiliser les traductions
-      const shippingText = geoShippingCents === null 
-        ? css(t.shippingToCalculate || "Shipping to calculate")
-        : (geoShippingCents === 0 ? css(t.freeShipping || "Gratuit") : moneyFmt(geoShippingCents));
+      // ✅ CORRECTION IMPORTANTE : Logique corrigée pour utiliser les traductions
+      let shippingText = "";
+      if (geoShippingCents === null) {
+        // ✅ Non calculé encore - utiliser "shippingToCalculate"
+        shippingText = css(t.shippingToCalculate || "Shipping to calculate");
+      } else if (geoShippingCents === 0) {
+        // ✅ API a retourné 0 - gratuit
+        shippingText = css(t.freeShipping || "Gratuit");
+      } else {
+        // ✅ Montant calculé > 0
+        shippingText = moneyFmt(geoShippingCents);
+      }
 
       shippingEls.forEach((el) => (el.textContent = shippingText));
       shippingNoteEls.forEach((el) => {
