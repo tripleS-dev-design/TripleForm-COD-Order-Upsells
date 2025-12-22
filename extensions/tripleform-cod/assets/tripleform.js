@@ -1327,7 +1327,8 @@ window.TripleformCOD = (function () {
         geoEnabledAttr === "yes");
 
     const geoEndpoint = geoEndpointAttr || "";
-    let geoShippingCents = 0;
+    // ✅ Initialiser à null (pas à 0) - shipping non calculé au début
+    let geoShippingCents = null;
     let geoNote = "";
     let geoRequestId = 0;
 
@@ -1603,7 +1604,13 @@ window.TripleformCOD = (function () {
                 <div>${css(t.shipping || "Shipping price")}</div>
                 <div data-tf="shipping-note" style="font-size:${tinyFontSize};opacity:.8;margin-top:2px;"></div>
               </div>
-                <div style="font-weight:700;" data-tf="shipping">${css(t.shippingToCalculate || "Gratuit")}</div>
+              <div style="font-weight:700;" data-tf="shipping">
+                ${
+                  geoShippingCents === 0 
+                    ? "Gratuit" 
+                    : css(t.shippingToCalculate || "Shipping to calculate")
+                }
+              </div>
             </div>
             <div style="${rowStyle}">
               <div>${css(t.total || "Total")}</div>
@@ -1998,7 +2005,7 @@ window.TripleformCOD = (function () {
     // ✅ Shipping GEO: appel GET vers /apps/tripleform-cod/api/geo/calc
     async function recalcGeo() {
       if (!geoEnabled || !geoEndpoint) {
-        geoShippingCents = 0;
+        geoShippingCents = null;
         geoNote = "";
         updateMoney();
         return;
@@ -2168,9 +2175,10 @@ window.TripleformCOD = (function () {
         discountEls.forEach((el) => (el.textContent = txt));
       }
 
-     const shippingText = geoShippingCents
-  ? moneyFmt(geoShippingCents)
-  : css(t.shippingToCalculate || "Gratuit");
+      // ✅ CORRECTION IMPORTANTE : Vérifier si geoShippingCents est null (pas encore calculé)
+      const shippingText = geoShippingCents === null 
+        ? css(t.shippingToCalculate || "Shipping to calculate")
+        : (geoShippingCents === 0 ? "Gratuit" : moneyFmt(geoShippingCents));
 
       shippingEls.forEach((el) => (el.textContent = shippingText));
       shippingNoteEls.forEach((el) => {
