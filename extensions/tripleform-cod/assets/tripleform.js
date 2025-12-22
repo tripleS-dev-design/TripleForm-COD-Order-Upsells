@@ -1607,7 +1607,7 @@ window.TripleformCOD = (function () {
               <div style="font-weight:700;" data-tf="shipping">
                 ${
                   geoShippingCents === 0 
-                    ? "Gratuit" 
+                    ? css(t.freeShipping || "Gratuit")
                     : css(t.shippingToCalculate || "Shipping to calculate")
                 }
               </div>
@@ -2002,10 +2002,11 @@ window.TripleformCOD = (function () {
         variantId: vId,
       };
     }
-    // ✅ Shipping GEO: appel GET vers /apps/tripleform-cod/api/geo/calc
+
+    // ✅ CORRECTION CRITIQUE : Shipping GEO - ne pas mettre à 0 en cas d'erreur
     async function recalcGeo() {
       if (!geoEnabled || !geoEndpoint) {
-        geoShippingCents = null;
+        // ✅ Ne pas changer geoShippingCents, reste null
         geoNote = "";
         updateMoney();
         return;
@@ -2018,6 +2019,15 @@ window.TripleformCOD = (function () {
       const province =
         getFieldValueByLabel("wilaya") || getFieldValueByLabel("province");
       const city = getFieldValueByLabel("city");
+
+      // ✅ Si province et ville sont vides, ne pas appeler l'API, laisser null
+      if (!province && !city) {
+        if (reqId !== geoRequestId) return;
+        geoShippingCents = null;
+        geoNote = "";
+        updateMoney();
+        return;
+      }
 
       try {
         // Construire l'URL avec query string
@@ -2034,14 +2044,15 @@ window.TripleformCOD = (function () {
 
         const json = await res.json().catch(() => ({}));
 
-        if (reqId !== geoRequestId) return; // ancienne requête dépassée
+        if (reqId !== geoRequestId) return;
 
         if (!res.ok || json.ok === false) {
           console.warn(
             "[Tripleform COD] geo calc error:",
             json.error || res.statusText
           );
-          geoShippingCents = 0;
+          // ✅ CORRECTION : En cas d'erreur, laisser null (pas 0)
+          geoShippingCents = null;
           geoNote = "";
         } else {
           let shippingCents = 0;
@@ -2071,12 +2082,14 @@ window.TripleformCOD = (function () {
             json.message ||
             "";
 
+          // ✅ Seulement si l'API retourne un montant (0 ou > 0)
           geoShippingCents = shippingCents + codFeeCents;
         }
       } catch (e) {
         if (reqId !== geoRequestId) return;
         console.warn("[Tripleform COD] geo calc network error:", e);
-        geoShippingCents = 0;
+        // ✅ CORRECTION : En cas d'erreur réseau, laisser null (pas 0)
+        geoShippingCents = null;
         geoNote = "";
       }
 
@@ -2175,10 +2188,10 @@ window.TripleformCOD = (function () {
         discountEls.forEach((el) => (el.textContent = txt));
       }
 
-      // ✅ CORRECTION IMPORTANTE : Vérifier si geoShippingCents est null (pas encore calculé)
+      // ✅ CORRECTION IMPORTANTE : Utiliser les traductions
       const shippingText = geoShippingCents === null 
         ? css(t.shippingToCalculate || "Shipping to calculate")
-        : (geoShippingCents === 0 ? "Gratuit" : moneyFmt(geoShippingCents));
+        : (geoShippingCents === 0 ? css(t.freeShipping || "Gratuit") : moneyFmt(geoShippingCents));
 
       shippingEls.forEach((el) => (el.textContent = shippingText));
       shippingNoteEls.forEach((el) => {

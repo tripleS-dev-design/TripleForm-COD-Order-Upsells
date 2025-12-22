@@ -1272,6 +1272,7 @@ const EN = {
 "section1.preview.shippingToCalculate": "Shipping to calculate",
 "section3.sheetsConfiguration.chooseTab": "Choose tab",
 "section3.connection.refresh": "Refresh connection",
+"section1.cart.freeShipping": "Free shipping",
 
 };
 
@@ -2528,7 +2529,7 @@ const FR = {
 "section1.preview.shippingToCalculate": "Livraison à calculer",
 "section3.sheetsConfiguration.chooseTab": "Choisir l'onglet",
 "section3.connection.refresh": "Rafraîchir la connexion",
-
+"section1.cart.freeShipping": "Livraison gratuite",
 
 
 };
@@ -3795,8 +3796,7 @@ const ES = {
 "section1.preview.shippingToCalculate": "Envío a calcular",
 "section3.sheetsConfiguration.chooseTab": "Elegir pestaña",
 "section3.connection.refresh": "Actualizar conexión",
-
-
+"section1.cart.freeShipping": "Envío gratis",
 };
 
 /* ========================================================================
@@ -5059,7 +5059,7 @@ const AR = {
 "section1.preview.shippingToCalculate": "التوصيل لحسابه",
 "section3.sheetsConfiguration.chooseTab": "اختر علامة التبويب",
 "section3.connection.refresh": "تحديث الاتصال",
-
+"section1.cart.freeShipping": "شحن مجاني",
 
 };
 
