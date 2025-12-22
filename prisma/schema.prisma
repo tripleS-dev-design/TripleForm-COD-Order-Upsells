@@ -41,25 +41,201 @@ model Shop {
 }
 
 model ShopGoogleSettings {
-  id               Int       @id @default(autoincrement())
-  shopDomain       String    @unique
-  googleUserId     String?
-  googleEmail      String?
-  accessToken      String?
-  refreshToken     String?
-  scope            String?
-  tokenType        String?
-  tokenExpiryDate  DateTime?
-  sheetsConfigJson String?
+  id                   Int       @id @default(autoincrement())
+  shopDomain           String    @unique
+  googleUserId         String?
+  googleEmail          String?
+  accessToken          String?
+  refreshToken         String?
+  scope                String?
+  tokenType            String?
+  tokenExpiryDate      DateTime?
+  sheetsConfigJson     String?
   
   // ✅ NOUVEAUX CHAMPS CRITIQUES pour Google Sheets
-  googleAccessToken   String?
-  googleRefreshToken  String?
-  googleTokenExpiry   DateTime?
-  spreadsheetId       String?
-  sheetName          String?   @default("Orders")
-  columns            String?
+  googleAccessToken    String?
+  googleRefreshToken   String?
+  googleTokenExpiry    DateTime?
+  spreadsheetId        String?
+  sheetName            String?   @default("Orders")
+  columns              String?
 
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+}
+
+// ✅ MODÈLES WHATSAPP
+model WhatsappStatus {
+  id           String    @id @default(cuid())
+  shopDomain   String    @unique
+  sessionId    String?
+  phoneNumber  String?
+  qrCode       String?   @db.Text
+  status       String    @default("disconnected")
+  connectedAt  DateTime?
+  lastError    String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  
+  @@map("whatsapp_status")
+}
+
+model WhatsappConfig {
+  id                     String    @id @default(cuid())
+  shopDomain             String    @unique
+  
+  // Connexion
+  autoConnect            Boolean   @default(true)
+  sessionTimeout         Int       @default(24)
+  
+  // Messages après commande COD
+  enabled                Boolean   @default(true)
+  buttonText             String    @default("💬 WhatsApp")
+  messageTemplate        String    @default("✅ Commande #{orderId} confirmée! Livraison dans 2-3 jours.")
+  sendAutomatically      Boolean   @default(true)
+  sendDelay              String    @default("immediate")
+  buttonPosition         String    @default("below")
+  buttonStyle            String    @default("secondary")
+  
+  // WhatsApp Recovery
+  recoveryEnabled        Boolean   @default(true)
+  recoveryMessage        String    @default("👋 Vous avez oublié quelque chose! Votre panier vous attend.")
+  recoveryDelay          String    @default("1h")
+  recoveryDiscount       String    @default("10%")
+  recoveryCode           String    @default("RECOVERY10")
+  
+  // Options avancées
+  enableAnalytics        Boolean   @default(true)
+  enableReadReceipts     Boolean   @default(true)
+  enableTypingIndicator  Boolean   @default(false)
+  maxRetries             Int       @default(3)
+  retryInterval          Int       @default(5)
+  businessHoursOnly      Boolean   @default(false)
+  businessHoursStart     String    @default("09:00")
+  businessHoursEnd       String    @default("18:00")
+  
+  // Template personnalisation
+  enableMediaMessages    Boolean   @default(false)
+  mediaUrl               String?
+  enableButtons          Boolean   @default(false)
+  button1Text            String    @default("Suivre ma commande")
+  button1Url             String    @default("{trackingUrl}")
+  button2Text            String    @default("Contacter le support")
+  button2Url             String    @default("https://wa.me/{supportNumber}")
+  
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+  
+  @@map("whatsapp_config")
+}
+
+model WhatsappStats {
+  id                  String    @id @default(cuid())
+  shopDomain          String    @unique
+  
+  totalMessages       Int       @default(0)
+  successful          Int       @default(0)
+  failed              Int       @default(0)
+  ordersNotified      Int       @default(0)
+  recoverySent        Int       @default(0)
+  recoveryConverted   Int       @default(0)
+  recoveryRate        Float     @default(0)
+  avgResponseTime     Float     @default(0)
+  
+  lastMessageAt       DateTime?
+  lastRecoveryAt      DateTime?
+  lastTestAt          DateTime?
+  lastTestMessageAt   DateTime?
+  lastError           String?
+  
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  
+  @@map("whatsapp_stats")
+}
+
+model WhatsappMessage {
+  id            String    @id @default(cuid())
+  shopDomain    String
+    
+  messageId     String?
+  orderId       String?
+  cartToken     String?
+  customerPhone String
+  
+  message       String    @db.Text
+  type          String
+  status        String
+  error         String?
+  
+  sentAt        DateTime  @default(now())
+  deliveredAt   DateTime?
+  readAt        DateTime?
+  
+  createdAt     DateTime  @default(now())
+  
+  @@map("whatsapp_messages")
+  @@index([shopDomain])
+  @@index([orderId])
+  @@index([cartToken])
+  @@index([customerPhone])
+  @@index([sentAt])
+}
+
+model AbandonedCart {
+  id                String    @id @default(cuid())
+  token             String    @unique
+  shopDomain        String
+    
+  customerPhone     String
+  customerEmail     String?
+  items             String    @db.Text
+  total             Float
+  currency          String    @default("MAD")
+  
+  abandonedAt       DateTime  @default(now())
+  recoveredAt       DateTime?
+  recoveryStatus    String    @default("pending")
+  recoveryMessageId String?
+  recoveryError     String?
+  
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  @@map("abandoned_carts")
+  @@index([shopDomain])
+  @@index([customerPhone])
+  @@index([abandonedAt])
+  @@index([recoveryStatus])
+}
+
+// ✅ MODÈLES POUR LES COMMANDES ET USAGE
+model OrderSync {
+  id               Int       @id @default(autoincrement())
+  shopDomain       String
+  orderId          String
+  orderData        String    @db.Text
+  syncedToSheets   Boolean   @default(false)
+  syncedAt         DateTime?
+  sheetRow         Int?
+  error            String?
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
+  
+  @@index([shopDomain])
+  @@index([orderId])
+  @@index([syncedToSheets])
+}
+
+model PlanUsage {
+  id            Int       @id @default(autoincrement())
+  shopDomain    String    @unique
+  planKey       String?
+  periodStart   DateTime?
+  ordersUsed    Int       @default(0)
+  ordersLimit   Int       @default(100)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  @@map("plan_usage")
 }

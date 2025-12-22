@@ -12,6 +12,9 @@ import {
   RangeSlider,
   Badge,
   Tabs,
+  Icon,
+  Box,
+  Divider,
 } from "@shopify/polaris";
 import { useI18n } from "../i18n/react";
 import PlanUsageWidget from "../components/PlanUsageWidget";
@@ -289,9 +292,213 @@ const LAYOUT_CSS = `
     margin-bottom:20px;
   }
 
+  /* WhatsApp Modern Styles */
+  .whatsapp-section {
+    margin-top: 24px;
+  }
+
+  .whatsapp-status-card {
+    background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+    border-radius: 12px;
+    padding: 20px;
+    color: white;
+    margin-bottom: 20px;
+    box-shadow: 0 8px 32px rgba(37, 211, 102, 0.25);
+  }
+
+  .whatsapp-qr-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 30px;
+    background: #f8fafc;
+    border-radius: 12px;
+    border: 2px dashed #25D366;
+    margin: 20px 0;
+  }
+
+  .whatsapp-qr-box {
+    width: 250px;
+    height: 250px;
+    background: white;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+    padding: 20px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+  }
+
+  .whatsapp-qr-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    color: #666;
+  }
+
+  .whatsapp-config-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+    margin-top: 20px;
+  }
+
+  .whatsapp-feature-card {
+    background: white;
+    border: 1px solid #E5E7EB;
+    border-radius: 12px;
+    padding: 20px;
+    transition: all 0.3s ease;
+  }
+
+  .whatsapp-feature-card:hover {
+    border-color: #25D366;
+    box-shadow: 0 10px 25px rgba(37, 211, 102, 0.1);
+  }
+
+  .whatsapp-feature-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .whatsapp-icon {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #25D366, #128C7E);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 20px;
+  }
+
+  .whatsapp-advanced-settings {
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 20px;
+    border: 1px solid #e2e8f0;
+  }
+
+  .whatsapp-connection-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .status-connected {
+    background: rgba(37, 211, 102, 0.1);
+    color: #128C7E;
+    border: 1px solid rgba(37, 211, 102, 0.3);
+  }
+
+  .status-disconnected {
+    background: rgba(239, 68, 68, 0.1);
+    color: #DC2626;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+  }
+
+  .whatsapp-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 16px;
+    margin-top: 20px;
+  }
+
+  .whatsapp-stat-card {
+    background: white;
+    border-radius: 10px;
+    padding: 16px;
+    border: 1px solid #E5E7EB;
+    text-align: center;
+  }
+
+  .whatsapp-stat-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: #0F172A;
+    margin: 8px 0;
+  }
+
+  .whatsapp-stat-label {
+    font-size: 12px;
+    color: #6B7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .whatsapp-template-preview {
+    background: #f0f9ff;
+    border: 1px solid #bae6fd;
+    border-radius: 8px;
+    padding: 16px;
+    margin-top: 16px;
+  }
+
+  .whatsapp-variables-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .whatsapp-variable-tag {
+    background: #e0f2fe;
+    border: 1px solid #bae6fd;
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 12px;
+    font-family: monospace;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .whatsapp-variable-tag:hover {
+    background: #bae6fd;
+    transform: translateY(-1px);
+  }
+
+  .whatsapp-schedule-selector {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+  }
+
+  .whatsapp-schedule-option {
+    padding: 8px 16px;
+    border: 2px solid #E5E7EB;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+    min-width: 100px;
+  }
+
+  .whatsapp-schedule-option:hover {
+    border-color: #25D366;
+  }
+
+  .whatsapp-schedule-option.active {
+    background: #25D366;
+    color: white;
+    border-color: #25D366;
+  }
+
   @media (max-width: 980px) {
     .tf-editor { grid-template-columns: 1fr; }
     .tf-rail, .tf-side-col { position:static; max-height:none; width:auto; }
+    .whatsapp-config-grid { grid-template-columns: 1fr; }
   }
 `;
 
@@ -493,6 +700,29 @@ function GoogleIcon() {
   );
 }
 
+function WhatsAppIcon({ size = 20 }) {
+  return (
+    <span
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        width: size,
+        height: size,
+        borderRadius: "50%",
+        background: "#25D366",
+        color: "#ffffff",
+        fontWeight: 700,
+        fontSize: size * 0.6,
+      }}
+    >
+      <svg width={size * 0.6} height={size * 0.6} viewBox="0 0 24 24" fill="none">
+        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.149-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.372-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.095 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.76.982.998-3.675-.236-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.897 6.994c-.004 5.45-4.438 9.88-9.888 9.88m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.333.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.333 11.893-11.893 0-3.18-1.24-6.162-3.495-8.411" fill="currentColor"/>
+      </svg>
+    </span>
+  );
+}
+
 /* ====== HEADER avec bouton Save dans la bande colorée ====== */
 function PageShell({ children, onSave, saving }) {
   const { t } = useI18n();
@@ -559,7 +789,6 @@ function PageShell({ children, onSave, saving }) {
   );
 }
 
-// Composant pour la configuration d'une feuille Google Sheets
 function SheetConfigSection({ 
   title, 
   sheetConfig, 
@@ -579,7 +808,6 @@ function SheetConfigSection({
     <div className="tf-sheet-config">
       <Text variant="headingMd" fontWeight="bold">{t(title)}</Text>
       <BlockStack gap="300" marginBlockStart="300">
-        {/* Sélection du Google Spreadsheet */}
         <Select
           label={t("section3.sheetsConfiguration.selectSpreadsheet")}
           helpText={t("section3.sheetsConfiguration.selectSpreadsheetHelp")}
@@ -594,13 +822,10 @@ function SheetConfigSection({
           onChange={(value) => {
             const newConfig = { ...sheetConfig, spreadsheetId: value };
             onConfigChange(newConfig);
-            // Si une valeur est sélectionnée, on peut charger les onglets
-            // Cette fonction sera passée depuis le parent
           }}
           disabled={!isConnected || isLoading || loadingSpreadsheets}
         />
 
-        {/* Sélection de l'onglet si un spreadsheet est sélectionné */}
         {sheetConfig.spreadsheetId && (
           <Select
             label={t("section3.sheetsConfiguration.selectTab")}
@@ -618,7 +843,6 @@ function SheetConfigSection({
           />
         )}
 
-        {/* Configuration de la ligne d'en-tête */}
         <RangeSlider
           label={`${t("section3.sheetsConfiguration.headerRow")} (${sheetConfig.headerRowIndex || 1})`}
           helpText={t("section3.sheetsConfiguration.headerRowHelp")}
@@ -648,6 +872,661 @@ function SheetConfigSection({
           </Button>
         </InlineStack>
       </BlockStack>
+    </div>
+  );
+}
+
+/* ====== WHATSAPP CONFIGURATION SECTION ====== */
+function WhatsAppConfigSection() {
+  const { t } = useI18n();
+  
+  const [whatsappStatus, setWhatsappStatus] = useState({
+    loading: true,
+    connected: false,
+    phoneNumber: null,
+    sessionStatus: 'disconnected',
+    qrCode: null,
+    lastConnected: null,
+    messagesSent: 0,
+    recoveryRate: 0
+  });
+
+  const [whatsappConfig, setWhatsappConfig] = useState({
+    // Connexion
+    autoConnect: true,
+    sessionTimeout: 24, // heures
+    
+    // Messages après commande COD
+    enabled: true,
+    buttonText: "💬 WhatsApp",
+    messageTemplate: "✅ Commande #{orderId} confirmée! Livraison dans 2-3 jours. Merci pour votre confiance!",
+    sendAutomatically: true,
+    sendDelay: "immediate",
+    buttonPosition: "below",
+    buttonStyle: "secondary",
+    
+    // WhatsApp Recovery
+    recoveryEnabled: true,
+    recoveryMessage: "👋 Vous avez oublié quelque chose! Votre panier vous attend. Profitez de 10% de réduction avec le code: RECOVERY10",
+    recoveryDelay: "1h",
+    recoveryDiscount: "10%",
+    recoveryCode: "RECOVERY10",
+    
+    // Options avancées
+    enableAnalytics: true,
+    enableReadReceipts: true,
+    enableTypingIndicator: false,
+    maxRetries: 3,
+    retryInterval: 5, // minutes
+    businessHoursOnly: false,
+    businessHoursStart: "09:00",
+    businessHoursEnd: "18:00",
+    
+    // Template personnalisation
+    enableMediaMessages: false,
+    mediaUrl: "",
+    enableButtons: false,
+    button1Text: "Suivre ma commande",
+    button1Url: "{trackingUrl}",
+    button2Text: "Contacter le support",
+    button2Url: "https://wa.me/{supportNumber}",
+  });
+
+  const [qrLoading, setQrLoading] = useState(false);
+  const [testingConnection, setTestingConnection] = useState(false);
+  const [stats, setStats] = useState({
+    totalMessages: 0,
+    successful: 0,
+    failed: 0,
+    recoveryConverted: 0,
+    avgResponseTime: 0
+  });
+
+  const availableVariables = [
+    { code: "{orderId}", label: t("whatsapp.variables.orderId") },
+    { code: "{customerName}", label: t("whatsapp.variables.customerName") },
+    { code: "{customerPhone}", label: t("whatsapp.variables.customerPhone") },
+    { code: "{productName}", label: t("whatsapp.variables.productName") },
+    { code: "{orderTotal}", label: t("whatsapp.variables.orderTotal") },
+    { code: "{deliveryDate}", label: t("whatsapp.variables.deliveryDate") },
+    { code: "{shopName}", label: t("whatsapp.variables.shopName") },
+    { code: "{trackingUrl}", label: t("whatsapp.variables.trackingUrl") },
+    { code: "{supportNumber}", label: t("whatsapp.variables.supportNumber") },
+    { code: "{recoveryCode}", label: t("whatsapp.variables.recoveryCode") },
+  ];
+
+  const delayOptions = [
+    { value: "immediate", label: t("whatsapp.delays.immediate") },
+    { value: "5min", label: t("whatsapp.delays.5min") },
+    { value: "30min", label: t("whatsapp.delays.30min") },
+    { value: "1h", label: t("whatsapp.delays.1h") },
+    { value: "2h", label: t("whatsapp.delays.2h") },
+    { value: "6h", label: t("whatsapp.delays.6h") },
+    { value: "24h", label: t("whatsapp.delays.24h") },
+  ];
+
+  useEffect(() => {
+    loadWhatsAppStatus();
+  }, []);
+
+  const loadWhatsAppStatus = async () => {
+    setWhatsappStatus(prev => ({ ...prev, loading: true }));
+    try {
+      const res = await fetch("/api/whatsapp/status", {
+        credentials: "include",
+      });
+      const data = await res.json();
+      if (data.ok) {
+        setWhatsappStatus({
+          loading: false,
+          connected: data.connected,
+          phoneNumber: data.phoneNumber,
+          sessionStatus: data.sessionStatus,
+          qrCode: data.qrCode,
+          lastConnected: data.lastConnected,
+          messagesSent: data.messagesSent || 0,
+          recoveryRate: data.recoveryRate || 0
+        });
+        setStats(data.stats || stats);
+        if (data.config) {
+          setWhatsappConfig(prev => ({ ...prev, ...data.config }));
+        }
+      }
+    } catch (error) {
+      console.error("Error loading WhatsApp status:", error);
+      setWhatsappStatus(prev => ({ ...prev, loading: false }));
+    }
+  };
+
+  const generateQRCode = async () => {
+    setQrLoading(true);
+    try {
+      const res = await fetch("/api/whatsapp/generate-qr", {
+        method: "POST",
+        credentials: "include",
+      });
+      const data = await res.json();
+      if (data.ok && data.qrCode) {
+        setWhatsappStatus(prev => ({ ...prev, qrCode: data.qrCode }));
+      }
+    } catch (error) {
+      console.error("Error generating QR code:", error);
+      alert(t("whatsapp.errors.qrGeneration"));
+    } finally {
+      setQrLoading(false);
+    }
+  };
+
+  const disconnectWhatsApp = async () => {
+    if (confirm(t("whatsapp.confirmDisconnect"))) {
+      try {
+        const res = await fetch("/api/whatsapp/disconnect", {
+          method: "POST",
+          credentials: "include",
+        });
+        if (res.ok) {
+          setWhatsappStatus(prev => ({ ...prev, connected: false, qrCode: null }));
+          alert(t("whatsapp.disconnected"));
+        }
+      } catch (error) {
+        console.error("Error disconnecting WhatsApp:", error);
+        alert(t("whatsapp.errors.disconnect"));
+      }
+    }
+  };
+
+  const testWhatsAppConnection = async () => {
+    setTestingConnection(true);
+    try {
+      const res = await fetch("/api/whatsapp/test", {
+        method: "POST",
+        credentials: "include",
+      });
+      const data = await res.json();
+      if (data.ok) {
+        alert(t("whatsapp.testSuccess"));
+      } else {
+        alert(t("whatsapp.testError", { error: data.error }));
+      }
+    } catch (error) {
+      alert(t("whatsapp.testError", { error: error.message }));
+    } finally {
+      setTestingConnection(false);
+    }
+  };
+
+  const saveWhatsAppConfig = async () => {
+    try {
+      const res = await fetch("/api/whatsapp/save-config", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ config: whatsappConfig }),
+      });
+      if (res.ok) {
+        alert(t("whatsapp.configSaved"));
+      } else {
+        alert(t("whatsapp.errors.saveConfig"));
+      }
+    } catch (error) {
+      console.error("Error saving WhatsApp config:", error);
+      alert(t("whatsapp.errors.saveConfig"));
+    }
+  };
+
+  const sendTestMessage = async () => {
+    if (confirm(t("whatsapp.confirmTestMessage"))) {
+      try {
+        const res = await fetch("/api/whatsapp/send-test", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ 
+            message: whatsappConfig.messageTemplate,
+            type: "order"
+          }),
+        });
+        const data = await res.json();
+        if (data.ok) {
+          alert(t("whatsapp.testMessageSent"));
+        } else {
+          alert(t("whatsapp.errors.testMessage", { error: data.error }));
+        }
+      } catch (error) {
+        alert(t("whatsapp.errors.testMessage", { error: error.message }));
+      }
+    }
+  };
+
+  const insertVariable = (variable) => {
+    const textarea = document.querySelector('textarea[name="messageTemplate"]');
+    if (textarea) {
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const text = textarea.value;
+      const newText = text.substring(0, start) + variable + text.substring(end);
+      
+      setWhatsappConfig(prev => ({
+        ...prev,
+        messageTemplate: newText
+      }));
+      
+      setTimeout(() => {
+        textarea.focus();
+        textarea.selectionStart = textarea.selectionEnd = start + variable.length;
+      }, 0);
+    }
+  };
+
+  return (
+    <div className="whatsapp-section">
+      {/* Status Card */}
+      <div className="whatsapp-status-card">
+        <InlineStack align="space-between" blockAlign="center">
+          <InlineStack gap="200" blockAlign="center">
+            <WhatsAppIcon size={32} />
+            <div>
+              <Text as="h3" variant="headingLg" color="text-inverse">
+                {t("whatsapp.title")}
+              </Text>
+              <Text as="p" color="text-inverse">
+                {t("whatsapp.subtitle")}
+              </Text>
+            </div>
+          </InlineStack>
+          
+          <div className={`whatsapp-connection-status ${whatsappStatus.connected ? 'status-connected' : 'status-disconnected'}`}>
+            {whatsappStatus.connected ? (
+              <>
+                <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#25D366' }} />
+                {t("whatsapp.connected")}
+              </>
+            ) : (
+              <>
+                <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#DC2626' }} />
+                {t("whatsapp.disconnected")}
+              </>
+            )}
+          </div>
+        </InlineStack>
+      </div>
+
+      {/* Connection QR Code */}
+      <Card>
+        <BlockStack gap="400">
+          <div className="whatsapp-feature-header">
+            <div className="whatsapp-icon">
+              <WhatsAppIcon size={24} />
+            </div>
+            <div>
+              <Text as="h3" variant="headingMd">{t("whatsapp.connection.title")}</Text>
+              <Text as="p" tone="subdued">{t("whatsapp.connection.description")}</Text>
+            </div>
+          </div>
+
+          {!whatsappStatus.connected ? (
+            <div className="whatsapp-qr-container">
+              <div className="whatsapp-qr-box">
+                {whatsappStatus.qrCode ? (
+                  <img 
+                    src={whatsappStatus.qrCode} 
+                    alt="WhatsApp QR Code" 
+                    style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                  />
+                ) : (
+                  <div className="whatsapp-qr-placeholder">
+                    <WhatsAppIcon size={48} />
+                    <Text as="p" tone="subdued">{t("whatsapp.qr.placeholder")}</Text>
+                  </div>
+                )}
+              </div>
+              
+              <BlockStack gap="200">
+                <Text as="p" alignment="center">{t("whatsapp.qr.instructions")}</Text>
+                
+                <InlineStack gap="200" align="center">
+                  <Button
+                    variant="primary"
+                    onClick={generateQRCode}
+                    loading={qrLoading}
+                    disabled={whatsappStatus.loading}
+                  >
+                    {whatsappStatus.qrCode ? t("whatsapp.qr.regenerate") : t("whatsapp.qr.generate")}
+                  </Button>
+                  
+                  <Button
+                    onClick={loadWhatsAppStatus}
+                    disabled={whatsappStatus.loading}
+                  >
+                    {t("whatsapp.refreshStatus")}
+                  </Button>
+                </InlineStack>
+              </BlockStack>
+            </div>
+          ) : (
+            <div style={{ padding: 20, background: '#f0f9ff', borderRadius: 12 }}>
+              <InlineStack align="space-between" blockAlign="center">
+                <InlineStack gap="200" blockAlign="center">
+                  <WhatsAppIcon size={24} />
+                  <div>
+                    <Text as="h4" variant="headingSm">{t("whatsapp.connectedTo")}</Text>
+                    <Text as="p" variant="bodyLg" fontWeight="bold">{whatsappStatus.phoneNumber}</Text>
+                    {whatsappStatus.lastConnected && (
+                      <Text as="p" tone="subdued" variant="bodySm">
+                        {t("whatsapp.lastConnected")}: {new Date(whatsappStatus.lastConnected).toLocaleString()}
+                      </Text>
+                    )}
+                  </div>
+                </InlineStack>
+                
+                <InlineStack gap="100">
+                  <Button onClick={testWhatsAppConnection} loading={testingConnection}>
+                    {t("whatsapp.testConnection")}
+                  </Button>
+                  <Button tone="critical" onClick={disconnectWhatsApp}>
+                    {t("whatsapp.disconnect")}
+                  </Button>
+                </InlineStack>
+              </InlineStack>
+            </div>
+          )}
+        </BlockStack>
+      </Card>
+
+      {/* Statistics */}
+      {whatsappStatus.connected && (
+        <div className="whatsapp-stats">
+          <div className="whatsapp-stat-card">
+            <div className="whatsapp-stat-value">{whatsappStatus.messagesSent}</div>
+            <div className="whatsapp-stat-label">{t("whatsapp.stats.messagesSent")}</div>
+          </div>
+          <div className="whatsapp-stat-card">
+            <div className="whatsapp-stat-value">{stats.successful}</div>
+            <div className="whatsapp-stat-label">{t("whatsapp.stats.successful")}</div>
+          </div>
+          <div className="whatsapp-stat-card">
+            <div className="whatsapp-stat-value">{whatsappStatus.recoveryRate}%</div>
+            <div className="whatsapp-stat-label">{t("whatsapp.stats.recoveryRate")}</div>
+          </div>
+          <div className="whatsapp-stat-card">
+            <div className="whatsapp-stat-value">{stats.avgResponseTime}s</div>
+            <div className="whatsapp-stat-label">{t("whatsapp.stats.avgResponse")}</div>
+          </div>
+        </div>
+      )}
+
+      {/* Main Configuration Grid */}
+      <div className="whatsapp-config-grid">
+        {/* After COD Order */}
+        <div className="whatsapp-feature-card">
+          <div className="whatsapp-feature-header">
+            <div className="whatsapp-icon">✅</div>
+            <div>
+              <Text as="h3" variant="headingSm">{t("whatsapp.features.afterCOD.title")}</Text>
+              <Text as="p" tone="subdued" variant="bodySm">{t("whatsapp.features.afterCOD.description")}</Text>
+            </div>
+          </div>
+          
+          <BlockStack gap="200">
+            <Checkbox
+              label={t("whatsapp.features.afterCOD.enable")}
+              checked={whatsappConfig.enabled}
+              onChange={(checked) => setWhatsappConfig(prev => ({ ...prev, enabled: checked }))}
+            />
+            
+            {whatsappConfig.enabled && (
+              <>
+                <TextField
+                  label={t("whatsapp.features.afterCOD.buttonText")}
+                  value={whatsappConfig.buttonText}
+                  onChange={(value) => setWhatsappConfig(prev => ({ ...prev, buttonText: value }))}
+                />
+                
+                <Select
+                  label={t("whatsapp.features.afterCOD.position")}
+                  value={whatsappConfig.buttonPosition}
+                  onChange={(value) => setWhatsappConfig(prev => ({ ...prev, buttonPosition: value }))}
+                  options={[
+                    { label: t("whatsapp.positions.below"), value: "below" },
+                    { label: t("whatsapp.positions.right"), value: "right" },
+                    { label: t("whatsapp.positions.replace"), value: "replace" },
+                  ]}
+                />
+                
+                <Checkbox
+                  label={t("whatsapp.features.afterCOD.autoSend")}
+                  checked={whatsappConfig.sendAutomatically}
+                  onChange={(checked) => setWhatsappConfig(prev => ({ ...prev, sendAutomatically: checked }))}
+                />
+                
+                {whatsappConfig.sendAutomatically && (
+                  <Select
+                    label={t("whatsapp.features.afterCOD.delay")}
+                    value={whatsappConfig.sendDelay}
+                    onChange={(value) => setWhatsappConfig(prev => ({ ...prev, sendDelay: value }))}
+                    options={delayOptions}
+                  />
+                )}
+              </>
+            )}
+          </BlockStack>
+        </div>
+
+        {/* Cart Recovery */}
+        <div className="whatsapp-feature-card">
+          <div className="whatsapp-feature-header">
+            <div className="whatsapp-icon">🛒</div>
+            <div>
+              <Text as="h3" variant="headingSm">{t("whatsapp.features.recovery.title")}</Text>
+              <Text as="p" tone="subdued" variant="bodySm">{t("whatsapp.features.recovery.description")}</Text>
+            </div>
+          </div>
+          
+          <BlockStack gap="200">
+            <Checkbox
+              label={t("whatsapp.features.recovery.enable")}
+              checked={whatsappConfig.recoveryEnabled}
+              onChange={(checked) => setWhatsappConfig(prev => ({ ...prev, recoveryEnabled: checked }))}
+            />
+            
+            {whatsappConfig.recoveryEnabled && (
+              <>
+                <Select
+                  label={t("whatsapp.features.recovery.delay")}
+                  value={whatsappConfig.recoveryDelay}
+                  onChange={(value) => setWhatsappConfig(prev => ({ ...prev, recoveryDelay: value }))}
+                  options={delayOptions.slice(2)} // Skip immediate and 5min
+                />
+                
+                <TextField
+                  label={t("whatsapp.features.recovery.discount")}
+                  value={whatsappConfig.recoveryDiscount}
+                  onChange={(value) => setWhatsappConfig(prev => ({ ...prev, recoveryDiscount: value }))}
+                />
+                
+                <TextField
+                  label={t("whatsapp.features.recovery.code")}
+                  value={whatsappConfig.recoveryCode}
+                  onChange={(value) => setWhatsappConfig(prev => ({ ...prev, recoveryCode: value }))}
+                />
+              </>
+            )}
+          </BlockStack>
+        </div>
+
+        {/* Message Templates */}
+        <div className="whatsapp-feature-card">
+          <div className="whatsapp-feature-header">
+            <div className="whatsapp-icon">💬</div>
+            <div>
+              <Text as="h3" variant="headingSm">{t("whatsapp.features.templates.title")}</Text>
+              <Text as="p" tone="subdued" variant="bodySm">{t("whatsapp.features.templates.description")}</Text>
+            </div>
+          </div>
+          
+          <BlockStack gap="200">
+            <TextField
+              label={t("whatsapp.features.templates.orderMessage")}
+              value={whatsappConfig.messageTemplate}
+              onChange={(value) => setWhatsappConfig(prev => ({ ...prev, messageTemplate: value }))}
+              multiline={3}
+              autoComplete="off"
+            />
+            
+            <TextField
+              label={t("whatsapp.features.templates.recoveryMessage")}
+              value={whatsappConfig.recoveryMessage}
+              onChange={(value) => setWhatsappConfig(prev => ({ ...prev, recoveryMessage: value }))}
+              multiline={3}
+              autoComplete="off"
+            />
+            
+            <div>
+              <Text as="p" variant="bodySm" fontWeight="medium">
+                {t("whatsapp.variables.available")}
+              </Text>
+              <div className="whatsapp-variables-grid">
+                {availableVariables.map((variable) => (
+                  <div
+                    key={variable.code}
+                    className="whatsapp-variable-tag"
+                    onClick={() => insertVariable(variable.code)}
+                    title={variable.label}
+                  >
+                    {variable.code}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </BlockStack>
+        </div>
+      </div>
+
+      {/* Advanced Settings */}
+      <div className="whatsapp-advanced-settings">
+        <Text as="h3" variant="headingMd">{t("whatsapp.advanced.title")}</Text>
+        <Text as="p" tone="subdued" variant="bodySm">{t("whatsapp.advanced.description")}</Text>
+        
+        <div className="whatsapp-config-grid" style={{ marginTop: 16 }}>
+          <BlockStack gap="200">
+            <Checkbox
+              label={t("whatsapp.advanced.autoConnect")}
+              checked={whatsappConfig.autoConnect}
+              onChange={(checked) => setWhatsappConfig(prev => ({ ...prev, autoConnect: checked }))}
+            />
+            
+            <Checkbox
+              label={t("whatsapp.advanced.analytics")}
+              checked={whatsappConfig.enableAnalytics}
+              onChange={(checked) => setWhatsappConfig(prev => ({ ...prev, enableAnalytics: checked }))}
+            />
+            
+            <Checkbox
+              label={t("whatsapp.advanced.readReceipts")}
+              checked={whatsappConfig.enableReadReceipts}
+              onChange={(checked) => setWhatsappConfig(prev => ({ ...prev, enableReadReceipts: checked }))}
+            />
+          </BlockStack>
+          
+          <BlockStack gap="200">
+            <Checkbox
+              label={t("whatsapp.advanced.businessHours")}
+              checked={whatsappConfig.businessHoursOnly}
+              onChange={(checked) => setWhatsappConfig(prev => ({ ...prev, businessHoursOnly: checked }))}
+            />
+            
+            {whatsappConfig.businessHoursOnly && (
+              <InlineStack gap="200">
+                <TextField
+                  label={t("whatsapp.advanced.startTime")}
+                  value={whatsappConfig.businessHoursStart}
+                  onChange={(value) => setWhatsappConfig(prev => ({ ...prev, businessHoursStart: value }))}
+                  type="time"
+                />
+                <TextField
+                  label={t("whatsapp.advanced.endTime")}
+                  value={whatsappConfig.businessHoursEnd}
+                  onChange={(value) => setWhatsappConfig(prev => ({ ...prev, businessHoursEnd: value }))}
+                  type="time"
+                />
+              </InlineStack>
+            )}
+            
+            <RangeSlider
+              label={t("whatsapp.advanced.maxRetries")}
+              value={whatsappConfig.maxRetries}
+              onChange={(value) => setWhatsappConfig(prev => ({ ...prev, maxRetries: value }))}
+              min={1}
+              max={10}
+              output
+            />
+          </BlockStack>
+          
+          <BlockStack gap="200">
+            <Checkbox
+              label={t("whatsapp.advanced.mediaMessages")}
+              checked={whatsappConfig.enableMediaMessages}
+              onChange={(checked) => setWhatsappConfig(prev => ({ ...prev, enableMediaMessages: checked }))}
+            />
+            
+            {whatsappConfig.enableMediaMessages && (
+              <TextField
+                label={t("whatsapp.advanced.mediaUrl")}
+                value={whatsappConfig.mediaUrl}
+                onChange={(value) => setWhatsappConfig(prev => ({ ...prev, mediaUrl: value }))}
+                placeholder="https://example.com/image.jpg"
+              />
+            )}
+            
+            <Checkbox
+              label={t("whatsapp.advanced.buttons")}
+              checked={whatsappConfig.enableButtons}
+              onChange={(checked) => setWhatsappConfig(prev => ({ ...prev, enableButtons: checked }))}
+            />
+          </BlockStack>
+        </div>
+      </div>
+
+      {/* Action Buttons */}
+      <InlineStack gap="200" align="end" marginBlockStart="400">
+        <Button onClick={sendTestMessage} disabled={!whatsappStatus.connected}>
+          {t("whatsapp.sendTest")}
+        </Button>
+        <Button variant="primary" onClick={saveWhatsAppConfig}>
+          {t("whatsapp.saveConfig")}
+        </Button>
+      </InlineStack>
+
+      {/* Preview */}
+      <Card marginBlockStart="400">
+        <BlockStack gap="300">
+          <Text as="h3" variant="headingMd">{t("whatsapp.preview.title")}</Text>
+          
+          <div className="whatsapp-template-preview">
+            <Text as="p" variant="bodyMd">
+              {whatsappConfig.messageTemplate
+                .replace(/{orderId}/g, "1234")
+                .replace(/{customerName}/g, "Jean Dupont")
+                .replace(/{productName}/g, "iPhone 15 Pro")
+                .replace(/{orderTotal}/g, "1 299,00 MAD")
+                .replace(/{shopName}/g, "TechStore")
+                .replace(/{deliveryDate}/g, "15 Mars 2024")
+              }
+            </Text>
+            
+            {whatsappConfig.enableButtons && (
+              <InlineStack gap="200" marginBlockStart="200">
+                <Button size="slim">{whatsappConfig.button1Text}</Button>
+                <Button size="slim" variant="secondary">{whatsappConfig.button2Text}</Button>
+              </InlineStack>
+            )}
+          </div>
+          
+          <Text as="p" tone="subdued" variant="bodySm">
+            {t("whatsapp.preview.description")}
+          </Text>
+        </BlockStack>
+      </Card>
     </div>
   );
 }
@@ -687,7 +1566,6 @@ export default function Section3Sheets() {
     abandonedSheetName: null,
   });
 
-  // 🔥 NOUVEAUX ÉTATS POUR LES SPREADSHEETS ET ONGLETS
   const [googleSpreadsheets, setGoogleSpreadsheets] = useState([]);
   const [loadingSpreadsheets, setLoadingSpreadsheets] = useState(false);
   const [availableTabs, setAvailableTabs] = useState([]);
@@ -696,7 +1574,6 @@ export default function Section3Sheets() {
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
 
-  // Tabs pour basculer entre commandes normales et abandonnées dans la vue "sheets"
   const [sheetTab, setSheetTab] = useState(0);
   const sheetTabs = [
     {
@@ -713,7 +1590,6 @@ export default function Section3Sheets() {
     },
   ];
 
-  // Écoute les messages de la popup Google OAuth
   useEffect(() => {
     const handleMessage = (event) => {
       console.log("Message reçu de la popup:", event.data);
@@ -721,9 +1597,7 @@ export default function Section3Sheets() {
       if (event.data && event.data.type === 'GOOGLE_OAUTH_SUCCESS') {
         console.log("Connexion Google réussie pour:", event.data.email);
         
-        // Rafraîchir le statut Google
         fetchGoogleStatus();
-        // Recharger la liste des spreadsheets
         loadGoogleSpreadsheets();
       }
       else if (event.data && event.data.type === 'GOOGLE_OAUTH_ERROR') {
@@ -736,7 +1610,6 @@ export default function Section3Sheets() {
     return () => window.removeEventListener('message', handleMessage);
   }, []);
 
-  // Fonction pour rafraîchir le statut Google
   const fetchGoogleStatus = async () => {
     try {
       const r = await fetch("/api/google/status", {
@@ -757,7 +1630,6 @@ export default function Section3Sheets() {
     }
   };
 
-  // Fonction pour charger les Google Sheets disponibles
   const loadGoogleSpreadsheets = async () => {
     setLoadingSpreadsheets(true);
     try {
@@ -765,17 +1637,14 @@ export default function Section3Sheets() {
       const data = await res.json();
       
       if (data.ok) {
-        // 1️⃣ Charger la liste des spreadsheets
         setGoogleSpreadsheets(data.spreadsheets || []);
         
-        // 2️⃣ Charger la config existante si elle existe
         if (data.config) {
           setCfg(prev => ({
             ...prev,
             ...data.config
           }));
           
-          // Si un spreadsheet est configuré, charger ses onglets
           if (data.config.sheet?.spreadsheetId) {
             loadSpreadsheetTabs(data.config.sheet.spreadsheetId);
           }
@@ -790,7 +1659,6 @@ export default function Section3Sheets() {
     }
   };
 
-  // Fonction pour charger les onglets d'un spreadsheet
   const loadSpreadsheetTabs = async (spreadsheetId) => {
     if (!spreadsheetId) return;
     
@@ -804,7 +1672,6 @@ export default function Section3Sheets() {
       if (data.ok && data.tabs) {
         setAvailableTabs(data.tabs);
         
-        // Si aucun onglet n'est sélectionné, choisir le premier
         if (!cfg.sheet.tabName && data.tabs.length > 0) {
           setCfg(prev => ({
             ...prev,
@@ -823,7 +1690,6 @@ export default function Section3Sheets() {
     }
   };
 
-  // Charger les spreadsheets au montage
   useEffect(() => {
     loadGoogleSpreadsheets();
     fetchGoogleStatus();
@@ -968,11 +1834,9 @@ export default function Section3Sheets() {
         return;
       }
       
-      // Vérifier si la popup a été bloquée
       const popupCheck = setInterval(() => {
         if (popup.closed) {
           clearInterval(popupCheck);
-          // Après fermeture de la popup, rafraîchir le statut et les sheets
           setTimeout(() => {
             fetchGoogleStatus();
             loadGoogleSpreadsheets();
@@ -989,7 +1853,6 @@ export default function Section3Sheets() {
   const testSheetConnection = async (sheet, kind) => {
     setTesting(true);
     try {
-      // Rafraîchir d'abord le statut Google
       await fetchGoogleStatus();
       
       if (!googleStatus.connected) {
@@ -1043,7 +1906,6 @@ export default function Section3Sheets() {
           abandonedSheetName: null
         });
         
-        // Vider la liste des spreadsheets
         setGoogleSpreadsheets([]);
         setAvailableTabs([]);
         
@@ -1446,7 +2308,6 @@ export default function Section3Sheets() {
           {view === "sheets" && (
             <div className="tf-panel">
               <BlockStack gap="400">
-                {/* Section Connexion Google */}
                 <GroupCard title="section3.connection.title">
                   <BlockStack gap="150">
                     {googleStatus.loading ? (
@@ -1527,7 +2388,6 @@ export default function Section3Sheets() {
                   </BlockStack>
                 </GroupCard>
 
-                {/* Configuration des deux feuilles Google Sheets */}
                 <GroupCard title="section3.sheetsConfiguration.title">
                   <Tabs
                     tabs={sheetTabs}
@@ -1541,7 +2401,6 @@ export default function Section3Sheets() {
                           sheetConfig={cfg.sheet}
                           onConfigChange={(newSheetConfig) => {
                             setCfg((c) => ({ ...c, sheet: newSheetConfig }));
-                            // Si le spreadsheet change, charger les onglets
                             if (newSheetConfig.spreadsheetId && newSheetConfig.spreadsheetId !== cfg.sheet.spreadsheetId) {
                               loadSpreadsheetTabs(newSheetConfig.spreadsheetId);
                             }
@@ -1565,10 +2424,7 @@ export default function Section3Sheets() {
                           sheetConfig={cfg.abandonedSheet}
                           onConfigChange={(newSheetConfig) => {
                             setCfg((c) => ({ ...c, abandonedSheet: newSheetConfig }));
-                            // Si le spreadsheet change, charger les onglets
                             if (newSheetConfig.spreadsheetId && newSheetConfig.spreadsheetId !== cfg.abandonedSheet.spreadsheetId) {
-                              // Pour la feuille abandonnée, on pourrait aussi charger les onglets
-                              // Mais pour l'instant, on utilise la même fonction
                               loadSpreadsheetTabs(newSheetConfig.spreadsheetId);
                             }
                           }}
@@ -1586,7 +2442,6 @@ export default function Section3Sheets() {
                   </Tabs>
                 </GroupCard>
 
-                {/* Mapping des colonnes */}
                 <GroupCard title="section3.mapping.title">
                   <InlineStack gap="200" wrap={false}>
                     <Select
@@ -1774,7 +2629,6 @@ export default function Section3Sheets() {
                   </div>
                 </GroupCard>
 
-                {/* Configuration de l'affichage */}
                 <GroupCard title="section3.display.title">
                   <Grid3>
                     <Select
@@ -1868,10 +2722,7 @@ export default function Section3Sheets() {
                                 .spreadsheetId
                                 ? ` · ${t(
                                     "section3.connection.id"
-                                  )}: ${
-                                    cfg.abandonedSheet
-                                      .spreadsheetId
-                                  }`
+                                  )}: ${cfg.abandonedSheet.spreadsheetId}`
                                 : ""}
                             </Text>
                             <Text tone="subdued" as="p">
@@ -1907,12 +2758,8 @@ export default function Section3Sheets() {
                               <GoogleIcon />
                               <span>
                                 {googleStatus.connected
-                                  ? t(
-                                      "section3.abandoned.changeSheet"
-                                    )
-                                  : t(
-                                      "section3.connection.connect"
-                                    )}
+                                  ? t("section3.abandoned.changeSheet")
+                                  : t("section3.connection.connect")}
                               </span>
                             </InlineStack>
                           </Button>
@@ -1988,9 +2835,7 @@ export default function Section3Sheets() {
                               blockAlign="center"
                             >
                               <Badge>
-                                {t(
-                                  "section3.abandoned.abandonedColumn"
-                                )}{" "}
+                                {t("section3.abandoned.abandonedColumn")}{" "}
                                 {i + 1}
                               </Badge>
                               <span className="pill">
@@ -2050,8 +2895,7 @@ export default function Section3Sheets() {
                                 width:
                                   tType === "datetime"
                                     ? 220
-                                    : tType ===
-                                      "currency"
+                                    : tType === "currency"
                                     ? 160
                                     : 180,
                                 asLink:
@@ -2065,9 +2909,7 @@ export default function Section3Sheets() {
                           {(col.type === "link" || col.asLink) && (
                             <>
                               <Checkbox
-                                label={t(
-                                  "section3.mapping.asLink"
-                                )}
+                                label={t("section3.mapping.asLink")}
                                 checked={!!col.asLink}
                                 onChange={(v) =>
                                   patchAbandonedCol(col.id, {
@@ -2076,16 +2918,9 @@ export default function Section3Sheets() {
                                 }
                               />
                               <TextField
-                                label={t(
-                                  "section3.mapping.linkTemplate"
-                                )}
-                                helpText={t(
-                                  "section3.mapping.linkExample"
-                                )}
-                                value={
-                                  col.linkTemplate ||
-                                  "{value}"
-                                }
+                                label={t("section3.mapping.linkTemplate")}
+                                helpText={t("section3.mapping.linkExample")}
+                                value={col.linkTemplate || "{value}"}
                                 onChange={(v) =>
                                   patchAbandonedCol(col.id, {
                                     linkTemplate: v,
@@ -2096,9 +2931,7 @@ export default function Section3Sheets() {
                           )}
 
                           <RangeSlider
-                            label={`${t(
-                              "section3.mapping.width"
-                            )} (${col.width || 180}px)`}
+                            label={`${t("section3.mapping.width")} (${col.width || 180}px)`}
                             min={140}
                             max={420}
                             output
@@ -2150,44 +2983,28 @@ export default function Section3Sheets() {
                           <thead>
                             <tr>
                               <th style={{ width: 80 }}>
-                                {t(
-                                  "section3.preview.columnHeaders.date"
-                                )}
+                                {t("section3.preview.columnHeaders.date")}
                               </th>
                               <th style={{ width: 90 }}>
-                                {t(
-                                  "section3.preview.columnHeaders.orderId"
-                                )}
+                                {t("section3.preview.columnHeaders.orderId")}
                               </th>
                               <th style={{ width: 160 }}>
-                                {t(
-                                  "section3.preview.columnHeaders.customer"
-                                )}
+                                {t("section3.preview.columnHeaders.customer")}
                               </th>
                               <th style={{ width: 130 }}>
-                                {t(
-                                  "section3.preview.columnHeaders.phone"
-                                )}
+                                {t("section3.preview.columnHeaders.phone")}
                               </th>
                               <th style={{ width: 130 }}>
-                                {t(
-                                  "section3.preview.columnHeaders.city"
-                                )}
+                                {t("section3.preview.columnHeaders.city")}
                               </th>
                               <th style={{ width: 220 }}>
-                                {t(
-                                  "section3.preview.columnHeaders.product"
-                                )}
+                                {t("section3.preview.columnHeaders.product")}
                               </th>
                               <th style={{ width: 110 }}>
-                                {t(
-                                  "section3.preview.columnHeaders.total"
-                                )}
+                                {t("section3.preview.columnHeaders.total")}
                               </th>
                               <th style={{ width: 70 }}>
-                                {t(
-                                  "section3.preview.columnHeaders.country"
-                                )}
+                                {t("section3.preview.columnHeaders.country")}
                               </th>
                             </tr>
                           </thead>
@@ -2234,13 +3051,8 @@ export default function Section3Sheets() {
                                   colSpan={8}
                                   style={{ textAlign: "center" }}
                                 >
-                                  <Text
-                                    tone="subdued"
-                                    as="span"
-                                  >
-                                    {t(
-                                      "section3.realtime.noOrders"
-                                    )}
+                                  <Text tone="subdued" as="span">
+                                    {t("section3.realtime.noOrders")}
                                   </Text>
                                 </td>
                               </tr>
@@ -2261,54 +3073,7 @@ export default function Section3Sheets() {
 
           {view === "whatsapp" && (
             <div className="tf-panel">
-              <div className="tf-group-title">
-                {t("section3.whatsapp.title")}
-              </div>
-              <BlockStack gap="200">
-                <Grid3>
-                  <TextField
-                    label={t("section3.whatsapp.supportNumber")}
-                    autoComplete="off"
-                    placeholder="+2126…"
-                  />
-                  <TextField
-                    label={t("section3.whatsapp.messageTemplate")}
-                    autoComplete="off"
-                    multiline={4}
-                    placeholder={t(
-                      "section3.whatsapp.templatePlaceholder"
-                    )}
-                  />
-                  <Select
-                    label={t("section3.whatsapp.whenToSend")}
-                    options={[
-                      {
-                        label: t(
-                          "section3.whatsapp.options.immediate"
-                        ),
-                        value: "immediate",
-                      },
-                      {
-                        label: t(
-                          "section3.whatsapp.options.1h"
-                        ),
-                        value: "1h",
-                      },
-                      {
-                        label: t(
-                          "section3.whatsapp.options.24h"
-                        ),
-                        value: "24h",
-                      },
-                    ]}
-                    value="immediate"
-                    onChange={() => {}}
-                  />
-                </Grid3>
-                <Text tone="subdued" as="p">
-                  {t("section3.whatsapp.description")}
-                </Text>
-              </BlockStack>
+              <WhatsAppConfigSection />
             </div>
           )}
         </div>
