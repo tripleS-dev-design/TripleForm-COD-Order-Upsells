@@ -2193,7 +2193,7 @@ window.TripleformCOD = (function () {
         shippingText = css(t.shippingToCalculate || "Shipping to calculate");
       } else if (geoShippingCents === 0) {
         // ✅ API a retourné 0 - gratuit
-        shippingText = css(t.freeShipping || "Gratuit");
+        shippingText = css(t.freeShipping || "Free");
       } else {
         // ✅ Montant calculé > 0
         shippingText = moneyFmt(geoShippingCents);
