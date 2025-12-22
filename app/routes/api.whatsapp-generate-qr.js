@@ -1,7 +1,7 @@
 // ===== File: /api/whatsapp/generate-qr.js =====
 import { create } from 'qrcode';
-import { Client, LocalAuth } from 'whatsapp-web.js';
-
+import whatsappWeb from "whatsapp-web.js";
+const { Client, LocalAuth } = whatsappWeb;
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ ok: false, error: 'Méthode non autorisée' });

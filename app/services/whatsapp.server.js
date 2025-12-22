@@ -12,22 +12,35 @@ const { Client, LocalAuth } = whatsappWeb;
 
 const app = express();
 const httpServer = createServer(app);
+
+// Config CORS pour production
 const io = new Server(httpServer, {
   cors: {
-    origin: process.env.NODE_ENV === 'production' 
-      ? 'https://votre-domaine.com' 
-      : 'http://localhost:3000',
-    methods: ['GET', 'POST']
-  }
+    origin: [
+      'https://tripleform-cod-order-upsells.onrender.com',
+      'https://tripleform-cod-order-upsells-*.onrender.com',
+      'http://localhost:3000'
+    ],
+    methods: ['GET', 'POST'],
+    credentials: true
+  },
+  transports: ['websocket', 'polling']
 });
 
-// Middleware
+// Middleware pour Render
 app.use(express.json());
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', 'https://tripleform-cod-order-upsells.onrender.com');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  next();
+});
 
-// Config WhatsApp Client
+// Config WhatsApp Client pour Render
 const client = new Client({
   authStrategy: new LocalAuth({
-    dataPath: path.join(__dirname, '.wwebjs_auth')
+    clientId: 'tripleform-production',
+    dataPath: '/tmp/.wwebjs_auth'  // Utiliser /tmp pour Render
   }),
   puppeteer: {
     headless: true,
@@ -38,8 +51,30 @@ const client = new Client({
       '--disable-accelerated-2d-canvas',
       '--no-first-run',
       '--no-zygote',
-      '--disable-gpu'
-    ]
+      '--single-process',
+      '--disable-gpu',
+      '--disable-software-rasterizer',
+      '--disable-background-timer-throttling',
+      '--disable-backgrounding-occluded-windows',
+      '--disable-renderer-backgrounding',
+      '--disable-background-networking',
+      '--disable-breakpad',
+      '--disable-component-extensions-with-background-pages',
+      '--disable-features=TranslateUI,BlinkGenPropertyTrees',
+      '--disable-ipc-flooding-protection',
+      '--disable-default-apps',
+      '--disable-extensions',
+      '--disable-sync',
+      '--disable-translate',
+      '--metrics-recording-only',
+      '--mute-audio',
+      '--no-default-browser-check',
+      '--use-gl=swiftshader',
+      '--ignore-certificate-errors',
+      '--ignore-ssl-errors',
+      '--enable-features=NetworkService,NetworkServiceInProcess'
+    ],
+    executablePath: process.env.CHROMIUM_PATH || '/usr/bin/chromium-browser'
   },
   webVersionCache: {
     type: 'remote',
@@ -47,102 +82,161 @@ const client = new Client({
   }
 });
 
+// Variables d'état
+let qrCode = null;
+let isReady = false;
+let status = 'initializing';
+
 // Événements WhatsApp
 client.on('qr', (qr) => {
   console.log('QR RECEIVED');
   qrcode.generate(qr, { small: true });
+  qrCode = qr;
+  status = 'qr_required';
   
-  // Envoyer QR via Socket.io
-  io.emit('qr', qr);
+  io.emit('whatsapp:qr', { qr });
+  io.emit('whatsapp:status', { status, qr });
 });
 
 client.on('ready', () => {
-  console.log('WhatsApp Client is ready!');
-  io.emit('ready', { status: 'connected', timestamp: new Date() });
+  console.log('✅ WhatsApp Client is ready!');
+  isReady = true;
+  status = 'connected';
+  qrCode = null;
+  
+  io.emit('whatsapp:ready', { 
+    status, 
+    timestamp: new Date(),
+    phone: client.info?.wid.user 
+  });
+  io.emit('whatsapp:status', { status });
 });
 
 client.on('authenticated', () => {
-  console.log('WhatsApp Client authenticated!');
-  io.emit('authenticated');
+  console.log('✅ WhatsApp Client authenticated!');
+  status = 'authenticated';
+  io.emit('whatsapp:authenticated');
 });
 
 client.on('auth_failure', (msg) => {
-  console.error('WhatsApp Auth failure:', msg);
-  io.emit('auth_failure', { error: msg });
+  console.error('❌ WhatsApp Auth failure:', msg);
+  status = 'auth_failed';
+  io.emit('whatsapp:auth_failure', { error: msg });
+  io.emit('whatsapp:status', { status });
 });
 
 client.on('disconnected', (reason) => {
-  console.log('WhatsApp Client disconnected:', reason);
-  io.emit('disconnected', { reason });
+  console.log('⚠️ WhatsApp Client disconnected:', reason);
+  isReady = false;
+  status = 'disconnected';
+  io.emit('whatsapp:disconnected', { reason });
+  io.emit('whatsapp:status', { status });
 });
 
 client.on('message', async (msg) => {
-  console.log('Message received:', msg.body);
+  console.log('📩 Message received from:', msg.from, 'Body:', msg.body?.substring(0, 50));
   
-  // Envoyer message via Socket.io
-  io.emit('message', {
+  io.emit('whatsapp:message', {
     from: msg.from,
     body: msg.body,
     timestamp: msg.timestamp,
-    id: msg.id._serialized
+    id: msg.id._serialized,
+    hasMedia: msg.hasMedia,
+    type: msg.type
   });
-  
-  // Exemple de réponse automatique
-  if (msg.body.toLowerCase() === 'ping') {
-    await msg.reply('pong');
-  }
 });
 
 // Routes API
-app.post('/api/whatsapp/send', async (req, res) => {
+app.get('/api/status', (req, res) => {
+  res.json({
+    status,
+    isReady,
+    phone: client.info?.wid.user,
+    timestamp: new Date(),
+    environment: process.env.NODE_ENV
+  });
+});
+
+app.post('/api/send', async (req, res) => {
   try {
     const { to, message } = req.body;
     
-    if (!client.info || !client.info.wid) {
-      return res.status(400).json({ error: 'WhatsApp client not ready' });
+    if (!isReady) {
+      return res.status(400).json({ 
+        error: 'WhatsApp client not ready',
+        status
+      });
     }
     
-    const chatId = to.includes('@c.us') ? to : `${to}@c.us`;
+    const chatId = to.includes('@c.us') || to.includes('@g.us') 
+      ? to 
+      : `${to}@c.us`;
+    
     const sent = await client.sendMessage(chatId, message);
     
-    res.json({ success: true, messageId: sent.id._serialized });
+    res.json({ 
+      success: true, 
+      messageId: sent.id._serialized,
+      timestamp: new Date()
+    });
   } catch (error) {
     console.error('Send error:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
-app.get('/api/whatsapp/status', (req, res) => {
-  res.json({
-    isReady: !!client.info,
-    phone: client.info?.wid.user,
-    timestamp: new Date()
+// Health check pour Render
+app.get('/health', (req, res) => {
+  res.json({ 
+    status: 'ok', 
+    whatsapp: status,
+    timestamp: new Date(),
+    uptime: process.uptime()
   });
 });
 
-app.post('/api/whatsapp/logout', async (req, res) => {
-  try {
-    await client.logout();
-    res.json({ success: true });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
+// Route racine
+app.get('/', (req, res) => {
+  res.json({
+    service: 'WhatsApp Server',
+    version: '1.0.0',
+    status: 'running',
+    endpoints: {
+      status: '/api/status',
+      send: '/api/send',
+      health: '/health'
+    }
+  });
 });
 
-// Démarrer
-const PORT = process.env.WHATSAPP_PORT || 4000;
+// Gestion des erreurs
+app.use((err, req, res, next) => {
+  console.error('Server error:', err);
+  res.status(500).json({ error: 'Internal server error' });
+});
+
+// Démarrer le serveur
+const PORT = process.env.PORT || 4000;
 
 const startServer = async () => {
   try {
+    console.log('🚀 Starting WhatsApp server...');
+    console.log('📁 Auth path:', '/tmp/.wwebjs_auth');
+    console.log('🌐 Environment:', process.env.NODE_ENV);
+    
     await client.initialize();
+    
     httpServer.listen(PORT, () => {
-      console.log(`WhatsApp Server running on port ${PORT}`);
+      console.log(`✅ WhatsApp Server running on port ${PORT}`);
+      console.log(`📡 WebSocket: ws://localhost:${PORT}`);
+      console.log(`🌐 REST API: http://localhost:${PORT}/api`);
     });
   } catch (error) {
-    console.error('Failed to start WhatsApp server:', error);
+    console.error('❌ Failed to start WhatsApp server:', error);
+    process.exit(1);
   }
 };
 
 startServer();
 
-export { client, io };
+export { client, io, status };

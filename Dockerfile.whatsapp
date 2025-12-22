@@ -1,0 +1,39 @@
+FROM node:18-alpine
+
+# Installer Chromium et dépendances
+RUN apk add --no-cache \
+    chromium \
+    nss \
+    freetype \
+    harfbuzz \
+    ca-certificates \
+    ttf-freefont \
+    font-noto-emoji \
+    udev \
+    ttf-opensans \
+    && rm -rf /var/cache/apk/*
+
+# Définir le chemin de Chromium
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
+    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser \
+    CHROMIUM_PATH=/usr/bin/chromium-browser \
+    NODE_ENV=production
+
+# Créer le dossier d'application
+WORKDIR /app
+
+# Copier package.json et installer les dépendances
+COPY package*.json ./
+RUN npm ci --only=production
+
+# Copier le code source
+COPY services/whatsapp ./services/whatsapp
+
+# Créer le dossier d'authentification
+RUN mkdir -p /tmp/.wwebjs_auth && chmod 777 /tmp/.wwebjs_auth
+
+# Exposer le port
+EXPOSE ${PORT:-4000}
+
+# Démarrer l'application
+CMD ["node", "services/whatsapp/server.js"]
