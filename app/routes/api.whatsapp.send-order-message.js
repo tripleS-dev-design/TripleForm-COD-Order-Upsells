@@ -1,7 +1,7 @@
 // app/routes/api.whatsapp-send-order-message.js (ADAPTÉ)
 import { json } from '@remix-run/node';
 import { authenticate } from '../shopify.server';
-import whatsappAPI from '../utils/whatsapp.business.api';
+import whatsappAPI from '../utils/whatsapp.business.api.js';
 import prisma from '../db.server';
 
 export async function action({ request }) {
