@@ -20,7 +20,7 @@ import {
 } from "@shopify/polaris";
 import { useI18n } from "../i18n/react";
 import PlanUsageWidget from "../components/PlanUsageWidget";
-import { MobileCancelMajor, AlertMinor } from '@shopify/polaris-icons';
+import { MobileCancelMajor, AlertTriangleIcon } from '@shopify/polaris-icons';
 const LAYOUT_CSS = `
   html, body { margin:0; background:#F6F7F9; }
   .Polaris-Page, .Polaris-Page__Content {
@@ -1447,7 +1447,7 @@ function WhatsAppConfigSection() {
       <div className="whatsapp-token-section">
         <BlockStack gap="200">
           <InlineStack gap="100" blockAlign="center">
-            <Icon source={AlertMinor} color="warning" />
+            <Icon source={AlertTriangleIcon} color="warning" />
             <Text as="h4" variant="headingSm" fontWeight="bold">
               {t("whatsapp.token.title")}
             </Text>

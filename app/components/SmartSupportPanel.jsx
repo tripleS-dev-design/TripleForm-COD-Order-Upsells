@@ -112,7 +112,7 @@ export default function SmartSupportPanel() {
 
   // Utilisez les icônes disponibles
  // Modifier la déclaration des icônes (ligne ~128-132) :
-      const SupportIcon = PI.InformationIcon || "ℹ️";
+      const SupportIcon = PI.InfoIcon || PI.QuestionMarkIcon || "ℹ️";
       const ChevronUpIcon = PI.ChevronUpIcon || "⬆️";
       const ChevronDownIcon = PI.ChevronDownIcon || "⬇️";
       const ChatIcon = "💬";
