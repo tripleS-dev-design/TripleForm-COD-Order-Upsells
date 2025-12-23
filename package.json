@@ -23,7 +23,6 @@
     "node": "^18.20 || ^20.10 || >=21.0.0"
   },
   "dependencies": {
-    "@adiwajshing/keyed-db": "^0.2.4",
     "@prisma/client": "^6.2.1",
     "@remix-run/dev": "^2.16.1",
     "@remix-run/express": "^2.16.1",
@@ -36,21 +35,17 @@
     "@shopify/polaris-icons": "^9.3.1",
     "@shopify/shopify-app-remix": "^3.7.0",
     "@shopify/shopify-app-session-storage-prisma": "^6.0.0",
+    "axios": "^1.13.2",
     "compression": "^1.7.4",
     "express": "^4.18.2",
     "googleapis": "^166.0.0",
     "isbot": "^5.1.0",
     "morgan": "^1.10.0",
     "prisma": "^6.2.1",
-    "puppeteer": "^24.34.0",
-    "puppeteer-extra": "^3.3.6",
-    "puppeteer-extra-plugin-stealth": "^2.11.2",
-    "qrcode": "^1.5.4",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.30.1",
-    "vite-tsconfig-paths": "^5.0.1",
-    "whatsapp-web.js": "^1.34.2"
+    "vite-tsconfig-paths": "^5.0.1"
   },
   "devDependencies": {
     "@remix-run/eslint-config": "^2.16.1",

@@ -1,40 +1,44 @@
-import { json } from "@remix-run/node";
-import prisma from "../db.server";
-import { authenticate } from "../shopify.server";
+// app/routes/api.whatsapp-status.js (NOUVEAU)
+import { json } from '@remix-run/node';
+import { authenticate } from '../shopify.server';
+import prisma from '../db.server';
+import whatsappAPI from '../lib/whatsapp-business-api';
 
 export async function loader({ request }) {
   try {
     const { session } = await authenticate.admin(request);
-    const shopDomain = session.shop; // Renommez shopId en shopDomain
+    const shopDomain = session.shop;
 
-    const status = await prisma.whatsappStatus.findUnique({
-      where: { shopDomain }, // Utilisez shopDomain ici
+    // 1. Vérifier la config dans votre base
+    const config = await prisma.whatsappConfig.findUnique({
+      where: { shopDomain }
     });
 
-    if (!status) {
-      return json({
-        ok: true,
-        status: "not_connected",
-        shop: shopDomain,
-      });
-    }
-
+    // 2. Tester la connexion à l'API WhatsApp
+    // On peut tester en récupérant les infos du numéro
+    const testResult = await whatsappAPI.client.get(`/${process.env.WHATSAPP_PHONE_NUMBER_ID}`);
+    
     return json({
       ok: true,
+      status: 'connected',
       shop: shopDomain,
-      status: status.status,
-      phoneNumber: status.phoneNumber || null,
-      connectedAt: status.connectedAt || null,
-      updatedAt: status.updatedAt,
-    });
-  } catch (error) {
-    console.error("[WhatsApp Status] Error:", error);
-    return json(
-      {
-        ok: false,
-        error: error.message,
+      apiStatus: 'active',
+      phoneNumberInfo: {
+        displayNumber: testResult.data.display_phone_number,
+        verifiedName: testResult.data.verified_name
       },
-      { status: 500 }
-    );
+      config: config ? {
+        enabled: config.enabled,
+        autoConnect: config.autoConnect
+      } : null
+    });
+    
+  } catch (error) {
+    console.error('[WhatsApp Status Check]', error.response?.data || error.message);
+    return json({
+      ok: false,
+      status: 'disconnected',
+      error: 'API WhatsApp non accessible'
+    }, { status: 500 });
   }
 }
