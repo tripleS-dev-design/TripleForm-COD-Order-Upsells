@@ -20,7 +20,7 @@ import {
 } from "@shopify/polaris";
 import { useI18n } from "../i18n/react";
 import PlanUsageWidget from "../components/PlanUsageWidget";
-import { MobileCancelMajor, AlertTriangleIcon } from '@shopify/polaris-icons';
+import { MobileCancelIcon, AlertTriangleIcon } from '@shopify/polaris-icons';
 const LAYOUT_CSS = `
   html, body { margin:0; background:#F6F7F9; }
   .Polaris-Page, .Polaris-Page__Content {
@@ -1502,7 +1502,7 @@ function WhatsAppConfigSection() {
                 className="whatsapp-danger-button"
               >
                 <InlineStack gap="100" blockAlign="center">
-                  <Icon source={MobileCancelMajor} />
+                  <Icon source={MobileCancelIcon} />
                   {t("whatsapp.disconnect")}
                 </InlineStack>
               </Button>
