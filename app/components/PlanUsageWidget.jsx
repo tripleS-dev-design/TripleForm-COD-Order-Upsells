@@ -5,24 +5,8 @@ import * as PI from "@shopify/polaris-icons";
 import { getPlan } from "../utils/plans";
 import { useI18n } from "../i18n/react";
 
-// Cherchez une icône de subscription qui existe
-const findAvailableIcon = () => {
-  // Essayez ces icônes dans l'ordre
-  const iconOptions = [
-    PI.CashDollarIcon,
-    PI.ReceiptIcon,
-    PI.CreditCardIcon,
-    PI.WalletIcon,
-    PI.SubscriptionIcon,  // Peut ne pas exister
-    PI.BillingStatementIcon,  // Peut ne pas exister
-    PI.OrdersIcon,  // Peut ne pas exister
-  ];
-  
-  // Retourne la première icône qui existe
-  return iconOptions.find(icon => icon !== undefined) || Object.values(PI)[0];
-};
-
-const subscriptionIconSource = findAvailableIcon();
+// Utilisez une icône qui existe certainement
+const subscriptionIconSource = PI.CashDollarIcon || PI.CreditCardIcon || PI.WalletIcon || "💰";
 
 /**
  * Cercle qui représente les commandes RESTANTES.
@@ -240,11 +224,15 @@ export default function PlanUsageWidget({
               justifyContent: "center",
             }}
           >
-            <Icon
-              source={subscriptionIconSource}
-              tone="success"
-              style={{ transform: "scale(0.8)" }}
-            />
+            {typeof subscriptionIconSource === 'string' ? (
+              <span style={{ fontSize: '14px' }}>{subscriptionIconSource}</span>
+            ) : (
+              <Icon
+                source={subscriptionIconSource}
+                tone="success"
+                style={{ transform: "scale(0.8)" }}
+              />
+            )}
           </div>
           <div>
             <div
@@ -302,7 +290,7 @@ export default function PlanUsageWidget({
               height: "100%",
               borderRadius: 999,
               background: "linear-gradient(90deg, #0B3B82, #7D0031)",
-              position: "relative",
+              position: relative,
               transition: "width 0.35s ease-out",
             }}
           >

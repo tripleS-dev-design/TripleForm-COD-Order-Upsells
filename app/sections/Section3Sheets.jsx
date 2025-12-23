@@ -20,8 +20,7 @@ import {
 } from "@shopify/polaris";
 import { useI18n } from "../i18n/react";
 import PlanUsageWidget from "../components/PlanUsageWidget";
-import { MobileCancelMajor, CircleTickOutlineMinor, AlertMinor, RefreshMajor } from '@shopify/polaris-icons';
-
+import { MobileCancelMajor, CircleTickOutlineMinor, AlertMinor } from '@shopify/polaris-icons';
 /* ======================= CSS / layout ======================= */
 const LAYOUT_CSS = `
   html, body { margin:0; background:#F6F7F9; }
@@ -1374,9 +1373,10 @@ function WhatsAppConfigSection() {
                 className="whatsapp-outline-button"
               >
                 <InlineStack gap="100" blockAlign="center">
-                  <Icon source={RefreshMajor} />
-                  {t("whatsapp.refreshStatus")}
-                </InlineStack>
+                {/* Utilisez un emoji ou une autre icône disponible */}
+                <span style={{ fontSize: '16px' }}>🔄</span>
+                {t("whatsapp.refreshStatus")}
+              </InlineStack>
               </Button>
             </InlineStack>
           </div>

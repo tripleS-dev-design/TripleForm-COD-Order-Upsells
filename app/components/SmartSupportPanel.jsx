@@ -86,7 +86,6 @@ export default function SmartSupportPanel() {
       { id: "all", label: t("section0.support.cat.all") },
       { id: "start", label: t("section0.support.cat.start") },
       { id: "forms", label: t("section0.support.cat.forms") },
-      { id: "forms", label: t("section0.support.cat.forms") },
       { id: "offers", label: t("section0.support.cat.offers") },
       { id: "sheets", label: t("section0.support.cat.sheets") },
       { id: "pixels", label: t("section0.support.cat.pixels") },
@@ -111,12 +110,12 @@ export default function SmartSupportPanel() {
     });
   }, [search, category, t]);
 
-  // Vérifiez que les icônes existent dans PI
-  const SupportIcon = PI.QuestionMarkIcon || PI.CircleInformationIcon || PI.HelpIcon || "❓";
+  // Utilisez les icônes disponibles
+  const SupportIcon = PI.CircleInformationIcon || "ℹ️";
   const ChevronUpIcon = PI.ChevronUpIcon || "⬆️";
   const ChevronDownIcon = PI.ChevronDownIcon || "⬇️";
-  const ChatIcon = PI.ChatIcon || PI.ConversationIcon || "💬";
-  const EmailIcon = PI.EmailIcon || "📧";
+  const ChatIcon = "💬"; // Utilisez un emoji direct
+  const EmailIcon = "📧"; // Utilisez un emoji direct
 
   return (
     <Card>
@@ -135,7 +134,7 @@ export default function SmartSupportPanel() {
                 justifyContent: "center",
               }}
             >
-              {/* Utilisez un caractère emoji si l'icône n'existe pas */}
+              {/* Utilisez un emoji si l'icône n'existe pas */}
               {typeof SupportIcon === 'string' ? (
                 <span style={{ color: 'white', fontSize: '18px' }}>{SupportIcon}</span>
               ) : (
@@ -200,13 +199,19 @@ export default function SmartSupportPanel() {
                           </Text>
                         </div>
                         <div className="tf-faq-header-icon">
-                          <Icon
-                            source={
-                              isOpen
-                                ? ChevronUpIcon
-                                : ChevronDownIcon
-                            }
-                          />
+                          {isOpen ? (
+                            typeof ChevronUpIcon === 'string' ? (
+                              <span>{ChevronUpIcon}</span>
+                            ) : (
+                              <Icon source={ChevronUpIcon} />
+                            )
+                          ) : (
+                            typeof ChevronDownIcon === 'string' ? (
+                              <span>{ChevronDownIcon}</span>
+                            ) : (
+                              <Icon source={ChevronDownIcon} />
+                            )
+                          )}
                         </div>
                       </button>
 
@@ -243,17 +248,15 @@ export default function SmartSupportPanel() {
 
               <InlineStack gap="200">
                 <Button
-                  icon={ChatIcon}
                   url="https://wa.me/212681570887"
                 >
-                  {t("section0.support.whatsapp")}
+                  {ChatIcon} {t("section0.support.whatsapp")}
                 </Button>
                 <Button
-                  icon={EmailIcon}
                   url="mailto:ktami.sami@icloud.com"
                   variant="secondary"
                 >
-                  {t("section0.support.email")}
+                  {EmailIcon} {t("section0.support.email")}
                 </Button>
               </InlineStack>
             </InlineStack>
