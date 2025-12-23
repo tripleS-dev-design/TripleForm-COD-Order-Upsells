@@ -1,12 +1,11 @@
 import { json } from "@remix-run/node";
 import { authenticate } from "../shopify.server";
 import prisma from "../db.server";
-import { create } from "qrcode";
+import QRCode from "qrcode"; // <-- IMPORTANT: utiliser QRCode au lieu de create
 import whatsappWeb from "whatsapp-web.js";
 
 const { Client, LocalAuth } = whatsappWeb;
 
-// Stockage global des clients
 const whatsappClients = global.whatsappClients || new Map();
 global.whatsappClients = whatsappClients;
 
@@ -29,7 +28,7 @@ export async function action({ request }) {
       );
     }
 
-    // Configuration optimisée pour Render
+    // Configuration optimisée
     client = new Client({
       authStrategy: new LocalAuth({
         clientId: `whatsapp_${shopDomain.replace(".myshopify.com", "")}`,
@@ -42,38 +41,11 @@ export async function action({ request }) {
           '--no-sandbox',
           '--disable-setuid-sandbox',
           '--disable-dev-shm-usage',
-          '--disable-accelerated-2d-canvas',
-          '--no-first-run',
-          '--no-zygote',
-          '--single-process', // CRITIQUE pour économiser mémoire
+          '--single-process',
           '--disable-gpu',
-          '--disable-software-rasterizer',
-          '--disable-extensions',
-          '--disable-background-networking',
-          '--disable-default-apps',
-          '--disable-translate',
-          '--disable-sync',
-          '--metrics-recording-only',
-          '--mute-audio',
-          '--no-default-browser-check',
-          '--disable-notifications',
-          '--disable-background-timer-throttling',
-          '--disable-backgrounding-occluded-windows',
-          '--disable-renderer-backgrounding',
-          '--disable-breakpad',
-          '--disable-component-extensions-with-background-pages',
-          '--disable-features=TranslateUI',
-          '--disable-ipc-flooding-protection',
-          '--disable-hang-monitor',
-          '--disable-prompt-on-repost',
-          '--disable-client-side-phishing-detection',
-          '--enable-low-end-device-mode',
-          '--js-flags=--max-old-space-size=512'
         ]
       },
-      // Timeout plus court
-      qrTimeout: 30000, // 30s
-      authTimeout: 60000, // 60s
+      qrTimeout: 30000,
     });
 
     // Promesse pour attendre le QR
@@ -82,13 +54,27 @@ export async function action({ request }) {
       client.on("qr", async (qr) => {
         try {
           console.log(`[WhatsApp] QR reçu pour ${shopDomain}`);
-          qrCodeDataURL = await create(qr, { 
-            type: "png", 
-            width: 300, 
-            margin: 1 
+          
+          // ✅ CORRECTION CRITIQUE ICI :
+          // Le paramètre "qr" est un STRING, pas un objet complexe
+          // WhatsApp Web.js retourne directement la string QR
+          const qrString = qr; // C'est déjà une string !
+          
+          console.log(`QR string longueur: ${qrString.length}`);
+          console.log(`QR début: ${qrString.substring(0, 50)}...`);
+          
+          // ✅ Générer le QR code image
+          // Utiliser QRCode.toDataURL() au lieu de create()
+          qrCodeDataURL = await QRCode.toDataURL(qrString, {
+            width: 300,
+            margin: 1,
+            errorCorrectionLevel: 'M'
           });
           
-          // Sauvegarder en base (SEULEMENT la string Data URL)
+          console.log(`QR Data URL généré (${qrCodeDataURL.length} chars)`);
+          console.log(`Début Data URL: ${qrCodeDataURL.substring(0, 50)}...`);
+          
+          // ✅ Sauvegarder en base - C'EST BIEN UNE STRING !
           await prisma.whatsappStatus.upsert({
             where: { shopDomain },
             update: { 
@@ -130,7 +116,7 @@ export async function action({ request }) {
 
     // Gestion des erreurs
     client.on("auth_failure", async (error) => {
-      console.error(`[WhatsApp] Auth failure pour ${shopDomain}:`, error);
+      console.error(`[WhatsApp] Auth failure:`, error);
       await prisma.whatsappStatus.update({
         where: { shopDomain },
         data: { 
@@ -141,7 +127,7 @@ export async function action({ request }) {
       });
     });
 
-    // Initialiser
+    // Démarrer
     console.log(`[WhatsApp] Initialisation pour ${shopDomain}`);
     await client.initialize();
     
@@ -166,7 +152,7 @@ export async function action({ request }) {
   } catch (error) {
     console.error("[WhatsApp Generate QR] Error:", error);
     
-    // Nettoyer le client en cas d'erreur
+    // Nettoyer
     if (client) {
       try {
         await client.destroy();
