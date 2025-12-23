@@ -20,8 +20,7 @@ import {
 } from "@shopify/polaris";
 import { useI18n } from "../i18n/react";
 import PlanUsageWidget from "../components/PlanUsageWidget";
-import { MobileCancelMajor, CircleTickOutlineMinor, AlertMinor } from '@shopify/polaris-icons';
-/* ======================= CSS / layout ======================= */
+import { MobileCancelMajor, AlertMinor } from '@shopify/polaris-icons';
 const LAYOUT_CSS = `
   html, body { margin:0; background:#F6F7F9; }
   .Polaris-Page, .Polaris-Page__Content {
@@ -1282,12 +1281,25 @@ function WhatsAppConfigSection() {
       return (
         <div className="whatsapp-connection-success">
           <InlineStack align="space-between" blockAlign="center">
-            <InlineStack gap="200" blockAlign="center">
-              <Icon source={CircleTickMajor} color="success" />
-              <div>
-                <Text as="h4" variant="headingSm" fontWeight="bold">
-                  {t("whatsapp.connectedTo")}
-                </Text>
+              <InlineStack gap="200" blockAlign="center">
+                <div style={{ 
+                  width: 24, 
+                  height: 24, 
+                  borderRadius: '50%', 
+                  background: '#22C55E',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'white',
+                  fontSize: '14px',
+                  fontWeight: 'bold'
+                }}>
+                  ✓
+                </div>
+                <div>
+                  <Text as="h4" variant="headingSm" fontWeight="bold">
+                    {t("whatsapp.connectedTo")}
+                  </Text>
                 <Text as="p" variant="bodyLg" fontWeight="bold">
                   {whatsappStatus.phoneNumber}
                 </Text>
