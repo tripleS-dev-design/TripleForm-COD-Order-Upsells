@@ -15,9 +15,12 @@ import {
   Icon,
   Box,
   Divider,
+  Spinner,
+  Toast,
 } from "@shopify/polaris";
 import { useI18n } from "../i18n/react";
 import PlanUsageWidget from "../components/PlanUsageWidget";
+import { MobileCancelMajor, CircleTickMajor, AlertMinor, RefreshMajor } from '@shopify/polaris-icons';
 
 /* ======================= CSS / layout ======================= */
 const LAYOUT_CSS = `
@@ -292,213 +295,338 @@ const LAYOUT_CSS = `
     margin-bottom:20px;
   }
 
-  /* WhatsApp Modern Styles */
+  /* WhatsApp Modern Styles - PROFESSIONNEL */
   .whatsapp-section {
-    margin-top: 24px;
+    margin-top: 0;
   }
 
-  .whatsapp-status-card {
-    background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
-    border-radius: 12px;
-    padding: 20px;
+  .whatsapp-header-card {
+    background: linear-gradient(135deg, #25D366 0%, #075E54 100%);
+    border-radius: 16px;
+    padding: 24px;
     color: white;
-    margin-bottom: 20px;
-    box-shadow: 0 8px 32px rgba(37, 211, 102, 0.25);
+    margin-bottom: 24px;
+    box-shadow: 0 12px 32px rgba(37, 211, 102, 0.25);
+    border: none;
+  }
+
+  .whatsapp-status-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 24px;
+    font-size: 14px;
+    font-weight: 600;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  .whatsapp-qr-section {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 32px;
+    margin: 24px 0;
+    border: 1px solid #E5E7EB;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+    text-align: center;
   }
 
   .whatsapp-qr-container {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    padding: 30px;
-    background: #f8fafc;
-    border-radius: 12px;
-    border: 2px dashed #25D366;
-    margin: 20px 0;
+    gap: 24px;
   }
 
   .whatsapp-qr-box {
-    width: 250px;
-    height: 250px;
+    width: 280px;
+    height: 280px;
     background: white;
-    border-radius: 12px;
+    border-radius: 16px;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 20px;
-    padding: 20px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    padding: 24px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1);
+    border: 2px solid #25D366;
+    position: relative;
   }
 
-  .whatsapp-qr-placeholder {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
-    color: #666;
+  .whatsapp-qr-instructions {
+    background: #F8FAFC;
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid #E5E7EB;
+    max-width: 500px;
+    margin: 0 auto;
   }
 
   .whatsapp-config-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 16px;
-    margin-top: 20px;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 20px;
+    margin-top: 24px;
   }
 
-  .whatsapp-feature-card {
+  .whatsapp-config-card {
     background: white;
     border: 1px solid #E5E7EB;
-    border-radius: 12px;
-    padding: 20px;
-    transition: all 0.3s ease;
+    border-radius: 16px;
+    padding: 24px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  .whatsapp-feature-card:hover {
+  .whatsapp-config-card:hover {
     border-color: #25D366;
-    box-shadow: 0 10px 25px rgba(37, 211, 102, 0.1);
+    box-shadow: 0 12px 32px rgba(37, 211, 102, 0.15);
+    transform: translateY(-2px);
   }
 
-  .whatsapp-feature-header {
+  .whatsapp-card-header {
     display: flex;
     align-items: center;
-    gap: 12px;
-    margin-bottom: 16px;
+    gap: 16px;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #F3F4F6;
   }
 
-  .whatsapp-icon {
-    width: 40px;
-    height: 40px;
+  .whatsapp-icon-circle {
+    width: 48px;
+    height: 48px;
     background: linear-gradient(135deg, #25D366, #128C7E);
-    border-radius: 10px;
+    border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
     color: white;
-    font-size: 20px;
+    font-size: 24px;
   }
 
-  .whatsapp-advanced-settings {
-    background: #f8fafc;
+  .whatsapp-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    margin: 24px 0;
+  }
+
+  .whatsapp-stat-item {
+    background: white;
     border-radius: 12px;
     padding: 20px;
-    margin-top: 20px;
-    border: 1px solid #e2e8f0;
-  }
-
-  .whatsapp-connection-status {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-size: 14px;
-    font-weight: 600;
-  }
-
-  .status-connected {
-    background: rgba(37, 211, 102, 0.1);
-    color: #128C7E;
-    border: 1px solid rgba(37, 211, 102, 0.3);
-  }
-
-  .status-disconnected {
-    background: rgba(239, 68, 68, 0.1);
-    color: #DC2626;
-    border: 1px solid rgba(239, 68, 68, 0.3);
-  }
-
-  .whatsapp-stats {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 16px;
-    margin-top: 20px;
-  }
-
-  .whatsapp-stat-card {
-    background: white;
-    border-radius: 10px;
-    padding: 16px;
     border: 1px solid #E5E7EB;
     text-align: center;
+    transition: all 0.2s ease;
+  }
+
+  .whatsapp-stat-item:hover {
+    border-color: #25D366;
+    box-shadow: 0 8px 24px rgba(37, 211, 102, 0.1);
   }
 
   .whatsapp-stat-value {
-    font-size: 24px;
+    font-size: 32px;
     font-weight: 700;
-    color: #0F172A;
+    color: #075E54;
     margin: 8px 0;
+    line-height: 1;
   }
 
   .whatsapp-stat-label {
-    font-size: 12px;
+    font-size: 13px;
     color: #6B7280;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-  }
-
-  .whatsapp-template-preview {
-    background: #f0f9ff;
-    border: 1px solid #bae6fd;
-    border-radius: 8px;
-    padding: 16px;
-    margin-top: 16px;
+    font-weight: 600;
   }
 
   .whatsapp-variables-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 8px;
-    margin-top: 12px;
+    gap: 10px;
+    margin-top: 16px;
   }
 
-  .whatsapp-variable-tag {
-    background: #e0f2fe;
-    border: 1px solid #bae6fd;
-    border-radius: 6px;
-    padding: 6px 10px;
-    font-size: 12px;
-    font-family: monospace;
-    cursor: pointer;
-    transition: all 0.2s ease;
-  }
-
-  .whatsapp-variable-tag:hover {
-    background: #bae6fd;
-    transform: translateY(-1px);
-  }
-
-  .whatsapp-schedule-selector {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    margin-top: 12px;
-  }
-
-  .whatsapp-schedule-option {
-    padding: 8px 16px;
-    border: 2px solid #E5E7EB;
+  .whatsapp-variable-chip {
+    background: #F0F9FF;
+    border: 1px solid #BAE6FD;
     border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 13px;
+    font-family: 'SF Mono', Menlo, Monaco, Consolas, monospace;
     cursor: pointer;
     transition: all 0.2s ease;
-    text-align: center;
-    min-width: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
   }
 
-  .whatsapp-schedule-option:hover {
-    border-color: #25D366;
+  .whatsapp-variable-chip:hover {
+    background: #E0F2FE;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(37, 211, 102, 0.15);
   }
 
-  .whatsapp-schedule-option.active {
+  .whatsapp-preview-card {
+    background: linear-gradient(135deg, #F8FAFC 0%, #FFFFFF 100%);
+    border: 1px solid #E5E7EB;
+    border-radius: 16px;
+    padding: 28px;
+    margin-top: 32px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .whatsapp-preview-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #25D366, #128C7E);
+  }
+
+  .whatsapp-message-preview {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid #E5E7EB;
+    margin: 16px 0;
+    position: relative;
+  }
+
+  .whatsapp-message-preview::before {
+    content: '💬';
+    position: absolute;
+    top: -12px;
+    left: 20px;
+    background: white;
+    padding: 0 8px;
+    font-size: 20px;
+  }
+
+  .whatsapp-action-buttons {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+    flex-wrap: wrap;
+  }
+
+  .whatsapp-pro-button {
+    background: linear-gradient(135deg, #25D366, #128C7E) !important;
+    color: white !important;
+    border: none !important;
+    font-weight: 600 !important;
+    padding: 12px 24px !important;
+    border-radius: 12px !important;
+    transition: all 0.3s ease !important;
+  }
+
+  .whatsapp-pro-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(37, 211, 102, 0.3) !important;
+  }
+
+  .whatsapp-outline-button {
+    background: white !important;
+    color: #075E54 !important;
+    border: 2px solid #25D366 !important;
+    font-weight: 600 !important;
+    padding: 12px 24px !important;
+    border-radius: 12px !important;
+    transition: all 0.3s ease !important;
+  }
+
+  .whatsapp-outline-button:hover {
+    background: #F0F9FF !important;
+    transform: translateY(-2px);
+  }
+
+  .whatsapp-danger-button {
+    background: linear-gradient(135deg, #EF4444, #DC2626) !important;
+    color: white !important;
+    border: none !important;
+    font-weight: 600 !important;
+    padding: 12px 24px !important;
+    border-radius: 12px !important;
+    transition: all 0.3s ease !important;
+  }
+
+  .whatsapp-danger-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(239, 68, 68, 0.3) !important;
+  }
+
+  .whatsapp-step-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin: 20px 0;
+  }
+
+  .whatsapp-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px;
+    background: #F8FAFC;
+    border-radius: 12px;
+    border: 1px solid #E5E7EB;
+  }
+
+  .whatsapp-step-number {
+    width: 32px;
+    height: 32px;
     background: #25D366;
     color: white;
-    border-color: #25D366;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+
+  .whatsapp-loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 16px;
+    z-index: 10;
+  }
+
+  .whatsapp-connection-success {
+    background: linear-gradient(135deg, #DCFCE7, #BBF7D0);
+    border: 2px solid #22C55E;
+    border-radius: 16px;
+    padding: 24px;
+    margin: 20px 0;
+  }
+
+  .whatsapp-token-section {
+    background: #FEF3C7;
+    border: 2px solid #F59E0B;
+    border-radius: 12px;
+    padding: 20px;
+    margin: 16px 0;
   }
 
   @media (max-width: 980px) {
     .tf-editor { grid-template-columns: 1fr; }
     .tf-rail, .tf-side-col { position:static; max-height:none; width:auto; }
     .whatsapp-config-grid { grid-template-columns: 1fr; }
+    .whatsapp-qr-box { width: 240px; height: 240px; }
   }
 `;
 
@@ -700,7 +828,7 @@ function GoogleIcon() {
   );
 }
 
-function WhatsAppIcon({ size = 20 }) {
+function WhatsAppIcon({ size = 20, color = "white" }) {
   return (
     <span
       style={{
@@ -711,13 +839,11 @@ function WhatsAppIcon({ size = 20 }) {
         height: size,
         borderRadius: "50%",
         background: "#25D366",
-        color: "#ffffff",
-        fontWeight: 700,
-        fontSize: size * 0.6,
+        color: color,
       }}
     >
-      <svg width={size * 0.6} height={size * 0.6} viewBox="0 0 24 24" fill="none">
-        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.149-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.372-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.095 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.76.982.998-3.675-.236-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.897 6.994c-.004 5.45-4.438 9.88-9.888 9.88m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.333.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.333 11.893-11.893 0-3.18-1.24-6.162-3.495-8.411" fill="currentColor"/>
+      <svg width={size * 0.6} height={size * 0.6} viewBox="0 0 24 24" fill="currentColor">
+        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.149-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.372-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.095 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.75.982.998-3.667-.236-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.897 6.994c-.004 5.45-4.438 9.88-9.888 9.88m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.333.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.333 11.893-11.893 0-3.18-1.24-6.162-3.495-8.411" />
       </svg>
     </span>
   );
@@ -876,7 +1002,7 @@ function SheetConfigSection({
   );
 }
 
-/* ====== WHATSAPP CONFIGURATION SECTION ====== */
+/* ====== WHATSAPP CONFIGURATION SECTION - ADAPTÉ POUR TOKEN PERMANENT ====== */
 function WhatsAppConfigSection() {
   const { t } = useI18n();
   
@@ -886,15 +1012,19 @@ function WhatsAppConfigSection() {
     phoneNumber: null,
     sessionStatus: 'disconnected',
     qrCode: null,
+    qrLoading: false,
     lastConnected: null,
     messagesSent: 0,
     recoveryRate: 0
   });
 
   const [whatsappConfig, setWhatsappConfig] = useState({
+    // Token permanent (juste pour l'UI)
+    permanentToken: '',
+    
     // Connexion
     autoConnect: true,
-    sessionTimeout: 24, // heures
+    sessionTimeout: 24,
     
     // Messages après commande COD
     enabled: true,
@@ -902,8 +1032,6 @@ function WhatsAppConfigSection() {
     messageTemplate: "✅ Commande #{orderId} confirmée! Livraison dans 2-3 jours. Merci pour votre confiance!",
     sendAutomatically: true,
     sendDelay: "immediate",
-    buttonPosition: "below",
-    buttonStyle: "secondary",
     
     // WhatsApp Recovery
     recoveryEnabled: true,
@@ -914,26 +1042,12 @@ function WhatsAppConfigSection() {
     
     // Options avancées
     enableAnalytics: true,
-    enableReadReceipts: true,
-    enableTypingIndicator: false,
-    maxRetries: 3,
-    retryInterval: 5, // minutes
     businessHoursOnly: false,
     businessHoursStart: "09:00",
     businessHoursEnd: "18:00",
-    
-    // Template personnalisation
-    enableMediaMessages: false,
-    mediaUrl: "",
-    enableButtons: false,
-    button1Text: "Suivre ma commande",
-    button1Url: "{trackingUrl}",
-    button2Text: "Contacter le support",
-    button2Url: "https://wa.me/{supportNumber}",
+    maxRetries: 3,
   });
 
-  const [qrLoading, setQrLoading] = useState(false);
-  const [testingConnection, setTestingConnection] = useState(false);
   const [stats, setStats] = useState({
     totalMessages: 0,
     successful: 0,
@@ -941,6 +1055,11 @@ function WhatsAppConfigSection() {
     recoveryConverted: 0,
     avgResponseTime: 0
   });
+
+  const [activeToast, setActiveToast] = useState(null);
+  const [isGeneratingQR, setIsGeneratingQR] = useState(false);
+  const [isTesting, setIsTesting] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const availableVariables = [
     { code: "{orderId}", label: t("whatsapp.variables.orderId") },
@@ -965,6 +1084,7 @@ function WhatsAppConfigSection() {
     { value: "24h", label: t("whatsapp.delays.24h") },
   ];
 
+  // Charger le statut WhatsApp
   useEffect(() => {
     loadWhatsAppStatus();
   }, []);
@@ -976,6 +1096,7 @@ function WhatsAppConfigSection() {
         credentials: "include",
       });
       const data = await res.json();
+      
       if (data.ok) {
         setWhatsappStatus({
           loading: false,
@@ -987,33 +1108,64 @@ function WhatsAppConfigSection() {
           messagesSent: data.messagesSent || 0,
           recoveryRate: data.recoveryRate || 0
         });
-        setStats(data.stats || stats);
+        
+        if (data.stats) {
+          setStats(data.stats);
+        }
+        
         if (data.config) {
           setWhatsappConfig(prev => ({ ...prev, ...data.config }));
         }
+        
+        // Si connecté, ne pas montrer de QR
+        if (data.connected) {
+          setWhatsappStatus(prev => ({ ...prev, qrCode: null }));
+        }
+      } else {
+        setWhatsappStatus(prev => ({ ...prev, loading: false }));
+        showToast(t("whatsapp.errors.loadStatus"), 'critical');
       }
     } catch (error) {
       console.error("Error loading WhatsApp status:", error);
       setWhatsappStatus(prev => ({ ...prev, loading: false }));
+      showToast(t("whatsapp.errors.loadStatus"), 'critical');
     }
   };
 
   const generateQRCode = async () => {
-    setQrLoading(true);
+    if (!whatsappConfig.permanentToken) {
+      showToast(t("whatsapp.errors.tokenRequired"), 'critical');
+      return;
+    }
+    
+    setIsGeneratingQR(true);
     try {
       const res = await fetch("/api/whatsapp/generate-qr", {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${whatsappConfig.permanentToken}`
+        },
         credentials: "include",
       });
+      
       const data = await res.json();
+      
       if (data.ok && data.qrCode) {
-        setWhatsappStatus(prev => ({ ...prev, qrCode: data.qrCode }));
+        setWhatsappStatus(prev => ({ 
+          ...prev, 
+          qrCode: data.qrCode,
+          qrLoading: false 
+        }));
+        showToast(t("whatsapp.qr.generated"), 'success');
+      } else {
+        throw new Error(data.error || 'QR generation failed');
       }
     } catch (error) {
       console.error("Error generating QR code:", error);
-      alert(t("whatsapp.errors.qrGeneration"));
+      showToast(t("whatsapp.errors.qrGeneration"), 'critical');
     } finally {
-      setQrLoading(false);
+      setIsGeneratingQR(false);
     }
   };
 
@@ -1024,38 +1176,47 @@ function WhatsAppConfigSection() {
           method: "POST",
           credentials: "include",
         });
+        
         if (res.ok) {
-          setWhatsappStatus(prev => ({ ...prev, connected: false, qrCode: null }));
-          alert(t("whatsapp.disconnected"));
+          setWhatsappStatus(prev => ({ 
+            ...prev, 
+            connected: false, 
+            qrCode: null,
+            phoneNumber: null 
+          }));
+          showToast(t("whatsapp.disconnected"), 'success');
         }
       } catch (error) {
         console.error("Error disconnecting WhatsApp:", error);
-        alert(t("whatsapp.errors.disconnect"));
+        showToast(t("whatsapp.errors.disconnect"), 'critical');
       }
     }
   };
 
   const testWhatsAppConnection = async () => {
-    setTestingConnection(true);
+    setIsTesting(true);
     try {
       const res = await fetch("/api/whatsapp/test", {
         method: "POST",
         credentials: "include",
       });
+      
       const data = await res.json();
+      
       if (data.ok) {
-        alert(t("whatsapp.testSuccess"));
+        showToast(t("whatsapp.testSuccess"), 'success');
       } else {
-        alert(t("whatsapp.testError", { error: data.error }));
+        showToast(t("whatsapp.testError", { error: data.error }), 'critical');
       }
     } catch (error) {
-      alert(t("whatsapp.testError", { error: error.message }));
+      showToast(t("whatsapp.testError", { error: error.message }), 'critical');
     } finally {
-      setTestingConnection(false);
+      setIsTesting(false);
     }
   };
 
   const saveWhatsAppConfig = async () => {
+    setIsSaving(true);
     try {
       const res = await fetch("/api/whatsapp/save-config", {
         method: "POST",
@@ -1063,14 +1224,19 @@ function WhatsAppConfigSection() {
         credentials: "include",
         body: JSON.stringify({ config: whatsappConfig }),
       });
-      if (res.ok) {
-        alert(t("whatsapp.configSaved"));
+      
+      const data = await res.json();
+      
+      if (data.ok) {
+        showToast(t("whatsapp.configSaved"), 'success');
       } else {
-        alert(t("whatsapp.errors.saveConfig"));
+        showToast(t("whatsapp.errors.saveConfig"), 'critical');
       }
     } catch (error) {
       console.error("Error saving WhatsApp config:", error);
-      alert(t("whatsapp.errors.saveConfig"));
+      showToast(t("whatsapp.errors.saveConfig"), 'critical');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -1083,50 +1249,160 @@ function WhatsAppConfigSection() {
           credentials: "include",
           body: JSON.stringify({ 
             message: whatsappConfig.messageTemplate,
-            type: "order"
+            type: "test"
           }),
         });
+        
         const data = await res.json();
+        
         if (data.ok) {
-          alert(t("whatsapp.testMessageSent"));
+          showToast(t("whatsapp.testMessageSent"), 'success');
         } else {
-          alert(t("whatsapp.errors.testMessage", { error: data.error }));
+          showToast(t("whatsapp.errors.testMessage", { error: data.error }), 'critical');
         }
       } catch (error) {
-        alert(t("whatsapp.errors.testMessage", { error: error.message }));
+        showToast(t("whatsapp.errors.testMessage", { error: error.message }), 'critical');
       }
     }
   };
 
   const insertVariable = (variable) => {
-    const textarea = document.querySelector('textarea[name="messageTemplate"]');
-    if (textarea) {
-      const start = textarea.selectionStart;
-      const end = textarea.selectionEnd;
-      const text = textarea.value;
-      const newText = text.substring(0, start) + variable + text.substring(end);
-      
-      setWhatsappConfig(prev => ({
-        ...prev,
-        messageTemplate: newText
-      }));
-      
-      setTimeout(() => {
-        textarea.focus();
-        textarea.selectionStart = textarea.selectionEnd = start + variable.length;
-      }, 0);
+    setWhatsappConfig(prev => ({
+      ...prev,
+      messageTemplate: prev.messageTemplate + variable
+    }));
+  };
+
+  const showToast = (message, tone = 'success') => {
+    setActiveToast({ message, tone });
+  };
+
+  // Affichage conditionnel du QR Code
+  const renderQRCodeSection = () => {
+    if (whatsappStatus.connected) {
+      return (
+        <div className="whatsapp-connection-success">
+          <InlineStack align="space-between" blockAlign="center">
+            <InlineStack gap="200" blockAlign="center">
+              <Icon source={CircleTickMajor} color="success" />
+              <div>
+                <Text as="h4" variant="headingSm" fontWeight="bold">
+                  {t("whatsapp.connectedTo")}
+                </Text>
+                <Text as="p" variant="bodyLg" fontWeight="bold">
+                  {whatsappStatus.phoneNumber}
+                </Text>
+                {whatsappStatus.lastConnected && (
+                  <Text as="p" tone="subdued" variant="bodySm">
+                    {t("whatsapp.lastConnected")}: {new Date(whatsappStatus.lastConnected).toLocaleString()}
+                  </Text>
+                )}
+              </div>
+            </InlineStack>
+          </InlineStack>
+        </div>
+      );
     }
+
+    return (
+      <div className="whatsapp-qr-section">
+        <div className="whatsapp-qr-container">
+          <div className="whatsapp-qr-box">
+            {isGeneratingQR ? (
+              <div className="whatsapp-loading-overlay">
+                <Spinner size="large" />
+              </div>
+            ) : whatsappStatus.qrCode ? (
+              <img 
+                src={whatsappStatus.qrCode} 
+                alt="WhatsApp QR Code" 
+                style={{ 
+                  width: '100%', 
+                  height: '100%', 
+                  objectFit: 'contain',
+                  borderRadius: '8px'
+                }}
+              />
+            ) : (
+              <div style={{ 
+                display: 'flex', 
+                flexDirection: 'column', 
+                alignItems: 'center',
+                gap: '16px'
+              }}>
+                <WhatsAppIcon size={64} />
+                <Text as="p" tone="subdued" alignment="center">
+                  {t("whatsapp.qr.placeholder")}
+                </Text>
+              </div>
+            )}
+          </div>
+          
+          <div className="whatsapp-qr-instructions">
+            <Text as="h4" variant="headingSm" fontWeight="bold" marginBlockEnd="200">
+              {t("whatsapp.qr.instructionsTitle")}
+            </Text>
+            <div className="whatsapp-step-list">
+              <div className="whatsapp-step">
+                <div className="whatsapp-step-number">1</div>
+                <Text as="p">{t("whatsapp.qr.step1")}</Text>
+              </div>
+              <div className="whatsapp-step">
+                <div className="whatsapp-step-number">2</div>
+                <Text as="p">{t("whatsapp.qr.step2")}</Text>
+              </div>
+              <div className="whatsapp-step">
+                <div className="whatsapp-step-number">3</div>
+                <Text as="p">{t("whatsapp.qr.step3")}</Text>
+              </div>
+            </div>
+            
+            <InlineStack gap="200" align="center">
+              <Button
+                variant="primary"
+                onClick={generateQRCode}
+                loading={isGeneratingQR}
+                disabled={whatsappStatus.loading || !whatsappConfig.permanentToken}
+                className="whatsapp-pro-button"
+              >
+                {whatsappStatus.qrCode ? t("whatsapp.qr.regenerate") : t("whatsapp.qr.generate")}
+              </Button>
+              
+              <Button
+                onClick={loadWhatsAppStatus}
+                disabled={whatsappStatus.loading}
+                className="whatsapp-outline-button"
+              >
+                <InlineStack gap="100" blockAlign="center">
+                  <Icon source={RefreshMajor} />
+                  {t("whatsapp.refreshStatus")}
+                </InlineStack>
+              </Button>
+            </InlineStack>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   return (
     <div className="whatsapp-section">
-      {/* Status Card */}
-      <div className="whatsapp-status-card">
+      {/* Toast notifications */}
+      {activeToast && (
+        <Toast
+          content={activeToast.message}
+          tone={activeToast.tone}
+          onDismiss={() => setActiveToast(null)}
+        />
+      )}
+
+      {/* Header Card */}
+      <div className="whatsapp-header-card">
         <InlineStack align="space-between" blockAlign="center">
           <InlineStack gap="200" blockAlign="center">
             <WhatsAppIcon size={32} />
             <div>
-              <Text as="h3" variant="headingLg" color="text-inverse">
+              <Text as="h3" variant="headingLg" color="text-inverse" fontWeight="bold">
                 {t("whatsapp.title")}
               </Text>
               <Text as="p" color="text-inverse">
@@ -1135,120 +1411,110 @@ function WhatsAppConfigSection() {
             </div>
           </InlineStack>
           
-          <div className={`whatsapp-connection-status ${whatsappStatus.connected ? 'status-connected' : 'status-disconnected'}`}>
+          <div className="whatsapp-status-indicator">
             {whatsappStatus.connected ? (
               <>
-                <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#25D366' }} />
-                {t("whatsapp.connected")}
+                <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#22C55E' }} />
+                <Text as="span" color="text-inverse" fontWeight="medium">
+                  {t("whatsapp.connected")}
+                </Text>
               </>
             ) : (
               <>
-                <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#DC2626' }} />
-                {t("whatsapp.disconnected")}
+                <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#EF4444' }} />
+                <Text as="span" color="text-inverse" fontWeight="medium">
+                  {t("whatsapp.disconnected")}
+                </Text>
               </>
             )}
           </div>
         </InlineStack>
       </div>
 
-      {/* Connection QR Code */}
+      {/* Token Permanent Section */}
+      <div className="whatsapp-token-section">
+        <BlockStack gap="200">
+          <InlineStack gap="100" blockAlign="center">
+            <Icon source={AlertMinor} color="warning" />
+            <Text as="h4" variant="headingSm" fontWeight="bold">
+              {t("whatsapp.token.title")}
+            </Text>
+          </InlineStack>
+          <Text as="p" tone="subdued" variant="bodySm">
+            {t("whatsapp.token.description")}
+          </Text>
+          <TextField
+            label={t("whatsapp.token.label")}
+            value={whatsappConfig.permanentToken}
+            onChange={(value) => setWhatsappConfig(prev => ({ ...prev, permanentToken: value }))}
+            type="password"
+            autoComplete="off"
+            placeholder={t("whatsapp.token.placeholder")}
+            helpText={t("whatsapp.token.help")}
+          />
+        </BlockStack>
+      </div>
+
+      {/* QR Code & Connection Section */}
       <Card>
         <BlockStack gap="400">
-          <div className="whatsapp-feature-header">
-            <div className="whatsapp-icon">
-              <WhatsAppIcon size={24} />
+          <div className="whatsapp-card-header">
+            <div className="whatsapp-icon-circle">
+              <WhatsAppIcon size={24} color="white" />
             </div>
             <div>
-              <Text as="h3" variant="headingMd">{t("whatsapp.connection.title")}</Text>
-              <Text as="p" tone="subdued">{t("whatsapp.connection.description")}</Text>
+              <Text as="h3" variant="headingMd" fontWeight="bold">
+                {t("whatsapp.connection.title")}
+              </Text>
+              <Text as="p" tone="subdued" variant="bodySm">
+                {t("whatsapp.connection.description")}
+              </Text>
             </div>
           </div>
 
-          {!whatsappStatus.connected ? (
-            <div className="whatsapp-qr-container">
-              <div className="whatsapp-qr-box">
-                {whatsappStatus.qrCode ? (
-                  <img 
-                    src={whatsappStatus.qrCode} 
-                    alt="WhatsApp QR Code" 
-                    style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-                  />
-                ) : (
-                  <div className="whatsapp-qr-placeholder">
-                    <WhatsAppIcon size={48} />
-                    <Text as="p" tone="subdued">{t("whatsapp.qr.placeholder")}</Text>
-                  </div>
-                )}
-              </div>
-              
-              <BlockStack gap="200">
-                <Text as="p" alignment="center">{t("whatsapp.qr.instructions")}</Text>
-                
-                <InlineStack gap="200" align="center">
-                  <Button
-                    variant="primary"
-                    onClick={generateQRCode}
-                    loading={qrLoading}
-                    disabled={whatsappStatus.loading}
-                  >
-                    {whatsappStatus.qrCode ? t("whatsapp.qr.regenerate") : t("whatsapp.qr.generate")}
-                  </Button>
-                  
-                  <Button
-                    onClick={loadWhatsAppStatus}
-                    disabled={whatsappStatus.loading}
-                  >
-                    {t("whatsapp.refreshStatus")}
-                  </Button>
+          {renderQRCodeSection()}
+
+          {/* Action Buttons */}
+          {whatsappStatus.connected && (
+            <InlineStack gap="200" align="end">
+              <Button
+                onClick={testWhatsAppConnection}
+                loading={isTesting}
+                className="whatsapp-outline-button"
+              >
+                {t("whatsapp.testConnection")}
+              </Button>
+              <Button
+                tone="critical"
+                onClick={disconnectWhatsApp}
+                className="whatsapp-danger-button"
+              >
+                <InlineStack gap="100" blockAlign="center">
+                  <Icon source={MobileCancelMajor} />
+                  {t("whatsapp.disconnect")}
                 </InlineStack>
-              </BlockStack>
-            </div>
-          ) : (
-            <div style={{ padding: 20, background: '#f0f9ff', borderRadius: 12 }}>
-              <InlineStack align="space-between" blockAlign="center">
-                <InlineStack gap="200" blockAlign="center">
-                  <WhatsAppIcon size={24} />
-                  <div>
-                    <Text as="h4" variant="headingSm">{t("whatsapp.connectedTo")}</Text>
-                    <Text as="p" variant="bodyLg" fontWeight="bold">{whatsappStatus.phoneNumber}</Text>
-                    {whatsappStatus.lastConnected && (
-                      <Text as="p" tone="subdued" variant="bodySm">
-                        {t("whatsapp.lastConnected")}: {new Date(whatsappStatus.lastConnected).toLocaleString()}
-                      </Text>
-                    )}
-                  </div>
-                </InlineStack>
-                
-                <InlineStack gap="100">
-                  <Button onClick={testWhatsAppConnection} loading={testingConnection}>
-                    {t("whatsapp.testConnection")}
-                  </Button>
-                  <Button tone="critical" onClick={disconnectWhatsApp}>
-                    {t("whatsapp.disconnect")}
-                  </Button>
-                </InlineStack>
-              </InlineStack>
-            </div>
+              </Button>
+            </InlineStack>
           )}
         </BlockStack>
       </Card>
 
       {/* Statistics */}
       {whatsappStatus.connected && (
-        <div className="whatsapp-stats">
-          <div className="whatsapp-stat-card">
+        <div className="whatsapp-stats-grid">
+          <div className="whatsapp-stat-item">
             <div className="whatsapp-stat-value">{whatsappStatus.messagesSent}</div>
             <div className="whatsapp-stat-label">{t("whatsapp.stats.messagesSent")}</div>
           </div>
-          <div className="whatsapp-stat-card">
+          <div className="whatsapp-stat-item">
             <div className="whatsapp-stat-value">{stats.successful}</div>
             <div className="whatsapp-stat-label">{t("whatsapp.stats.successful")}</div>
           </div>
-          <div className="whatsapp-stat-card">
+          <div className="whatsapp-stat-item">
             <div className="whatsapp-stat-value">{whatsappStatus.recoveryRate}%</div>
             <div className="whatsapp-stat-label">{t("whatsapp.stats.recoveryRate")}</div>
           </div>
-          <div className="whatsapp-stat-card">
+          <div className="whatsapp-stat-item">
             <div className="whatsapp-stat-value">{stats.avgResponseTime}s</div>
             <div className="whatsapp-stat-label">{t("whatsapp.stats.avgResponse")}</div>
           </div>
@@ -1257,17 +1523,21 @@ function WhatsAppConfigSection() {
 
       {/* Main Configuration Grid */}
       <div className="whatsapp-config-grid">
-        {/* After COD Order */}
-        <div className="whatsapp-feature-card">
-          <div className="whatsapp-feature-header">
-            <div className="whatsapp-icon">✅</div>
+        {/* Order Confirmation */}
+        <div className="whatsapp-config-card">
+          <div className="whatsapp-card-header">
+            <div className="whatsapp-icon-circle">✅</div>
             <div>
-              <Text as="h3" variant="headingSm">{t("whatsapp.features.afterCOD.title")}</Text>
-              <Text as="p" tone="subdued" variant="bodySm">{t("whatsapp.features.afterCOD.description")}</Text>
+              <Text as="h3" variant="headingSm" fontWeight="bold">
+                {t("whatsapp.features.afterCOD.title")}
+              </Text>
+              <Text as="p" tone="subdued" variant="bodySm">
+                {t("whatsapp.features.afterCOD.description")}
+              </Text>
             </div>
           </div>
           
-          <BlockStack gap="200">
+          <BlockStack gap="300">
             <Checkbox
               label={t("whatsapp.features.afterCOD.enable")}
               checked={whatsappConfig.enabled}
@@ -1280,17 +1550,6 @@ function WhatsAppConfigSection() {
                   label={t("whatsapp.features.afterCOD.buttonText")}
                   value={whatsappConfig.buttonText}
                   onChange={(value) => setWhatsappConfig(prev => ({ ...prev, buttonText: value }))}
-                />
-                
-                <Select
-                  label={t("whatsapp.features.afterCOD.position")}
-                  value={whatsappConfig.buttonPosition}
-                  onChange={(value) => setWhatsappConfig(prev => ({ ...prev, buttonPosition: value }))}
-                  options={[
-                    { label: t("whatsapp.positions.below"), value: "below" },
-                    { label: t("whatsapp.positions.right"), value: "right" },
-                    { label: t("whatsapp.positions.replace"), value: "replace" },
-                  ]}
                 />
                 
                 <Checkbox
@@ -1313,16 +1572,20 @@ function WhatsAppConfigSection() {
         </div>
 
         {/* Cart Recovery */}
-        <div className="whatsapp-feature-card">
-          <div className="whatsapp-feature-header">
-            <div className="whatsapp-icon">🛒</div>
+        <div className="whatsapp-config-card">
+          <div className="whatsapp-card-header">
+            <div className="whatsapp-icon-circle">🛒</div>
             <div>
-              <Text as="h3" variant="headingSm">{t("whatsapp.features.recovery.title")}</Text>
-              <Text as="p" tone="subdued" variant="bodySm">{t("whatsapp.features.recovery.description")}</Text>
+              <Text as="h3" variant="headingSm" fontWeight="bold">
+                {t("whatsapp.features.recovery.title")}
+              </Text>
+              <Text as="p" tone="subdued" variant="bodySm">
+                {t("whatsapp.features.recovery.description")}
+              </Text>
             </div>
           </div>
           
-          <BlockStack gap="200">
+          <BlockStack gap="300">
             <Checkbox
               label={t("whatsapp.features.recovery.enable")}
               checked={whatsappConfig.recoveryEnabled}
@@ -1335,7 +1598,7 @@ function WhatsAppConfigSection() {
                   label={t("whatsapp.features.recovery.delay")}
                   value={whatsappConfig.recoveryDelay}
                   onChange={(value) => setWhatsappConfig(prev => ({ ...prev, recoveryDelay: value }))}
-                  options={delayOptions.slice(2)} // Skip immediate and 5min
+                  options={delayOptions.slice(2)}
                 />
                 
                 <TextField
@@ -1355,21 +1618,25 @@ function WhatsAppConfigSection() {
         </div>
 
         {/* Message Templates */}
-        <div className="whatsapp-feature-card">
-          <div className="whatsapp-feature-header">
-            <div className="whatsapp-icon">💬</div>
+        <div className="whatsapp-config-card">
+          <div className="whatsapp-card-header">
+            <div className="whatsapp-icon-circle">💬</div>
             <div>
-              <Text as="h3" variant="headingSm">{t("whatsapp.features.templates.title")}</Text>
-              <Text as="p" tone="subdued" variant="bodySm">{t("whatsapp.features.templates.description")}</Text>
+              <Text as="h3" variant="headingSm" fontWeight="bold">
+                {t("whatsapp.features.templates.title")}
+              </Text>
+              <Text as="p" tone="subdued" variant="bodySm">
+                {t("whatsapp.features.templates.description")}
+              </Text>
             </div>
           </div>
           
-          <BlockStack gap="200">
+          <BlockStack gap="300">
             <TextField
               label={t("whatsapp.features.templates.orderMessage")}
               value={whatsappConfig.messageTemplate}
               onChange={(value) => setWhatsappConfig(prev => ({ ...prev, messageTemplate: value }))}
-              multiline={3}
+              multiline={4}
               autoComplete="off"
             />
             
@@ -1377,23 +1644,23 @@ function WhatsAppConfigSection() {
               label={t("whatsapp.features.templates.recoveryMessage")}
               value={whatsappConfig.recoveryMessage}
               onChange={(value) => setWhatsappConfig(prev => ({ ...prev, recoveryMessage: value }))}
-              multiline={3}
+              multiline={4}
               autoComplete="off"
             />
             
             <div>
-              <Text as="p" variant="bodySm" fontWeight="medium">
+              <Text as="p" variant="bodySm" fontWeight="medium" marginBlockEnd="200">
                 {t("whatsapp.variables.available")}
               </Text>
               <div className="whatsapp-variables-grid">
                 {availableVariables.map((variable) => (
                   <div
                     key={variable.code}
-                    className="whatsapp-variable-tag"
+                    className="whatsapp-variable-chip"
                     onClick={() => insertVariable(variable.code)}
                     title={variable.label}
                   >
-                    {variable.code}
+                    <span style={{ fontSize: '12px' }}>{variable.code}</span>
                   </div>
                 ))}
               </div>
@@ -1403,130 +1670,131 @@ function WhatsAppConfigSection() {
       </div>
 
       {/* Advanced Settings */}
-      <div className="whatsapp-advanced-settings">
-        <Text as="h3" variant="headingMd">{t("whatsapp.advanced.title")}</Text>
-        <Text as="p" tone="subdued" variant="bodySm">{t("whatsapp.advanced.description")}</Text>
-        
-        <div className="whatsapp-config-grid" style={{ marginTop: 16 }}>
-          <BlockStack gap="200">
-            <Checkbox
-              label={t("whatsapp.advanced.autoConnect")}
-              checked={whatsappConfig.autoConnect}
-              onChange={(checked) => setWhatsappConfig(prev => ({ ...prev, autoConnect: checked }))}
-            />
-            
-            <Checkbox
-              label={t("whatsapp.advanced.analytics")}
-              checked={whatsappConfig.enableAnalytics}
-              onChange={(checked) => setWhatsappConfig(prev => ({ ...prev, enableAnalytics: checked }))}
-            />
-            
-            <Checkbox
-              label={t("whatsapp.advanced.readReceipts")}
-              checked={whatsappConfig.enableReadReceipts}
-              onChange={(checked) => setWhatsappConfig(prev => ({ ...prev, enableReadReceipts: checked }))}
-            />
-          </BlockStack>
-          
-          <BlockStack gap="200">
-            <Checkbox
-              label={t("whatsapp.advanced.businessHours")}
-              checked={whatsappConfig.businessHoursOnly}
-              onChange={(checked) => setWhatsappConfig(prev => ({ ...prev, businessHoursOnly: checked }))}
-            />
-            
-            {whatsappConfig.businessHoursOnly && (
-              <InlineStack gap="200">
-                <TextField
-                  label={t("whatsapp.advanced.startTime")}
-                  value={whatsappConfig.businessHoursStart}
-                  onChange={(value) => setWhatsappConfig(prev => ({ ...prev, businessHoursStart: value }))}
-                  type="time"
-                />
-                <TextField
-                  label={t("whatsapp.advanced.endTime")}
-                  value={whatsappConfig.businessHoursEnd}
-                  onChange={(value) => setWhatsappConfig(prev => ({ ...prev, businessHoursEnd: value }))}
-                  type="time"
-                />
-              </InlineStack>
-            )}
-            
-            <RangeSlider
-              label={t("whatsapp.advanced.maxRetries")}
-              value={whatsappConfig.maxRetries}
-              onChange={(value) => setWhatsappConfig(prev => ({ ...prev, maxRetries: value }))}
-              min={1}
-              max={10}
-              output
-            />
-          </BlockStack>
-          
-          <BlockStack gap="200">
-            <Checkbox
-              label={t("whatsapp.advanced.mediaMessages")}
-              checked={whatsappConfig.enableMediaMessages}
-              onChange={(checked) => setWhatsappConfig(prev => ({ ...prev, enableMediaMessages: checked }))}
-            />
-            
-            {whatsappConfig.enableMediaMessages && (
-              <TextField
-                label={t("whatsapp.advanced.mediaUrl")}
-                value={whatsappConfig.mediaUrl}
-                onChange={(value) => setWhatsappConfig(prev => ({ ...prev, mediaUrl: value }))}
-                placeholder="https://example.com/image.jpg"
-              />
-            )}
-            
-            <Checkbox
-              label={t("whatsapp.advanced.buttons")}
-              checked={whatsappConfig.enableButtons}
-              onChange={(checked) => setWhatsappConfig(prev => ({ ...prev, enableButtons: checked }))}
-            />
-          </BlockStack>
-        </div>
-      </div>
-
-      {/* Action Buttons */}
-      <InlineStack gap="200" align="end" marginBlockStart="400">
-        <Button onClick={sendTestMessage} disabled={!whatsappStatus.connected}>
-          {t("whatsapp.sendTest")}
-        </Button>
-        <Button variant="primary" onClick={saveWhatsAppConfig}>
-          {t("whatsapp.saveConfig")}
-        </Button>
-      </InlineStack>
-
-      {/* Preview */}
       <Card marginBlockStart="400">
         <BlockStack gap="300">
-          <Text as="h3" variant="headingMd">{t("whatsapp.preview.title")}</Text>
+          <div className="whatsapp-card-header">
+            <div className="whatsapp-icon-circle">⚙️</div>
+            <div>
+              <Text as="h3" variant="headingMd" fontWeight="bold">
+                {t("whatsapp.advanced.title")}
+              </Text>
+              <Text as="p" tone="subdued" variant="bodySm">
+                {t("whatsapp.advanced.description")}
+              </Text>
+            </div>
+          </div>
           
-          <div className="whatsapp-template-preview">
+          <div className="whatsapp-config-grid" style={{ marginTop: 0 }}>
+            <BlockStack gap="300">
+              <Checkbox
+                label={t("whatsapp.advanced.autoConnect")}
+                checked={whatsappConfig.autoConnect}
+                onChange={(checked) => setWhatsappConfig(prev => ({ ...prev, autoConnect: checked }))}
+              />
+              
+              <Checkbox
+                label={t("whatsapp.advanced.analytics")}
+                checked={whatsappConfig.enableAnalytics}
+                onChange={(checked) => setWhatsappConfig(prev => ({ ...prev, enableAnalytics: checked }))}
+              />
+            </BlockStack>
+            
+            <BlockStack gap="300">
+              <Checkbox
+                label={t("whatsapp.advanced.businessHours")}
+                checked={whatsappConfig.businessHoursOnly}
+                onChange={(checked) => setWhatsappConfig(prev => ({ ...prev, businessHoursOnly: checked }))}
+              />
+              
+              {whatsappConfig.businessHoursOnly && (
+                <InlineStack gap="200">
+                  <TextField
+                    label={t("whatsapp.advanced.startTime")}
+                    value={whatsappConfig.businessHoursStart}
+                    onChange={(value) => setWhatsappConfig(prev => ({ ...prev, businessHoursStart: value }))}
+                    type="time"
+                  />
+                  <TextField
+                    label={t("whatsapp.advanced.endTime")}
+                    value={whatsappConfig.businessHoursEnd}
+                    onChange={(value) => setWhatsappConfig(prev => ({ ...prev, businessHoursEnd: value }))}
+                    type="time"
+                  />
+                </InlineStack>
+              )}
+            </BlockStack>
+            
+            <BlockStack gap="300">
+              <RangeSlider
+                label={t("whatsapp.advanced.maxRetries")}
+                value={whatsappConfig.maxRetries}
+                onChange={(value) => setWhatsappConfig(prev => ({ ...prev, maxRetries: value }))}
+                min={1}
+                max={10}
+                output
+              />
+              
+              <RangeSlider
+                label={`${t("whatsapp.advanced.sessionTimeout")} (${whatsappConfig.sessionTimeout}h)`}
+                value={whatsappConfig.sessionTimeout}
+                onChange={(value) => setWhatsappConfig(prev => ({ ...prev, sessionTimeout: value }))}
+                min={1}
+                max={72}
+                output
+              />
+            </BlockStack>
+          </div>
+        </BlockStack>
+      </Card>
+
+      {/* Preview & Actions */}
+      <div className="whatsapp-preview-card">
+        <BlockStack gap="400">
+          <Text as="h3" variant="headingMd" fontWeight="bold">
+            {t("whatsapp.preview.title")}
+          </Text>
+          
+          <div className="whatsapp-message-preview">
             <Text as="p" variant="bodyMd">
               {whatsappConfig.messageTemplate
-                .replace(/{orderId}/g, "1234")
+                .replace(/{orderId}/g, "#1234")
                 .replace(/{customerName}/g, "Jean Dupont")
+                .replace(/{customerPhone}/g, "+212 600 000 000")
                 .replace(/{productName}/g, "iPhone 15 Pro")
                 .replace(/{orderTotal}/g, "1 299,00 MAD")
                 .replace(/{shopName}/g, "TechStore")
                 .replace(/{deliveryDate}/g, "15 Mars 2024")
+                .replace(/{trackingUrl}/g, "https://tracking.example.com/1234")
+                .replace(/{supportNumber}/g, "+212 600 000 000")
+                .replace(/{recoveryCode}/g, "RECOVERY10")
               }
             </Text>
+          </div>
+          
+          <div className="whatsapp-action-buttons">
+            <Button
+              onClick={sendTestMessage}
+              disabled={!whatsappStatus.connected}
+              className="whatsapp-outline-button"
+            >
+              {t("whatsapp.sendTest")}
+            </Button>
             
-            {whatsappConfig.enableButtons && (
-              <InlineStack gap="200" marginBlockStart="200">
-                <Button size="slim">{whatsappConfig.button1Text}</Button>
-                <Button size="slim" variant="secondary">{whatsappConfig.button2Text}</Button>
-              </InlineStack>
-            )}
+            <Button
+              variant="primary"
+              onClick={saveWhatsAppConfig}
+              loading={isSaving}
+              className="whatsapp-pro-button"
+            >
+              {t("whatsapp.saveConfig")}
+            </Button>
           </div>
           
           <Text as="p" tone="subdued" variant="bodySm">
             {t("whatsapp.preview.description")}
           </Text>
         </BlockStack>
-      </Card>
+      </div>
     </div>
   );
 }
