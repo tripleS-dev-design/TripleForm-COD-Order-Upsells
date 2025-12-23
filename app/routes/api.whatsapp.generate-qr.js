@@ -1,22 +1,10 @@
-import { json } from "@remix-run/node";
-import { authenticate } from "../shopify.server";
-import prisma from "../db.server";
-import { create } from "qrcode";
-import whatsappWeb from "whatsapp-web.js";
-
-const { Client, LocalAuth } = whatsappWeb;
-
-// mémoire (à remplacer par Redis si scaling)
-const whatsappClients = global.whatsappClients || new Map();
-global.whatsappClients = whatsappClients;
-
 export async function action({ request }) {
   try {
     const { session } = await authenticate.admin(request);
-    const shopDomain = session.shop; // Renommez shopId en shopDomain
+    const shopDomain = session.shop;
 
     const existing = await prisma.whatsappStatus.findUnique({
-      where: { shopDomain }, // Utilisez shopDomain ici
+      where: { shopDomain },
     });
 
     if (existing?.status === "connected") {
@@ -35,12 +23,28 @@ export async function action({ request }) {
 
     client.on("qr", async (qr) => {
       try {
-        const qrCodeDataURL = await create(qr, { type: "png", width: 300, margin: 1 });
+        // ✅ CORRECTION ICI : Convertir le QR en Data URL string
+        const qrCodeDataURL = await create(qr, { 
+          type: "png", 
+          width: 300, 
+          margin: 1 
+        });
+        
+        // qrCodeDataURL est déjà une string (Data URL)
+        // ex: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA..."
 
         await prisma.whatsappStatus.upsert({
-          where: { shopDomain }, // Utilisez shopDomain ici
-          update: { qrCode: qrCodeDataURL, status: "waiting_qr", updatedAt: new Date() },
-          create: { shopDomain, qrCode: qrCodeDataURL, status: "waiting_qr" },
+          where: { shopDomain },
+          update: { 
+            qrCode: qrCodeDataURL, // ✅ String, pas objet
+            status: "waiting_qr", 
+            updatedAt: new Date() 
+          },
+          create: { 
+            shopDomain, 
+            qrCode: qrCodeDataURL, // ✅ String, pas objet
+            status: "waiting_qr" 
+          },
         });
 
         whatsappClients.set(shopDomain, client);
@@ -53,8 +57,13 @@ export async function action({ request }) {
       const phoneNumber = client.info?.wid?.user || null;
 
       await prisma.whatsappStatus.update({
-        where: { shopDomain }, // Utilisez shopDomain ici
-        data: { phoneNumber, connectedAt: new Date(), status: "connected", qrCode: null },
+        where: { shopDomain },
+        data: { 
+          phoneNumber, 
+          connectedAt: new Date(), 
+          status: "connected", 
+          qrCode: null 
+        },
       });
 
       console.log(`[WhatsApp] Connected for ${shopDomain}`);
@@ -63,22 +72,41 @@ export async function action({ request }) {
     client.on("auth_failure", async (error) => {
       console.error("Auth failure:", error);
       await prisma.whatsappStatus.update({
-        where: { shopDomain }, // Utilisez shopDomain ici
-        data: { status: "auth_failure", lastError: error.message, qrCode: null },
+        where: { shopDomain },
+        data: { 
+          status: "auth_failure", 
+          lastError: error.message, 
+          qrCode: null 
+        },
       });
     });
 
     await client.initialize();
 
-    const status = await prisma.whatsappStatus.findUnique({ where: { shopDomain } });
+    // Attendre un peu pour que le QR soit généré
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    const status = await prisma.whatsappStatus.findUnique({ 
+      where: { shopDomain } 
+    });
 
     if (!status?.qrCode) {
-      return json({ ok: false, error: "QR non généré" }, { status: 500 });
+      return json({ 
+        ok: false, 
+        error: "QR non généré - réessayez" 
+      }, { status: 500 });
     }
 
-    return json({ ok: true, status: "waiting_qr", qrCode: status.qrCode });
+    return json({ 
+      ok: true, 
+      status: "waiting_qr", 
+      qrCode: status.qrCode 
+    });
   } catch (error) {
     console.error("[WhatsApp Generate QR] Error:", error);
-    return json({ ok: false, error: error.message }, { status: 500 });
+    return json({ 
+      ok: false, 
+      error: error.message 
+    }, { status: 500 });
   }
 }
