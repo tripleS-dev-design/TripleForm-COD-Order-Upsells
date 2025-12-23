@@ -2,7 +2,7 @@
 import { json } from '@remix-run/node';
 import { authenticate } from '../shopify.server';
 import prisma from '../db.server';
-import whatsappAPI from '../utils/whatsapp-business-api';
+import whatsappAPI from '../utils/whatsapp.business.api.js';
 
 export async function loader({ request }) {
   try {
