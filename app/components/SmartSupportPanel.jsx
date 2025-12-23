@@ -86,6 +86,7 @@ export default function SmartSupportPanel() {
       { id: "all", label: t("section0.support.cat.all") },
       { id: "start", label: t("section0.support.cat.start") },
       { id: "forms", label: t("section0.support.cat.forms") },
+      { id: "forms", label: t("section0.support.cat.forms") },
       { id: "offers", label: t("section0.support.cat.offers") },
       { id: "sheets", label: t("section0.support.cat.sheets") },
       { id: "pixels", label: t("section0.support.cat.pixels") },
@@ -110,6 +111,13 @@ export default function SmartSupportPanel() {
     });
   }, [search, category, t]);
 
+  // Vérifiez que les icônes existent dans PI
+  const SupportIcon = PI.QuestionMarkIcon || PI.CircleInformationIcon || PI.HelpIcon || "❓";
+  const ChevronUpIcon = PI.ChevronUpIcon || "⬆️";
+  const ChevronDownIcon = PI.ChevronDownIcon || "⬇️";
+  const ChatIcon = PI.ChatIcon || PI.ConversationIcon || "💬";
+  const EmailIcon = PI.EmailIcon || "📧";
+
   return (
     <Card>
       <div style={{ padding: 16 }}>
@@ -127,7 +135,12 @@ export default function SmartSupportPanel() {
                 justifyContent: "center",
               }}
             >
-              <Icon source={PI.SupportIcon} color="base" />
+              {/* Utilisez un caractère emoji si l'icône n'existe pas */}
+              {typeof SupportIcon === 'string' ? (
+                <span style={{ color: 'white', fontSize: '18px' }}>{SupportIcon}</span>
+              ) : (
+                <Icon source={SupportIcon} color="base" />
+              )}
             </div>
             <Text as="h2" variant="headingMd">
               {t("section0.support.header")}
@@ -190,8 +203,8 @@ export default function SmartSupportPanel() {
                           <Icon
                             source={
                               isOpen
-                                ? PI.ChevronUpIcon
-                                : PI.ChevronDownIcon
+                                ? ChevronUpIcon
+                                : ChevronDownIcon
                             }
                           />
                         </div>
@@ -230,13 +243,13 @@ export default function SmartSupportPanel() {
 
               <InlineStack gap="200">
                 <Button
-                  icon={PI.ChatIcon}
+                  icon={ChatIcon}
                   url="https://wa.me/212681570887"
                 >
                   {t("section0.support.whatsapp")}
                 </Button>
                 <Button
-                  icon={PI.EmailIcon}
+                  icon={EmailIcon}
                   url="mailto:ktami.sami@icloud.com"
                   variant="secondary"
                 >

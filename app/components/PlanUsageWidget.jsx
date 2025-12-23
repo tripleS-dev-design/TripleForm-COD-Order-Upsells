@@ -5,12 +5,24 @@ import * as PI from "@shopify/polaris-icons";
 import { getPlan } from "../utils/plans";
 import { useI18n } from "../i18n/react";
 
-// Icon sûre (au cas où certaines n’existent pas)
-const subscriptionIconSource =
-  PI.SubscriptionIcon ||
-  PI.BillingStatementIcon ||
-  PI.OrdersIcon ||
-  Object.values(PI)[0];
+// Cherchez une icône de subscription qui existe
+const findAvailableIcon = () => {
+  // Essayez ces icônes dans l'ordre
+  const iconOptions = [
+    PI.CashDollarIcon,
+    PI.ReceiptIcon,
+    PI.CreditCardIcon,
+    PI.WalletIcon,
+    PI.SubscriptionIcon,  // Peut ne pas exister
+    PI.BillingStatementIcon,  // Peut ne pas exister
+    PI.OrdersIcon,  // Peut ne pas exister
+  ];
+  
+  // Retourne la première icône qui existe
+  return iconOptions.find(icon => icon !== undefined) || Object.values(PI)[0];
+};
+
+const subscriptionIconSource = findAvailableIcon();
 
 /**
  * Cercle qui représente les commandes RESTANTES.

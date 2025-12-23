@@ -20,7 +20,7 @@ import {
 } from "@shopify/polaris";
 import { useI18n } from "../i18n/react";
 import PlanUsageWidget from "../components/PlanUsageWidget";
-import { MobileCancelMajor, CircleTickMajor, AlertMinor, RefreshMajor } from '@shopify/polaris-icons';
+import { MobileCancelMajor, CircleTickOutlineMinor, AlertMinor, RefreshMajor } from '@shopify/polaris-icons';
 
 /* ======================= CSS / layout ======================= */
 const LAYOUT_CSS = `
