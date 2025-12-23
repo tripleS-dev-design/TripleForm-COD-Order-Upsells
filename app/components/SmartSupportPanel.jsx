@@ -111,11 +111,12 @@ export default function SmartSupportPanel() {
   }, [search, category, t]);
 
   // Utilisez les icônes disponibles
-  const SupportIcon = PI.CircleInformationIcon || "ℹ️";
-  const ChevronUpIcon = PI.ChevronUpIcon || "⬆️";
-  const ChevronDownIcon = PI.ChevronDownIcon || "⬇️";
-  const ChatIcon = "💬"; // Utilisez un emoji direct
-  const EmailIcon = "📧"; // Utilisez un emoji direct
+ // Modifier la déclaration des icônes (ligne ~128-132) :
+      const SupportIcon = PI.InformationIcon || "ℹ️";
+      const ChevronUpIcon = PI.ChevronUpIcon || "⬆️";
+      const ChevronDownIcon = PI.ChevronDownIcon || "⬇️";
+      const ChatIcon = "💬";
+      const EmailIcon = "📧";
 
   return (
     <Card>
