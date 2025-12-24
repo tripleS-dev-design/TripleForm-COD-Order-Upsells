@@ -13,7 +13,7 @@ export async function action({ request }) {
   let client = null;
   
   try {
-    const { session } = await authenticate.admin(request);
+    const { session } = await authenticate.public(request);
     const shopDomain = session.shop;
 
     // Vérifier si déjà connecté
