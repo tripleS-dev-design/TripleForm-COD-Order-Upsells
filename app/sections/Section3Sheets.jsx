@@ -1130,44 +1130,6 @@ function WhatsAppConfigSection() {
     }
   };
 
-    const generateQRCode = async () => {
-      // ✅ ENLÈVE la vérification de token ici
-      // if (!whatsappConfig.permanentToken) {
-      //   showToast(t("whatsapp.errors.tokenRequired"), 'critical');
-      //   return;
-      // }
-      
-      setIsGeneratingQR(true);
-      try {
-        const res = await fetch("/api/whatsapp/generate-qr", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            // ✅ ENLÈVE ce header Authorization
-            // "Authorization": `Bearer ${whatsappConfig.permanentToken}`
-          },
-          credentials: "include", // ✅ Garde ça, c'est bon
-        });
-        
-        const data = await res.json();
-        
-        if (data.ok && data.qrCode) {
-          setWhatsappStatus(prev => ({ 
-            ...prev, 
-            qrCode: data.qrCode,
-            qrLoading: false 
-          }));
-          showToast(t("whatsapp.qr.generated"), 'success');
-        } else {
-          throw new Error(data.error || 'QR generation failed');
-        }
-      } catch (error) {
-        console.error("Error generating QR code:", error);
-        showToast(t("whatsapp.errors.qrGeneration"), 'critical');
-      } finally {
-        setIsGeneratingQR(false);
-      }
-    };
 
   const disconnectWhatsApp = async () => {
     if (confirm(t("whatsapp.confirmDisconnect"))) {
@@ -1375,7 +1337,7 @@ function WhatsAppConfigSection() {
                 variant="primary"
                 onClick={generateQRCode}
                 loading={isGeneratingQR}
-                disabled={whatsappStatus.loading || !whatsappConfig.permanentToken}
+                disabled={whatsappStatus.loading}
                 className="whatsapp-pro-button"
               >
                 {whatsappStatus.qrCode ? t("whatsapp.qr.regenerate") : t("whatsapp.qr.generate")}
