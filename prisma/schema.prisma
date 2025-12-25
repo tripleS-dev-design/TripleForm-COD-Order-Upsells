@@ -52,7 +52,7 @@ model ShopGoogleSettings {
   tokenExpiryDate      DateTime?
   sheetsConfigJson     String?
   
-  // ✅ NOUVEAUX CHAMPS CRITIQUES pour Google Sheets
+  // NOUVEAUX CHAMPS CRITIQUES pour Google Sheets
   googleAccessToken    String?
   googleRefreshToken   String?
   googleTokenExpiry    DateTime?
@@ -64,7 +64,7 @@ model ShopGoogleSettings {
   updatedAt            DateTime  @updatedAt
 }
 
-// ✅ MODÈLES WHATSAPP
+// MODÈLES WHATSAPP - MIS À JOUR AVEC CHAMPS SIMPLE
 model WhatsappStatus {
   id           String    @id @default(cuid())
   shopDomain   String    @unique
@@ -84,27 +84,38 @@ model WhatsappConfig {
   id                     String    @id @default(cuid())
   shopDomain             String    @unique
   
-  // Connexion
+  // ============================================
+  // NOUVEAUX CHAMPS POUR L'INTERFACE SIMPLE
+  // ============================================
+  phoneNumber            String?   @default("")
+  businessName           String?   @default("")
+  orderMessage           String?   @default("✅ Commande #{orderId} confirmée! Livraison dans 2-3 jours. Merci!")
+  sendAutomatically      Boolean   @default(true)
+  useToken               Boolean   @default(false)
+  permanentToken         String?   @default("")
+  mode                   String    @default("simple")
+  // ============================================
+  
+  // Connexion (interface avancée)
   autoConnect            Boolean   @default(true)
   sessionTimeout         Int       @default(24)
   
-  // Messages après commande COD
+  // Messages après commande COD (interface avancée)
   enabled                Boolean   @default(true)
   buttonText             String    @default("💬 WhatsApp")
   messageTemplate        String    @default("✅ Commande #{orderId} confirmée! Livraison dans 2-3 jours.")
-  sendAutomatically      Boolean   @default(true)
   sendDelay              String    @default("immediate")
   buttonPosition         String    @default("below")
   buttonStyle            String    @default("secondary")
   
-  // WhatsApp Recovery
+  // WhatsApp Recovery (interface avancée)
   recoveryEnabled        Boolean   @default(true)
   recoveryMessage        String    @default("👋 Vous avez oublié quelque chose! Votre panier vous attend.")
   recoveryDelay          String    @default("1h")
   recoveryDiscount       String    @default("10%")
   recoveryCode           String    @default("RECOVERY10")
   
-  // Options avancées
+  // Options avancées (interface avancée)
   enableAnalytics        Boolean   @default(true)
   enableReadReceipts     Boolean   @default(true)
   enableTypingIndicator  Boolean   @default(false)
@@ -114,7 +125,7 @@ model WhatsappConfig {
   businessHoursStart     String    @default("09:00")
   businessHoursEnd       String    @default("18:00")
   
-  // Template personnalisation
+  // Template personnalisation (interface avancée)
   enableMediaMessages    Boolean   @default(false)
   mediaUrl               String?
   enableButtons          Boolean   @default(false)
@@ -209,7 +220,7 @@ model AbandonedCart {
   @@index([recoveryStatus])
 }
 
-// ✅ MODÈLES POUR LES COMMANDES ET USAGE
+// MODÈLES POUR LES COMMANDES ET USAGE
 model OrderSync {
   id               Int       @id @default(autoincrement())
   shopDomain       String
