@@ -1046,8 +1046,8 @@ function SimpleWhatsAppConfig() {
       if (data.ok) {
         setWhatsappStatus({
           loading: false,
-          connected: data.connected,
-          phoneNumber: data.phoneNumber,
+          connected: !!(data.config && data.config.phoneNumber),
+          phoneNumber: data.config?.phoneNumber || data.phoneNumber,
           qrCode: data.qrCode,
           lastConnected: data.lastConnected,
           messagesSent: data.messagesSent || 0
