@@ -1,4 +1,7 @@
 -- WhatsApp simple interface fields 
--- These fields were added via direct SQL execution: phoneNumber, businessName, orderMessage, sendAutomatically, useToken, permanentToken, mode 
--- Migration recorded for Prisma history synchronization 
-SELECT 1; 
+ALTER TABLE "WhatsappConfig" ADD COLUMN IF NOT EXISTS "businessName" TEXT; 
+ALTER TABLE "WhatsappConfig" ADD COLUMN IF NOT EXISTS "orderMessage" TEXT; 
+ALTER TABLE "WhatsappConfig" ADD COLUMN IF NOT EXISTS "sendAutomatically" BOOLEAN DEFAULT true; 
+ALTER TABLE "WhatsappConfig" ADD COLUMN IF NOT EXISTS "useToken" BOOLEAN DEFAULT false; 
+ALTER TABLE "WhatsappConfig" ADD COLUMN IF NOT EXISTS "permanentToken" TEXT; 
+ALTER TABLE "WhatsappConfig" ADD COLUMN IF NOT EXISTS "mode" TEXT DEFAULT 'simple'; 
