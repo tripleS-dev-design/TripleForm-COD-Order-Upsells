@@ -1,44 +1,81 @@
-// app/routes/api.whatsapp-status.js (NOUVEAU)
+// app/routes/api.whatsapp-status.js
 import { json } from '@remix-run/node';
 import { authenticate } from '../shopify.server';
 import prisma from '../db.server';
-import whatsappAPI from '../utils/whatsapp.business.api.js';
 
 export async function loader({ request }) {
   try {
     const { session } = await authenticate.admin(request);
     const shopDomain = session.shop;
 
-    // 1. Vérifier la config dans votre base
-    const config = await prisma.whatsappConfig.findUnique({
+    // 1. Vérifier la config dans votre base - CORRIGEZ LE NOM DE TABLE
+    const config = await prisma.whatsAppConfig.findUnique({
       where: { shopDomain }
     });
 
-    // 2. Tester la connexion à l'API WhatsApp
-    // On peut tester en récupérant les infos du numéro
-    const testResult = await whatsappAPI.client.get(`/${process.env.WHATSAPP_PHONE_NUMBER_ID}`);
-    
+    // 2. Si pas de config, retourner null
+    if (!config) {
+      return json({
+        ok: true,
+        status: 'no_config',
+        shop: shopDomain,
+        config: null
+      });
+    }
+
+    // 3. Retourner TOUTE la configuration
     return json({
       ok: true,
-      status: 'connected',
+      status: 'loaded',
       shop: shopDomain,
-      apiStatus: 'active',
-      phoneNumberInfo: {
-        displayNumber: testResult.data.display_phone_number,
-        verifiedName: testResult.data.verified_name
-      },
-      config: config ? {
+      config: {
+        // TOUS les champs dont vous avez besoin dans l'interface
+        phoneNumber: config.phoneNumber,
+        businessName: config.businessName,
+        orderMessage: config.orderMessage,
+        sendAutomatically: config.sendAutomatically,
+        useToken: config.useToken,
+        permanentToken: config.permanentToken,
+        mode: config.mode,
+        autoConnect: config.autoConnect,
+        sessionTimeout: config.sessionTimeout,
         enabled: config.enabled,
-        autoConnect: config.autoConnect
-      } : null
+        buttonText: config.buttonText,
+        messageTemplate: config.messageTemplate,
+        sendDelay: config.sendDelay,
+        buttonPosition: config.buttonPosition,
+        buttonStyle: config.buttonStyle,
+        recoveryEnabled: config.recoveryEnabled,
+        recoveryMessage: config.recoveryMessage,
+        recoveryDelay: config.recoveryDelay,
+        recoveryDiscount: config.recoveryDiscount,
+        recoveryCode: config.recoveryCode,
+        enableAnalytics: config.enableAnalytics,
+        enableReadReceipts: config.enableReadReceipts,
+        enableTypingIndicator: config.enableTypingIndicator,
+        maxRetries: config.maxRetries,
+        retryInterval: config.retryInterval,
+        businessHoursOnly: config.businessHoursOnly,
+        businessHoursStart: config.businessHoursStart,
+        businessHoursEnd: config.businessHoursEnd,
+        enableMediaMessages: config.enableMediaMessages,
+        mediaUrl: config.mediaUrl,
+        enableButtons: config.enableButtons,
+        button1Text: config.button1Text,
+        button1Url: config.button1Url,
+        button2Text: config.button2Text,
+        button2Url: config.button2Url,
+        // Ajoutez tous les autres champs que vous utilisez
+      }
     });
     
   } catch (error) {
-    console.error('[WhatsApp Status Check]', error.response?.data || error.message);
+    console.error('[WhatsApp Status API Error]', error);
     return json({
       ok: false,
-      status: 'disconnected',
-      error: 'API WhatsApp non accessible'
+      status: 'error',
+      error: error.message,
+      shop: session?.shop || 'unknown'
     }, { status: 500 });
   }
 }
