@@ -4,79 +4,71 @@ import prisma from '../db.server';
 
 export async function loader({ request }) {
   try {
-    // 1. Essayez l'authentification
-    let session;
-    let shopDomain = 'unknown';
+    // 1. TOUJOURS essayer l'authentification Shopify d'abord
+    const { session } = await authenticate.admin(request);
+    const shopDomain = session.shop;
     
-    try {
-      const auth = await authenticate.admin(request);
-      session = auth.session;
-      if (session?.shop) {
-        shopDomain = session.shop;
-      }
-    } catch (authError) {
-      console.log('[DEBUG] Auth failed, using shop from param or config');
-      // Récupérez le shop depuis l'URL si possible
-      const url = new URL(request.url);
-      const shopParam = url.searchParams.get('shop');
-      if (shopParam) {
-        shopDomain = shopParam;
-      }
+    if (!shopDomain) {
+      return json({
+        ok: false,
+        error: 'Shop domain required',
+        connected: false,
+        config: null
+      }, { status: 400 });
     }
 
-    // 2. Si toujours unknown, utilisez une valeur par défaut
-    if (shopDomain === 'unknown') {
-      shopDomain = 'samifinal2.myshopify.com'; // Votre shop par défaut
-    }
-
-    // 3. Vérifiez Prisma
-    if (!prisma || !prisma.whatsappConfig) {
-      console.error('[ERROR] Prisma or whatsappConfig not available');
-      // Retournez quand même une réponse utilisable
+    // 2. Vérifier Prisma
+    if (!prisma || !prisma.whatsAppConfig) {
+      console.error(`[ERROR] Prisma not available for ${shopDomain}`);
       return json({
         ok: true,
-        status: 'no_prisma',
-        shop: shopDomain,
+        connected: false,
         config: null,
-        message: 'Database not available'
+        error: 'Database unavailable',
+        shop: shopDomain
       });
     }
 
-    // 4. Requête à la base
-    console.log('[DEBUG] Querying for shop:', shopDomain);
-    const config = await prisma.whatsappConfig.findUnique({
+    // 3. Récupérer la config WhatsApp
+    const config = await prisma.whatsAppConfig.findUnique({
       where: { shopDomain }
     });
 
-    console.log('[DEBUG] Config found:', !!config);
-    
-    // 5. Retournez TOUJOURS une réponse valide
+    // 4. Récupérer le statut de connexion WhatsApp
+    const whatsappStatus = await prisma.whatsappStatus.findUnique({
+      where: { shopDomain }
+    });
+
+    // 5. Déterminer si WhatsApp est connecté
+    const isConnected = !!(
+      whatsappStatus && 
+      whatsappStatus.status === 'connected' && 
+      whatsappStatus.phoneNumber
+    );
+
+    // 6. Retourner la réponse structurée
     return json({
       ok: true,
-      status: config ? 'loaded' : 'no_config',
-      shop: shopDomain,
+      connected: isConnected,
+      phoneNumber: whatsappStatus?.phoneNumber || config?.phoneNumber || '',
+      qrCode: whatsappStatus?.qrCode || '',
+      lastConnected: whatsappStatus?.connectedAt || null,
+      messagesSent: 0,
       config: config || null,
-      auth: session ? 'authenticated' : 'public_access'
+      whatsappStatus: whatsappStatus || null,
+      shop: shopDomain
     });
 
   } catch (error) {
-    console.error('[WhatsApp Status API - FINAL ERROR]', error.message);
+    console.error(`[WhatsApp Status API ERROR]`, error);
     
-    // MÊME EN ERREUR, retournez une réponse utilisable
+    // EN PRODUCTION: Ne pas exposer d'infos sensibles
     return json({
-      ok: true,  // Toujours true pour le frontend
-      status: 'error_fallback',
-      shop: 'samifinal2.myshopify.com',
-      config: {
-        phoneNumber: '+212725348634',
-        businessName: 'SAMIFINAL2',
-        orderMessage: '✅ Commande #{orderId} confirmée! Livraison dans 2-3 jours. Merci!',
-        sendAutomatically: true,
-        useToken: false,
-        permanentToken: '',
-        mode: 'simple'
-      },
-      error: 'Using fallback configuration'
-    });
+      ok: false,
+      connected: false,
+      error: 'Unable to load WhatsApp status',
+      config: null,
+      shop: null
+    }, { status: 500 });
   }
 }
