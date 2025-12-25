@@ -65,7 +65,10 @@ export async function action({ request }) {
           '--disable-backgrounding-occluded-windows',
           '--disable-renderer-backgrounding',
           '--memory-pressure-off',
-          '--js-flags="--max-old-space-size=256"'
+          '--js-flags="--max-old-space-size=256"',
+          '--disable-features=ProcessSingleton',  
+          '--user-data-dir=/tmp/chrome_profile_' + Date.now(), 
+          '--no-default-browser-check'
         ]
       },
       webVersionCache: {
