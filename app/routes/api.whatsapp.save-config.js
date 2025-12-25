@@ -1,7 +1,7 @@
 // app/routes/api.whatsapp.save-config.jsx
 import { json } from "@remix-run/node";
-import { authenticate } from "~/shopify.server";
-import { prisma } from "~/db.server";
+import { authenticate } from "../shopify.server";
+import { prisma } from "../db.server";
 
 export const action = async ({ request }) => {
   console.log("📦 WhatsApp Save Config - Action appelée");
