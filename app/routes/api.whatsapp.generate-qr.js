@@ -1,9 +1,9 @@
 // app/routes/api.whatsapp.generate-qr.js - VERSION CORRECTE
 import { json } from "@remix-run/node";
 import { authenticate } from "../shopify.server";
-import { Client, LocalAuth } from "whatsapp-web.js";
+import pkg from "whatsapp-web.js";
+const { Client, LocalAuth } = pkg;
 import QRCode from "qrcode";
-// Assurez-vous que prisma est bien configuré
 import prisma from "../db.server";
 
 // Stocke les clients actifs par boutique pour éviter les doublons
