@@ -10,6 +10,9 @@ import {
   RangeSlider,
   Modal,
   Icon,
+  Box,
+  InlineGrid,
+  Badge,
 } from "@shopify/polaris";
 import * as PI from "@shopify/polaris-icons";
 import React, {
@@ -110,6 +113,25 @@ const LAYOUT_CSS = `
   .tf-accordion__btn { width:100%; text-align:left; padding:10px 12px; background:#F8FAFC; color:#111827; border:none; cursor:pointer; font-weight:700; border-radius:10px; border-bottom:1px solid #E5E7EB; }
   .tf-accordion__body { padding:12px; background:#FFFFFF; }
 
+  /* Palettes de couleurs */
+  .tf-color-palettes { display:grid; grid-template-columns:repeat(auto-fill, minmax(140px, 1fr)); gap:12px; margin-top:12px; }
+  .tf-color-palette { border:1px solid #E5E7EB; border-radius:10px; overflow:hidden; cursor:pointer; transition:all 0.2s; }
+  .tf-color-palette:hover { transform:translateY(-2px); box-shadow:0 6px 16px rgba(0,0,0,0.1); }
+  .tf-color-palette.active { outline:2px solid #00A7A3; }
+  .tf-palette-colors { display:flex; height:36px; }
+  .tf-palette-info { padding:8px; background:#fff; font-size:11px; font-weight:600; }
+
+  /* Icônes pour les champs */
+  .tf-icon-selector { display:grid; grid-template-columns:repeat(auto-fill, minmax(44px, 1fr)); gap:8px; margin-top:8px; max-height:200px; overflow-y:auto; padding:8px; border:1px solid #E5E7EB; border-radius:8px; }
+  .tf-icon-option { width:44px; height:44px; display:flex; align-items:center; justify-content:center; border:2px solid #E5E7EB; border-radius:8px; cursor:pointer; background:#fff; transition:all 0.2s; }
+  .tf-icon-option:hover { border-color:#00A7A3; background:#f8fafc; }
+  .tf-icon-option.selected { border-color:#00A7A3; background:#ecfeff; }
+
+  /* Aperçu avec icônes */
+  .tf-field-with-icon { display:grid; grid-template-columns:auto 1fr; gap:10px; align-items:center; }
+  .tf-field-icon { width:20px; height:20px; display:flex; align-items:center; justify-content:center; color:#6B7280; }
+  .tf-btn-with-icon { display:flex; align-items:center; justify-content:center; gap:8px; }
+
   @media (max-width: 1200px) {
     .tf-editor { grid-template-columns: 300px 2.2fr 1.4fr; }
   }
@@ -128,8 +150,8 @@ function useInjectCss() {
   }, []);
 }
 
-/* ============================== Presets ============================== */
-const PRESETS = {
+/* ============================== Presets de design ============================== */
+const DESIGN_PRESETS = {
   SkyBlueUI: {
     bg: "#F0F9FF",
     text: "#0C4A6E",
@@ -202,7 +224,267 @@ const PRESETS = {
     cartTitleColor: "#E5F0FF",
     cartTextColor: "#E5F0FF",
   },
+  GreenNature: {
+    bg: "#F0FDF4",
+    text: "#065F46",
+    border: "#D1FAE5",
+    radius: 12,
+    padding: 16,
+    inputBg: "#FFFFFF",
+    inputBorder: "#A7F3D0",
+    placeholder: "#6EE7B7",
+    btnBg: "#10B981",
+    btnText: "#FFFFFF",
+    btnBorder: "#059669",
+    btnHeight: 46,
+    btnRadius: 12,
+    shadow: true,
+    glow: false,
+    glowPx: 18,
+    cartBg: "#FFFFFF",
+    cartBorder: "#D1FAE5",
+    cartRowBg: "#ECFDF5",
+    cartRowBorder: "#A7F3D0",
+    cartTitleColor: "#065F46",
+    cartTextColor: "#065F46",
+  },
+  SunsetOrange: {
+    bg: "#FFF7ED",
+    text: "#9A3412",
+    border: "#FDBA74",
+    radius: 12,
+    padding: 16,
+    inputBg: "#FFFFFF",
+    inputBorder: "#FDBA74",
+    placeholder: "#FB923C",
+    btnBg: "#F97316",
+    btnText: "#FFFFFF",
+    btnBorder: "#EA580C",
+    btnHeight: 46,
+    btnRadius: 12,
+    shadow: true,
+    glow: false,
+    glowPx: 18,
+    cartBg: "#FFFFFF",
+    cartBorder: "#FDBA74",
+    cartRowBg: "#FFEDD5",
+    cartRowBorder: "#FDBA74",
+    cartTitleColor: "#9A3412",
+    cartTextColor: "#9A3412",
+  },
+  PurpleElegant: {
+    bg: "#FAF5FF",
+    text: "#5B21B6",
+    border: "#E9D5FF",
+    radius: 16,
+    padding: 20,
+    inputBg: "#FFFFFF",
+    inputBorder: "#D8B4FE",
+    placeholder: "#C084FC",
+    btnBg: "#8B5CF6",
+    btnText: "#FFFFFF",
+    btnBorder: "#7C3AED",
+    btnHeight: 48,
+    btnRadius: 16,
+    shadow: true,
+    glow: true,
+    glowPx: 20,
+    cartBg: "#FFFFFF",
+    cartBorder: "#E9D5FF",
+    cartRowBg: "#F5F3FF",
+    cartRowBorder: "#DDD6FE",
+    cartTitleColor: "#5B21B6",
+    cartTextColor: "#5B21B6",
+  },
+  LuxuryGold: {
+    bg: "#FEFCE8",
+    text: "#854D0E",
+    border: "#FDE68A",
+    radius: 12,
+    padding: 18,
+    inputBg: "#FFFFFF",
+    inputBorder: "#FCD34D",
+    placeholder: "#FBBF24",
+    btnBg: "#D97706",
+    btnText: "#FFFFFF",
+    btnBorder: "#B45309",
+    btnHeight: 50,
+    btnRadius: 12,
+    shadow: true,
+    glow: false,
+    glowPx: 18,
+    cartBg: "#FFFFFF",
+    cartBorder: "#FDE68A",
+    cartRowBg: "#FEF3C7",
+    cartRowBorder: "#FCD34D",
+    cartTitleColor: "#854D0E",
+    cartTextColor: "#854D0E",
+  },
+  OceanDeep: {
+    bg: "#ECFEFF",
+    text: "#0E7490",
+    border: "#A5F3FC",
+    radius: 12,
+    padding: 16,
+    inputBg: "#FFFFFF",
+    inputBorder: "#67E8F9",
+    placeholder: "#22D3EE",
+    btnBg: "#0891B2",
+    btnText: "#FFFFFF",
+    btnBorder: "#0E7490",
+    btnHeight: 46,
+    btnRadius: 12,
+    shadow: true,
+    glow: false,
+    glowPx: 18,
+    cartBg: "#FFFFFF",
+    cartBorder: "#A5F3FC",
+    cartRowBg: "#CFFAFE",
+    cartRowBorder: "#67E8F9",
+    cartTitleColor: "#0E7490",
+    cartTextColor: "#0E7490",
+  },
+  MinimalGray: {
+    bg: "#F9FAFB",
+    text: "#374151",
+    border: "#D1D5DB",
+    radius: 8,
+    padding: 16,
+    inputBg: "#FFFFFF",
+    inputBorder: "#D1D5DB",
+    placeholder: "#9CA3AF",
+    btnBg: "#4B5563",
+    btnText: "#FFFFFF",
+    btnBorder: "#374151",
+    btnHeight: 44,
+    btnRadius: 8,
+    shadow: false,
+    glow: false,
+    glowPx: 0,
+    cartBg: "#FFFFFF",
+    cartBorder: "#D1D5DB",
+    cartRowBg: "#F9FAFB",
+    cartRowBorder: "#D1D5DB",
+    cartTitleColor: "#374151",
+    cartTextColor: "#374151",
+  },
 };
+
+/* ============================== Bibliothèque d'icônes ============================== */
+const ICON_LIBRARY = {
+  // Icônes pour les champs
+  name: [
+    { value: "ProfileIcon", label: "Profil", icon: PI.ProfileIcon },
+    { value: "PersonIcon", label: "Personne", icon: PI.PersonIcon },
+    { value: "UserIcon", label: "Utilisateur", icon: PI.UserIcon },
+    { value: "CustomersIcon", label: "Clients", icon: PI.CustomersIcon },
+  ],
+  phone: [
+    { value: "PhoneIcon", label: "Téléphone", icon: PI.PhoneIcon },
+    { value: "MobileIcon", label: "Mobile", icon: PI.MobileIcon },
+    { value: "CallIcon", label: "Appel", icon: PI.CallIcon },
+    { value: "ChatIcon", label: "Chat", icon: PI.ChatIcon },
+  ],
+  quantity: [
+    { value: "HashtagIcon", label: "Hashtag", icon: PI.HashtagIcon },
+    { value: "NumberIcon", label: "Nombre", icon: PI.NumberIcon },
+    { value: "CirclePlusIcon", label: "Plus", icon: PI.CirclePlusIcon },
+    { value: "CartIcon", label: "Panier", icon: PI.CartIcon },
+  ],
+  address: [
+    { value: "LocationIcon", label: "Localisation", icon: PI.LocationIcon },
+    { value: "PinIcon", label: "Épingle", icon: PI.PinIcon },
+    { value: "HomeIcon", label: "Maison", icon: PI.HomeIcon },
+    { value: "StoreIcon", label: "Magasin", icon: PI.StoreIcon },
+  ],
+  city: [
+    { value: "CityIcon", label: "Ville", icon: PI.CityIcon },
+    { value: "GlobeIcon", label: "Globe", icon: PI.GlobeIcon },
+    { value: "LocationIcon", label: "Localisation", icon: PI.LocationIcon },
+    { value: "MapIcon", label: "Carte", icon: PI.MapIcon },
+  ],
+  province: [
+    { value: "RegionIcon", label: "Région", icon: PI.RegionIcon },
+    { value: "GlobeIcon", label: "Globe", icon: PI.GlobeIcon },
+    { value: "MapIcon", label: "Carte", icon: PI.MapIcon },
+    { value: "LocationIcon", label: "Localisation", icon: PI.LocationIcon },
+  ],
+  notes: [
+    { value: "NoteIcon", label: "Note", icon: PI.NoteIcon },
+    { value: "ClipboardIcon", label: "Presse-papier", icon: PI.ClipboardIcon },
+    { value: "DocumentIcon", label: "Document", icon: PI.DocumentIcon },
+    { value: "TextIcon", label: "Texte", icon: PI.TextIcon },
+  ],
+  // Icônes pour les boutons
+  button: [
+    { value: "CartIcon", label: "Panier", icon: PI.CartIcon },
+    { value: "CheckoutIcon", label: "Checkout", icon: PI.CheckoutIcon },
+    { value: "BagIcon", label: "Sac", icon: PI.BagIcon },
+    { value: "TruckIcon", label: "Camion", icon: PI.TruckIcon },
+    { value: "CheckCircleIcon", label: "Coche", icon: PI.CheckCircleIcon },
+    { value: "PlayIcon", label: "Play", icon: PI.PlayIcon },
+    { value: "ArrowRightIcon", label: "Flèche droite", icon: PI.ArrowRightIcon },
+    { value: "SendIcon", label: "Envoyer", icon: PI.SendIcon },
+  ],
+};
+
+/* ============================== Palette de couleurs ============================== */
+const COLOR_PALETTES = [
+  {
+    id: "blue-gradient",
+    name: "Gradient Bleu",
+    colors: ["#0B3B82", "#7D0031", "#00A7A3", "#F0F9FF", "#0C4A6E"],
+    preset: "SkyBlueUI",
+  },
+  {
+    id: "clean-white",
+    name: "Blanc Propre",
+    colors: ["#FFFFFF", "#111827", "#E5E7EB", "#F9FAFB", "#374151"],
+    preset: "CleanWhite",
+  },
+  {
+    id: "dark-modern",
+    name: "Sombre Moderne",
+    colors: ["#0B1220", "#2563EB", "#1F2A44", "#101828", "#E5F0FF"],
+    preset: "BoldDark",
+  },
+  {
+    id: "green-nature",
+    name: "Nature Verte",
+    colors: ["#10B981", "#065F46", "#D1FAE5", "#ECFDF5", "#F0FDF4"],
+    preset: "GreenNature",
+  },
+  {
+    id: "sunset-orange",
+    name: "Orange Couchant",
+    colors: ["#F97316", "#9A3412", "#FDBA74", "#FFEDD5", "#FFF7ED"],
+    preset: "SunsetOrange",
+  },
+  {
+    id: "purple-elegant",
+    name: "Violet Élégant",
+    colors: ["#8B5CF6", "#5B21B6", "#E9D5FF", "#F5F3FF", "#FAF5FF"],
+    preset: "PurpleElegant",
+  },
+  {
+    id: "luxury-gold",
+    name: "Or Luxueux",
+    colors: ["#D97706", "#854D0E", "#FDE68A", "#FEF3C7", "#FEFCE8"],
+    preset: "LuxuryGold",
+  },
+  {
+    id: "ocean-deep",
+    name: "Océan Profond",
+    colors: ["#0891B2", "#0E7490", "#A5F3FC", "#CFFAFE", "#ECFEFF"],
+    preset: "OceanDeep",
+  },
+  {
+    id: "minimal-gray",
+    name: "Gris Minimal",
+    colors: ["#4B5563", "#374151", "#D1D5DB", "#F9FAFB", "#FFFFFF"],
+    preset: "MinimalGray",
+  },
+];
 
 /* ============================== Sanitizer ============================== */
 const REPLACERS = [
@@ -789,7 +1071,7 @@ function Section1FormsLayoutInner() {
 
   const [config, setConfig] = useState(() => ({
     meta: {
-      version: 1,
+      version: 2,
       preset: "CleanWhite",
       fieldsOrder: ["name", "phone", "quantity", "address", "city", "province", "notes"],
     },
@@ -799,9 +1081,10 @@ function Section1FormsLayoutInner() {
       subtitle: "Please enter your contact information",
       buttonText: "Order now",
       successText: "Thanks! We'll contact you",
+      buttonIcon: "CartIcon",
     },
     design: {
-      ...PRESETS.CleanWhite,
+      ...DESIGN_PRESETS.CleanWhite,
       direction: isRTL ? "rtl" : "ltr",
       fontSize: 14,
       titleAlign: isRTL ? "right" : "left",
@@ -818,6 +1101,7 @@ function Section1FormsLayoutInner() {
       glowPx: 18,
       stickyType: "none",
       stickyLabel: "Order now",
+      stickyIcon: "CartIcon",
       drawerDirection: "right",
       drawerSize: "md",
       overlayColor: "#020617",
@@ -833,6 +1117,7 @@ function Section1FormsLayoutInner() {
         type: "text",
         label: "Full name",
         ph: "Your full name",
+        icon: "ProfileIcon",
       },
       phone: {
         on: true,
@@ -841,6 +1126,7 @@ function Section1FormsLayoutInner() {
         label: "Phone (WhatsApp)",
         ph: "Phone number",
         prefix: "+212",
+        icon: "PhoneIcon",
       },
       quantity: {
         on: true,
@@ -850,6 +1136,7 @@ function Section1FormsLayoutInner() {
         ph: "1",
         min: 1,
         max: 10,
+        icon: "HashtagIcon",
       },
       province: {
         on: true,
@@ -857,6 +1144,7 @@ function Section1FormsLayoutInner() {
         type: "text",
         label: "Wilaya / Province",
         ph: "Select province",
+        icon: "RegionIcon",
       },
       city: {
         on: true,
@@ -864,6 +1152,7 @@ function Section1FormsLayoutInner() {
         type: "text",
         label: "City",
         ph: "Select city",
+        icon: "CityIcon",
       },
       address: {
         on: false,
@@ -871,6 +1160,7 @@ function Section1FormsLayoutInner() {
         type: "text",
         label: "Address",
         ph: "Full address",
+        icon: "LocationIcon",
       },
       notes: {
         on: false,
@@ -878,6 +1168,7 @@ function Section1FormsLayoutInner() {
         type: "textarea",
         label: "Notes",
         ph: "(optional)",
+        icon: "NoteIcon",
       },
     },
     cartTitles: {
@@ -1052,7 +1343,7 @@ function Section1FormsLayoutInner() {
   const inputBase = useMemo(
     () => ({
       width: "100%",
-      padding: "10px 12px",
+      padding: "10px 12px 10px 40px",
       borderRadius: config.design.btnRadius,
       border: `1px solid ${config.design.inputBorder}`,
       background: config.design.inputBg,
@@ -1076,6 +1367,11 @@ function Section1FormsLayoutInner() {
       letterSpacing: 0.2,
       boxShadow: computeShadow(eff, glowPx, glowCol, !!config.design.shadow),
       fontSize: baseFontSize,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: "8px",
+      cursor: "pointer",
     }),
     [config.design, eff, glowPx, glowCol, baseFontSize]
   );
@@ -1226,6 +1522,82 @@ function Section1FormsLayoutInner() {
   );
 }
 
+/* ============================== Composant pour les palettes de couleurs ============================== */
+function ColorPaletteSelector({ onSelect }) {
+  const { config, setDesign } = useForms();
+  
+  const applyPalette = (paletteId) => {
+    const palette = COLOR_PALETTES.find(p => p.id === paletteId);
+    if (palette && DESIGN_PRESETS[palette.preset]) {
+      setDesign(DESIGN_PRESETS[palette.preset]);
+    }
+  };
+
+  return (
+    <div className="tf-color-palettes">
+      {COLOR_PALETTES.map((palette) => (
+        <div
+          key={palette.id}
+          className={`tf-color-palette ${config.meta?.preset === palette.preset ? 'active' : ''}`}
+          onClick={() => {
+            applyPalette(palette.id);
+            if (onSelect) onSelect(palette.id);
+          }}
+        >
+          <div className="tf-palette-colors">
+            {palette.colors.map((color, idx) => (
+              <div
+                key={idx}
+                style={{
+                  flex: 1,
+                  background: color,
+                  height: '100%',
+                }}
+                title={color}
+              />
+            ))}
+          </div>
+          <div className="tf-palette-info">
+            {palette.name}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ============================== Sélecteur d'icônes ============================== */
+function IconSelector({ fieldKey, type = "field", onSelect, selectedIcon }) {
+  const { t } = useForms();
+  
+  const icons = type === "field" 
+    ? ICON_LIBRARY[fieldKey] || ICON_LIBRARY.name
+    : ICON_LIBRARY.button;
+  
+  return (
+    <div>
+      <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8 }}>
+        {t("section1.iconSelector.title")}
+      </div>
+      <div className="tf-icon-selector">
+        {icons.map((icon) => {
+          const IconComponent = icon.icon;
+          return (
+            <div
+              key={icon.value}
+              className={`tf-icon-option ${selectedIcon === icon.value ? 'selected' : ''}`}
+              onClick={() => onSelect(icon.value)}
+              title={icon.label}
+            >
+              <Icon source={IconComponent} />
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 /* ============================== Éditeur (rail | réglages | preview) ============================== */
 function OutletEditor() {
   const {
@@ -1283,7 +1655,8 @@ function OutletEditor() {
       label: t("section1.rail.appearanceSeparator"),
       separator: true,
     },
-    { key: "colors", label: t("section1.rail.colors"), icon: "WandIcon" },
+    { key: "presets", label: t("section1.rail.presets"), icon: "WandIcon" },
+    { key: "colors", label: t("section1.rail.colors"), icon: "ColorIcon" },
     { key: "options", label: t("section1.rail.options"), icon: "SettingsIcon" },
   ];
 
@@ -1364,6 +1737,11 @@ function OutletEditor() {
                       <button
                         className="tf-icon-btn"
                         onClick={() => toggleField(it.key)}
+                        style={{
+                          background: it.on ? "#10B981" : "#EF4444",
+                          color: "#FFFFFF",
+                          border: "none",
+                        }}
                       >
                         {it.on ? "ON" : "OFF"}
                       </button>
@@ -1468,11 +1846,35 @@ function OutletEditor() {
                   value={config.form.successText}
                   onChange={(v) => setForm({ successText: v })}
                 />
+                <div style={{ display: "grid", gap: 8 }}>
+                  <div style={{ fontSize: 13, fontWeight: 600 }}>
+                    {t("section1.buttons.buttonIcon")}
+                  </div>
+                  <IconSelector
+                    type="button"
+                    selectedIcon={config.form.buttonIcon}
+                    onSelect={(icon) => setForm({ buttonIcon: icon })}
+                  />
+                </div>
               </Grid2>
             </GroupCard>
           )}
 
-          {/* 4) Couleurs & layout */}
+          {/* 4) Presets de couleurs */}
+          {sel === "presets" && (
+            <GroupCard title={t("section1.group.presets.title")}>
+              <BlueSection title={t("section1.presets.available")} defaultOpen>
+                <div style={{ marginBottom: 16 }}>
+                  <p style={{ fontSize: 13, color: "#6B7280", marginBottom: 12 }}>
+                    {t("section1.presets.description")}
+                  </p>
+                  <ColorPaletteSelector />
+                </div>
+              </BlueSection>
+            </GroupCard>
+          )}
+
+          {/* 5) Couleurs & layout */}
           {sel === "colors" && (
             <GroupCard title={t("section1.group.colors.title")}>
               <BlueSection title={t("section1.colors.formSection")} defaultOpen>
@@ -1659,7 +2061,7 @@ function OutletEditor() {
             </GroupCard>
           )}
 
-          {/* 5) Options : effets, sticky, pays, consentements */}
+          {/* 6) Options : effets, sticky, pays, consentements */}
           {sel === "options" && (
             <GroupCard title={t("section1.group.options.title")}>
               <BlueSection title={t("section1.options.behavior")}>
@@ -1770,6 +2172,16 @@ function OutletEditor() {
                     value={config.behavior.stickyLabel || ""}
                     onChange={(v) => setBehav({ stickyLabel: v })}
                   />
+                  <div style={{ display: "grid", gap: 8 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600 }}>
+                      {t("section1.options.stickyIcon")}
+                    </div>
+                    <IconSelector
+                      type="button"
+                      selectedIcon={config.behavior.stickyIcon}
+                      onSelect={(icon) => setBehav({ stickyIcon: icon })}
+                    />
+                  </div>
                 </Grid3>
               </BlueSection>
 
@@ -1979,6 +2391,16 @@ function FieldEditor({ fieldKey }) {
           </>
         )}
       </Grid2>
+      <div style={{ marginTop: 16 }}>
+        <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8 }}>
+          {t("section1.fieldEditor.iconLabel")}
+        </div>
+        <IconSelector
+          fieldKey={fieldKey}
+          selectedIcon={st.icon}
+          onSelect={(icon) => setField(fieldKey, { icon })}
+        />
+      </div>
     </GroupCard>
   );
 }
@@ -2136,6 +2558,69 @@ function PreviewPanel() {
     setShippingNote(`${t("section1.preview.shippingTo")} ${city} - ${shippingData.note}`);
   };
 
+  const renderFieldWithIcon = (f, key) => {
+    if (!f?.on) return null;
+    
+    const IconComponent = f.icon ? PI[f.icon] : null;
+    const isTextarea = f.type === "textarea";
+    
+    return (
+      <div key={key} className="tf-field-with-icon">
+        {IconComponent && (
+          <div className="tf-field-icon">
+            <Icon source={IconComponent} />
+          </div>
+        )}
+        <label style={{ display: "grid", gap: 6, flex: 1 }}>
+          <span style={{ fontSize: 13, color: "#475569", textAlign: fieldAlign }}>
+            {sStr(f.label)}
+            {f.required ? " *" : ""}
+          </span>
+          {isTextarea ? (
+            <textarea
+              style={{
+                ...inputBase,
+                padding: "10px 12px",
+                minHeight: 80,
+              }}
+              placeholder={sStr(f.ph)}
+              rows={3}
+            />
+          ) : f.type === "tel" ? (
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: f.prefix ? "minmax(88px,130px) 1fr" : "1fr",
+                gap: 8,
+              }}
+            >
+              {f.prefix && (
+                <input
+                  style={{
+                    ...inputBase,
+                    textAlign: "center",
+                    padding: "10px 12px",
+                  }}
+                  value={f.prefix}
+                  readOnly
+                />
+              )}
+              <input type="tel" style={inputBase} placeholder={sStr(f.ph)} />
+            </div>
+          ) : (
+            <input
+              type={f.type === "number" ? "number" : "text"}
+              style={inputBase}
+              placeholder={sStr(f.ph)}
+              min={f.type === "number" && f.min != null ? f.min : undefined}
+              max={f.type === "number" && f.max != null ? f.max : undefined}
+            />
+          )}
+        </label>
+      </div>
+    );
+  };
+
   const renderCartBox = () => {
     const shippingDisplay = shippingPrice === null 
       ? (countryKey ? t("section1.preview.shippingToCalculate") : "Gratuit")
@@ -2183,65 +2668,88 @@ function PreviewPanel() {
   const renderProvinceField = (f) => {
     if (!f?.on) return null;
     
+    const IconComponent = f.icon ? PI[f.icon] : null;
+    
     return (
-      <label key="province" style={{ display: "grid", gap: 6, textAlign: fieldAlign }}>
-        <span style={{ fontSize: 13, color: "#475569" }}>
-          {sStr(f.label)}
-          {f.required ? " *" : ""}
-        </span>
-        <select
-          style={inputBase}
-          value={selectedProvinceKey}
-          onChange={(e) => {
-            const v = e.target.value;
-            setBehav({ provinceKey: v, cityKey: "" });
-          }}
-        >
-          <option value="">{f.ph || t("section1.preview.provincePlaceholder")}</option>
-          {provincesEntries.map(([key, p]) => (
-            <option key={key} value={key}>
-              {p.label}
-            </option>
-          ))}
-        </select>
-      </label>
+      <div key="province" className="tf-field-with-icon">
+        {IconComponent && (
+          <div className="tf-field-icon">
+            <Icon source={IconComponent} />
+          </div>
+        )}
+        <label style={{ display: "grid", gap: 6, flex: 1 }}>
+          <span style={{ fontSize: 13, color: "#475569", textAlign: fieldAlign }}>
+            {sStr(f.label)}
+            {f.required ? " *" : ""}
+          </span>
+          <select
+            style={{
+              ...inputBase,
+              padding: "10px 12px",
+              background: config.design.inputBg,
+            }}
+            value={selectedProvinceKey}
+            onChange={(e) => {
+              const v = e.target.value;
+              setBehav({ provinceKey: v, cityKey: "" });
+            }}
+          >
+            <option value="">{f.ph || t("section1.preview.provincePlaceholder")}</option>
+            {provincesEntries.map(([key, p]) => (
+              <option key={key} value={key}>
+                {p.label}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
     );
   };
 
   const renderCityField = (f) => {
     if (!f?.on) return null;
     
+    const IconComponent = f.icon ? PI[f.icon] : null;
+    
     return (
-      <label key="city" style={{ display: "grid", gap: 6, textAlign: fieldAlign }}>
-        <span style={{ fontSize: 13, color: "#475569" }}>
-          {sStr(f.label)}
-          {f.required ? " *" : ""}
-        </span>
-        <select
-          style={{
-            ...inputBase,
-            backgroundColor: selectedProvinceKey ? inputBase.background : "#F3F4F6",
-          }}
-          value={config.behavior.cityKey || ""}
-          onChange={(e) => {
-            const city = e.target.value;
-            setBehav({ cityKey: city });
-            handleCityChange(city);
-          }}
-          disabled={!selectedProvinceKey}
-        >
-          <option value="">
-            {!selectedProvinceKey
-              ? t("section1.preview.cityPlaceholderNoProvince")
-              : f.ph || t("section1.preview.cityPlaceholder")}
-          </option>
-          {cities.map((c) => (
-            <option key={c} value={c}>
-              {c}
+      <div key="city" className="tf-field-with-icon">
+        {IconComponent && (
+          <div className="tf-field-icon">
+            <Icon source={IconComponent} />
+          </div>
+        )}
+        <label style={{ display: "grid", gap: 6, flex: 1 }}>
+          <span style={{ fontSize: 13, color: "#475569", textAlign: fieldAlign }}>
+            {sStr(f.label)}
+            {f.required ? " *" : ""}
+          </span>
+          <select
+            style={{
+              ...inputBase,
+              padding: "10px 12px",
+              backgroundColor: selectedProvinceKey ? inputBase.background : "#F3F4F6",
+            }}
+            value={config.behavior.cityKey || ""}
+            onChange={(e) => {
+              const city = e.target.value;
+              setBehav({ cityKey: city });
+              handleCityChange(city);
+            }}
+            disabled={!selectedProvinceKey}
+          >
+            <option value="">
+              {!selectedProvinceKey
+                ? t("section1.preview.cityPlaceholderNoProvince")
+                : f.ph || t("section1.preview.cityPlaceholder")}
             </option>
-          ))}
-        </select>
-      </label>
+            {cities.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
     );
   };
 
@@ -2249,6 +2757,7 @@ function PreviewPanel() {
     const total = productPrice + (shippingPrice || 0);
     const orderLabel = sStr(config.uiTitles.orderNow || config.form?.buttonText || "Order now");
     const suffix = sStr(config.uiTitles.totalSuffix || "Total:");
+    const ButtonIcon = config.form.buttonIcon ? PI[config.form.buttonIcon] : null;
 
     return (
       <div style={cardCSS} dir={config.design.direction || "ltr"}>
@@ -2272,7 +2781,7 @@ function PreviewPanel() {
             if (!f?.on) return null;
             if (key === "province") return renderProvinceField(f);
             if (key === "city") return renderCityField(f);
-            return renderField(f, inputBase, key);
+            return renderFieldWithIcon(f, key);
           })}
 
           {config.behavior.requireGDPR && (
@@ -2302,64 +2811,12 @@ function PreviewPanel() {
             </label>
           )}
 
-          <button type="button" style={btnCSS}>
+          <button type="button" style={btnCSS} className="tf-btn-with-icon">
+            {ButtonIcon && <Icon source={ButtonIcon} />}
             {orderLabel} · {suffix} {total.toFixed(2)} {currency}
           </button>
         </div>
       </div>
-    );
-  };
-
-  const renderField = (f, inputBase, key) => {
-    if (!f?.on) return null;
-    const labelEl = (
-      <span
-        style={{
-          fontSize: 13,
-          color: "#475569",
-          textAlign: fieldAlign,
-          display: "block",
-        }}
-      >
-        {sStr(f.label)}
-        {f.required ? " *" : ""}
-      </span>
-    );
-    const common = { style: inputBase, placeholder: sStr(f.ph) };
-    return (
-      <label key={key} style={{ display: "grid", gap: 6 }}>
-        {labelEl}
-        {f.type === "textarea" ? (
-          <textarea {...common} rows={3} />
-        ) : f.type === "tel" ? (
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: f.prefix ? "minmax(88px,130px) 1fr" : "1fr",
-              gap: 8,
-            }}
-          >
-            {f.prefix && (
-              <input
-                style={{
-                  ...inputBase,
-                  textAlign: "center",
-                }}
-                value={f.prefix}
-                readOnly
-              />
-            )}
-            <input type="tel" {...common} />
-          </div>
-        ) : (
-          <input
-            type={f.type === "number" ? "number" : "text"}
-            {...common}
-            min={f.type === "number" && f.min != null ? f.min : undefined}
-            max={f.type === "number" && f.max != null ? f.max : undefined}
-          />
-        )}
-      </label>
     );
   };
 
@@ -2383,6 +2840,7 @@ function PreviewPanel() {
     const label = sStr(
       config.behavior?.stickyLabel || config.uiTitles?.orderNow || "Order now"
     );
+    const StickyIcon = config.behavior.stickyIcon ? PI[config.behavior.stickyIcon] : null;
 
     const miniBtnStyle = {
       ...btnCSS,
@@ -2412,7 +2870,8 @@ function PreviewPanel() {
           <span>
             {t("section1.preview.stickyBarLabel")} · {styleText}
           </span>
-          <button type="button" style={miniBtnStyle}>
+          <button type="button" style={miniBtnStyle} className="tf-btn-with-icon">
+            {StickyIcon && <Icon source={StickyIcon} />}
             {label}
           </button>
         </div>
@@ -2437,7 +2896,9 @@ function PreviewPanel() {
                 borderRadius: 999,
                 boxShadow: "0 8px 18px rgba(15,23,42,0.28)",
               }}
+              className="tf-btn-with-icon"
             >
+              {StickyIcon && <Icon source={StickyIcon} />}
               {label}
             </button>
             <div
