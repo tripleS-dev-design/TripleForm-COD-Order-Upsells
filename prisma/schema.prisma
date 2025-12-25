@@ -80,7 +80,7 @@ model WhatsappStatus {
   @@map("whatsapp_status")
 }
 
-model WhatsappConfig {
+model WhatsAppConfig {
   id                     String    @id @default(cuid())
   shopDomain             String    @unique
   

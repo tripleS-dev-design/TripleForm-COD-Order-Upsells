@@ -1001,29 +1001,24 @@ function SheetConfigSection({
   );
 }
 
-/* ====== NOUVELLE SECTION WHATSAPP SIMPLIFIÉE ====== */
+/* ====== SECTION WHATSAPP CORRIGÉE ====== */
 function SimpleWhatsAppConfig() {
   const { t } = useI18n();
   
   const [whatsappStatus, setWhatsappStatus] = useState({
     loading: true,
     connected: false,
-    phoneNumber: null,
+    phoneNumber: '',
     qrCode: null,
     lastConnected: null,
     messagesSent: 0
   });
 
   const [whatsappConfig, setWhatsappConfig] = useState({
-    // Pour petites boutiques (sans token)
     phoneNumber: '',
     businessName: '',
-    
-    // Messages simples
     orderMessage: "✅ Commande #{orderId} confirmée! Livraison dans 2-3 jours. Merci!",
     sendAutomatically: true,
-    
-    // Pour grandes boutiques (avec token)
     useToken: false,
     permanentToken: ''
   });
@@ -1032,37 +1027,67 @@ function SimpleWhatsAppConfig() {
   const [isSaving, setIsSaving] = useState(false);
   const [activeToast, setActiveToast] = useState(null);
 
-  // Charger le statut
-  useEffect(() => {
-    loadWhatsAppStatus();
-  }, []);
-
+  // Fonction corrigée pour charger le statut
   const loadWhatsAppStatus = async () => {
     setWhatsappStatus(prev => ({ ...prev, loading: true }));
     try {
       const res = await fetch("/api/whatsapp/status", { credentials: "include" });
       const data = await res.json();
       
+      console.log("WhatsApp API Response:", data); // Pour debug
+      
       if (data.ok) {
+        // CORRECTION PRINCIPALE ICI : Vérifie si config ET phoneNumber existent
+        const hasPhoneNumber = data.config && data.config.phoneNumber;
+        
         setWhatsappStatus({
           loading: false,
-          connected: data.connected,
-          phoneNumber: data.phoneNumber,
-          qrCode: data.qrCode,
-          lastConnected: data.lastConnected,
-          messagesSent: data.messagesSent || 0
+          connected: hasPhoneNumber, // ← CONNECTÉ si numéro présent
+          phoneNumber: data.config?.phoneNumber || '',
+          qrCode: data.qrCode || null,
+          lastConnected: data.config?.updatedAt || new Date().toISOString(),
+          messagesSent: data.config?.messagesSent || 0
         });
         
         if (data.config) {
-          setWhatsappConfig(prev => ({ ...prev, ...data.config }));
+          setWhatsappConfig(prev => ({ 
+            ...prev, 
+            ...data.config,
+            phoneNumber: data.config.phoneNumber || ''
+          }));
         }
+      } else {
+        // Si API retourne error
+        setWhatsappStatus({
+          loading: false,
+          connected: false,
+          phoneNumber: '',
+          qrCode: null,
+          lastConnected: null,
+          messagesSent: 0
+        });
       }
     } catch (error) {
       console.error("Error loading WhatsApp status:", error);
+      setWhatsappStatus({
+        loading: false,
+        connected: false,
+        phoneNumber: '',
+        qrCode: null,
+        lastConnected: null,
+        messagesSent: 0
+      });
     }
   };
 
-  // ✅ FONCTION CORRECTE POUR GÉNÉRER QR
+  // Charger le statut au montage et toutes les 5 secondes
+  useEffect(() => {
+    loadWhatsAppStatus();
+    
+    const interval = setInterval(loadWhatsAppStatus, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
   const generateQRCode = async () => {
     setIsGeneratingQR(true);
     try {
@@ -1071,7 +1096,6 @@ function SimpleWhatsAppConfig() {
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({
-          // Envoie la config si besoin
           phoneNumber: whatsappConfig.phoneNumber,
           useToken: whatsappConfig.useToken
         }),
@@ -1113,6 +1137,8 @@ function SimpleWhatsAppConfig() {
       
       if (data.ok) {
         showToast(t("whatsapp.configSaved"), 'success');
+        // Recharger le statut après sauvegarde
+        loadWhatsAppStatus();
       }
     } catch (error) {
       console.error("Error saving WhatsApp config:", error);
@@ -1131,12 +1157,14 @@ function SimpleWhatsAppConfig() {
         });
         
         if (res.ok) {
-          setWhatsappStatus(prev => ({ 
-            ...prev, 
-            connected: false, 
+          setWhatsappStatus({
+            loading: false,
+            connected: false,
+            phoneNumber: '',
             qrCode: null,
-            phoneNumber: null 
-          }));
+            lastConnected: null,
+            messagesSent: 0
+          });
           showToast(t("whatsapp.disconnected"), 'success');
         }
       } catch (error) {
@@ -1206,6 +1234,7 @@ function SimpleWhatsAppConfig() {
             </div>
           </InlineStack>
           
+          {/* Statut corrigé */}
           <div style={{
             display: 'inline-flex',
             alignItems: 'center',
@@ -1219,10 +1248,15 @@ function SimpleWhatsAppConfig() {
             border: '1px solid rgba(255, 255, 255, 0.2)',
             color: 'white'
           }}>
-            {whatsappStatus.connected ? (
+            {whatsappStatus.loading ? (
+              <>
+                <Spinner size="small" accessibilityLabel="Chargement" />
+                <span>Chargement...</span>
+              </>
+            ) : whatsappStatus.connected ? (
               <>
                 <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#22C55E' }} />
-                <span>Connecté à {whatsappStatus.phoneNumber}</span>
+                <span>Connecté à {whatsappStatus.phoneNumber || whatsappConfig.phoneNumber}</span>
               </>
             ) : (
               <>
@@ -1463,7 +1497,7 @@ function SimpleWhatsAppConfig() {
         </BlockStack>
       </Card>
 
-      {/* QR Code Section */}
+      {/* QR Code Section - Afficher seulement si non connecté */}
       {!whatsappStatus.connected && (
         <Card marginBlockStart="400">
           <BlockStack gap="400">
@@ -1544,7 +1578,6 @@ function SimpleWhatsAppConfig() {
                   </div>
                   
                   <InlineStack gap="200" align="center">
-                    {/* ✅ CORRIGÉ : Bouton avec generateQRCode défini */}
                     <Button
                       variant="primary"
                       onClick={generateQRCode}
@@ -1573,16 +1606,11 @@ function SimpleWhatsAppConfig() {
         </Card>
       )}
 
-      {/* Statut connecté */}
+      {/* Statut connecté - Afficher seulement si connecté */}
       {whatsappStatus.connected && (
         <Card marginBlockStart="400">
           <BlockStack gap="300">
-            <div style={{
-              background: 'linear-gradient(135deg, #DCFCE7, #BBF7D0)',
-              border: '2px solid #22C55E',
-              borderRadius: '16px',
-              padding: '24px'
-            }}>
+            <div className="whatsapp-connection-success">
               <InlineStack align="space-between" blockAlign="center">
                 <InlineStack gap="200" blockAlign="center">
                   <div style={{ 
@@ -1604,11 +1632,17 @@ function SimpleWhatsAppConfig() {
                       WhatsApp connecté
                     </Text>
                     <Text as="p" variant="bodyLg" fontWeight="bold">
-                      {whatsappStatus.phoneNumber}
+                      {whatsappStatus.phoneNumber || whatsappConfig.phoneNumber}
                     </Text>
                     {whatsappStatus.lastConnected && (
                       <Text as="p" tone="subdued" variant="bodySm">
-                        Dernière connexion : {new Date(whatsappStatus.lastConnected).toLocaleString()}
+                        Dernière connexion : {new Date(whatsappStatus.lastConnected).toLocaleDateString('fr-FR', {
+                          day: '2-digit',
+                          month: '2-digit',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
                       </Text>
                     )}
                   </div>
@@ -1623,6 +1657,26 @@ function SimpleWhatsAppConfig() {
             <Text as="p" tone="subdued">
               Votre WhatsApp est maintenant connecté et prêt à envoyer des confirmations de commandes automatiquement.
             </Text>
+            
+            <InlineStack gap="200">
+              <Button
+                onClick={loadWhatsAppStatus}
+                className="whatsapp-outline-button"
+              >
+                <InlineStack gap="100" blockAlign="center">
+                  <span style={{ fontSize: '16px' }}>🔄</span>
+                  Rafraîchir le statut
+                </InlineStack>
+              </Button>
+              
+              <Button
+                tone="critical"
+                onClick={disconnectWhatsApp}
+                className="whatsapp-danger-button"
+              >
+                Déconnecter WhatsApp
+              </Button>
+            </InlineStack>
           </BlockStack>
         </Card>
       )}
