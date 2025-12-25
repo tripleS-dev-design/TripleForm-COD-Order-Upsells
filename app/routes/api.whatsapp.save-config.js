@@ -1,7 +1,7 @@
 // app/routes/api.whatsapp.save-config.jsx
 import { json } from "@remix-run/node";
 import { authenticate } from "../shopify.server";
-import prisma from "../db.server";
+import { prisma } from "../db.server"; 
 
 export const action = async ({ request }) => {
   console.log("📦 WhatsApp Save Config - Action appelée");
@@ -37,21 +37,20 @@ export const action = async ({ request }) => {
       
       // Mode et token
       useToken: config.useToken ?? false,
-      permanentToken: config.permanentToken || ''
+      permanentToken: config.permanentToken || '',
+      mode: mode || 'simple'
     };
 
     // 5. Sauvegarder dans la base de données
-    const savedConfig = await prisma.whatsappConfig.upsert({
-      where: { shopDomain: shop },
+    const savedConfig = await prisma.whatsAppConfig.upsert({  
+      where: { shopDomain: shop },  
       update: { 
         ...configData,
-        mode: mode || 'simple',
         updatedAt: new Date()
       },
       create: { 
-        shopDomain: shop,
-        ...configData,
-        mode: mode || 'simple'
+        shopDomain: shop,  
+        ...configData
       }
     });
 
@@ -73,29 +72,3 @@ export const action = async ({ request }) => {
     }, { status: 500 });
   }
 };
-
-// Fonction loader pour les requêtes GET (optionnelle)
-export async function loader({ request }) {
-  try {
-    const { session } = await authenticate.admin(request);
-    const shop = session.shop;
-    
-    // Charger la configuration existante
-    const existingConfig = await prisma.whatsappConfig.findUnique({
-      where: { shopDomain: shop }
-    });
-
-    return json({ 
-      ok: true, 
-      config: existingConfig || {},
-      shop: shop 
-    });
-    
-  } catch (error) {
-    console.error("❌ Erreur lors du chargement de la config WhatsApp:", error);
-    return json({ 
-      ok: false, 
-      error: "Impossible de charger la configuration" 
-    }, { status: 500 });
-  }
-}
