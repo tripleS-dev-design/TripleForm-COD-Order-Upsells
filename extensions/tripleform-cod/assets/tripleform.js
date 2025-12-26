@@ -933,25 +933,21 @@ window.TripleformCOD = (function () {
         return {
           maxWidth: "95vw",
           maxHeight: "85vh",
-          cardMaxHeight: "calc(85vh - 40px)",
         };
       case "lg":
         return {
           maxWidth: "95vw",
           maxHeight: "92vh",
-          cardMaxHeight: "calc(92vh - 40px)",
         };
       case "full":
         return {
           maxWidth: "100%",
           maxHeight: "100vh",
-          cardMaxHeight: "calc(100vh - 40px)",
         };
       default:
         return {
           maxWidth: "95vw",
           maxHeight: "90vh",
-          cardMaxHeight: "calc(90vh - 40px)",
         };
     }
   }
@@ -962,22 +958,18 @@ window.TripleformCOD = (function () {
       case "sm":
         return {
           sideWidth: "min(380px, 95vw)",
-          edgeHeight: "min(500px, 90vh)",
         };
       case "lg":
         return {
           sideWidth: "min(500px, 95vw)",
-          edgeHeight: "min(700px, 95vh)",
         };
       case "full":
         return {
           sideWidth: "100%",
-          edgeHeight: "100%",
         };
       default:
         return {
           sideWidth: "min(450px, 95vw)",
-          edgeHeight: "min(600px, 92vh)",
         };
     }
   }
@@ -1473,8 +1465,27 @@ window.TripleformCOD = (function () {
       max-width:100%;
       box-sizing:border-box;
     `;
+    
+    const inputHeight = `${+d.btnHeight || 46}px`;
     const inputStyle = `
-      width:100%; padding:10px 12px 10px 40px;
+      width:100%; 
+      height:${inputHeight};
+      padding:0 12px;
+      border-radius:${+d.btnRadius || 10}px;
+      border:1px solid ${css(d.inputBorder)};
+      background:${css(d.inputBg)};
+      color:${css(d.text)};
+      outline:none;
+      text-align:${fieldAlign};
+      font-size:${inputFontSize}px;
+      box-sizing:border-box;
+      line-height:normal;
+    `;
+    
+    const selectStyle = `
+      width:100%;
+      height:${inputHeight};
+      padding:0 12px;
       border-radius:${+d.btnRadius || 10}px;
       border:1px solid ${css(d.inputBorder)};
       background:${css(d.inputBg)};
@@ -1484,9 +1495,25 @@ window.TripleformCOD = (function () {
       font-size:${inputFontSize}px;
       box-sizing:border-box;
     `;
+    
+    const textareaStyle = `
+      width:100%; 
+      padding:12px;
+      border-radius:${+d.btnRadius || 10}px;
+      border:1px solid ${css(d.inputBorder)};
+      background:${css(d.inputBg)};
+      color:${css(d.text)};
+      outline:none;
+      text-align:${fieldAlign};
+      font-size:${inputFontSize}px;
+      box-sizing:border-box;
+      min-height:100px;
+      resize:vertical;
+    `;
+    
     const btnStyle = `
       width:100%;
-      height:${+d.btnHeight || 46}px;
+      height:${inputHeight};
       border-radius:${+d.btnRadius || 10}px;
       border:1px solid ${css(d.btnBorder)};
       color:${css(d.btnText)};
@@ -1502,6 +1529,7 @@ window.TripleformCOD = (function () {
       cursor:pointer;
       box-sizing:border-box;
     `;
+    
     const cartBoxStyle = `
       background:${css(d.cartBg)};
       border:1px solid ${css(d.cartBorder)};
@@ -1512,6 +1540,7 @@ window.TripleformCOD = (function () {
       direction:${textDir};
       box-sizing:border-box;
     `;
+    
     const cartTitleStyle = `
       font-weight:700;
       margin-bottom:10px;
@@ -1522,6 +1551,7 @@ window.TripleformCOD = (function () {
       align-items:center;
       gap:8px;
     `;
+    
     const rowStyle = `
       display:grid; grid-template-columns:1fr auto;
       gap:8px; align-items:center;
@@ -1566,114 +1596,88 @@ window.TripleformCOD = (function () {
       const ph = field.ph || "";
       const requiredAttr = field.required ? " required" : "";
 
+      // Style commun pour le conteneur de champ
+      const fieldContainerStyle = `
+        display:grid;
+        grid-template-columns:auto 1fr;
+        gap:10px;
+        align-items:center;
+        margin-bottom:12px;
+      `;
+
+      const labelStyle = `
+        display:block;
+        font-size:${labelFontSize};
+        color:#475569;
+        text-align:${fieldAlign};
+        margin-bottom:4px;
+        font-weight:500;
+      `;
+
       if (key === "province") {
         return `
-          <div style="display:grid; grid-template-columns:auto 1fr; gap:10px; align-items:center;">
-            ${iconHtml}
-            <label style="display:grid; gap:6px; flex:1;">
-              <span style="font-size:${labelFontSize}; color:#475569; text-align:${fieldAlign};">${css(label)}</span>
-              <select data-tf-role="province" data-tf-field="${key}" style="
-                width:100%; padding:10px 12px;
-                border-radius:${+d.btnRadius || 10}px;
-                border:1px solid ${css(d.inputBorder)};
-                background:${css(d.inputBg)};
-                color:${css(d.text)};
-                outline:none;
-                text-align:${fieldAlign};
-                font-size:${inputFontSize}px;
-                box-sizing:border-box;
-              " ${requiredAttr}>
+          <div style="${fieldContainerStyle}">
+            <div style="height:${inputHeight}; display:flex; align-items:center; justify-content:center;">
+              ${iconHtml}
+            </div>
+            <div style="flex:1;">
+              <label style="${labelStyle}">${css(label)}</label>
+              <select data-tf-role="province" data-tf-field="${key}" style="${selectStyle}" ${requiredAttr}>
                 <option value="">${css(ph || "Wilaya / Province")}</option>
               </select>
-            </label>
+            </div>
           </div>
         `;
       }
 
       if (key === "city") {
         return `
-          <div style="display:grid; grid-template-columns:auto 1fr; gap:10px; align-items:center;">
-            ${iconHtml}
-            <label style="display:grid; gap:6px; flex:1;">
-              <span style="font-size:${labelFontSize}; color:#475569; text-align:${fieldAlign};">${css(label)}</span>
-              <select data-tf-role="city" data-tf-field="${key}" style="
-                width:100%; padding:10px 12px;
-                border-radius:${+d.btnRadius || 10}px;
-                border:1px solid ${css(d.inputBorder)};
-                background:${css(d.inputBg)};
-                color:${css(d.text)};
-                outline:none;
-                text-align:${fieldAlign};
-                font-size:${inputFontSize}px;
-                box-sizing:border-box;
-              " ${requiredAttr}>
+          <div style="${fieldContainerStyle}">
+            <div style="height:${inputHeight}; display:flex; align-items:center; justify-content:center;">
+              ${iconHtml}
+            </div>
+            <div style="flex:1;">
+              <label style="${labelStyle}">${css(label)}</label>
+              <select data-tf-role="city" data-tf-field="${key}" style="${selectStyle}" ${requiredAttr}>
                 <option value="">${css(ph || "Select province first")}</option>
               </select>
-            </label>
+            </div>
           </div>
         `;
       }
 
       if (field.type === "textarea") {
         return `
-          <div style="display:grid; grid-template-columns:auto 1fr; gap:10px; align-items:start;">
-            ${iconHtml}
-            <label style="display:grid; gap:6px; flex:1;">
-              <span style="font-size:${labelFontSize}; color:#475569; text-align:${fieldAlign};">${css(label)}</span>
-              <textarea data-tf-field="${key}" style="
-                width:100%; padding:10px 12px;
-                border-radius:${+d.btnRadius || 10}px;
-                border:1px solid ${css(d.inputBorder)};
-                background:${css(d.inputBg)};
-                color:${css(d.text)};
-                outline:none;
-                text-align:${fieldAlign};
-                font-size:${inputFontSize}px;
-                box-sizing:border-box;
-                min-height:80px;
-                resize:vertical;
-              " rows="3" placeholder="${css(ph)}" ${requiredAttr}></textarea>
-            </label>
+          <div style="${fieldContainerStyle}">
+            <div style="height:100px; display:flex; align-items:flex-start; justify-content:center; padding-top:12px;">
+              ${iconHtml}
+            </div>
+            <div style="flex:1;">
+              <label style="${labelStyle}">${css(label)}</label>
+              <textarea data-tf-field="${key}" style="${textareaStyle}" rows="3" placeholder="${css(ph)}" ${requiredAttr}></textarea>
+            </div>
           </div>
         `;
       }
 
       if (field.type === "tel") {
         const prefix = field.prefix
-          ? `<input style="
-                width:100%; padding:10px 12px;
-                border-radius:${+d.btnRadius || 10}px;
-                border:1px solid ${css(d.inputBorder)};
-                background:${css(d.inputBg)};
-                color:${css(d.text)};
-                outline:none;
-                text-align:center;
-                font-size:${inputFontSize}px;
-                box-sizing:border-box;
-              " value="${css(field.prefix)}" readonly />`
+          ? `<input style="${inputStyle}; text-align:center;" value="${css(field.prefix)}" readonly />`
           : "";
         const grid = field.prefix ? "minmax(88px,130px) 1fr" : "1fr";
 
         return `
-          <div style="display:grid; grid-template-columns:auto 1fr; gap:10px; align-items:center;">
-            ${iconHtml}
-            <label style="display:grid; gap:6px; flex:1;">
-              <span style="font-size:${labelFontSize}; color:#475569; text-align:${fieldAlign};">${css(label)}</span>
+          <div style="${fieldContainerStyle}">
+            <div style="height:${inputHeight}; display:flex; align-items:center; justify-content:center;">
+              ${iconHtml}
+            </div>
+            <div style="flex:1;">
+              <label style="${labelStyle}">${css(label)}</label>
               <div style="display:grid; grid-template-columns:${grid}; gap:8px;">
                 ${prefix}
-                <input type="tel" data-tf-field="${key}" style="
-                  width:100%; padding:10px 12px;
-                  border-radius:${+d.btnRadius || 10}px;
-                  border:1px solid ${css(d.inputBorder)};
-                  background:${css(d.inputBg)};
-                  color:${css(d.text)};
-                  outline:none;
-                  text-align:${fieldAlign};
-                  font-size:${inputFontSize}px;
-                  box-sizing:border-box;
-                " placeholder="${css(ph)}" ${requiredAttr} />
+                <input type="tel" data-tf-field="${key}" style="${inputStyle}" placeholder="${css(ph)}" ${requiredAttr} />
               </div>
-            </label>
+            </div>
           </div>
         `;
       }
@@ -1681,12 +1685,14 @@ window.TripleformCOD = (function () {
       const typeAttr = field.type === "number" ? 'type="number"' : 'type="text"';
 
       return `
-        <div style="display:grid; grid-template-columns:auto 1fr; gap:10px; align-items:center;">
-          ${iconHtml}
-          <label style="display:grid; gap:6px; flex:1;">
-            <span style="font-size:${labelFontSize}; color:#475569; text-align:${fieldAlign};">${css(label)}</span>
+        <div style="${fieldContainerStyle}">
+          <div style="height:${inputHeight}; display:flex; align-items:center; justify-content:center;">
+            ${iconHtml}
+          </div>
+          <div style="flex:1;">
+            <label style="${labelStyle}">${css(label)}</label>
             <input ${typeAttr} data-tf-field="${key}" style="${inputStyle}" placeholder="${css(ph)}" ${requiredAttr} />
-          </label>
+          </div>
         </div>
       `;
     }
@@ -1735,7 +1741,7 @@ window.TripleformCOD = (function () {
       `;
     }
 
-    function formCardHTML(ctaKey) {
+    function formCardHTML(ctaKey, isPopupOrDrawer = false) {
       const orderLabel = css(ui.orderNow || cfg.form?.buttonText || "Order now");
       const buttonIconHtml = cfg.form?.buttonIcon ? getIconHtml(cfg.form.buttonIcon, "20px") : "";
       const suffix = css(ui.totalSuffix || "Total:");
@@ -1758,15 +1764,24 @@ window.TripleformCOD = (function () {
         />
       `;
 
+      // Pour popup/drawer, on ne met pas de carte autour du formulaire
+      const formContainerStyle = isPopupOrDrawer ? `
+        padding:0;
+        background:transparent;
+        border:none;
+        box-shadow:none;
+        border-radius:0;
+      ` : cardStyle;
+
       return `
-        <div style="${cardStyle}" data-tf-role="form-card">
+        <div style="${formContainerStyle}" data-tf-role="form-card">
           ${
             cfg.form?.title || cfg.form?.subtitle
               ? `
-            <div style="text-align:${titleAlign}; margin-bottom:10px;">
+            <div style="text-align:${titleAlign}; margin-bottom:20px;">
               ${
                 cfg.form?.title
-                  ? `<div style="font-weight:700; font-size:${labelFontSize};">${css(cfg.form.title)}</div>`
+                  ? `<div style="font-weight:700; font-size:${labelFontSize}; margin-bottom:4px;">${css(cfg.form.title)}</div>`
                   : ""
               }
               ${
@@ -1778,7 +1793,7 @@ window.TripleformCOD = (function () {
               : ""
           }
 
-          <div style="display:grid; gap:10px; position:relative;">
+          <div style="position:relative;">
             <!-- Champ honeypot anti-bot -->
             <input
               type="text"
@@ -1795,7 +1810,7 @@ window.TripleformCOD = (function () {
             ${
               beh?.requireGDPR
                 ? `
-              <label style="display:flex; gap:8px; align-items:center; font-size:${smallFontSize}; color:#374151;">
+              <label style="display:flex; gap:8px; align-items:center; font-size:${smallFontSize}; color:#374151; margin:12px 0;">
                 <input type="checkbox" /> ${css(beh.gdprLabel || "I accept the privacy policy")}
               </label>`
                 : ""
@@ -1804,7 +1819,7 @@ window.TripleformCOD = (function () {
             ${
               beh?.whatsappOptIn
                 ? `
-              <label style="display:flex; gap:8px; align-items:center; font-size:${smallFontSize}; color:#374151;">
+              <label style="display:flex; gap:8px; align-items:center; font-size:${smallFontSize}; color:#374151; margin:12px 0;">
                 <input type="checkbox" /> ${css(beh.whatsappLabel || "Receive confirmation on WhatsApp")}
               </label>`
                 : ""
@@ -1812,7 +1827,7 @@ window.TripleformCOD = (function () {
 
             <button
               type="button"
-              style="${btnStyle}"
+              style="${btnStyle}; margin-top:16px;"
               data-tf-cta="1"
               data-tf="${ctaKey}"
             >
@@ -1823,7 +1838,7 @@ window.TripleformCOD = (function () {
       `;
     }
 
-    const mainStart = `<div style="max-width:560px;margin:0 auto;display:grid;gap:12px;direction:${textDir};box-sizing:border-box;">`;
+    const mainStart = `<div style="max-width:560px;margin:0 auto;display:grid;gap:16px;direction:${textDir};box-sizing:border-box;">`;
     const mainEnd = "</div>";
 
     let html = "";
@@ -1834,7 +1849,7 @@ window.TripleformCOD = (function () {
         offersHtml +
         cartSummaryHTML() +
         '<div style="height:8px"></div>' +
-        formCardHTML("cta-inline") +
+        formCardHTML("cta-inline", false) +
         mainEnd;
     } else if (styleType === "popup") {
       html =
@@ -1879,41 +1894,36 @@ window.TripleformCOD = (function () {
             max-height:${popupCfg.maxHeight};
             box-sizing:border-box;
             position:relative;
+            background:${css(d.bg)};
+            border-radius:${+d.radius || 12}px;
+            box-shadow:${cardShadow};
+            overflow:auto;
           ">
-            <div style="text-align:right; margin-bottom:8px; position:absolute; top:-40px; right:0;">
+            <div style="text-align:right; margin-bottom:8px; position:absolute; top:12px; right:12px; z-index:10;">
               <button
                 type="button"
                 data-tf="close"
                 style="
-                  background:transparent;
-                  border:none;
-                  color:#fff;
-                  font-size:28px;
+                  background:${css(d.bg)};
+                  border:1px solid ${css(d.border)};
+                  color:${css(d.text)};
+                  font-size:20px;
                   cursor:pointer;
-                  width:40px;
-                  height:40px;
+                  width:32px;
+                  height:32px;
                   display:flex;
                   align-items:center;
                   justify-content:center;
                   border-radius:50%;
-                  background:rgba(0,0,0,0.3);
                 "
               >&times;</button>
             </div>
-            <div style="
-              background:${css(d.bg)};
-              border-radius:${+d.radius || 12}px;
-              box-shadow:${cardShadow};
-              padding:20px;
-              max-height:${popupCfg.cardMaxHeight};
-              overflow:auto;
-              box-sizing:border-box;
-            ">
-              <div style="max-width:560px;margin:0 auto;display:grid;gap:12px;direction:${textDir};">
+            <div style="padding:24px; box-sizing:border-box;">
+              <div style="max-width:560px;margin:0 auto;display:grid;gap:16px;direction:${textDir};">
                 ${offersHtml}
                 ${cartSummaryHTML()}
                 <div style="height:8px"></div>
-                ${formCardHTML("cta-popup")}
+                ${formCardHTML("cta-popup", true)}
               </div>
             </div>
           </div>
@@ -1969,38 +1979,38 @@ window.TripleformCOD = (function () {
               box-shadow:0 0 40px rgba(15,23,42,0.65);
               display:flex;
               flex-direction:column;
-              padding:20px;
+              padding:0;
               box-sizing:border-box;
               transform:translateX(100%);
               transition:transform 260ms ease;
               overflow:hidden;
             "
           >
-            <div style="text-align:right; margin-bottom:8px;">
-              <button
-                type="button"
-                data-tf="close"
-                style="
-                  background:transparent;
-                  border:none;
-                  color:#020617;
-                  font-size:28px;
-                  cursor:pointer;
-                  width:40px;
-                  height:40px;
-                  display:flex;
-                  align-items:center;
-                  justify-content:center;
-                  border-radius:50%;
-                "
-              >&times;</button>
-            </div>
-            <div style="overflow:auto; flex:1; padding-right:4px; box-sizing:border-box;">
-              <div style="max-width:560px;margin:0 auto;display:grid;gap:12px;direction:${textDir};">
+            <div style="padding:24px; overflow:auto; flex:1; box-sizing:border-box;">
+              <div style="text-align:right; margin-bottom:16px;">
+                <button
+                  type="button"
+                  data-tf="close"
+                  style="
+                    background:${css(d.bg)};
+                    border:1px solid ${css(d.border)};
+                    color:${css(d.text)};
+                    font-size:20px;
+                    cursor:pointer;
+                    width:32px;
+                    height:32px;
+                    display:flex;
+                    align-items:center;
+                    justify-content:center;
+                    border-radius:50%;
+                  "
+                >&times;</button>
+              </div>
+              <div style="max-width:560px;margin:0 auto;display:grid;gap:16px;direction:${textDir};">
                 ${offersHtml}
                 ${cartSummaryHTML()}
                 <div style="height:8px"></div>
-                ${formCardHTML("cta-drawer")}
+                ${formCardHTML("cta-drawer", true)}
               </div>
             </div>
           </div>
@@ -2553,7 +2563,6 @@ window.TripleformCOD = (function () {
       const closeBtns = root.querySelectorAll('[data-tf="close"]');
       const drawerCta = root.querySelector('[data-tf="cta-drawer"]');
       const origin = beh.drawerOrigin || beh.drawerDirection || "right";
-      const { edgeHeight } = drawerCfg;
 
       let hiddenTransform = "translateX(100%)";
       if (drawer) {
@@ -2566,7 +2575,8 @@ window.TripleformCOD = (function () {
           drawer.style.right = "0";
           drawer.style.bottom = "0";
           drawer.style.top = "auto";
-          drawer.style.height = edgeHeight;
+          drawer.style.height = "auto";
+          drawer.style.maxHeight = "80vh";
           drawer.style.width = "100%";
           hiddenTransform = "translateY(100%)";
         } else if (origin === "top") {
@@ -2574,7 +2584,8 @@ window.TripleformCOD = (function () {
           drawer.style.right = "0";
           drawer.style.top = "0";
           drawer.style.bottom = "auto";
-          drawer.style.height = edgeHeight;
+          drawer.style.height = "auto";
+          drawer.style.maxHeight = "80vh";
           drawer.style.width = "100%";
           hiddenTransform = "translateY(-100%)";
         } else {
