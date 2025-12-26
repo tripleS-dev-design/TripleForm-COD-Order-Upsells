@@ -25,8 +25,68 @@ import React, {
 import { useRouteLoaderData } from "@remix-run/react";
 import { I18nProvider, useI18n } from "../i18n/react";
 
-/* ============================== Fonction utilitaire pour les icônes ============================== */
-// Fonction pour obtenir une icône avec fallback sécurisé
+/* ============================== MAPPING D'ICÔNES (émojis) ============================== */
+// Correspondance entre les noms d'icônes Polaris et les émojis
+const ICON_EMOJI_MAPPING = {
+  // Cart icons
+  CartIcon: "🛒",
+  BagIcon: "🛍️",
+  ProductsIcon: "📦",
+  CheckoutIcon: "💳",
+  ReceiptIcon: "🧾",
+  NoteIcon: "📝",
+  
+  // Field icons
+  ProfileIcon: "👤",
+  PersonIcon: "👤",
+  UserIcon: "👤",
+  CustomersIcon: "👥",
+  PhoneIcon: "📱",
+  MobileIcon: "📱",
+  CallIcon: "📞",
+  ChatIcon: "💬",
+  HashtagIcon: "#️⃣",
+  NumberIcon: "🔢",
+  CirclePlusIcon: "➕",
+  LocationIcon: "📍",
+  PinIcon: "📍",
+  HomeIcon: "🏠",
+  StoreIcon: "🏪",
+  CityIcon: "🏙️",
+  GlobeIcon: "🌍",
+  MapIcon: "🗺️",
+  RegionIcon: "🗾",
+  ClipboardIcon: "📋",
+  DocumentIcon: "📄",
+  TextIcon: "📝",
+  
+  // Button icons
+  TruckIcon: "🚚",
+  CheckCircleIcon: "✅",
+  PlayIcon: "▶️",
+  ArrowRightIcon: "➡️",
+  SendIcon: "📤",
+  AppsIcon: "📱",
+  
+  // Autres icônes communes
+  ColorIcon: "🎨",
+  SettingsIcon: "⚙️",
+  TextBlockIcon: "📝",
+  CircleInformationIcon: "ℹ️"
+};
+
+// Fonction pour obtenir l'émoji correspondant à un nom d'icône
+function getIconEmoji(iconName) {
+  if (!iconName || typeof iconName !== 'string') return "📱";
+  
+  // Nettoyer le nom de l'icône
+  const cleanName = iconName.endsWith('Icon') ? iconName : `${iconName}Icon`;
+  
+  return ICON_EMOJI_MAPPING[cleanName] || ICON_EMOJI_MAPPING[iconName] || "📱";
+}
+
+/* ============================== Fonction utilitaire pour les icônes Polaris ============================== */
+// Fonction pour obtenir une icône Polaris avec fallback sécurisé (pour l'éditeur seulement)
 function getIconComponent(iconName, fallbackIcon = "AppsIcon") {
   if (!iconName || typeof iconName !== 'string') {
     return PI[fallbackIcon] || PI.AppsIcon;
@@ -144,20 +204,21 @@ const LAYOUT_CSS = `
   .tf-palette-colors { display:flex; height:36px; }
   .tf-palette-info { padding:8px; background:#fff; font-size:11px; font-weight:600; }
 
-  /* Icônes pour les champs */
+  /* Icônes pour les champs - MISE À JOUR pour émojis */
   .tf-icon-selector { display:grid; grid-template-columns:repeat(auto-fill, minmax(44px, 1fr)); gap:8px; margin-top:8px; max-height:200px; overflow-y:auto; padding:8px; border:1px solid #E5E7EB; border-radius:8px; }
-  .tf-icon-option { width:44px; height:44px; display:flex; align-items:center; justify-content:center; border:2px solid #E5E7EB; border-radius:8px; cursor:pointer; background:#fff; transition:all 0.2s; }
+  .tf-icon-option { width:44px; height:44px; display:flex; align-items:center; justify-content:center; border:2px solid #E5E7EB; border-radius:8px; cursor:pointer; background:#fff; transition:all 0.2s; font-size:20px; }
   .tf-icon-option:hover { border-color:#00A7A3; background:#f8fafc; }
   .tf-icon-option.selected { border-color:#00A7A3; background:#ecfeff; }
 
-  /* Aperçu avec icônes - CORRIGÉ pour centrage du texte */
+  /* Aperçu avec icônes - CORRIGÉ pour centrage du texte et émojis */
   .tf-field-with-icon { display:grid; grid-template-columns:auto 1fr; gap:10px; align-items:center; }
-  .tf-field-icon { width:20px; height:20px; display:flex; align-items:center; justify-content:center; color:#6B7280; }
+  .tf-field-icon { width:20px; height:20px; display:flex; align-items:center; justify-content:center; color:#6B7280; font-size:18px; }
   .tf-btn-with-icon { display:flex; align-items:center; justify-content:center; gap:8px; width:100%; text-align:center; }
+  .tf-btn-icon { font-size:18px; display:flex; align-items:center; }
 
   /* Cart avec icône */
   .tf-cart-with-icon { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
-  .tf-cart-icon { display:flex; align-items:center; justify-content:center; width:24px; height:24px; }
+  .tf-cart-icon { display:flex; align-items:center; justify-content:center; width:24px; height:24px; font-size:20px; }
 
   @media (max-width: 1200px) {
     .tf-editor { grid-template-columns: 300px 2.2fr 1.4fr; }
@@ -199,7 +260,7 @@ const DESIGN_PRESETS = {
     cartBg: "#FFFFFF",
     cartBorder: "#E2E8F0",
     cartRowBg: "#FFFFFF",
-    cartRowBorder: "#E2E8F0",
+    cartRowBorder: "#E2E7EB",
     cartTitleColor: "#0F172A",
     cartTextColor: "#0F172A",
   },
@@ -397,71 +458,79 @@ const DESIGN_PRESETS = {
   },
 };
 
-/* ============================== Bibliothèque d'icônes ============================== */
+/* ============================== Bibliothèque d'icônes (émojis) ============================== */
 const ICON_LIBRARY = {
   // Icônes pour le cart
   cartTitle: [
-    { value: "CartIcon", label: "Panier", icon: "CartIcon" },
-    { value: "BagIcon", label: "Sac", icon: "BagIcon" },
-    { value: "ProductsIcon", label: "Produits", icon: "ProductsIcon" },
-    { value: "CheckoutIcon", label: "Checkout", icon: "CheckoutIcon" },
-    { value: "ReceiptIcon", label: "Reçu", icon: "ReceiptIcon" },
-    { value: "NoteIcon", label: "Note", icon: "NoteIcon" },
+    { value: "CartIcon", label: "Panier", icon: "🛒" },
+    { value: "BagIcon", label: "Sac", icon: "🛍️" },
+    { value: "ProductsIcon", label: "Produits", icon: "📦" },
+    { value: "CheckoutIcon", label: "Checkout", icon: "💳" },
+    { value: "ReceiptIcon", label: "Reçu", icon: "🧾" },
+    { value: "NoteIcon", label: "Note", icon: "📝" },
   ],
   // Icônes pour les champs
   name: [
-    { value: "ProfileIcon", label: "Profil", icon: "ProfileIcon" },
-    { value: "PersonIcon", label: "Personne", icon: "PersonIcon" },
-    { value: "UserIcon", label: "Utilisateur", icon: "UserIcon" },
-    { value: "CustomersIcon", label: "Clients", icon: "CustomersIcon" },
+    { value: "ProfileIcon", label: "Profil", icon: "👤" },
+    { value: "PersonIcon", label: "Personne", icon: "👤" },
+    { value: "UserIcon", label: "Utilisateur", icon: "👤" },
+    { value: "CustomersIcon", label: "Clients", icon: "👥" },
   ],
   phone: [
-    { value: "PhoneIcon", label: "Téléphone", icon: "PhoneIcon" },
-    { value: "MobileIcon", label: "Mobile", icon: "MobileIcon" },
-    { value: "CallIcon", label: "Appel", icon: "CallIcon" },
-    { value: "ChatIcon", label: "Chat", icon: "ChatIcon" },
+    { value: "PhoneIcon", label: "Téléphone", icon: "📱" },
+    { value: "MobileIcon", label: "Mobile", icon: "📱" },
+    { value: "CallIcon", label: "Appel", icon: "📞" },
+    { value: "ChatIcon", label: "Chat", icon: "💬" },
   ],
   quantity: [
-    { value: "HashtagIcon", label: "Hashtag", icon: "HashtagIcon" },
-    { value: "NumberIcon", label: "Nombre", icon: "NumberIcon" },
-    { value: "CirclePlusIcon", label: "Plus", icon: "CirclePlusIcon" },
-    { value: "CartIcon", label: "Panier", icon: "CartIcon" },
+    { value: "HashtagIcon", label: "Hashtag", icon: "#️⃣" },
+    { value: "NumberIcon", label: "Nombre", icon: "🔢" },
+    { value: "CirclePlusIcon", label: "Plus", icon: "➕" },
+    { value: "CartIcon", label: "Panier", icon: "🛒" },
   ],
   address: [
-    { value: "LocationIcon", label: "Localisation", icon: "LocationIcon" },
-    { value: "PinIcon", label: "Épingle", icon: "PinIcon" },
-    { value: "HomeIcon", label: "Maison", icon: "HomeIcon" },
-    { value: "StoreIcon", label: "Magasin", icon: "StoreIcon" },
+    { value: "LocationIcon", label: "Localisation", icon: "📍" },
+    { value: "PinIcon", label: "Épingle", icon: "📍" },
+    { value: "HomeIcon", label: "Maison", icon: "🏠" },
+    { value: "StoreIcon", label: "Magasin", icon: "🏪" },
   ],
   city: [
-    { value: "CityIcon", label: "Ville", icon: "CityIcon" },
-    { value: "GlobeIcon", label: "Globe", icon: "GlobeIcon" },
-    { value: "LocationIcon", label: "Localisation", icon: "LocationIcon" },
-    { value: "MapIcon", label: "Carte", icon: "MapIcon" },
+    { value: "CityIcon", label: "Ville", icon: "🏙️" },
+    { value: "GlobeIcon", label: "Globe", icon: "🌍" },
+    { value: "LocationIcon", label: "Localisation", icon: "📍" },
+    { value: "MapIcon", label: "Carte", icon: "🗺️" },
   ],
   province: [
-    { value: "RegionIcon", label: "Région", icon: "RegionIcon" },
-    { value: "GlobeIcon", label: "Globe", icon: "GlobeIcon" },
-    { value: "MapIcon", label: "Carte", icon: "MapIcon" },
-    { value: "LocationIcon", label: "Localisation", icon: "LocationIcon" },
+    { value: "RegionIcon", label: "Région", icon: "🗾" },
+    { value: "GlobeIcon", label: "Globe", icon: "🌍" },
+    { value: "MapIcon", label: "Carte", icon: "🗺️" },
+    { value: "LocationIcon", label: "Localisation", icon: "📍" },
   ],
   notes: [
-    { value: "NoteIcon", label: "Note", icon: "NoteIcon" },
-    { value: "ClipboardIcon", label: "Presse-papier", icon: "ClipboardIcon" },
-    { value: "DocumentIcon", label: "Document", icon: "DocumentIcon" },
-    { value: "TextIcon", label: "Texte", icon: "TextIcon" },
+    { value: "NoteIcon", label: "Note", icon: "📝" },
+    { value: "ClipboardIcon", label: "Presse-papier", icon: "📋" },
+    { value: "DocumentIcon", label: "Document", icon: "📄" },
+    { value: "TextIcon", label: "Texte", icon: "📝" },
   ],
   // Icônes pour les boutons
   button: [
-    { value: "CartIcon", label: "Panier", icon: "CartIcon" },
-    { value: "CheckoutIcon", label: "Checkout", icon: "CheckoutIcon" },
-    { value: "BagIcon", label: "Sac", icon: "BagIcon" },
-    { value: "TruckIcon", label: "Camion", icon: "TruckIcon" },
-    { value: "CheckCircleIcon", label: "Coche", icon: "CheckCircleIcon" },
-    { value: "PlayIcon", label: "Play", icon: "PlayIcon" },
-    { value: "ArrowRightIcon", label: "Flèche droite", icon: "ArrowRightIcon" },
-    { value: "SendIcon", label: "Envoyer", icon: "SendIcon" },
+    { value: "CartIcon", label: "Panier", icon: "🛒" },
+    { value: "CheckoutIcon", label: "Checkout", icon: "💳" },
+    { value: "BagIcon", label: "Sac", icon: "🛍️" },
+    { value: "TruckIcon", label: "Camion", icon: "🚚" },
+    { value: "CheckCircleIcon", label: "Coche", icon: "✅" },
+    { value: "PlayIcon", label: "Play", icon: "▶️" },
+    { value: "ArrowRightIcon", label: "Flèche droite", icon: "➡️" },
+    { value: "SendIcon", label: "Envoyer", icon: "📤" },
   ],
+  // Icônes pour le rail
+  rail: {
+    cart: { icon: "📦", value: "ProductsIcon" },
+    titles: { icon: "📝", value: "TextBlockIcon" },
+    buttons: { icon: "ℹ️", value: "CircleInformationIcon" },
+    colors: { icon: "🎨", value: "ColorIcon" },
+    options: { icon: "⚙️", value: "SettingsIcon" }
+  }
 };
 
 /* ============================== Palette de couleurs ============================== */
@@ -1212,7 +1281,7 @@ function Section1FormsLayoutInner() {
       price: "Product price",
       shipping: "Shipping price",
       total: "Total",
-      cartIcon: "CartIcon", // Nouveau champ pour l'icône du cart
+      cartIcon: "CartIcon",
     },
     uiTitles: {
       applyCoupon: "Apply",
@@ -1603,7 +1672,7 @@ function ColorPaletteSelector({ onSelect }) {
   );
 }
 
-/* ============================== Sélecteur d'icônes ============================== */
+/* ============================== Sélecteur d'icônes (émojis) ============================== */
 function IconSelector({ fieldKey, type = "field", onSelect, selectedIcon }) {
   const { t } = useForms();
   
@@ -1619,19 +1688,16 @@ function IconSelector({ fieldKey, type = "field", onSelect, selectedIcon }) {
         {t("section1.iconSelector.title")}
       </div>
       <div className="tf-icon-selector">
-        {icons.map((icon) => {
-          const IconComponent = getIconComponent(icon.icon || icon.value);
-          return (
-            <div
-              key={icon.value}
-              className={`tf-icon-option ${selectedIcon === icon.value ? 'selected' : ''}`}
-              onClick={() => onSelect(icon.value)}
-              title={icon.label}
-            >
-              <Icon source={IconComponent} />
-            </div>
-          );
-        })}
+        {icons.map((icon) => (
+          <div
+            key={icon.value}
+            className={`tf-icon-option ${selectedIcon === icon.value ? 'selected' : ''}`}
+            onClick={() => onSelect(icon.value)}
+            title={icon.label}
+          >
+            {icon.icon}
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -1669,12 +1735,12 @@ function OutletEditor() {
   }, [order]);
 
   const baseItems = [
-    { key: "cart", label: t("section1.rail.cart"), icon: "ProductsIcon" },
-    { key: "titles", label: t("section1.rail.titles"), icon: "TextBlockIcon" },
+    { key: "cart", label: t("section1.rail.cart"), icon: ICON_LIBRARY.rail.cart.icon },
+    { key: "titles", label: t("section1.rail.titles"), icon: ICON_LIBRARY.rail.titles.icon },
     {
       key: "buttons",
       label: t("section1.rail.buttons"),
-      icon: "CircleInformationIcon",
+      icon: ICON_LIBRARY.rail.buttons.icon,
     },
     { key: "sep", label: t("section1.rail.fieldsSeparator"), separator: true },
   ];
@@ -1685,7 +1751,7 @@ function OutletEditor() {
     movable: true,
     toggle: true,
     on: !!config.fields[k]?.on,
-    icon: "AppsIcon",
+    icon: getIconEmoji(config.fields[k]?.icon || "AppsIcon"),
   }));
 
   const tailItems = [
@@ -1694,8 +1760,8 @@ function OutletEditor() {
       label: t("section1.rail.appearanceSeparator"),
       separator: true,
     },
-    { key: "colors", label: t("section1.rail.colors"), icon: "ColorIcon" },
-    { key: "options", label: t("section1.rail.options"), icon: "SettingsIcon" },
+    { key: "colors", label: t("section1.rail.colors"), icon: ICON_LIBRARY.rail.colors.icon },
+    { key: "options", label: t("section1.rail.options"), icon: ICON_LIBRARY.rail.options.icon },
   ];
 
   const items = [...baseItems, ...fieldItems, ...tailItems];
@@ -1764,7 +1830,7 @@ function OutletEditor() {
                   onDrop={() => onDrop(it.key)}
                 >
                   <div className="tf-grip">
-                    <Icon source={getIconComponent(it.icon, "AppsIcon")} />
+                    {it.icon}
                   </div>
                   <div>{it.label}</div>
                   <div
@@ -2555,13 +2621,13 @@ function PreviewPanel() {
   const renderFieldWithIcon = (f, key) => {
     if (!f?.on) return null;
     
-    const IconComponent = getIconComponent(f.icon, "AppsIcon");
+    const iconEmoji = getIconEmoji(f.icon);
     const isTextarea = f.type === "textarea";
     
     return (
       <div key={key} className="tf-field-with-icon">
         <div className="tf-field-icon">
-          <Icon source={IconComponent} />
+          {iconEmoji}
         </div>
         <label style={{ display: "grid", gap: 6, flex: 1 }}>
           <span style={{ fontSize: 13, color: "#475569", textAlign: fieldAlign }}>
@@ -2619,13 +2685,13 @@ function PreviewPanel() {
       : `${shippingPrice.toFixed(2)} ${currency}`;
     
     const total = productPrice + (shippingPrice || 0);
-    const CartIcon = getIconComponent(config.cartTitles.cartIcon, "CartIcon");
+    const cartIconEmoji = getIconEmoji(config.cartTitles.cartIcon);
 
     return (
       <div style={cartBoxCSS} dir={config.design.direction || "ltr"}>
         <div className="tf-cart-with-icon">
           <div className="tf-cart-icon">
-            <Icon source={CartIcon} />
+            {cartIconEmoji}
           </div>
           <div
             style={{
@@ -2664,12 +2730,12 @@ function PreviewPanel() {
   const renderProvinceField = (f) => {
     if (!f?.on) return null;
     
-    const IconComponent = getIconComponent(f.icon, "RegionIcon");
+    const iconEmoji = getIconEmoji(f.icon);
     
     return (
       <div key="province" className="tf-field-with-icon">
         <div className="tf-field-icon">
-          <Icon source={IconComponent} />
+          {iconEmoji}
         </div>
         <label style={{ display: "grid", gap: 6, flex: 1 }}>
           <span style={{ fontSize: 13, color: "#475569", textAlign: fieldAlign }}>
@@ -2703,12 +2769,12 @@ function PreviewPanel() {
   const renderCityField = (f) => {
     if (!f?.on) return null;
     
-    const IconComponent = getIconComponent(f.icon, "CityIcon");
+    const iconEmoji = getIconEmoji(f.icon);
     
     return (
       <div key="city" className="tf-field-with-icon">
         <div className="tf-field-icon">
-          <Icon source={IconComponent} />
+          {iconEmoji}
         </div>
         <label style={{ display: "grid", gap: 6, flex: 1 }}>
           <span style={{ fontSize: 13, color: "#475569", textAlign: fieldAlign }}>
@@ -2749,7 +2815,7 @@ function PreviewPanel() {
     const total = productPrice + (shippingPrice || 0);
     const orderLabel = sStr(config.uiTitles.orderNow || config.form?.buttonText || "Order now");
     const suffix = sStr(config.uiTitles.totalSuffix || "Total:");
-    const ButtonIcon = getIconComponent(config.form.buttonIcon, "CartIcon");
+    const buttonIconEmoji = getIconEmoji(config.form.buttonIcon);
 
     return (
       <div style={cardCSS} dir={config.design.direction || "ltr"}>
@@ -2804,7 +2870,7 @@ function PreviewPanel() {
           )}
 
           <button type="button" style={btnCSS} className="tf-btn-with-icon">
-            <Icon source={ButtonIcon} />
+            <span className="tf-btn-icon">{buttonIconEmoji}</span>
             <span style={{ flex: 1, textAlign: 'center' }}>
               {orderLabel} · {suffix} {total.toFixed(2)} {currency}
             </span>
@@ -2834,7 +2900,7 @@ function PreviewPanel() {
     const label = sStr(
       config.behavior?.stickyLabel || config.uiTitles?.orderNow || "Order now"
     );
-    const StickyIcon = getIconComponent(config.behavior.stickyIcon, "CartIcon");
+    const stickyIconEmoji = getIconEmoji(config.behavior.stickyIcon);
 
     const miniBtnStyle = {
       ...btnCSS,
@@ -2865,7 +2931,7 @@ function PreviewPanel() {
             {t("section1.preview.stickyBarLabel")} · {styleText}
           </span>
           <button type="button" style={miniBtnStyle} className="tf-btn-with-icon">
-            <Icon source={StickyIcon} />
+            <span className="tf-btn-icon">{stickyIconEmoji}</span>
             <span style={{ flex: 1, textAlign: 'center' }}>{label}</span>
           </button>
         </div>
@@ -2892,7 +2958,7 @@ function PreviewPanel() {
               }}
               className="tf-btn-with-icon"
             >
-              <Icon source={StickyIcon} />
+              <span className="tf-btn-icon">{stickyIconEmoji}</span>
               <span style={{ flex: 1, textAlign: 'center' }}>{label}</span>
             </button>
             <div
