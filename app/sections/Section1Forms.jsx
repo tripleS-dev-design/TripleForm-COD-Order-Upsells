@@ -25,6 +25,29 @@ import React, {
 import { useRouteLoaderData } from "@remix-run/react";
 import { I18nProvider, useI18n } from "../i18n/react";
 
+/* ============================== Fonction utilitaire pour les icônes ============================== */
+// Fonction pour obtenir une icône avec fallback sécurisé
+function getIconComponent(iconName, fallbackIcon = "AppsIcon") {
+  if (!iconName || typeof iconName !== 'string') {
+    return PI[fallbackIcon] || PI.AppsIcon;
+  }
+  
+  // Nettoyer le nom de l'icône (enlever "Icon" si déjà présent)
+  const cleanName = iconName.endsWith('Icon') ? iconName : `${iconName}Icon`;
+  
+  if (PI[cleanName]) {
+    return PI[cleanName];
+  }
+  
+  // Essayer avec le nom original
+  if (PI[iconName]) {
+    return PI[iconName];
+  }
+  
+  // Fallback
+  return PI[fallbackIcon] || PI.AppsIcon;
+}
+
 /* -------------------- deep link vers l'éditeur de thème -------------------- */
 function b64urlToB64(s) {
   return (
@@ -1597,7 +1620,7 @@ function IconSelector({ fieldKey, type = "field", onSelect, selectedIcon }) {
       </div>
       <div className="tf-icon-selector">
         {icons.map((icon) => {
-          const IconComponent = icon.icon && PI[icon.icon] ? PI[icon.icon] : null;
+          const IconComponent = getIconComponent(icon.icon || icon.value);
           return (
             <div
               key={icon.value}
@@ -1605,7 +1628,7 @@ function IconSelector({ fieldKey, type = "field", onSelect, selectedIcon }) {
               onClick={() => onSelect(icon.value)}
               title={icon.label}
             >
-              {IconComponent ? <Icon source={IconComponent} /> : icon.value}
+              <Icon source={IconComponent} />
             </div>
           );
         })}
@@ -1741,7 +1764,7 @@ function OutletEditor() {
                   onDrop={() => onDrop(it.key)}
                 >
                   <div className="tf-grip">
-                    <Icon source={PI[it.icon] || PI.AppsIcon} />
+                    <Icon source={getIconComponent(it.icon, "AppsIcon")} />
                   </div>
                   <div>{it.label}</div>
                   <div
@@ -2532,16 +2555,14 @@ function PreviewPanel() {
   const renderFieldWithIcon = (f, key) => {
     if (!f?.on) return null;
     
-    const IconComponent = f.icon && PI[f.icon] ? PI[f.icon] : null;
+    const IconComponent = getIconComponent(f.icon, "AppsIcon");
     const isTextarea = f.type === "textarea";
     
     return (
       <div key={key} className="tf-field-with-icon">
-        {IconComponent && (
-          <div className="tf-field-icon">
-            <Icon source={IconComponent} />
-          </div>
-        )}
+        <div className="tf-field-icon">
+          <Icon source={IconComponent} />
+        </div>
         <label style={{ display: "grid", gap: 6, flex: 1 }}>
           <span style={{ fontSize: 13, color: "#475569", textAlign: fieldAlign }}>
             {sStr(f.label)}
@@ -2598,16 +2619,14 @@ function PreviewPanel() {
       : `${shippingPrice.toFixed(2)} ${currency}`;
     
     const total = productPrice + (shippingPrice || 0);
-    const CartIcon = config.cartTitles.cartIcon && PI[config.cartTitles.cartIcon] ? PI[config.cartTitles.cartIcon] : null;
+    const CartIcon = getIconComponent(config.cartTitles.cartIcon, "CartIcon");
 
     return (
       <div style={cartBoxCSS} dir={config.design.direction || "ltr"}>
         <div className="tf-cart-with-icon">
-          {CartIcon && (
-            <div className="tf-cart-icon">
-              <Icon source={CartIcon} />
-            </div>
-          )}
+          <div className="tf-cart-icon">
+            <Icon source={CartIcon} />
+          </div>
           <div
             style={{
               fontWeight: 700,
@@ -2645,15 +2664,13 @@ function PreviewPanel() {
   const renderProvinceField = (f) => {
     if (!f?.on) return null;
     
-    const IconComponent = f.icon && PI[f.icon] ? PI[f.icon] : null;
+    const IconComponent = getIconComponent(f.icon, "RegionIcon");
     
     return (
       <div key="province" className="tf-field-with-icon">
-        {IconComponent && (
-          <div className="tf-field-icon">
-            <Icon source={IconComponent} />
-          </div>
-        )}
+        <div className="tf-field-icon">
+          <Icon source={IconComponent} />
+        </div>
         <label style={{ display: "grid", gap: 6, flex: 1 }}>
           <span style={{ fontSize: 13, color: "#475569", textAlign: fieldAlign }}>
             {sStr(f.label)}
@@ -2686,15 +2703,13 @@ function PreviewPanel() {
   const renderCityField = (f) => {
     if (!f?.on) return null;
     
-    const IconComponent = f.icon && PI[f.icon] ? PI[f.icon] : null;
+    const IconComponent = getIconComponent(f.icon, "CityIcon");
     
     return (
       <div key="city" className="tf-field-with-icon">
-        {IconComponent && (
-          <div className="tf-field-icon">
-            <Icon source={IconComponent} />
-          </div>
-        )}
+        <div className="tf-field-icon">
+          <Icon source={IconComponent} />
+        </div>
         <label style={{ display: "grid", gap: 6, flex: 1 }}>
           <span style={{ fontSize: 13, color: "#475569", textAlign: fieldAlign }}>
             {sStr(f.label)}
@@ -2734,7 +2749,7 @@ function PreviewPanel() {
     const total = productPrice + (shippingPrice || 0);
     const orderLabel = sStr(config.uiTitles.orderNow || config.form?.buttonText || "Order now");
     const suffix = sStr(config.uiTitles.totalSuffix || "Total:");
-    const ButtonIcon = config.form.buttonIcon && PI[config.form.buttonIcon] ? PI[config.form.buttonIcon] : null;
+    const ButtonIcon = getIconComponent(config.form.buttonIcon, "CartIcon");
 
     return (
       <div style={cardCSS} dir={config.design.direction || "ltr"}>
@@ -2789,7 +2804,7 @@ function PreviewPanel() {
           )}
 
           <button type="button" style={btnCSS} className="tf-btn-with-icon">
-            {ButtonIcon && <Icon source={ButtonIcon} />}
+            <Icon source={ButtonIcon} />
             <span style={{ flex: 1, textAlign: 'center' }}>
               {orderLabel} · {suffix} {total.toFixed(2)} {currency}
             </span>
@@ -2819,7 +2834,7 @@ function PreviewPanel() {
     const label = sStr(
       config.behavior?.stickyLabel || config.uiTitles?.orderNow || "Order now"
     );
-    const StickyIcon = config.behavior.stickyIcon && PI[config.behavior.stickyIcon] ? PI[config.behavior.stickyIcon] : null;
+    const StickyIcon = getIconComponent(config.behavior.stickyIcon, "CartIcon");
 
     const miniBtnStyle = {
       ...btnCSS,
@@ -2850,7 +2865,7 @@ function PreviewPanel() {
             {t("section1.preview.stickyBarLabel")} · {styleText}
           </span>
           <button type="button" style={miniBtnStyle} className="tf-btn-with-icon">
-            {StickyIcon && <Icon source={StickyIcon} />}
+            <Icon source={StickyIcon} />
             <span style={{ flex: 1, textAlign: 'center' }}>{label}</span>
           </button>
         </div>
@@ -2877,7 +2892,7 @@ function PreviewPanel() {
               }}
               className="tf-btn-with-icon"
             >
-              {StickyIcon && <Icon source={StickyIcon} />}
+              <Icon source={StickyIcon} />
               <span style={{ flex: 1, textAlign: 'center' }}>{label}</span>
             </button>
             <div
