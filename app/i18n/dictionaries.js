@@ -1393,7 +1393,81 @@ const EN = {
   "icon.label.CheckCircleIcon": "Check",
   "icon.label.PlayIcon": "Play",
   "icon.label.ArrowRightIcon": "Arrow right",
-  "icon.label.SendIcon": "Send"
+  "icon.label.SendIcon": "Send",
+  // Rail navigation
+"section2.rail.title": "Navigation",
+"section2.rail.offers": "Offers (conditions)",
+"section2.rail.upsells": "Gifts / Upsell",
+
+// Groups
+"section2.group.conditions.title": "Application conditions",
+"section2.group.display.title": "Display",
+
+// Global settings
+"section2.global.rounding.label": "Price rounding",
+
+// Display settings
+"section2.display.showOrderSummary": "Show order summary",
+"section2.display.showOffersSection": "Show offers section",
+
+// Offer settings (individual offers)
+"section2.offer.title": "Offer {{number}}",
+"section2.offer.titleField": "Offer title",
+"section2.offer.description": "Description",
+"section2.offer.enable": "Enable this offer",
+"section2.offer.type": "Discount type",
+"section2.offer.type.percent": "Percentage",
+"section2.offer.type.fixed": "Fixed amount",
+"section2.offer.percent": "Percentage",
+"section2.offer.fixedAmount": "Fixed amount",
+"section2.offer.product": "Product concerned",
+"section2.offer.selectProduct": "Select a product",
+"section2.offer.minQuantity": "Minimum quantity",
+"section2.offer.minSubtotal": "Minimum subtotal",
+"section2.offer.maxDiscount": "Maximum discount (0 = unlimited)",
+"section2.offer.requiresCode": "Requires a code",
+"section2.offer.code": "Promo code",
+"section2.offer.imageUrl": "Image URL",
+"section2.offer.icon": "Icon",
+"section2.offer.showInPreview": "Show in preview",
+
+// Upsell settings (individual)
+"section2.upsell.title": "Gift {{number}}",
+"section2.upsell.titleField": "Gift title",
+"section2.upsell.description": "Description",
+"section2.upsell.enable": "Enable this gift",
+"section2.upsell.product": "Gift product",
+"section2.upsell.triggerType": "Activation condition",
+"section2.upsell.trigger.subtotal": "Minimum subtotal",
+"section2.upsell.trigger.product": "Specific product",
+"section2.upsell.minSubtotal": "Minimum subtotal",
+"section2.upsell.productHandle": "Product handle",
+"section2.upsell.imageUrl": "Image URL",
+"section2.upsell.icon": "Icon",
+"section2.upsell.showInPreview": "Show in preview",
+
+// Gift details
+"section2.gift.originalPrice": "Original price",
+
+// Buttons
+"section2.button.addOffer": "Add offer",
+"section2.button.addUpsell": "Add gift",
+
+// Preview
+"section2.preview.active": "Active",
+"section2.preview.inactive": "Inactive",
+"section2.preview.offerStrip.offer": "OFFER",
+"section2.preview.offerStrip.gift": "GIFT",
+"section2.preview.defaultOfferTitle": "Special offer",
+"section2.preview.defaultUpsellTitle": "Surprise gift",
+"section2.preview.discountPercent": "Discount of {{percent}}%",
+"section2.preview.discountFixed": "Discount of {{amount}} {{currency}}",
+"section2.preview.giftDescription": "Free with your order",
+"section2.preview.orderSummary.title": "Order summary",
+"section2.preview.orderSummary.subtotal": "Subtotal",
+"section2.preview.orderSummary.shipping": "Shipping",
+"section2.preview.orderSummary.total": "Total"
+
 };
 
 /* ========================================================================
@@ -2771,7 +2845,80 @@ const FR = {
   "icon.label.CheckCircleIcon": "Coche",
   "icon.label.PlayIcon": "Play",
   "icon.label.ArrowRightIcon": "Flèche droite",
-  "icon.label.SendIcon": "Envoyer"
+  "icon.label.SendIcon": "Envoyer",
+  // Rail navigation
+"section2.rail.title": "Navigation",
+"section2.rail.offers": "Offres (conditions)",
+"section2.rail.upsells": "Cadeaux / Upsell",
+
+// Groups
+"section2.group.conditions.title": "Conditions d'application",
+"section2.group.display.title": "Affichage",
+
+// Global settings
+"section2.global.rounding.label": "Arrondi des prix",
+
+// Display settings
+"section2.display.showOrderSummary": "Afficher le récapitulatif",
+"section2.display.showOffersSection": "Afficher la section offres",
+
+// Offer settings (individual offers)
+"section2.offer.title": "Offre {{number}}",
+"section2.offer.titleField": "Titre de l'offre",
+"section2.offer.description": "Description",
+"section2.offer.enable": "Activer cette offre",
+"section2.offer.type": "Type de réduction",
+"section2.offer.type.percent": "Pourcentage",
+"section2.offer.type.fixed": "Montant fixe",
+"section2.offer.percent": "Pourcentage",
+"section2.offer.fixedAmount": "Montant fixe",
+"section2.offer.product": "Produit concerné",
+"section2.offer.selectProduct": "Sélectionner un produit",
+"section2.offer.minQuantity": "Quantité minimum",
+"section2.offer.minSubtotal": "Sous-total minimum",
+"section2.offer.maxDiscount": "Réduction maximum (0 = illimitée)",
+"section2.offer.requiresCode": "Nécessite un code",
+"section2.offer.code": "Code promo",
+"section2.offer.imageUrl": "URL de l'image",
+"section2.offer.icon": "Icône",
+"section2.offer.showInPreview": "Afficher dans l'aperçu",
+
+// Upsell settings (individual)
+"section2.upsell.title": "Cadeau {{number}}",
+"section2.upsell.titleField": "Titre du cadeau",
+"section2.upsell.description": "Description",
+"section2.upsell.enable": "Activer ce cadeau",
+"section2.upsell.product": "Produit cadeau",
+"section2.upsell.triggerType": "Condition d'activation",
+"section2.upsell.trigger.subtotal": "Sous-total minimum",
+"section2.upsell.trigger.product": "Produit spécifique",
+"section2.upsell.minSubtotal": "Sous-total minimum",
+"section2.upsell.productHandle": "Handle du produit",
+"section2.upsell.imageUrl": "URL de l'image",
+"section2.upsell.icon": "Icône",
+"section2.upsell.showInPreview": "Afficher dans l'aperçu",
+
+// Gift details
+"section2.gift.originalPrice": "Prix original",
+
+// Buttons
+"section2.button.addOffer": "Ajouter une offre",
+"section2.button.addUpsell": "Ajouter un cadeau",
+
+// Preview
+"section2.preview.active": "Actif",
+"section2.preview.inactive": "Inactif",
+"section2.preview.offerStrip.offer": "OFFRE",
+"section2.preview.offerStrip.gift": "CADEAU",
+"section2.preview.defaultOfferTitle": "Offre spéciale",
+"section2.preview.defaultUpsellTitle": "Cadeau surprise",
+"section2.preview.discountPercent": "Réduction de {{percent}}%",
+"section2.preview.discountFixed": "Réduction de {{amount}} {{currency}}",
+"section2.preview.giftDescription": "Offert avec votre commande",
+"section2.preview.orderSummary.title": "Récapitulatif de commande",
+"section2.preview.orderSummary.subtotal": "Sous-total",
+"section2.preview.orderSummary.shipping": "Livraison",
+"section2.preview.orderSummary.total": "Total"
 
 };
 
@@ -4158,7 +4305,80 @@ const ES = {
   "icon.label.CheckCircleIcon": "Verificar",
   "icon.label.PlayIcon": "Play",
   "icon.label.ArrowRightIcon": "Flecha derecha",
-  "icon.label.SendIcon": "Enviar"
+  "icon.label.SendIcon": "Enviar",
+  // Rail navigation
+"section2.rail.title": "Navegación",
+"section2.rail.offers": "Ofertas (condiciones)",
+"section2.rail.upsells": "Regalos / Upsell",
+
+// Groups
+"section2.group.conditions.title": "Condiciones de aplicación",
+"section2.group.display.title": "Visualización",
+
+// Global settings
+"section2.global.rounding.label": "Redondeo de precios",
+
+// Display settings
+"section2.display.showOrderSummary": "Mostrar resumen de pedido",
+"section2.display.showOffersSection": "Mostrar sección de ofertas",
+
+// Offer settings (individual offers)
+"section2.offer.title": "Oferta {{number}}",
+"section2.offer.titleField": "Título de la oferta",
+"section2.offer.description": "Descripción",
+"section2.offer.enable": "Activar esta oferta",
+"section2.offer.type": "Tipo de descuento",
+"section2.offer.type.percent": "Porcentaje",
+"section2.offer.type.fixed": "Monto fijo",
+"section2.offer.percent": "Porcentaje",
+"section2.offer.fixedAmount": "Monto fijo",
+"section2.offer.product": "Producto concernido",
+"section2.offer.selectProduct": "Seleccionar un producto",
+"section2.offer.minQuantity": "Cantidad mínima",
+"section2.offer.minSubtotal": "Subtotal mínimo",
+"section2.offer.maxDiscount": "Descuento máximo (0 = ilimitado)",
+"section2.offer.requiresCode": "Requiere un código",
+"section2.offer.code": "Código promocional",
+"section2.offer.imageUrl": "URL de la imagen",
+"section2.offer.icon": "Icono",
+"section2.offer.showInPreview": "Mostrar en vista previa",
+
+// Upsell settings (individual)
+"section2.upsell.title": "Regalo {{number}}",
+"section2.upsell.titleField": "Título del regalo",
+"section2.upsell.description": "Descripción",
+"section2.upsell.enable": "Activar este regalo",
+"section2.upsell.product": "Producto regalo",
+"section2.upsell.triggerType": "Condición de activación",
+"section2.upsell.trigger.subtotal": "Subtotal mínimo",
+"section2.upsell.trigger.product": "Producto específico",
+"section2.upsell.minSubtotal": "Subtotal mínimo",
+"section2.upsell.productHandle": "Handle del producto",
+"section2.upsell.imageUrl": "URL de la imagen",
+"section2.upsell.icon": "Icono",
+"section2.upsell.showInPreview": "Mostrar en vista previa",
+
+// Gift details
+"section2.gift.originalPrice": "Precio original",
+
+// Buttons
+"section2.button.addOffer": "Añadir oferta",
+"section2.button.addUpsell": "Añadir regalo",
+
+// Preview
+"section2.preview.active": "Activo",
+"section2.preview.inactive": "Inactivo",
+"section2.preview.offerStrip.offer": "OFERTA",
+"section2.preview.offerStrip.gift": "REGALO",
+"section2.preview.defaultOfferTitle": "Oferta especial",
+"section2.preview.defaultUpsellTitle": "Regalo sorpresa",
+"section2.preview.discountPercent": "Descuento del {{percent}}%",
+"section2.preview.discountFixed": "Descuento de {{amount}} {{currency}}",
+"section2.preview.giftDescription": "Gratis con tu pedido",
+"section2.preview.orderSummary.title": "Resumen del pedido",
+"section2.preview.orderSummary.subtotal": "Subtotal",
+"section2.preview.orderSummary.shipping": "Envío",
+"section2.preview.orderSummary.total": "Total"
 
 };
 
@@ -5543,7 +5763,80 @@ const AR = {
   "icon.label.CheckCircleIcon": "تحقق",
   "icon.label.PlayIcon": "تشغيل",
   "icon.label.ArrowRightIcon": "سهم يمين",
-  "icon.label.SendIcon": "إرسال"
+  "icon.label.SendIcon": "إرسال",
+  // Rail navigation
+"section2.rail.title": "التنقل",
+"section2.rail.offers": "العروض (الشروط)",
+"section2.rail.upsells": "الهدايا / البيع الإضافي",
+
+// Groups
+"section2.group.conditions.title": "شروط التطبيق",
+"section2.group.display.title": "العرض",
+
+// Global settings
+"section2.global.rounding.label": "تقريب الأسعار",
+
+// Display settings
+"section2.display.showOrderSummary": "عرض ملخص الطلب",
+"section2.display.showOffersSection": "عرض قسم العروض",
+
+// Offer settings (individual offers)
+"section2.offer.title": "العرض {{number}}",
+"section2.offer.titleField": "عنوان العرض",
+"section2.offer.description": "الوصف",
+"section2.offer.enable": "تفعيل هذا العرض",
+"section2.offer.type": "نوع الخصم",
+"section2.offer.type.percent": "نسبة مئوية",
+"section2.offer.type.fixed": "مبلغ ثابت",
+"section2.offer.percent": "النسبة المئوية",
+"section2.offer.fixedAmount": "المبلغ الثابت",
+"section2.offer.product": "المنتج المعني",
+"section2.offer.selectProduct": "اختر منتجًا",
+"section2.offer.minQuantity": "الحد الأدنى للكمية",
+"section2.offer.minSubtotal": "الحد الأدنى للمجموع الفرعي",
+"section2.offer.maxDiscount": "الحد الأقصى للخصم (0 = غير محدود)",
+"section2.offer.requiresCode": "يتطلب رمزًا",
+"section2.offer.code": "رمز الترويج",
+"section2.offer.imageUrl": "رابط الصورة",
+"section2.offer.icon": "الأيقونة",
+"section2.offer.showInPreview": "عرض في المعاينة",
+
+// Upsell settings (individual)
+"section2.upsell.title": "الهدية {{number}}",
+"section2.upsell.titleField": "عنوان الهدية",
+"section2.upsell.description": "الوصف",
+"section2.upsell.enable": "تفعيل هذه الهدية",
+"section2.upsell.product": "منتج الهدية",
+"section2.upsell.triggerType": "شرط التنشيط",
+"section2.upsell.trigger.subtotal": "الحد الأدنى للمجموع الفرعي",
+"section2.upsell.trigger.product": "منتج محدد",
+"section2.upsell.minSubtotal": "الحد الأدنى للمجموع الفرعي",
+"section2.upsell.productHandle": "معرف المنتج",
+"section2.upsell.imageUrl": "رابط الصورة",
+"section2.upsell.icon": "الأيقونة",
+"section2.upsell.showInPreview": "عرض في المعاينة",
+
+// Gift details
+"section2.gift.originalPrice": "السعر الأصلي",
+
+// Buttons
+"section2.button.addOffer": "إضافة عرض",
+"section2.button.addUpsell": "إضافة هدية",
+
+// Preview
+"section2.preview.active": "نشط",
+"section2.preview.inactive": "غير نشط",
+"section2.preview.offerStrip.offer": "عرض",
+"section2.preview.offerStrip.gift": "هدية",
+"section2.preview.defaultOfferTitle": "عرض خاص",
+"section2.preview.defaultUpsellTitle": "هدية مفاجئة",
+"section2.preview.discountPercent": "خصم {{percent}}%",
+"section2.preview.discountFixed": "خصم {{amount}} {{currency}}",
+"section2.preview.giftDescription": "مجاني مع طلبك",
+"section2.preview.orderSummary.title": "ملخص الطلب",
+"section2.preview.orderSummary.subtotal": "المجموع الفرعي",
+"section2.preview.orderSummary.shipping": "الشحن",
+"section2.preview.orderSummary.total": "المجموع"
 
 };
 
