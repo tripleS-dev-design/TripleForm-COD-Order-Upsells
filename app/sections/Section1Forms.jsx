@@ -127,10 +127,10 @@ const LAYOUT_CSS = `
   .tf-icon-option:hover { border-color:#00A7A3; background:#f8fafc; }
   .tf-icon-option.selected { border-color:#00A7A3; background:#ecfeff; }
 
-  /* Aperçu avec icônes */
+  /* Aperçu avec icônes - CORRIGÉ pour centrage du texte */
   .tf-field-with-icon { display:grid; grid-template-columns:auto 1fr; gap:10px; align-items:center; }
   .tf-field-icon { width:20px; height:20px; display:flex; align-items:center; justify-content:center; color:#6B7280; }
-  .tf-btn-with-icon { display:flex; align-items:center; justify-content:center; gap:8px; }
+  .tf-btn-with-icon { display:flex; align-items:center; justify-content:center; gap:8px; width:100%; text-align:center; }
 
   @media (max-width: 1200px) {
     .tf-editor { grid-template-columns: 300px 2.2fr 1.4fr; }
@@ -374,57 +374,57 @@ const DESIGN_PRESETS = {
 const ICON_LIBRARY = {
   // Icônes pour les champs
   name: [
-    { value: "ProfileIcon", label: "Profil", icon: PI.ProfileIcon },
-    { value: "PersonIcon", label: "Personne", icon: PI.PersonIcon },
-    { value: "UserIcon", label: "Utilisateur", icon: PI.UserIcon },
-    { value: "CustomersIcon", label: "Clients", icon: PI.CustomersIcon },
+    { value: "ProfileIcon", label: "Profil", icon: "ProfileIcon" },
+    { value: "PersonIcon", label: "Personne", icon: "PersonIcon" },
+    { value: "UserIcon", label: "Utilisateur", icon: "UserIcon" },
+    { value: "CustomersIcon", label: "Clients", icon: "CustomersIcon" },
   ],
   phone: [
-    { value: "PhoneIcon", label: "Téléphone", icon: PI.PhoneIcon },
-    { value: "MobileIcon", label: "Mobile", icon: PI.MobileIcon },
-    { value: "CallIcon", label: "Appel", icon: PI.CallIcon },
-    { value: "ChatIcon", label: "Chat", icon: PI.ChatIcon },
+    { value: "PhoneIcon", label: "Téléphone", icon: "PhoneIcon" },
+    { value: "MobileIcon", label: "Mobile", icon: "MobileIcon" },
+    { value: "CallIcon", label: "Appel", icon: "CallIcon" },
+    { value: "ChatIcon", label: "Chat", icon: "ChatIcon" },
   ],
   quantity: [
-    { value: "HashtagIcon", label: "Hashtag", icon: PI.HashtagIcon },
-    { value: "NumberIcon", label: "Nombre", icon: PI.NumberIcon },
-    { value: "CirclePlusIcon", label: "Plus", icon: PI.CirclePlusIcon },
-    { value: "CartIcon", label: "Panier", icon: PI.CartIcon },
+    { value: "HashtagIcon", label: "Hashtag", icon: "HashtagIcon" },
+    { value: "NumberIcon", label: "Nombre", icon: "NumberIcon" },
+    { value: "CirclePlusIcon", label: "Plus", icon: "CirclePlusIcon" },
+    { value: "CartIcon", label: "Panier", icon: "CartIcon" },
   ],
   address: [
-    { value: "LocationIcon", label: "Localisation", icon: PI.LocationIcon },
-    { value: "PinIcon", label: "Épingle", icon: PI.PinIcon },
-    { value: "HomeIcon", label: "Maison", icon: PI.HomeIcon },
-    { value: "StoreIcon", label: "Magasin", icon: PI.StoreIcon },
+    { value: "LocationIcon", label: "Localisation", icon: "LocationIcon" },
+    { value: "PinIcon", label: "Épingle", icon: "PinIcon" },
+    { value: "HomeIcon", label: "Maison", icon: "HomeIcon" },
+    { value: "StoreIcon", label: "Magasin", icon: "StoreIcon" },
   ],
   city: [
-    { value: "CityIcon", label: "Ville", icon: PI.CityIcon },
-    { value: "GlobeIcon", label: "Globe", icon: PI.GlobeIcon },
-    { value: "LocationIcon", label: "Localisation", icon: PI.LocationIcon },
-    { value: "MapIcon", label: "Carte", icon: PI.MapIcon },
+    { value: "CityIcon", label: "Ville", icon: "CityIcon" },
+    { value: "GlobeIcon", label: "Globe", icon: "GlobeIcon" },
+    { value: "LocationIcon", label: "Localisation", icon: "LocationIcon" },
+    { value: "MapIcon", label: "Carte", icon: "MapIcon" },
   ],
   province: [
-    { value: "RegionIcon", label: "Région", icon: PI.RegionIcon },
-    { value: "GlobeIcon", label: "Globe", icon: PI.GlobeIcon },
-    { value: "MapIcon", label: "Carte", icon: PI.MapIcon },
-    { value: "LocationIcon", label: "Localisation", icon: PI.LocationIcon },
+    { value: "RegionIcon", label: "Région", icon: "RegionIcon" },
+    { value: "GlobeIcon", label: "Globe", icon: "GlobeIcon" },
+    { value: "MapIcon", label: "Carte", icon: "MapIcon" },
+    { value: "LocationIcon", label: "Localisation", icon: "LocationIcon" },
   ],
   notes: [
-    { value: "NoteIcon", label: "Note", icon: PI.NoteIcon },
-    { value: "ClipboardIcon", label: "Presse-papier", icon: PI.ClipboardIcon },
-    { value: "DocumentIcon", label: "Document", icon: PI.DocumentIcon },
-    { value: "TextIcon", label: "Texte", icon: PI.TextIcon },
+    { value: "NoteIcon", label: "Note", icon: "NoteIcon" },
+    { value: "ClipboardIcon", label: "Presse-papier", icon: "ClipboardIcon" },
+    { value: "DocumentIcon", label: "Document", icon: "DocumentIcon" },
+    { value: "TextIcon", label: "Texte", icon: "TextIcon" },
   ],
   // Icônes pour les boutons
   button: [
-    { value: "CartIcon", label: "Panier", icon: PI.CartIcon },
-    { value: "CheckoutIcon", label: "Checkout", icon: PI.CheckoutIcon },
-    { value: "BagIcon", label: "Sac", icon: PI.BagIcon },
-    { value: "TruckIcon", label: "Camion", icon: PI.TruckIcon },
-    { value: "CheckCircleIcon", label: "Coche", icon: PI.CheckCircleIcon },
-    { value: "PlayIcon", label: "Play", icon: PI.PlayIcon },
-    { value: "ArrowRightIcon", label: "Flèche droite", icon: PI.ArrowRightIcon },
-    { value: "SendIcon", label: "Envoyer", icon: PI.SendIcon },
+    { value: "CartIcon", label: "Panier", icon: "CartIcon" },
+    { value: "CheckoutIcon", label: "Checkout", icon: "CheckoutIcon" },
+    { value: "BagIcon", label: "Sac", icon: "BagIcon" },
+    { value: "TruckIcon", label: "Camion", icon: "TruckIcon" },
+    { value: "CheckCircleIcon", label: "Coche", icon: "CheckCircleIcon" },
+    { value: "PlayIcon", label: "Play", icon: "PlayIcon" },
+    { value: "ArrowRightIcon", label: "Flèche droite", icon: "ArrowRightIcon" },
+    { value: "SendIcon", label: "Envoyer", icon: "SendIcon" },
   ],
 };
 
@@ -1581,7 +1581,7 @@ function IconSelector({ fieldKey, type = "field", onSelect, selectedIcon }) {
       </div>
       <div className="tf-icon-selector">
         {icons.map((icon) => {
-          const IconComponent = icon.icon;
+          const IconComponent = icon.icon ? PI[icon.icon] : null;
           return (
             <div
               key={icon.value}
@@ -1589,7 +1589,7 @@ function IconSelector({ fieldKey, type = "field", onSelect, selectedIcon }) {
               onClick={() => onSelect(icon.value)}
               title={icon.label}
             >
-              <Icon source={IconComponent} />
+              {IconComponent ? <Icon source={IconComponent} /> : icon.value}
             </div>
           );
         })}
@@ -1655,7 +1655,6 @@ function OutletEditor() {
       label: t("section1.rail.appearanceSeparator"),
       separator: true,
     },
-    { key: "presets", label: t("section1.rail.presets"), icon: "WandIcon" },
     { key: "colors", label: t("section1.rail.colors"), icon: "ColorIcon" },
     { key: "options", label: t("section1.rail.options"), icon: "SettingsIcon" },
   ];
@@ -1860,24 +1859,19 @@ function OutletEditor() {
             </GroupCard>
           )}
 
-          {/* 4) Presets de couleurs */}
-          {sel === "presets" && (
-            <GroupCard title={t("section1.group.presets.title")}>
-              <BlueSection title={t("section1.presets.available")} defaultOpen>
-                <div style={{ marginBottom: 16 }}>
-                  <p style={{ fontSize: 13, color: "#6B7280", marginBottom: 12 }}>
-                    {t("section1.presets.description")}
-                  </p>
-                  <ColorPaletteSelector />
-                </div>
-              </BlueSection>
-            </GroupCard>
-          )}
-
-          {/* 5) Couleurs & layout */}
+          {/* 4) Couleurs & layout */}
           {sel === "colors" && (
             <GroupCard title={t("section1.group.colors.title")}>
-              <BlueSection title={t("section1.colors.formSection")} defaultOpen>
+              {/* PALETTES DE COULEURS EN HAUT */}
+              <BlueSection title={t("section1.colors.presets")} defaultOpen>
+                <p style={{ fontSize: 13, color: "#6B7280", marginBottom: 12 }}>
+                  {t("section1.presets.description")}
+                </p>
+                <ColorPaletteSelector />
+              </BlueSection>
+
+              {/* COULEURS DU FORMULAIRE */}
+              <BlueSection title={t("section1.colors.formSection")}>
                 <Grid3>
                   <ColorField
                     label={t("section1.colors.bg")}
@@ -1912,6 +1906,7 @@ function OutletEditor() {
                 </Grid3>
               </BlueSection>
 
+              {/* COULEURS DU BOUTON */}
               <BlueSection title={t("section1.colors.buttonSection")}>
                 <Grid3>
                   <ColorField
@@ -1942,6 +1937,7 @@ function OutletEditor() {
                 </div>
               </BlueSection>
 
+              {/* COULEURS DU PANIER */}
               <BlueSection title={t("section1.colors.cartSection")}>
                 <Grid3>
                   <ColorField
@@ -1977,6 +1973,7 @@ function OutletEditor() {
                 </Grid3>
               </BlueSection>
 
+              {/* LAYOUT */}
               <BlueSection title={t("section1.colors.layoutSection")}>
                 <Grid3>
                   <RangeSlider
@@ -2061,9 +2058,18 @@ function OutletEditor() {
             </GroupCard>
           )}
 
-          {/* 6) Options : effets, sticky, pays, consentements */}
+          {/* 5) Options : effets, sticky, pays, consentements */}
           {sel === "options" && (
             <GroupCard title={t("section1.group.options.title")}>
+              {/* PALETTES DE COULEURS EN HAUT DE OPTIONS */}
+              <BlueSection title={t("section1.options.colorPresets")} defaultOpen>
+                <p style={{ fontSize: 13, color: "#6B7280", marginBottom: 12 }}>
+                  {t("section1.presets.description")}
+                </p>
+                <ColorPaletteSelector />
+              </BlueSection>
+
+              {/* OPTIONS D'AFFICHAGE & COMPORTEMENT */}
               <BlueSection title={t("section1.options.behavior")}>
                 <Grid3>
                   <Select
@@ -2075,14 +2081,6 @@ function OutletEditor() {
                     ]}
                     value={config.form.style || "inline"}
                     onChange={(v) => setForm({ style: v })}
-                  />
-                  <TextField
-                    type="number"
-                    label={t("section1.options.openDelayMs")}
-                    value={String(config.behavior.openDelayMs ?? 0)}
-                    onChange={(v) =>
-                      setBehav({ openDelayMs: Number(v || 0) })
-                    }
                   />
                   <Select
                     label={t("section1.options.effect")}
@@ -2102,49 +2100,7 @@ function OutletEditor() {
                 </Grid3>
               </BlueSection>
 
-              <BlueSection title={t("section1.options.drawer")}>
-                <Grid3>
-                  <Select
-                    label={t("section1.options.drawerDirection")}
-                    options={[
-                      {
-                        label: t("section1.options.drawerDirection.right"),
-                        value: "right",
-                      },
-                      {
-                        label: t("section1.options.drawerDirection.left"),
-                        value: "left",
-                      },
-                    ]}
-                    value={config.behavior.drawerDirection || "right"}
-                    onChange={(v) => setBehav({ drawerDirection: v })}
-                  />
-                  <Select
-                    label={t("section1.options.drawerSize")}
-                    options={[
-                      { label: "Small", value: "sm" },
-                      { label: "Medium", value: "md" },
-                      { label: "Large", value: "lg" },
-                    ]}
-                    value={config.behavior.drawerSize || "md"}
-                    onChange={(v) => setBehav({ drawerSize: v })}
-                  />
-                  <ColorField
-                    label={t("section1.options.overlayColor")}
-                    value={config.behavior.overlayColor || "#020617"}
-                    onChange={(v) => setBehav({ overlayColor: v })}
-                  />
-                  <RangeSlider
-                    label={t("section1.options.overlayOpacity")}
-                    value={config.behavior.overlayOpacity ?? 70}
-                    min={0}
-                    max={100}
-                    step={5}
-                    onChange={(v) => setBehav({ overlayOpacity: v })}
-                  />
-                </Grid3>
-              </BlueSection>
-
+              {/* BOUTON STICKY */}
               <BlueSection title={t("section1.options.stickyButton")}>
                 <Grid3>
                   <Select
