@@ -12,6 +12,7 @@ import {
   Button,
   Icon,
   Badge,
+  Box,
 } from "@shopify/polaris";
 import * as PI from "@shopify/polaris-icons";
 import { useI18n } from "../i18n/react";
@@ -252,17 +253,6 @@ const LAYOUT_CSS = `
     object-fit:cover;
     border-radius:12px;
   }
-  .offers-strip-title {
-    font-size:11px;
-    font-weight:600;
-    text-transform:uppercase;
-    letter-spacing:.08em;
-    color:#6B7280;
-    display:flex;
-    align-items:center;
-    gap:6px;
-    margin-bottom:4px;
-  }
   .offers-strip-main {
     font-size:14px;
     font-weight:600;
@@ -291,6 +281,11 @@ const LAYOUT_CSS = `
   }
   .offer-timer-icon {
     font-size:10px;
+  }
+  .timer-countdown {
+    font-family:monospace;
+    font-weight:bold;
+    letter-spacing:1px;
   }
 
   /* ---- Palette de couleurs ---- */
@@ -323,6 +318,38 @@ const LAYOUT_CSS = `
     background:#fff;
     font-size:11px;
     font-weight:600;
+  }
+
+  /* ---- Custom color picker ---- */
+  .custom-color-picker {
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(200px, 1fr));
+    gap:16px;
+    margin-top:16px;
+  }
+  .color-field {
+    display:grid;
+    gap:6px;
+  }
+  .color-field-label {
+    font-size:13px;
+    font-weight:600;
+    color:#111827;
+  }
+  .color-input-group {
+    display:flex;
+    gap:8px;
+    align-items:center;
+  }
+  .color-preview {
+    width:40px;
+    height:40px;
+    border-radius:8px;
+    border:1px solid #E5E7EB;
+    cursor:pointer;
+  }
+  .color-input {
+    flex:1;
   }
 
   /* ---- Bouton d'ajout centré ---- */
@@ -411,70 +438,196 @@ function useInjectCss() {
   }, []);
 }
 
-/* ============================== Fonction pour obtenir la devise selon le pays ============================== */
-const getCurrencyByCountry = (countryCode) => {
-  const map = {
-    'MA': 'MAD',
-    'DZ': 'DZD',
-    'TN': 'TND',
-    'EG': 'EGP',
-    'FR': 'EUR',
-    'ES': 'EUR',
-    'SA': 'SAR',
-    'AE': 'AED',
-    'US': 'USD',
-    'NG': 'NGN',
-    'PK': 'PKR',
-    'IN': 'INR',
-    'ID': 'IDR',
-    'TR': 'TRY',
-    'BR': 'BRL',
-  };
-  return map[countryCode] || 'MAD';
-};
-
 /* ============================== Palettes de couleurs ============================== */
 const COLOR_PALETTES = [
   {
     id: "blue-gradient",
     name: "Gradient Bleu",
     colors: ["#0B3B82", "#7D0031", "#00A7A3", "#F0F9FF", "#0C4A6E"],
+    theme: {
+      bg: "#F0F9FF",
+      text: "#0C4A6E",
+      border: "#E2E8F0",
+      offerBg: "#FFFFFF",
+      offerBorder: "#CBD5E1",
+      offerTitle: "#0C4A6E",
+      offerText: "#0C4A6E",
+      timerBg: "#FEF2F2",
+      timerText: "#DC2626",
+      timerBorder: "#FECACA"
+    }
   },
   {
     id: "clean-white",
     name: "Blanc Propre",
     colors: ["#FFFFFF", "#111827", "#E5E7EB", "#F9FAFB", "#374151"],
+    theme: {
+      bg: "#FFFFFF",
+      text: "#111827",
+      border: "#E5E7EB",
+      offerBg: "#F9FAFB",
+      offerBorder: "#E5E7EB",
+      offerTitle: "#111827",
+      offerText: "#374151",
+      timerBg: "#FEF2F2",
+      timerText: "#DC2626",
+      timerBorder: "#FECACA"
+    }
   },
   {
     id: "dark-modern",
     name: "Sombre Moderne",
     colors: ["#0B1220", "#2563EB", "#1F2A44", "#101828", "#E5F0FF"],
+    theme: {
+      bg: "#0B1220",
+      text: "#E5F0FF",
+      border: "#1F2A44",
+      offerBg: "#101828",
+      offerBorder: "#1F2A44",
+      offerTitle: "#E5F0FF",
+      offerText: "#E5F0FF",
+      timerBg: "#450A0A",
+      timerText: "#FCA5A5",
+      timerBorder: "#991B1B"
+    }
   },
   {
     id: "green-nature",
     name: "Nature Verte",
     colors: ["#10B981", "#065F46", "#D1FAE5", "#ECFDF5", "#F0FDF4"],
+    theme: {
+      bg: "#F0FDF4",
+      text: "#065F46",
+      border: "#D1FAE5",
+      offerBg: "#ECFDF5",
+      offerBorder: "#A7F3D0",
+      offerTitle: "#065F46",
+      offerText: "#047857",
+      timerBg: "#FEF2F2",
+      timerText: "#DC2626",
+      timerBorder: "#FECACA"
+    }
   },
   {
     id: "sunset-orange",
     name: "Orange Couchant",
     colors: ["#F97316", "#9A3412", "#FDBA74", "#FFEDD5", "#FFF7ED"],
+    theme: {
+      bg: "#FFF7ED",
+      text: "#9A3412",
+      border: "#FDBA74",
+      offerBg: "#FFEDD5",
+      offerBorder: "#FDBA74",
+      offerTitle: "#9A3412",
+      offerText: "#92400E",
+      timerBg: "#FEF2F2",
+      timerText: "#DC2626",
+      timerBorder: "#FECACA"
+    }
   },
   {
     id: "purple-elegant",
     name: "Violet Élégant",
     colors: ["#8B5CF6", "#5B21B6", "#E9D5FF", "#F5F3FF", "#FAF5FF"],
+    theme: {
+      bg: "#FAF5FF",
+      text: "#5B21B6",
+      border: "#E9D5FF",
+      offerBg: "#F5F3FF",
+      offerBorder: "#DDD6FE",
+      offerTitle: "#5B21B6",
+      offerText: "#6D28D9",
+      timerBg: "#FDF4FF",
+      timerText: "#C026D3",
+      timerBorder: "#F0ABFC"
+    }
   },
   {
     id: "luxury-gold",
     name: "Or Luxueux",
     colors: ["#D97706", "#854D0E", "#FDE68A", "#FEF3C7", "#FEFCE8"],
+    theme: {
+      bg: "#FEFCE8",
+      text: "#854D0E",
+      border: "#FDE68A",
+      offerBg: "#FEF3C7",
+      offerBorder: "#FCD34D",
+      offerTitle: "#854D0E",
+      offerText: "#92400E",
+      timerBg: "#FEF2F2",
+      timerText: "#DC2626",
+      timerBorder: "#FECACA"
+    }
   },
   {
     id: "ocean-deep",
     name: "Océan Profond",
     colors: ["#0891B2", "#0E7490", "#A5F3FC", "#CFFAFE", "#ECFEFF"],
+    theme: {
+      bg: "#ECFEFF",
+      text: "#0E7490",
+      border: "#A5F3FC",
+      offerBg: "#CFFAFE",
+      offerBorder: "#67E8F9",
+      offerTitle: "#0E7490",
+      offerText: "#0891B2",
+      timerBg: "#F0F9FF",
+      timerText: "#0369A1",
+      timerBorder: "#BAE6FD"
+    }
+  }
+];
+
+/* ============================== Exemples de countdown prédéfinis ============================== */
+const COUNTDOWN_EXAMPLES = [
+  {
+    id: "urgent-1h",
+    name: "Offre Urgente (1h)",
+    minutes: 60,
+    message: "⚠️ Offre spéciale! Se termine dans:"
   },
+  {
+    id: "flash-sale",
+    name: "Vente Flash (30min)",
+    minutes: 30,
+    message: "⚡ Vente Flash! Dernière chance:"
+  },
+  {
+    id: "weekend-deal",
+    name: "Offre Weekend (24h)",
+    minutes: 1440,
+    message: "🎉 Offre du Weekend! Fini dans:"
+  },
+  {
+    id: "black-friday",
+    name: "Black Friday (2h)",
+    minutes: 120,
+    message: "🖤 Black Friday! Plus que:"
+  },
+  {
+    id: "last-chance",
+    name: "Dernière Chance (15min)",
+    minutes: 15,
+    message: "⏳ Dernière chance! Se termine dans:"
+  },
+  {
+    id: "new-year",
+    name: "Promo Nouvel An (45min)",
+    minutes: 45,
+    message: "🎊 Bonne année! Offre spéciale:"
+  },
+  {
+    id: "summer-sale",
+    name: "Solde d'Été (3h)",
+    minutes: 180,
+    message: "☀️ Soldes d'Été! Termine dans:"
+  },
+  {
+    id: "clearance",
+    name: "Liquidation (6h)",
+    minutes: 360,
+    message: "💥 Liquidation totale! Plus que:"
+  }
 ];
 
 /* ============================== Small UI helpers ============================== */
@@ -515,33 +668,258 @@ const Grid3 = ({ children }) => (
 );
 
 /* ============================== Sélecteur de palette de couleurs ============================== */
-function ColorPaletteSelector({ selectedPalette, onSelect }) {
+function ColorPaletteSelector({ selectedPalette, onSelect, customTheme, onCustomColorChange }) {
+  const [showCustom, setShowCustom] = useState(false);
+
   return (
-    <div className="color-palette-grid">
-      {COLOR_PALETTES.map((palette) => (
+    <div>
+      <div style={{ marginBottom: 16 }}>
+        <Text as="p" variant="bodyMd">
+          Choisissez une palette prédéfinie ou personnalisez les couleurs manuellement
+        </Text>
+      </div>
+      
+      <div className="color-palette-grid">
+        {COLOR_PALETTES.map((palette) => (
+          <div
+            key={palette.id}
+            className={`color-palette-item ${selectedPalette === palette.id ? 'active' : ''}`}
+            onClick={() => {
+              onSelect(palette.id);
+              setShowCustom(false);
+            }}
+          >
+            <div className="palette-colors">
+              {palette.colors.map((color, idx) => (
+                <div
+                  key={idx}
+                  style={{
+                    flex: 1,
+                    background: color,
+                    height: '100%',
+                  }}
+                  title={color}
+                />
+              ))}
+            </div>
+            <div className="palette-info">
+              {palette.name}
+            </div>
+          </div>
+        ))}
+        
         <div
-          key={palette.id}
-          className={`color-palette-item ${selectedPalette === palette.id ? 'active' : ''}`}
-          onClick={() => onSelect(palette.id)}
+          className={`color-palette-item ${showCustom ? 'active' : ''}`}
+          onClick={() => setShowCustom(true)}
+          style={{ borderStyle: 'dashed' }}
         >
-          <div className="palette-colors">
-            {palette.colors.map((color, idx) => (
-              <div
-                key={idx}
-                style={{
-                  flex: 1,
-                  background: color,
-                  height: '100%',
-                }}
-                title={color}
-              />
-            ))}
+          <div className="palette-colors" style={{ background: '#F9FAFB' }}>
+            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Icon source={PI.PaintBrushIcon} />
+            </div>
           </div>
           <div className="palette-info">
-            {palette.name}
+            Personnaliser
           </div>
         </div>
-      ))}
+      </div>
+      
+      {showCustom && (
+        <div className="custom-color-picker">
+          <div className="color-field">
+            <div className="color-field-label">Fond des offres</div>
+            <div className="color-input-group">
+              <div 
+                className="color-preview" 
+                style={{ background: customTheme.offerBg || '#FFFFFF' }}
+                onClick={() => {
+                  const color = prompt("Entrez une couleur hexadécimale (#FFFFFF):", customTheme.offerBg || '#FFFFFF');
+                  if (color) onCustomColorChange('offerBg', color);
+                }}
+              />
+              <TextField
+                label="Fond des offres"
+                labelHidden
+                value={customTheme.offerBg || ''}
+                onChange={(value) => onCustomColorChange('offerBg', value)}
+                placeholder="#FFFFFF"
+              />
+            </div>
+          </div>
+          
+          <div className="color-field">
+            <div className="color-field-label">Titre des offres</div>
+            <div className="color-input-group">
+              <div 
+                className="color-preview" 
+                style={{ background: customTheme.offerTitle || '#111827' }}
+                onClick={() => {
+                  const color = prompt("Entrez une couleur hexadécimale:", customTheme.offerTitle || '#111827');
+                  if (color) onCustomColorChange('offerTitle', color);
+                }}
+              />
+              <TextField
+                label="Titre des offres"
+                labelHidden
+                value={customTheme.offerTitle || ''}
+                onChange={(value) => onCustomColorChange('offerTitle', value)}
+                placeholder="#111827"
+              />
+            </div>
+          </div>
+          
+          <div className="color-field">
+            <div className="color-field-label">Texte des offres</div>
+            <div className="color-input-group">
+              <div 
+                className="color-preview" 
+                style={{ background: customTheme.offerText || '#374151' }}
+                onClick={() => {
+                  const color = prompt("Entrez une couleur hexadécimale:", customTheme.offerText || '#374151');
+                  if (color) onCustomColorChange('offerText', color);
+                }}
+              />
+              <TextField
+                label="Texte des offres"
+                labelHidden
+                value={customTheme.offerText || ''}
+                onChange={(value) => onCustomColorChange('offerText', value)}
+                placeholder="#374151"
+              />
+            </div>
+          </div>
+          
+          <div className="color-field">
+            <div className="color-field-label">Fond du timer</div>
+            <div className="color-input-group">
+              <div 
+                className="color-preview" 
+                style={{ background: customTheme.timerBg || '#FEF2F2' }}
+                onClick={() => {
+                  const color = prompt("Entrez une couleur hexadécimale:", customTheme.timerBg || '#FEF2F2');
+                  if (color) onCustomColorChange('timerBg', color);
+                }}
+              />
+              <TextField
+                label="Fond du timer"
+                labelHidden
+                value={customTheme.timerBg || ''}
+                onChange={(value) => onCustomColorChange('timerBg', value)}
+                placeholder="#FEF2F2"
+              />
+            </div>
+          </div>
+          
+          <div className="color-field">
+            <div className="color-field-label">Texte du timer</div>
+            <div className="color-input-group">
+              <div 
+                className="color-preview" 
+                style={{ background: customTheme.timerText || '#DC2626' }}
+                onClick={() => {
+                  const color = prompt("Entrez une couleur hexadécimale:", customTheme.timerText || '#DC2626');
+                  if (color) onCustomColorChange('timerText', color);
+                }}
+              />
+              <TextField
+                label="Texte du timer"
+                labelHidden
+                value={customTheme.timerText || ''}
+                onChange={(value) => onCustomColorChange('timerText', value)}
+                placeholder="#DC2626"
+              />
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ============================== Exemples de countdown ============================== */
+function CountdownExamples({ onSelect }) {
+  return (
+    <div style={{ marginTop: 12 }}>
+      <Text as="p" variant="bodyMd" fontWeight="medium">
+        Exemples prédéfinis:
+      </Text>
+      <div style={{ 
+        display: 'grid', 
+        gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+        gap: 8,
+        marginTop: 8
+      }}>
+        {COUNTDOWN_EXAMPLES.map((example) => (
+          <div
+            key={example.id}
+            style={{
+              padding: '8px 12px',
+              border: '1px solid #E5E7EB',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              backgroundColor: '#F9FAFB',
+              transition: 'all 0.2s'
+            }}
+            onClick={() => onSelect(example)}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F3F4F6'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#F9FAFB'}
+          >
+            <div style={{ fontSize: 12, fontWeight: 600 }}>{example.name}</div>
+            <div style={{ fontSize: 11, color: '#6B7280', marginTop: 2 }}>
+              {example.message}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ============================== Composant Timer pour prévisualisation ============================== */
+function TimerDisplay({ minutes, message, theme }) {
+  const [timeLeft, setTimeLeft] = useState(minutes * 60);
+  
+  useEffect(() => {
+    if (timeLeft <= 0) return;
+    
+    const timer = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    
+    return () => clearInterval(timer);
+  }, [timeLeft]);
+  
+  const formatTime = (seconds) => {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+    
+    if (h > 0) {
+      return `${h}h ${m}m ${s}s`;
+    }
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  };
+  
+  return (
+    <div 
+      className="offer-timer"
+      style={{
+        background: theme?.timerBg || '#FEF2F2',
+        color: theme?.timerText || '#DC2626',
+        borderColor: theme?.timerBorder || '#FECACA'
+      }}
+    >
+      <span className="offer-timer-icon">⏱️</span>
+      <span>{message}</span>
+      <span className="timer-countdown" style={{ marginLeft: 'auto' }}>
+        {formatTime(timeLeft)}
+      </span>
     </div>
   );
 }
@@ -552,8 +930,8 @@ const DEFAULT_OFFER = {
   enabled: true,
   type: "percent",
   value: 10,
-  title: "",
-  description: "",
+  title: "Remise Spéciale",
+  description: "Profitez de cette offre exclusive",
   
   // Conditions
   minQuantity: 2,
@@ -566,11 +944,12 @@ const DEFAULT_OFFER = {
   shopifyProductId: "",
   productRef: "",
   imageUrl: "",
+  iconUrl: "",
   
   // Timer settings
   enableTimer: false,
   timerMinutes: 60,
-  timerMessage: "Offre spéciale limitée dans le temps!",
+  timerMessage: "⏱️ Offre limitée dans le temps!",
   
   // Display
   showInPreview: true
@@ -578,8 +957,8 @@ const DEFAULT_OFFER = {
 
 const DEFAULT_UPSELL = {
   enabled: true,
-  title: "",
-  description: "",
+  title: "Cadeau Gratuit",
+  description: "Recevez un cadeau spécial avec votre commande",
   
   // Trigger conditions
   triggerType: "subtotal",
@@ -596,23 +975,36 @@ const DEFAULT_UPSELL = {
   shopifyProductId: "",
   productRef: "",
   imageUrl: "",
+  iconUrl: "",
   
   // Timer settings
   enableTimer: false,
   timerMinutes: 60,
-  timerMessage: "Cadeau spécial limité dans le temps!",
+  timerMessage: "🎁 Cadeau limité dans le temps!",
   
   // Display
   showInPreview: true
 };
 
 const DEFAULT_CFG = {
-  meta: { version: 9 },
+  meta: { version: 10 },
   global: { 
     enabled: true, 
-    currency: "",
+    currency: "MAD",
     rounding: "none",
     colorPalette: "blue-gradient",
+    customTheme: {
+      bg: "#F0F9FF",
+      text: "#0C4A6E",
+      border: "#E2E8F0",
+      offerBg: "#FFFFFF",
+      offerBorder: "#CBD5E1",
+      offerTitle: "#0C4A6E",
+      offerText: "#0C4A6E",
+      timerBg: "#FEF2F2",
+      timerText: "#DC2626",
+      timerBorder: "#FECACA"
+    }
   },
   
   // Multiple offers support (max 3)
@@ -648,40 +1040,6 @@ function withDefaults(raw = {}) {
   return x;
 }
 
-/* ============================== Composant Timer pour prévisualisation ============================== */
-function TimerDisplay({ minutes, message }) {
-  const [timeLeft, setTimeLeft] = useState(minutes * 60);
-  
-  useEffect(() => {
-    if (timeLeft <= 0) return;
-    
-    const timer = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-    
-    return () => clearInterval(timer);
-  }, [timeLeft]);
-  
-  const formatTime = (seconds) => {
-    const m = Math.floor(seconds / 60);
-    const s = seconds % 60;
-    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-  };
-  
-  return (
-    <div className="offer-timer">
-      <span className="offer-timer-icon">⏱️</span>
-      <span>{formatTime(timeLeft)} - {message}</span>
-    </div>
-  );
-}
-
 /* ============================== Preview Components ============================== */
 
 function findProductLabel(products, id) {
@@ -690,10 +1048,13 @@ function findProductLabel(products, id) {
   return p?.title || "";
 }
 
-function OffersPreview({ cfg, products, t, formsDesign }) {
+function OffersPreview({ cfg, products, t }) {
   const activeOffers = cfg.offers.filter(offer => offer.enabled && offer.showInPreview);
   
   if (activeOffers.length === 0) return null;
+  
+  const selectedPalette = COLOR_PALETTES.find(p => p.id === cfg.global.colorPalette) || COLOR_PALETTES[0];
+  const theme = cfg.global.customTheme || selectedPalette.theme;
   
   return (
     <BlockStack gap="200">
@@ -710,9 +1071,9 @@ function OffersPreview({ cfg, products, t, formsDesign }) {
             key={idx} 
             className="offers-strip"
             style={{
-              background: formsDesign?.bg || "#FFFFFF",
-              border: `1px solid ${formsDesign?.border || "#E5E7EB"}`,
-              color: formsDesign?.text || "#111827"
+              background: theme.offerBg,
+              border: `1px solid ${theme.offerBorder}`,
+              color: theme.offerText
             }}
           >
             <div className="offers-strip-thumb">
@@ -723,10 +1084,10 @@ function OffersPreview({ cfg, products, t, formsDesign }) {
               )}
             </div>
             <div style={{ flex: 1 }}>
-              <div className="offers-strip-main" style={{ color: formsDesign?.cartTitleColor || "#111827" }}>
+              <div className="offers-strip-main" style={{ color: theme.offerTitle }}>
                 {productName}
               </div>
-              <div className="offers-strip-desc" style={{ color: formsDesign?.cartTextColor || "#6B7280" }}>
+              <div className="offers-strip-desc">
                 {description}
               </div>
               
@@ -734,6 +1095,7 @@ function OffersPreview({ cfg, products, t, formsDesign }) {
                 <TimerDisplay 
                   minutes={offer.timerMinutes} 
                   message={offer.timerMessage || t("section2.preview.timerDefaultMessage")}
+                  theme={theme}
                 />
               )}
             </div>
@@ -744,10 +1106,13 @@ function OffersPreview({ cfg, products, t, formsDesign }) {
   );
 }
 
-function UpsellsPreview({ cfg, products, t, formsDesign }) {
+function UpsellsPreview({ cfg, products, t }) {
   const activeUpsells = cfg.upsells.filter(upsell => upsell.enabled && upsell.showInPreview);
   
   if (activeUpsells.length === 0) return null;
+  
+  const selectedPalette = COLOR_PALETTES.find(p => p.id === cfg.global.colorPalette) || COLOR_PALETTES[0];
+  const theme = cfg.global.customTheme || selectedPalette.theme;
   
   return (
     <BlockStack gap="200">
@@ -761,9 +1126,9 @@ function UpsellsPreview({ cfg, products, t, formsDesign }) {
             key={idx} 
             className="offers-strip"
             style={{
-              background: formsDesign?.bg || "#FFFFFF",
-              border: `1px solid ${formsDesign?.border || "#E5E7EB"}`,
-              color: formsDesign?.text || "#111827"
+              background: theme.offerBg,
+              border: `1px solid ${theme.offerBorder}`,
+              color: theme.offerText
             }}
           >
             <div className="offers-strip-thumb">
@@ -774,10 +1139,10 @@ function UpsellsPreview({ cfg, products, t, formsDesign }) {
               )}
             </div>
             <div style={{ flex: 1 }}>
-              <div className="offers-strip-main" style={{ color: formsDesign?.cartTitleColor || "#111827" }}>
+              <div className="offers-strip-main" style={{ color: theme.offerTitle }}>
                 {productName}
               </div>
-              <div className="offers-strip-desc" style={{ color: formsDesign?.cartTextColor || "#6B7280" }}>
+              <div className="offers-strip-desc">
                 {description}
               </div>
               
@@ -785,6 +1150,7 @@ function UpsellsPreview({ cfg, products, t, formsDesign }) {
                 <TimerDisplay 
                   minutes={upsell.timerMinutes} 
                   message={upsell.timerMessage || t("section2.preview.timerDefaultMessage")}
+                  theme={theme}
                 />
               )}
             </div>
@@ -795,44 +1161,38 @@ function UpsellsPreview({ cfg, products, t, formsDesign }) {
   );
 }
 
-function OrderSummaryPreview({ cfg, t, formsDesign }) {
+function OrderSummaryPreview({ cfg, t }) {
   if (!cfg.display.showOrderSummary) return null;
+  
+  const selectedPalette = COLOR_PALETTES.find(p => p.id === cfg.global.colorPalette) || COLOR_PALETTES[0];
+  const theme = cfg.global.customTheme || selectedPalette.theme;
   
   return (
     <div 
       className="order-summary-preview"
       style={{
-        background: formsDesign?.cartBg || "#F9FAFB",
-        border: `1px solid ${formsDesign?.cartBorder || "#E5E7EB"}`,
-        color: formsDesign?.cartTextColor || "#111827"
+        background: theme.bg,
+        border: `1px solid ${theme.border}`,
+        color: theme.text
       }}
     >
-      <div 
-        className="order-summary-title"
-        style={{ color: formsDesign?.cartTitleColor || "#111827" }}
-      >
+      <div className="order-summary-title">
         {t("section2.preview.orderSummary.title")}
       </div>
       <div className="order-row">
-        <span className="order-label" style={{ color: formsDesign?.placeholder || "#6B7280" }}>
+        <span className="order-label">
           {t("section2.preview.orderSummary.subtotal")}
         </span>
         <span>129.99 {cfg.global.currency}</span>
       </div>
       <div className="order-row">
-        <span className="order-label" style={{ color: formsDesign?.placeholder || "#6B7280" }}>
+        <span className="order-label">
           {t("section2.preview.orderSummary.shipping")}
         </span>
         <span>{t("section1.preview.freeShipping")}</span>
       </div>
-      <div 
-        className="order-row"
-        style={{ 
-          borderTop: `1px solid ${formsDesign?.cartRowBorder || "#E5E7EB"}`,
-          color: formsDesign?.cartTitleColor || "#111827"
-        }}
-      >
-        <span className="order-label" style={{ color: formsDesign?.cartTitleColor || "#111827" }}>
+      <div className="order-row">
+        <span className="order-label">
           {t("section2.preview.orderSummary.total")}
         </span>
         <span style={{ fontWeight: 700 }}>129.99 {cfg.global.currency}</span>
@@ -854,6 +1214,15 @@ function OfferItemEditor({
 }) {
   const handleChange = (field, value) => {
     onChange({ ...offer, [field]: value });
+  };
+  
+  const handleCountdownExample = (example) => {
+    onChange({
+      ...offer,
+      enableTimer: true,
+      timerMinutes: example.minutes,
+      timerMessage: example.message
+    });
   };
   
   return (
@@ -975,6 +1344,23 @@ function OfferItemEditor({
           )}
         </GroupCard>
         
+        <GroupCard title={t("section2.group.images.title")}>
+          <Grid2>
+            <TextField
+              label={t("section2.offer.imageUrl")}
+              value={offer.imageUrl}
+              onChange={(v) => handleChange('imageUrl', v)}
+              helpText={t("section2.helpText.offerImage")}
+            />
+            <TextField
+              label={t("section2.offer.iconUrl")}
+              value={offer.iconUrl}
+              onChange={(v) => handleChange('iconUrl', v)}
+              helpText={t("section2.helpText.offerIconUrl")}
+            />
+          </Grid2>
+        </GroupCard>
+        
         <GroupCard title={t("section2.group.timer.title")}>
           <Grid2>
             <Checkbox
@@ -1002,18 +1388,11 @@ function OfferItemEditor({
               </>
             )}
           </Grid2>
+          
+          <CountdownExamples onSelect={handleCountdownExample} />
         </GroupCard>
         
         <GroupCard title={t("section2.group.display.title")}>
-          <Grid2>
-            <TextField
-              label={t("section2.offer.imageUrl")}
-              value={offer.imageUrl}
-              onChange={(v) => handleChange('imageUrl', v)}
-              helpText={t("section2.helpText.offerImage")}
-            />
-          </Grid2>
-          
           <Checkbox
             label={t("section2.offer.showInPreview")}
             checked={offer.showInPreview}
@@ -1036,6 +1415,15 @@ function UpsellItemEditor({
 }) {
   const handleChange = (field, value) => {
     onChange({ ...upsell, [field]: value });
+  };
+  
+  const handleCountdownExample = (example) => {
+    onChange({
+      ...upsell,
+      enableTimer: true,
+      timerMinutes: example.minutes,
+      timerMessage: example.message
+    });
   };
   
   return (
@@ -1143,6 +1531,23 @@ function UpsellItemEditor({
           />
         </GroupCard>
         
+        <GroupCard title={t("section2.group.images.title")}>
+          <Grid2>
+            <TextField
+              label={t("section2.upsell.imageUrl")}
+              value={upsell.imageUrl}
+              onChange={(v) => handleChange('imageUrl', v)}
+              helpText={t("section2.helpText.offerImage")}
+            />
+            <TextField
+              label={t("section2.upsell.iconUrl")}
+              value={upsell.iconUrl}
+              onChange={(v) => handleChange('iconUrl', v)}
+              helpText={t("section2.helpText.offerIconUrl")}
+            />
+          </Grid2>
+        </GroupCard>
+        
         <GroupCard title={t("section2.group.timer.title")}>
           <Grid2>
             <Checkbox
@@ -1170,18 +1575,11 @@ function UpsellItemEditor({
               </>
             )}
           </Grid2>
+          
+          <CountdownExamples onSelect={handleCountdownExample} />
         </GroupCard>
         
         <GroupCard title={t("section2.group.display.title")}>
-          <Grid2>
-            <TextField
-              label={t("section2.upsell.imageUrl")}
-              value={upsell.imageUrl}
-              onChange={(v) => handleChange('imageUrl', v)}
-              helpText={t("section2.helpText.offerImage")}
-            />
-          </Grid2>
-          
           <Checkbox
             label={t("section2.upsell.showInPreview")}
             checked={upsell.showInPreview}
@@ -1282,7 +1680,6 @@ function Section2OffersInner({ products = [] }) {
   ];
 
   const [cfg, setCfg] = useState(() => DEFAULT_CFG);
-  const [formsConfig, setFormsConfig] = useState(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [selectedTab, setSelectedTab] = useState("global");
@@ -1291,63 +1688,11 @@ function Section2OffersInner({ products = [] }) {
     if (typeof window === "undefined") return;
     try {
       window.localStorage.setItem(
-        "tripleform_cod_offers_v6",
+        "tripleform_cod_offers_v10",
         JSON.stringify(withDefaults(next))
       );
     } catch {}
   };
-
-  // Charger la configuration de Section1FormsLayout
-  useEffect(() => {
-    const loadFormsSettings = async () => {
-      try {
-        const res = await fetch("/api/load-settings");
-        if (res.ok) {
-          const j = await res.json();
-          if (j?.ok && j.settings) {
-            setFormsConfig(j.settings);
-            
-            const countryCode = j.settings.behavior?.country || "MA";
-            const currency = getCurrencyByCountry(countryCode);
-            
-            setCfg(prev => ({
-              ...prev,
-              global: {
-                ...prev.global,
-                currency: prev.global.currency || currency
-              }
-            }));
-            return;
-          }
-        }
-      } catch (e) {
-        console.warn("Failed to load forms settings from API:", e);
-      }
-      
-      try {
-        const formsConfigStr = localStorage.getItem("tripleform_cod_config");
-        if (formsConfigStr) {
-          const config = JSON.parse(formsConfigStr);
-          setFormsConfig(config);
-          
-          const countryCode = config.behavior?.country || "MA";
-          const currency = getCurrencyByCountry(countryCode);
-          
-          setCfg(prev => ({
-            ...prev,
-            global: {
-              ...prev.global,
-              currency: prev.global.currency || currency
-            }
-          }));
-        }
-      } catch (e) {
-        console.error("Failed to load forms settings from localStorage:", e);
-      }
-    };
-    
-    loadFormsSettings();
-  }, []);
 
   // Charger la configuration des offres
   useEffect(() => {
@@ -1377,7 +1722,7 @@ function Section2OffersInner({ products = [] }) {
 
       if (!cancelled && typeof window !== "undefined") {
         try {
-          const s = window.localStorage.getItem("tripleform_cod_offers_v6");
+          const s = window.localStorage.getItem("tripleform_cod_offers_v10");
           if (s) {
             setCfg(withDefaults(JSON.parse(s)));
           }
@@ -1480,6 +1825,33 @@ function Section2OffersInner({ products = [] }) {
   const setDisplay = (p) =>
     setCfg((c) => ({ ...c, display: { ...c.display, ...p } }));
 
+  const setCustomTheme = (field, value) => {
+    setCfg((c) => ({
+      ...c,
+      global: {
+        ...c.global,
+        customTheme: {
+          ...c.global.customTheme,
+          [field]: value
+        }
+      }
+    }));
+  };
+
+  const applyPalette = (paletteId) => {
+    const palette = COLOR_PALETTES.find(p => p.id === paletteId);
+    if (palette) {
+      setCfg((c) => ({
+        ...c,
+        global: {
+          ...c.global,
+          colorPalette: paletteId,
+          customTheme: palette.theme
+        }
+      }));
+    }
+  };
+
   const NAV_ITEMS = [
     { key: "global", label: t("section2.rail.global"), icon: "SettingsIcon" },
     { key: "colors", label: t("section2.rail.colors"), icon: "PaintBrushIcon" },
@@ -1487,22 +1859,8 @@ function Section2OffersInner({ products = [] }) {
     { key: "upsells", label: t("section2.rail.upsells"), icon: "GiftCardIcon" },
   ];
 
-  // Récupérer les paramètres de design depuis formsConfig
-  const formsDesign = formsConfig?.design || {};
-  
-  // Options de devise basées sur le pays
-  const currencyOptions = formsConfig?.behavior?.country ? [
-    { label: `${getCurrencyByCountry(formsConfig.behavior.country)} (Auto)`, value: "" },
-    { label: "MAD (DH)", value: "MAD" },
-    { label: "EUR (€)", value: "EUR" },
-    { label: "USD ($)", value: "USD" },
-    { label: "GBP (£)", value: "GBP" },
-  ] : [
-    { label: "MAD (DH)", value: "MAD" },
-    { label: "EUR (€)", value: "EUR" },
-    { label: "USD ($)", value: "USD" },
-    { label: "GBP (£)", value: "GBP" },
-  ];
+  const selectedPalette = COLOR_PALETTES.find(p => p.id === cfg.global.colorPalette) || COLOR_PALETTES[0];
+  const theme = cfg.global.customTheme || selectedPalette.theme;
 
   return (
     <PageShell t={t} loading={loading} onSave={saveOffers} saving={saving}>
@@ -1566,11 +1924,12 @@ function Section2OffersInner({ products = [] }) {
                       label={t("section2.global.currency")}
                       value={cfg.global.currency}
                       onChange={(v) => setGlobal({ currency: v })}
-                      options={currencyOptions}
-                      helpText={formsConfig?.behavior?.country 
-                        ? `${t("section2.global.currencyBasedOnCountry")}: ${formsConfig.behavior.country}`
-                        : t("section2.global.selectCurrency")
-                      }
+                      options={[
+                        { label: "MAD (DH)", value: "MAD" },
+                        { label: "EUR (€)", value: "EUR" },
+                        { label: "USD ($)", value: "USD" },
+                        { label: "GBP (£)", value: "GBP" },
+                      ]}
                     />
                     <Select
                       label={t("section2.global.rounding")}
@@ -1586,7 +1945,7 @@ function Section2OffersInner({ products = [] }) {
                 </GroupCard>
 
                 <GroupCard title={t("section2.group.display.title")}>
-                  <Grid2>
+                  <Grid3>
                     <Checkbox
                       label={t("section2.display.showOrderSummary")}
                       checked={cfg.display.showOrderSummary}
@@ -1602,7 +1961,7 @@ function Section2OffersInner({ products = [] }) {
                       checked={cfg.display.showTimerInPreview}
                       onChange={(v) => setDisplay({ showTimerInPreview: v })}
                     />
-                  </Grid2>
+                  </Grid3>
                   <Text variant="bodySm" tone="subdued">
                     {t("section2.helpText.display")}
                   </Text>
@@ -1612,12 +1971,11 @@ function Section2OffersInner({ products = [] }) {
 
             {selectedTab === "colors" && (
               <GroupCard title={t("section2.group.colors.title")}>
-                <Text as="p" variant="bodySm" tone="subdued">
-                  {t("section2.colors.description")}
-                </Text>
                 <ColorPaletteSelector
                   selectedPalette={cfg.global.colorPalette}
-                  onSelect={(paletteId) => setGlobal({ colorPalette: paletteId })}
+                  onSelect={applyPalette}
+                  customTheme={cfg.global.customTheme}
+                  onCustomColorChange={setCustomTheme}
                 />
               </GroupCard>
             )}
@@ -1689,14 +2047,14 @@ function Section2OffersInner({ products = [] }) {
           <div 
             className="tf-preview-card"
             style={{
-              background: formsDesign?.bg || "#FFFFFF",
-              border: `1px solid ${formsDesign?.border || "#E5E7EB"}`,
-              color: formsDesign?.text || "#111827"
+              background: theme.bg,
+              border: `1px solid ${theme.border}`,
+              color: theme.text
             }}
           >
             <BlockStack gap="300">
               <InlineStack align="space-between" blockAlign="center">
-                <Text as="h3" variant="headingSm" style={{ color: formsDesign?.text || "#111827" }}>
+                <Text as="h3" variant="headingSm" style={{ color: theme.text }}>
                   {t("section2.preview.title")}
                 </Text>
                 <Badge tone={cfg.global.enabled ? "success" : "critical"}>
@@ -1706,7 +2064,7 @@ function Section2OffersInner({ products = [] }) {
                 </Badge>
               </InlineStack>
 
-              <Text as="p" variant="bodySm" tone="subdued" style={{ color: formsDesign?.placeholder || "#6B7280" }}>
+              <Text as="p" variant="bodySm" tone="subdued">
                 {t("section2.preview.subtitle")}
               </Text>
 
@@ -1715,22 +2073,19 @@ function Section2OffersInner({ products = [] }) {
                   <OffersPreview 
                     cfg={cfg} 
                     products={shopProducts} 
-                    t={t} 
-                    formsDesign={formsDesign}
+                    t={t}
                   />
                   <UpsellsPreview 
                     cfg={cfg} 
                     products={shopProducts} 
-                    t={t} 
-                    formsDesign={formsDesign}
+                    t={t}
                   />
                 </>
               )}
               
               <OrderSummaryPreview 
                 cfg={cfg} 
-                t={t} 
-                formsDesign={formsDesign}
+                t={t}
               />
             </BlockStack>
           </div>
