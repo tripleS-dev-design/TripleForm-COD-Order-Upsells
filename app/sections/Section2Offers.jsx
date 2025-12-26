@@ -12,6 +12,7 @@ import {
   Button,
   Icon,
   Badge,
+  Box,
 } from "@shopify/polaris";
 import * as PI from "@shopify/polaris-icons";
 import { useI18n } from "../i18n/react";
@@ -65,7 +66,7 @@ const LAYOUT_CSS = `
 
   .tf-editor {
     display:grid;
-    grid-template-columns: 280px minmax(0,2.3fr) minmax(0,1.5fr);
+    grid-template-columns: 240px minmax(0,2fr) minmax(0,1.2fr);
     gap:16px;
     align-items:flex-start;
   }
@@ -87,6 +88,7 @@ const LAYOUT_CSS = `
     border-bottom:1px solid #E5E7EB;
     font-weight:700;
     font-size:13px;
+    background:#F9FAFB;
   }
   .tf-rail-list {
     padding:8px;
@@ -100,17 +102,17 @@ const LAYOUT_CSS = `
     gap:8px;
     background:#F9FAFB;
     border:1px solid #E5E7EB;
-    border-radius:999px;
-    padding:7px 10px;
+    border-radius:8px;
+    padding:8px 10px;
     cursor:pointer;
     font-size:13px;
-    transition:background 0.15s, box-shadow 0.15s, transform 0.12s;
+    transition:all 0.15s ease;
   }
   .tf-rail-item[data-sel="1"] {
     background:#EEF2FF;
     border-color:#4F46E5;
-    box-shadow:0 8px 18px rgba(79,70,229,.35);
-    transform:translateY(-1px);
+    box-shadow:0 4px 12px rgba(79,70,229,.2);
+    transform:translateX(2px);
   }
   .tf-grip {
     opacity:.7;
@@ -127,8 +129,8 @@ const LAYOUT_CSS = `
     background:#FFFFFF;
     border:1px solid #E5E7EB;
     border-radius:12px;
-    padding:12px;
-    box-shadow:0 18px 36px rgba(15,23,42,0.06);
+    padding:16px;
+    box-shadow:0 8px 24px rgba(15,23,42,0.04);
   }
 
   .tf-preview-col {
@@ -139,49 +141,96 @@ const LAYOUT_CSS = `
   }
   .tf-preview-card {
     background:#FFFFFF;
-    border-radius:18px;
-    padding:14px;
-    box-shadow:0 24px 50px rgba(15,23,42,0.16);
+    border-radius:12px;
+    padding:16px;
+    box-shadow:0 12px 32px rgba(15,23,42,0.08);
     border:1px solid #E5E7EB;
   }
 
-  /* >>> GRANDS TITRES — même design que la bande du header <<< */
+  /* >>> GRANDS TITRES des sections <<< */
   .tf-group-title {
-    padding:10px 12px;
-    background:linear-gradient(90deg,#0B3B82,#7D0031);
-    border:1px solid rgba(0,167,163,0.85);
+    padding:10px 14px;
+    background:linear-gradient(90deg,#1E40AF,#7C2D12);
     color:#F9FAFB;
-    border-radius:10px;
-    font-weight:800;
+    border-radius:8px;
+    font-weight:700;
     letter-spacing:.02em;
-    margin-bottom:10px;
+    margin-bottom:16px;
     font-size:13px;
-    box-shadow:0 6px 18px rgba(11,59,130,0.35);
+    box-shadow:0 4px 12px rgba(30,64,175,0.15);
   }
 
-  /* ---- Preview OFFERS / UPSELL (cartes en haut) ---- */
-  .offers-status-bar {
+  /* ---- Offer item cards ---- */
+  .offer-item-card {
+    background:#FFFFFF;
+    border:1px solid #E5E7EB;
     border-radius:10px;
-    padding:8px 10px;
-    margin-bottom:10px;
+    padding:16px;
+    margin-bottom:16px;
+    position:relative;
+  }
+  .offer-item-header {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:16px;
+    padding-bottom:12px;
+    border-bottom:1px solid #F3F4F6;
+  }
+  .offer-item-number {
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:28px;
+    height:28px;
+    border-radius:50%;
+    background:#4F46E5;
+    color:white;
+    font-weight:600;
+    font-size:12px;
+    margin-right:10px;
+  }
+  .remove-offer-btn {
+    position:absolute;
+    top:12px;
+    right:12px;
+    background:#FEF2F2;
+    border:1px solid #FECACA;
+    color:#DC2626;
+    width:24px;
+    height:24px;
+    border-radius:6px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    font-size:12px;
+    transition:all 0.2s;
+  }
+  .remove-offer-btn:hover {
+    background:#FEE2E2;
+    transform:scale(1.05);
   }
 
+  /* ---- Preview OFFERS / UPSELL ---- */
   .offers-strip {
     display:grid;
-    grid-template-columns:68px minmax(0,1fr);
+    grid-template-columns:60px minmax(0,1fr);
     gap:12px;
     align-items:center;
-    border-radius:16px;
-  }
-  .offers-strip + .offers-strip {
-    margin-top:10px;
+    background:#FFFFFF;
+    border:1px solid #E5E7EB;
+    border-radius:10px;
+    padding:12px;
+    margin-bottom:10px;
+    box-shadow:0 4px 12px rgba(0,0,0,0.04);
   }
   .offers-strip-thumb {
-    width:64px;
-    height:64px;
-    border-radius:18px;
+    width:56px;
+    height:56px;
+    border-radius:12px;
     overflow:hidden;
-    border:1px solid rgba(248,250,252,0.4);
+    border:1px solid #E5E7EB;
     display:flex;
     align-items:center;
     justify-content:center;
@@ -189,112 +238,138 @@ const LAYOUT_CSS = `
   .offers-strip-thumb-inner {
     width:100%;
     height:100%;
-    border-radius:16px;
-    background:linear-gradient(135deg,#3B82F6 0%,#A855F7 40%,#F97316 100%);
+    border-radius:12px;
+    background:linear-gradient(135deg,#3B82F6 0%,#8B5CF6 100%);
   }
   .offers-strip-thumb-inner-upsell {
     width:100%;
     height:100%;
-    border-radius:16px;
-    background:linear-gradient(135deg,#EC4899 0%,#F97316 40%,#22C55E 100%);
+    border-radius:12px;
+    background:linear-gradient(135deg,#EC4899 0%,#F59E0B 100%);
   }
   .offers-strip-thumb img {
     width:100%;
     height:100%;
     object-fit:cover;
-    border-radius:16px;
+    border-radius:12px;
   }
   .offers-strip-title {
     font-size:11px;
     font-weight:600;
     text-transform:uppercase;
     letter-spacing:.08em;
-    opacity:.9;
+    color:#6B7280;
     display:flex;
     align-items:center;
     gap:6px;
+    margin-bottom:4px;
   }
   .offers-strip-icon {
-    width:22px;
-    height:22px;
+    width:20px;
+    height:20px;
     border-radius:999px;
-    display:grid;
-    place-items:center;
-    font-size:13px;
-    flex-shrink:0;
-    overflow:hidden;
+    background:#F3F4F6;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:12px;
   }
   .offers-strip-main {
-    font-size:13px;
+    font-size:14px;
     font-weight:600;
-    margin-top:2px;
+    color:#111827;
+    margin-bottom:2px;
   }
   .offers-strip-desc {
     font-size:12px;
-    margin-top:1px;
+    color:#6B7280;
+    line-height:1.4;
   }
 
-  /* ---- Preview Order summary + form (copie de Forms COD style) ---- */
-  .cod-preview-grid {
-    margin-top:14px;
+  /* ---- Icons palette ---- */
+  .icons-palette {
     display:grid;
-    gap:12px;
-  }
-  .cod-card {
-    background:#F9FAFB;
-    border-radius:14px;
-    padding:12px;
-    border:1px solid #E5E7EB;
-  }
-  .cod-card-title {
-    font-size:13px;
-    font-weight:600;
-    margin-bottom:8px;
-  }
-  .cod-row {
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    font-size:13px;
-    padding:6px 8px;
-    border-radius:8px;
-    background:#FFFFFF;
-    border:1px solid #E5E7EB;
-  }
-  .cod-row + .cod-row { margin-top:6px; }
-  .cod-row-label {
-    color:#4B5563;
-  }
-  .cod-row-value {
-    font-weight:600;
-  }
-  .cod-form-field {
+    grid-template-columns:repeat(6, 1fr);
+    gap:8px;
     margin-top:8px;
   }
-  .cod-form-label {
-    font-size:12px;
-    margin-bottom:4px;
+  .icon-item {
+    width:32px;
+    height:32px;
+    border-radius:8px;
+    background:#F9FAFB;
+    border:1px solid #E5E7EB;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    transition:all 0.2s;
+    font-size:16px;
+  }
+  .icon-item:hover {
+    background:#EFF6FF;
+    border-color:#3B82F6;
+    transform:translateY(-2px);
+  }
+  .icon-item.selected {
+    background:#DBEAFE;
+    border-color:#2563EB;
+    box-shadow:0 4px 12px rgba(37,99,235,0.15);
+  }
+
+  /* ---- Add button ---- */
+  .add-button {
+    width:100%;
+    padding:12px;
+    background:#F9FAFB;
+    border:2px dashed #D1D5DB;
+    border-radius:10px;
+    color:#6B7280;
+    font-size:13px;
+    font-weight:500;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    cursor:pointer;
+    transition:all 0.2s;
+    margin-top:8px;
+  }
+  .add-button:hover {
+    background:#F3F4F6;
+    border-color:#9CA3AF;
     color:#4B5563;
   }
-  .cod-form-input {
-    width:100%;
-    border-radius:9px;
+
+  /* ---- Preview Order summary ---- */
+  .order-summary-preview {
+    background:#F9FAFB;
+    border-radius:10px;
+    padding:16px;
+    margin-top:16px;
     border:1px solid #E5E7EB;
-    padding:7px 10px;
+  }
+  .order-summary-title {
     font-size:13px;
-    background:#FFFFFF;
+    font-weight:600;
+    color:#111827;
+    margin-bottom:12px;
+  }
+  .order-row {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:8px 0;
+    border-bottom:1px solid #E5E7EB;
+    font-size:13px;
+  }
+  .order-row:last-child {
+    border-bottom:none;
+    font-weight:600;
     color:#111827;
   }
-  .cod-form-input::placeholder {
-    color:#9CA3AF;
-  }
-  .cod-cta {
-    margin-top:10px;
-    border-radius:12px;
-    padding:10px 12px;
-    text-align:center;
-    font-weight:700;
-    font-size:13px;
+  .order-label {
+    color:#6B7280;
   }
 
   @media (max-width: 1040px) {
@@ -304,7 +379,6 @@ const LAYOUT_CSS = `
       position:static;
       max-height:none;
     }
-    .tf-preview-card { margin-top:8px; }
   }
 `;
 
@@ -335,11 +409,11 @@ function GroupCard({ title, children }) {
   );
 }
 
-const Grid3 = ({ children }) => (
+const Grid2 = ({ children }) => (
   <div
     style={{
       display: "grid",
-      gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+      gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
       gap: 12,
       alignItems: "start",
     }}
@@ -348,437 +422,573 @@ const Grid3 = ({ children }) => (
   </div>
 );
 
-/** Champ couleur : picker visuel + champ texte Polaris */
-function ColorSwatchField({ label, value, onChange, helpText }) {
-  const safe =
-    typeof value === "string" && value.startsWith("#") && value.length >= 4
-      ? value
-      : "#111827";
+const Grid3 = ({ children }) => (
+  <div
+    style={{
+      display: "grid",
+      gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+      gap: 12,
+      alignItems: "start",
+    }}
+  >
+    {children}
+  </div>
+);
 
+/* ============================== Icons Palette ============================== */
+
+const ICONS_PALETTE = [
+  "🔥", "🎁", "✨", "⭐", "💎", "👑",
+  "🏆", "💝", "💯", "✅", "🛒", "💰",
+  "📦", "🚚", "⚡", "❤️", "👍", "👌",
+  "🏷️", "🎯", "🆓", "🔝", "🥇", "🎊"
+];
+
+function IconsPalette({ selected, onSelect }) {
   return (
-    <div>
-      <div
-        style={{
-          fontSize: 13,
-          fontWeight: 500,
-          marginBottom: 4,
-        }}
-      >
-        {label}
-      </div>
-      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-        <input
-          type="color"
-          value={safe}
-          onChange={(e) => onChange(e.target.value)}
-          style={{
-            width: 34,
-            height: 30,
-            borderRadius: 8,
-            border: "1px solid #E5E7EB",
-            padding: 0,
-            background: "transparent",
-            cursor: "pointer",
-          }}
-        />
-        <div style={{ flex: 1 }}>
-          <TextField
-            label={label}
-            labelHidden
-            value={value}
-            onChange={onChange}
-            helpText={helpText}
-          />
+    <div className="icons-palette">
+      {ICONS_PALETTE.map((icon, idx) => (
+        <div
+          key={idx}
+          className={`icon-item ${selected === icon ? 'selected' : ''}`}
+          onClick={() => onSelect(icon)}
+        >
+          {icon}
         </div>
-      </div>
+      ))}
     </div>
   );
 }
 
 /* ============================== DEFAULTS ============================== */
-const THEME_PRESETS = {
-  light: {
-    statusBarBg: "#020617",
-    statusBarText: "#E5E7EB",
-    offerBg: "#FFFFFF",
-    upsellBg: "#FFFFFF",
-    ctaBg: "#111827",
-    ctaText: "#F9FAFB",
-    ctaBorder: "#000000",
-  },
-  dark: {
-    statusBarBg: "#020617",
-    statusBarText: "#F9FAFB",
-    offerBg: "#020617",
-    upsellBg: "#020617",
-    ctaBg: "#F97316",
-    ctaText: "#111827",
-    ctaBorder: "#F97316",
-  },
-  purple: {
-    statusBarBg: "#4C1D95",
-    statusBarText: "#F9FAFB",
-    offerBg: "#EEF2FF",
-    upsellBg: "#F5F3FF",
-    ctaBg: "#7C3AED",
-    ctaText: "#F9FAFB",
-    ctaBorder: "#4C1D95",
-  },
+
+const DEFAULT_OFFER = {
+  enabled: true,
+  type: "percent", // "percent" or "fixed"
+  value: 10, // percent or fixed amount
+  title: "",
+  description: "",
+  
+  // Conditions
+  minQuantity: 2,
+  minSubtotal: 0,
+  requiresCode: false,
+  code: "",
+  maxDiscount: 0, // 0 = unlimited
+  
+  // Product selection
+  shopifyProductId: "",
+  productRef: "",
+  imageUrl: "",
+  icon: "🔥",
+  
+  // Display
+  showInPreview: true
+};
+
+const DEFAULT_UPSELL = {
+  enabled: true,
+  title: "",
+  description: "",
+  
+  // Trigger conditions
+  triggerType: "subtotal", // "subtotal" or "product"
+  minSubtotal: 30,
+  productHandle: "",
+  
+  // Gift details
+  giftTitle: "Free Gift",
+  giftNote: "Special offer",
+  originalPrice: 9.99,
+  isFree: true,
+  
+  // Product selection
+  shopifyProductId: "",
+  productRef: "",
+  imageUrl: "",
+  icon: "🎁",
+  
+  // Display
+  showInPreview: true
 };
 
 const DEFAULT_CFG = {
-  meta: { version: 7 },
-  global: { enabled: false, currency: "dh", rounding: "none" },
-
-  themePreset: "light",
-  theme: THEME_PRESETS.light,
-
+  meta: { version: 8 },
+  global: { 
+    enabled: true, 
+    currency: "dh", 
+    rounding: "none" 
+  },
+  
+  // Multiple offers support (max 3)
+  offers: [JSON.parse(JSON.stringify(DEFAULT_OFFER))],
+  
+  // Multiple upsells support (max 3)
+  upsells: [JSON.parse(JSON.stringify(DEFAULT_UPSELL))],
+  
+  // Display settings
   display: {
-    style: "style4",
-    showDiscountLine: true,
-    showUpsellLine: true,
-  },
-
-  discount: {
-    enabled: false,
-    type: "percent",
-    percent: 10,
-    fixedAmount: 5,
-    conditions: {
-      minQty: 2,
-      minSubtotal: 0,
-      requiresCode: false,
-      code: "",
-    },
-    caps: {
-      maxDiscount: 0,
-    },
-
-    shopifyProductId: "",
-    productRef: "",
-    previewTitle: "",
-    previewDescription: "Discount -10% from 2 items.",
-    imageUrl: "",
-    iconEmoji: "🔥",
-    iconUrl: "",
-  },
-
-  upsell: {
-    enabled: false,
-    trigger: {
-      type: "subtotal",
-      productHandle: "",
-      minSubtotal: 30,
-    },
-    gift: {
-      title: "Winning gift",
-      note: "Free gift",
-      priceBefore: 9.99,
-      isFree: true,
-    },
-
-    shopifyProductId: "",
-    productRef: "",
-    previewTitle: "",
-    previewDescription: "Free gift automatically.",
-    imageUrl: "",
-    iconEmoji: "🎁",
-    iconUrl: "",
-  },
+    showOrderSummary: true,
+    showOffersSection: true
+  }
 };
 
 function withDefaults(raw = {}) {
   const d = DEFAULT_CFG;
   const x = { ...d, ...raw };
-
-  x.global = { ...d.global, ...(raw.global || {}) };
-  x.themePreset = raw.themePreset || d.themePreset;
-  x.theme = { ...d.theme, ...(raw.theme || {}) };
-  x.display = { ...d.display, ...(raw.display || {}) };
-
-  x.discount = {
-    ...d.discount,
-    ...(raw.discount || {}),
-    conditions: {
-      ...d.discount.conditions,
-      ...((raw.discount || {}).conditions || {}),
-    },
-    caps: {
-      ...d.discount.caps,
-      ...((raw.discount || {}).caps || {}),
-    },
-  };
-
-  x.upsell = {
-    ...d.upsell,
-    ...(raw.upsell || {}),
-    trigger: {
-      ...d.upsell.trigger,
-      ...((raw.upsell || {}).trigger || {}),
-    },
-    gift: {
-      ...d.upsell.gift,
-      ...((raw.upsell || {}).gift || {}),
-    },
-  };
-
+  
+  // Ensure arrays exist
+  x.offers = Array.isArray(x.offers) ? x.offers : [DEFAULT_OFFER];
+  x.upsells = Array.isArray(x.upsells) ? x.upsells : [DEFAULT_UPSELL];
+  
+  // Limit to 3 items each
+  x.offers = x.offers.slice(0, 3);
+  x.upsells = x.upsells.slice(0, 3);
+  
+  // Merge with defaults for each item
+  x.offers = x.offers.map(offer => ({ ...DEFAULT_OFFER, ...offer }));
+  x.upsells = x.upsells.map(upsell => ({ ...DEFAULT_UPSELL, ...upsell }));
+  
   return x;
 }
 
-/* ============================== Preview helpers ============================== */
+/* ============================== Preview Components ============================== */
 
 function findProductLabel(products, id) {
   if (!id) return "";
-  const p = products.find((prod) => String(prod.id) === String(id));
+  const p = products.find(prod => String(prod.id) === String(id));
   return p?.title || "";
 }
 
-function getStripStyle(kind, cfg) {
-  const styleKey = cfg.display?.style || "style1";
-  const t = cfg.theme || {};
-  const baseBg =
-    kind === "offer" ? t.offerBg || "#FFFFFF" : t.upsellBg || "#FFFFFF";
-
-  let out = {
-    background: baseBg,
-    borderRadius: "16px",
-    border: "1px solid #E5E7EB",
-    boxShadow: "0 14px 30px rgba(15,23,42,0.08)",
-    padding: "10px 12px",
-  };
-
-  switch (styleKey) {
-    case "style2":
-      out.boxShadow = "0 18px 40px rgba(79,70,229,0.35)";
-      out.border = "1px solid rgba(79,70,229,0.4)";
-      break;
-    case "style3":
-      out.boxShadow = "none";
-      out.padding = "8px 10px";
-      break;
-    case "style4":
-      out.padding = "6px 10px";
-      break;
-    case "style5":
-      out.boxShadow = "none";
-      out.border = "1px dashed rgba(148,163,184,0.9)";
-      break;
-    default:
-      break;
-  }
-
-  return out;
-}
-
-function OffersStatusBar({ cfg, t }) {
-  const offersOn = !!cfg.global?.enabled && !!cfg.discount?.enabled;
-  const upsellOn = !!cfg.global?.enabled && !!cfg.upsell?.enabled;
-  const theme = cfg.theme || DEFAULT_CFG.theme;
-
-  return (
-    <div
-      className="offers-status-bar"
-      style={{
-        background: theme.statusBarBg,
-        color: theme.statusBarText,
-      }}
-    >
-      <InlineStack align="space-between" blockAlign="center">
-        <InlineStack gap="200" blockAlign="center">
-          <Badge tone={offersOn ? "success" : "critical"}>
-            {offersOn
-              ? t("section2.preview.offersStatus.active")
-              : t("section2.preview.offersStatus.inactive")}
-          </Badge>
-          <Badge tone={upsellOn ? "success" : "attention"}>
-            {upsellOn
-              ? t("section2.preview.offersStatus.giftActive")
-              : t("section2.preview.offersStatus.giftPending")}
-          </Badge>
-        </InlineStack>
-        <Text as="span" variant="bodySm" tone="subdued">
-          {t("section2.preview.offersStatus.displayAbove")}
-        </Text>
-      </InlineStack>
-    </div>
-  );
-}
-
-function OffersCardsPreview({ cfg, products, t }) {
-  const offersOn = !!cfg.global?.enabled && !!cfg.discount?.enabled;
-  const upsellOn = !!cfg.global?.enabled && !!cfg.upsell?.enabled;
-
-  const offerName =
-    cfg.discount.previewTitle ||
-    findProductLabel(products, cfg.discount.shopifyProductId) ||
-    t("section2.discount.product.placeholder");
-
-  const offerDesc =
-    cfg.discount.previewDescription || t("section2.helpText.offerDesc");
-
-  const upsellName =
-    cfg.upsell.previewTitle ||
-    findProductLabel(products, cfg.upsell.shopifyProductId) ||
-    t("section2.upsell.product.placeholder");
-
-  const upsellDesc =
-    cfg.upsell.previewDescription || t("section2.helpText.giftDesc");
-
-  const discountIconEmoji = cfg.discount.iconEmoji || cfg.discount.icon || "";
-  const discountIconUrl = cfg.discount.iconUrl || "";
-  const upsellIconEmoji = cfg.upsell.iconEmoji || cfg.upsell.icon || "";
-  const upsellIconUrl = cfg.upsell.iconUrl || "";
-
+function OffersPreview({ cfg, products, t }) {
+  const activeOffers = cfg.offers.filter(offer => offer.enabled && offer.showInPreview);
+  
+  if (activeOffers.length === 0) return null;
+  
   return (
     <BlockStack gap="200">
-      {offersOn && cfg.display.showDiscountLine !== false && (
-        <div className="offers-strip" style={getStripStyle("offer", cfg)}>
-          <div className="offers-strip-thumb">
-            {cfg.discount.imageUrl ? (
-              <img src={cfg.discount.imageUrl} alt="Produit offre" />
-            ) : (
-              <div className="offers-strip-thumb-inner" />
-            )}
-          </div>
-          <div>
-            <div className="offers-strip-title">
-              {discountIconUrl ? (
-                <span className="offers-strip-icon">
-                  <img
-                    src={discountIconUrl}
-                    alt="Icône offre"
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "cover",
-                      borderRadius: "999px",
-                    }}
-                  />
-                </span>
-              ) : discountIconEmoji ? (
-                <span className="offers-strip-icon">
-                  {discountIconEmoji}
-                </span>
-              ) : null}
-              <span>{t("section2.preview.offerStrip.offer")}</span>
+      {activeOffers.map((offer, idx) => {
+        const productName = offer.title || findProductLabel(products, offer.shopifyProductId) || 
+                          t("section2.preview.defaultOfferTitle");
+        const description = offer.description || 
+                          (offer.type === "percent" 
+                            ? t("section2.preview.discountPercent", { percent: offer.value })
+                            : t("section2.preview.discountFixed", { amount: offer.value, currency: cfg.global.currency }));
+        
+        return (
+          <div key={idx} className="offers-strip">
+            <div className="offers-strip-thumb">
+              {offer.imageUrl ? (
+                <img src={offer.imageUrl} alt={productName} />
+              ) : (
+                <div className="offers-strip-thumb-inner" />
+              )}
             </div>
-            <div className="offers-strip-main">{offerName}</div>
-            <div className="offers-strip-desc">{offerDesc}</div>
-          </div>
-        </div>
-      )}
-
-      {upsellOn && cfg.display.showUpsellLine !== false && (
-        <div className="offers-strip" style={getStripStyle("upsell", cfg)}>
-          <div className="offers-strip-thumb">
-            {cfg.upsell.imageUrl ? (
-              <img src={cfg.upsell.imageUrl} alt="Produit cadeau" />
-            ) : (
-              <div className="offers-strip-thumb-inner-upsell" />
-            )}
-          </div>
-          <div>
-            <div className="offers-strip-title">
-              {upsellIconUrl ? (
-                <span className="offers-strip-icon">
-                  <img
-                    src={upsellIconUrl}
-                    alt="Icône cadeau"
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "cover",
-                      borderRadius: "999px",
-                    }}
-                  />
-                </span>
-              ) : upsellIconEmoji ? (
-                <span className="offers-strip-icon">
-                  {upsellIconEmoji}
-                </span>
-              ) : null}
-              <span>{t("section2.preview.offerStrip.gift")}</span>
+            <div>
+              <div className="offers-strip-title">
+                <span className="offers-strip-icon">{offer.icon}</span>
+                <span>{t("section2.preview.offerStrip.offer")}</span>
+              </div>
+              <div className="offers-strip-main">{productName}</div>
+              <div className="offers-strip-desc">{description}</div>
             </div>
-            <div className="offers-strip-main">{upsellName}</div>
-            <div className="offers-strip-desc">{upsellDesc}</div>
           </div>
-        </div>
-      )}
+        );
+      })}
     </BlockStack>
   );
 }
 
-function CodFormPreview({ currency, theme, t }) {
+function UpsellsPreview({ cfg, products, t }) {
+  const activeUpsells = cfg.upsells.filter(upsell => upsell.enabled && upsell.showInPreview);
+  
+  if (activeUpsells.length === 0) return null;
+  
   return (
-    <div className="cod-preview-grid">
-      <div className="cod-card">
-        <div className="cod-card-title">
-          {t("section2.preview.orderSummary.title")}
-        </div>
-        <div className="cod-row">
-          <div className="cod-row-label">
-            {t("section2.preview.orderSummary.productPrice")}
+    <BlockStack gap="200">
+      {activeUpsells.map((upsell, idx) => {
+        const productName = upsell.title || findProductLabel(products, upsell.shopifyProductId) || 
+                          t("section2.preview.defaultUpsellTitle");
+        const description = upsell.description || t("section2.preview.giftDescription");
+        
+        return (
+          <div key={idx} className="offers-strip">
+            <div className="offers-strip-thumb">
+              {upsell.imageUrl ? (
+                <img src={upsell.imageUrl} alt={productName} />
+              ) : (
+                <div className="offers-strip-thumb-inner-upsell" />
+              )}
+            </div>
+            <div>
+              <div className="offers-strip-title">
+                <span className="offers-strip-icon">{upsell.icon}</span>
+                <span>{t("section2.preview.offerStrip.gift")}</span>
+              </div>
+              <div className="offers-strip-main">{productName}</div>
+              <div className="offers-strip-desc">{description}</div>
+            </div>
           </div>
-          <div className="cod-row-value">19.99 {currency}</div>
-        </div>
-        <div className="cod-row">
-          <div className="cod-row-label">
-            {t("section2.preview.orderSummary.shipping")}
-          </div>
-          <div className="cod-row-value">
-            {t("section1.preview.freeShipping")}
-          </div>
-        </div>
-        <div className="cod-row">
-          <div className="cod-row-label">
-            {t("section2.preview.orderSummary.total")}
-          </div>
-          <div className="cod-row-value">19.99 {currency}</div>
-        </div>
-      </div>
+        );
+      })}
+    </BlockStack>
+  );
+}
 
-      <div className="cod-card">
-        <div className="cod-card-title">
-          {t("section2.preview.form.title")}
-        </div>
-        <div className="cod-form-field">
-          <div className="cod-form-label">
-            {t("section2.preview.form.fullName")}
-          </div>
-          <input
-            className="cod-form-input"
-            placeholder={t("section1.fieldEditor.titlePrefix.fullName")}
-            readOnly
-          />
-        </div>
-        <div className="cod-form-field">
-          <div className="cod-form-label">
-            {t("section2.preview.form.phone")}
-          </div>
-          <input className="cod-form-input" placeholder="+212 ..." readOnly />
-        </div>
-        <div className="cod-form-field">
-          <div className="cod-form-label">
-            {t("section2.preview.form.city")}
-          </div>
-          <input
-            className="cod-form-input"
-            placeholder={t("section1.fieldEditor.titlePrefix.city")}
-            readOnly
-          />
-        </div>
-        <div
-          className="cod-cta"
-          style={{
-            background: theme.ctaBg,
-            color: theme.ctaText,
-            border: `1px solid ${theme.ctaBorder}`,
-            boxShadow: "0 18px 36px rgba(15,23,42,0.55)",
-          }}
-        >
-          {t("section2.preview.form.submit", { price: "19.99", currency })}
-        </div>
+function OrderSummaryPreview({ cfg, t }) {
+  if (!cfg.display.showOrderSummary) return null;
+  
+  return (
+    <div className="order-summary-preview">
+      <div className="order-summary-title">
+        {t("section2.preview.orderSummary.title")}
       </div>
+      <div className="order-row">
+        <span className="order-label">
+          {t("section2.preview.orderSummary.subtotal")}
+        </span>
+        <span>129.99 {cfg.global.currency}</span>
+      </div>
+      <div className="order-row">
+        <span className="order-label">
+          {t("section2.preview.orderSummary.shipping")}
+        </span>
+        <span>{t("section1.preview.freeShipping")}</span>
+      </div>
+      <div className="order-row">
+        <span className="order-label">
+          {t("section2.preview.orderSummary.total")}
+        </span>
+        <span>129.99 {cfg.global.currency}</span>
+      </div>
+    </div>
+  );
+}
+
+/* ============================== Editor Components ============================== */
+
+function OfferItemEditor({ 
+  offer, 
+  index, 
+  onChange, 
+  onRemove, 
+  productOptions, 
+  t,
+  canRemove 
+}) {
+  const handleChange = (field, value) => {
+    onChange({ ...offer, [field]: value });
+  };
+  
+  return (
+    <div className="offer-item-card">
+      {canRemove && (
+        <div className="remove-offer-btn" onClick={onRemove}>
+          ×
+        </div>
+      )}
+      
+      <div className="offer-item-header">
+        <InlineStack align="start" blockAlign="center">
+          <span className="offer-item-number">{index + 1}</span>
+          <Text as="h3" variant="headingSm">
+            {t("section2.offer.title", { number: index + 1 })}
+          </Text>
+        </InlineStack>
+        <Checkbox
+          label={t("section2.offer.enable")}
+          checked={offer.enabled}
+          onChange={(v) => handleChange('enabled', v)}
+        />
+      </div>
+      
+      <BlockStack gap="300">
+        <Grid2>
+          <TextField
+            label={t("section2.offer.titleField")}
+            value={offer.title}
+            onChange={(v) => handleChange('title', v)}
+            helpText={t("section2.helpText.offerTitle")}
+          />
+          <TextField
+            label={t("section2.offer.description")}
+            value={offer.description}
+            onChange={(v) => handleChange('description', v)}
+            helpText={t("section2.helpText.offerDesc")}
+          />
+        </Grid2>
+        
+        <Grid3>
+          <Select
+            label={t("section2.offer.type")}
+            value={offer.type}
+            onChange={(v) => handleChange('type', v)}
+            options={[
+              { label: t("section2.offer.type.percent"), value: "percent" },
+              { label: t("section2.offer.type.fixed"), value: "fixed" }
+            ]}
+          />
+          
+          {offer.type === "percent" ? (
+            <RangeSlider
+              label={`${t("section2.offer.percent")}: ${offer.value}%`}
+              min={1}
+              max={90}
+              output
+              value={offer.value}
+              onChange={(v) => handleChange('value', v)}
+            />
+          ) : (
+            <TextField
+              type="number"
+              label={t("section2.offer.fixedAmount")}
+              value={String(offer.value)}
+              onChange={(v) => handleChange('value', parseFloat(v) || 0)}
+            />
+          )}
+          
+          <Select
+            label={t("section2.offer.product")}
+            value={offer.shopifyProductId}
+            onChange={(v) => handleChange('shopifyProductId', v)}
+            options={productOptions}
+            helpText={t("section2.helpText.product")}
+          />
+        </Grid3>
+        
+        <GroupCard title={t("section2.group.conditions.title")}>
+          <Grid3>
+            <TextField
+              type="number"
+              label={t("section2.offer.minQuantity")}
+              value={String(offer.minQuantity)}
+              onChange={(v) => handleChange('minQuantity', parseInt(v) || 0)}
+              helpText={t("section2.helpText.minQuantity")}
+            />
+            
+            <TextField
+              type="number"
+              label={t("section2.offer.minSubtotal")}
+              value={String(offer.minSubtotal)}
+              onChange={(v) => handleChange('minSubtotal', parseFloat(v) || 0)}
+              helpText={t("section2.helpText.minSubtotal")}
+            />
+            
+            <TextField
+              type="number"
+              label={t("section2.offer.maxDiscount")}
+              value={String(offer.maxDiscount)}
+              onChange={(v) => handleChange('maxDiscount', parseFloat(v) || 0)}
+              helpText={t("section2.helpText.maxDiscount")}
+            />
+          </Grid3>
+          
+          <Checkbox
+            label={t("section2.offer.requiresCode")}
+            checked={offer.requiresCode}
+            onChange={(v) => handleChange('requiresCode', v)}
+          />
+          
+          {offer.requiresCode && (
+            <TextField
+              label={t("section2.offer.code")}
+              value={offer.code}
+              onChange={(v) => handleChange('code', v.toUpperCase())}
+              helpText={t("section2.helpText.code")}
+            />
+          )}
+        </GroupCard>
+        
+        <GroupCard title={t("section2.group.display.title")}>
+          <Grid2>
+            <TextField
+              label={t("section2.offer.imageUrl")}
+              value={offer.imageUrl}
+              onChange={(v) => handleChange('imageUrl', v)}
+              helpText={t("section2.helpText.offerImage")}
+            />
+            
+            <div>
+              <Text as="p" variant="bodySm">
+                {t("section2.offer.icon")}
+              </Text>
+              <TextField
+                label={t("section2.offer.icon")}
+                labelHidden
+                value={offer.icon}
+                onChange={(v) => handleChange('icon', v)}
+                helpText={t("section2.helpText.offerIconEmoji")}
+              />
+              <IconsPalette
+                selected={offer.icon}
+                onSelect={(icon) => handleChange('icon', icon)}
+              />
+            </div>
+          </Grid2>
+          
+          <Checkbox
+            label={t("section2.offer.showInPreview")}
+            checked={offer.showInPreview}
+            onChange={(v) => handleChange('showInPreview', v)}
+          />
+        </GroupCard>
+      </BlockStack>
+    </div>
+  );
+}
+
+function UpsellItemEditor({ 
+  upsell, 
+  index, 
+  onChange, 
+  onRemove, 
+  productOptions, 
+  t,
+  canRemove 
+}) {
+  const handleChange = (field, value) => {
+    onChange({ ...upsell, [field]: value });
+  };
+  
+  return (
+    <div className="offer-item-card">
+      {canRemove && (
+        <div className="remove-offer-btn" onClick={onRemove}>
+          ×
+        </div>
+      )}
+      
+      <div className="offer-item-header">
+        <InlineStack align="start" blockAlign="center">
+          <span className="offer-item-number">{index + 1}</span>
+          <Text as="h3" variant="headingSm">
+            {t("section2.upsell.title", { number: index + 1 })}
+          </Text>
+        </InlineStack>
+        <Checkbox
+          label={t("section2.upsell.enable")}
+          checked={upsell.enabled}
+          onChange={(v) => handleChange('enabled', v)}
+        />
+      </div>
+      
+      <BlockStack gap="300">
+        <Grid2>
+          <TextField
+            label={t("section2.upsell.titleField")}
+            value={upsell.title}
+            onChange={(v) => handleChange('title', v)}
+            helpText={t("section2.helpText.upsellTitle")}
+          />
+          <TextField
+            label={t("section2.upsell.description")}
+            value={upsell.description}
+            onChange={(v) => handleChange('description', v)}
+            helpText={t("section2.helpText.giftDesc")}
+          />
+        </Grid2>
+        
+        <Grid3>
+          <Select
+            label={t("section2.upsell.product")}
+            value={upsell.shopifyProductId}
+            onChange={(v) => handleChange('shopifyProductId', v)}
+            options={productOptions}
+            helpText={t("section2.helpText.product")}
+          />
+          
+          <Select
+            label={t("section2.upsell.triggerType")}
+            value={upsell.triggerType}
+            onChange={(v) => handleChange('triggerType', v)}
+            options={[
+              { label: t("section2.upsell.trigger.subtotal"), value: "subtotal" },
+              { label: t("section2.upsell.trigger.product"), value: "product" }
+            ]}
+          />
+          
+          {upsell.triggerType === "subtotal" ? (
+            <TextField
+              type="number"
+              label={t("section2.upsell.minSubtotal")}
+              value={String(upsell.minSubtotal)}
+              onChange={(v) => handleChange('minSubtotal', parseFloat(v) || 0)}
+              helpText={t("section2.helpText.minSubtotal")}
+            />
+          ) : (
+            <TextField
+              label={t("section2.upsell.productHandle")}
+              value={upsell.productHandle}
+              onChange={(v) => handleChange('productHandle', v)}
+              helpText={t("section2.helpText.productHandle")}
+            />
+          )}
+        </Grid3>
+        
+        <GroupCard title={t("section2.group.gift.title")}>
+          <Grid3>
+            <TextField
+              label={t("section2.gift.title")}
+              value={upsell.giftTitle}
+              onChange={(v) => handleChange('giftTitle', v)}
+            />
+            
+            <TextField
+              label={t("section2.gift.note")}
+              value={upsell.giftNote}
+              onChange={(v) => handleChange('giftNote', v)}
+            />
+            
+            <TextField
+              type="number"
+              label={t("section2.gift.originalPrice")}
+              value={String(upsell.originalPrice)}
+              onChange={(v) => handleChange('originalPrice', parseFloat(v) || 0)}
+              helpText={t("section2.helpText.originalPrice")}
+            />
+          </Grid3>
+          
+          <Checkbox
+            label={t("section2.gift.isFree")}
+            checked={upsell.isFree}
+            onChange={(v) => handleChange('isFree', v)}
+          />
+        </GroupCard>
+        
+        <GroupCard title={t("section2.group.display.title")}>
+          <Grid2>
+            <TextField
+              label={t("section2.upsell.imageUrl")}
+              value={upsell.imageUrl}
+              onChange={(v) => handleChange('imageUrl', v)}
+              helpText={t("section2.helpText.offerImage")}
+            />
+            
+            <div>
+              <Text as="p" variant="bodySm">
+                {t("section2.upsell.icon")}
+              </Text>
+              <TextField
+                label={t("section2.upsell.icon")}
+                labelHidden
+                value={upsell.icon}
+                onChange={(v) => handleChange('icon', v)}
+                helpText={t("section2.helpText.giftIconEmoji")}
+              />
+              <IconsPalette
+                selected={upsell.icon}
+                onSelect={(icon) => handleChange('icon', icon)}
+              />
+            </div>
+          </Grid2>
+          
+          <Checkbox
+            label={t("section2.upsell.showInPreview")}
+            checked={upsell.showInPreview}
+            onChange={(v) => handleChange('showInPreview', v)}
+          />
+        </GroupCard>
+      </BlockStack>
     </div>
   );
 }
@@ -828,7 +1038,6 @@ function PageShell({ children, t, loading, onSave, saving }) {
             </div>
           </InlineStack>
 
-          {/* === Sous-titre + bouton Save dans la bande colorée === */}
           <InlineStack gap="200" blockAlign="center">
             <div
               style={{
@@ -865,7 +1074,7 @@ function Section2OffersInner({ products = [] }) {
   const shopProducts = products || [];
 
   const productOptions = [
-    { label: t("section2.discount.product.placeholder"), value: "" },
+    { label: t("section2.offer.selectProduct"), value: "" },
     ...shopProducts.map((p) => ({
       label: p.title || `Produit #${p.id}`,
       value: String(p.id),
@@ -875,12 +1084,13 @@ function Section2OffersInner({ products = [] }) {
   const [cfg, setCfg] = useState(() => DEFAULT_CFG);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [selectedTab, setSelectedTab] = useState("offers");
 
   const persistLocal = (next) => {
     if (typeof window === "undefined") return;
     try {
       window.localStorage.setItem(
-        "tripleform_cod_offers_v4",
+        "tripleform_cod_offers_v5",
         JSON.stringify(withDefaults(next))
       );
     } catch {}
@@ -913,7 +1123,7 @@ function Section2OffersInner({ products = [] }) {
 
       if (!cancelled && typeof window !== "undefined") {
         try {
-          const s = window.localStorage.getItem("tripleform_cod_offers_v4");
+          const s = window.localStorage.getItem("tripleform_cod_offers_v5");
           if (s) {
             setCfg(withDefaults(JSON.parse(s)));
           }
@@ -957,142 +1167,103 @@ function Section2OffersInner({ products = [] }) {
     }
   };
 
-  const setGlobal = (p) =>
-    setCfg((c) => ({ ...c, global: { ...c.global, ...p } }));
-
-  const setTheme = (p) =>
-    setCfg((c) => ({ ...c, theme: { ...(c.theme || {}), ...p } }));
-
-  const applyThemePreset = (presetKey) => {
-    const preset = THEME_PRESETS[presetKey];
-    if (!preset) return;
-    setCfg((c) => ({
-      ...c,
-      themePreset: presetKey,
-      theme: { ...(c.theme || {}), ...preset },
+  // Offers management
+  const addOffer = () => {
+    if (cfg.offers.length >= 3) return;
+    setCfg(prev => ({
+      ...prev,
+      offers: [...prev.offers, JSON.parse(JSON.stringify(DEFAULT_OFFER))]
     }));
   };
+
+  const updateOffer = (index, updatedOffer) => {
+    setCfg(prev => ({
+      ...prev,
+      offers: prev.offers.map((offer, i) => 
+        i === index ? updatedOffer : offer
+      )
+    }));
+  };
+
+  const removeOffer = (index) => {
+    if (cfg.offers.length <= 1) return;
+    setCfg(prev => ({
+      ...prev,
+      offers: prev.offers.filter((_, i) => i !== index)
+    }));
+  };
+
+  // Upsells management
+  const addUpsell = () => {
+    if (cfg.upsells.length >= 3) return;
+    setCfg(prev => ({
+      ...prev,
+      upsells: [...prev.upsells, JSON.parse(JSON.stringify(DEFAULT_UPSELL))]
+    }));
+  };
+
+  const updateUpsell = (index, updatedUpsell) => {
+    setCfg(prev => ({
+      ...prev,
+      upsells: prev.upsells.map((upsell, i) => 
+        i === index ? updatedUpsell : upsell
+      )
+    }));
+  };
+
+  const removeUpsell = (index) => {
+    if (cfg.upsells.length <= 1) return;
+    setCfg(prev => ({
+      ...prev,
+      upsells: prev.upsells.filter((_, i) => i !== index)
+    }));
+  };
+
+  // Global settings
+  const setGlobal = (p) =>
+    setCfg((c) => ({ ...c, global: { ...c.global, ...p } }));
 
   const setDisplay = (p) =>
     setCfg((c) => ({ ...c, display: { ...c.display, ...p } }));
 
-  const setDiscount = (p) =>
-    setCfg((c) => ({ ...c, discount: { ...c.discount, ...p } }));
-
-  const setDiscCond = (p) =>
-    setCfg((c) => ({
-      ...c,
-      discount: {
-        ...c.discount,
-        conditions: { ...c.discount.conditions, ...p },
-      },
-    }));
-
-  const setDiscCaps = (p) =>
-    setCfg((c) => ({
-      ...c,
-      discount: {
-        ...c.discount,
-        caps: { ...c.discount.caps, ...p },
-      },
-    }));
-
-  const setUpsell = (p) =>
-    setCfg((c) => ({ ...c, upsell: { ...c.upsell, ...p } }));
-
-  const setUpTrig = (p) =>
-    setCfg((c) => ({
-      ...c,
-      upsell: {
-        ...c.upsell,
-        trigger: { ...c.upsell.trigger, ...p },
-      },
-    }));
-
-  const setUpGift = (p) =>
-    setCfg((c) => ({
-      ...c,
-      upsell: {
-        ...c.upsell,
-        gift: { ...c.upsell.gift, ...p },
-      },
-    }));
-
-  const currency = cfg.global.currency || "dh";
-  const theme = cfg.theme || DEFAULT_CFG.theme;
-
-  const RAIL = [
+  const NAV_ITEMS = [
     { key: "global", label: t("section2.rail.global"), icon: "SettingsIcon" },
-    {
-      key: "discount",
-      label: t("section2.rail.discount"),
-      icon: "DiscountIcon",
-    },
-    { key: "upsell", label: t("section2.rail.upsell"), icon: "GiftCardIcon" },
-  ];
-  const [sel, setSel] = useState("global");
-
-  const OFFER_STYLES = [
-    { label: t("section2.display.style.style1"), value: "style1" },
-    { label: t("section2.display.style.style2"), value: "style2" },
-    { label: t("section2.display.style.style3"), value: "style3" },
-    { label: t("section2.display.style.style4"), value: "style4" },
-    { label: t("section2.display.style.style5"), value: "style5" },
-  ];
-
-  const THEME_PRESET_OPTIONS = [
-    {
-      label: t("section2.theme.preset.light"),
-      value: "light",
-    },
-    {
-      label: t("section2.theme.preset.dark"),
-      value: "dark",
-    },
-    {
-      label: t("section2.theme.preset.purple"),
-      value: "purple",
-    },
+    { key: "offers", label: t("section2.rail.offers"), icon: "DiscountIcon" },
+    { key: "upsells", label: t("section2.rail.upsells"), icon: "GiftCardIcon" },
   ];
 
   return (
-    <PageShell
-      t={t}
-      loading={loading}
-      onSave={saveOffers}
-      saving={saving}
-    >
+    <PageShell t={t} loading={loading} onSave={saveOffers} saving={saving}>
       <div className="tf-editor">
-        {/* ===== Rail ===== */}
+        {/* ===== Rail de navigation ===== */}
         <div className="tf-rail">
           <div className="tf-rail-card">
             <div className="tf-rail-head">{t("section2.rail.title")}</div>
             <div className="tf-rail-list">
-              {RAIL.map((it) => (
+              {NAV_ITEMS.map((item) => (
                 <div
-                  key={it.key}
+                  key={item.key}
                   className="tf-rail-item"
-                  data-sel={sel === it.key ? 1 : 0}
-                  onClick={() => setSel(it.key)}
+                  data-sel={selectedTab === item.key ? 1 : 0}
+                  onClick={() => setSelectedTab(item.key)}
                 >
                   <div className="tf-grip">
-                    <Icon source={PI[it.icon] || PI.AppsIcon} />
+                    <Icon source={PI[item.icon] || PI.AppsIcon} />
                   </div>
-                  <div>{it.label}</div>
+                  <div>{item.label}</div>
                 </div>
               ))}
             </div>
           </div>
         </div>
 
-        {/* ===== Colonne réglages ===== */}
+        {/* ===== Colonne principale ===== */}
         <div className="tf-right-col">
           <div className="tf-hero">
             <InlineStack align="space-between" blockAlign="center">
               <InlineStack gap="200" blockAlign="center">
                 <span className="tf-hero-badge">
-                  {t("section2.preview.offerStrip.offer")} &{" "}
-                  {t("section2.preview.offerStrip.gift")}
+                  {cfg.offers.filter(o => o.enabled).length} {t("section2.rail.offers")} • {cfg.upsells.filter(u => u.enabled).length} {t("section2.rail.upsells")}
                 </span>
                 <div>
                   <div style={{ fontWeight: 700, fontSize: 14 }}>
@@ -1104,450 +1275,149 @@ function Section2OffersInner({ products = [] }) {
                 </div>
               </InlineStack>
               <div style={{ fontSize: 12, opacity: 0.9 }}>
-                {t("section2.preview.subtitle")}{" "}
-                {loading ? t("section0.usage.loading") : ""}
+                {t("section2.preview.subtitle")}
               </div>
             </InlineStack>
           </div>
 
           <div className="tf-panel">
-            <BlockStack gap="300">
-              {sel === "global" && (
-                <>
-                  <GroupCard title={t("section2.group.global.title")}>
-                    <Grid3>
-                      <Checkbox
-                        label={t("section2.global.enable")}
-                        checked={!!cfg.global.enabled}
-                        onChange={(v) => setGlobal({ enabled: v })}
-                      />
-                      <Select
-                        label={t("section2.global.rounding")}
-                        value={cfg.global.rounding}
-                        onChange={(v) => setGlobal({ rounding: v })}
-                        options={[
-                          {
-                            label: t("section2.global.rounding.none"),
-                            value: "none",
-                          },
-                          {
-                            label: t("section2.global.rounding.unit"),
-                            value: "unit",
-                          },
-                          {
-                            label: t("section2.global.rounding.99"),
-                            value: ".99",
-                          },
-                        ]}
-                      />
-                      <TextField
-                        label={t("section2.global.currency")}
-                        value={cfg.global.currency}
-                        onChange={(v) => setGlobal({ currency: v })}
-                      />
-                    </Grid3>
-                  </GroupCard>
-
-                  <GroupCard title={t("section2.group.theme.title")}>
-                    <BlockStack gap="200">
-                      <Grid3>
-                        <Select
-                          label={t("section2.theme.preset")}
-                          value={cfg.themePreset}
-                          onChange={applyThemePreset}
-                          options={THEME_PRESET_OPTIONS}
-                        />
-                      </Grid3>
-
-                      <Text variant="bodySm" tone="subdued">
-                        {t("section2.helpText.display")}
-                      </Text>
-
-                      <Grid3>
-                        <ColorSwatchField
-                          label={t("section2.theme.statusBarBg")}
-                          value={theme.statusBarBg}
-                          onChange={(v) => setTheme({ statusBarBg: v })}
-                          helpText={t("section2.helpText.offerIconUrl")}
-                        />
-                        <ColorSwatchField
-                          label={t("section2.theme.statusBarText")}
-                          value={theme.statusBarText}
-                          onChange={(v) => setTheme({ statusBarText: v })}
-                          helpText={t("section2.helpText.offerIconUrl")}
-                        />
-                        <ColorSwatchField
-                          label={t("section2.theme.offerBg")}
-                          value={theme.offerBg}
-                          onChange={(v) => setTheme({ offerBg: v })}
-                          helpText={t("section2.helpText.offerIconUrl")}
-                        />
-                        <ColorSwatchField
-                          label={t("section2.theme.upsellBg")}
-                          value={theme.upsellBg}
-                          onChange={(v) => setTheme({ upsellBg: v })}
-                          helpText={t("section2.helpText.offerIconUrl")}
-                        />
-                        <ColorSwatchField
-                          label={t("section2.theme.ctaBg")}
-                          value={theme.ctaBg}
-                          onChange={(v) => setTheme({ ctaBg: v })}
-                          helpText={t("section2.helpText.offerIconUrl")}
-                        />
-                        <ColorSwatchField
-                          label={t("section2.theme.ctaText")}
-                          value={theme.ctaText}
-                          onChange={(v) => setTheme({ ctaText: v })}
-                          helpText={t("section2.helpText.offerIconUrl")}
-                        />
-                        <ColorSwatchField
-                          label={t("section2.theme.ctaBorder")}
-                          value={theme.ctaBorder}
-                          onChange={(v) => setTheme({ ctaBorder: v })}
-                          helpText={t("section2.helpText.offerIconUrl")}
-                        />
-                      </Grid3>
-                    </BlockStack>
-                  </GroupCard>
-                </>
-              )}
-
-              {sel === "discount" && (
-                <>
-                  <GroupCard title={t("section2.group.discount.title")}>
-                    <Grid3>
-                      <Checkbox
-                        label={t("section2.discount.enable")}
-                        checked={!!cfg.discount.enabled}
-                        onChange={(v) => setDiscount({ enabled: v })}
-                      />
-
-                      <Select
-                        label={t("section2.discount.product")}
-                        value={cfg.discount.shopifyProductId}
-                        onChange={(v) =>
-                          setDiscount({ shopifyProductId: v })
-                        }
-                        options={productOptions}
-                        helpText={t("section2.helpText.product")}
-                      />
-
-                      <TextField
-                        label={t("section2.discount.previewTitle")}
-                        value={cfg.discount.previewTitle}
-                        onChange={(v) =>
-                          setDiscount({ previewTitle: v })
-                        }
-                      />
-
-                      <TextField
-                        label={t("section2.discount.previewDescription")}
-                        value={cfg.discount.previewDescription}
-                        onChange={(v) =>
-                          setDiscount({ previewDescription: v })
-                        }
-                        helpText={t("section2.helpText.offerDesc")}
-                      />
-
-                      <TextField
-                        label={t("section2.discount.productRef")}
-                        value={cfg.discount.productRef}
-                        onChange={(v) => setDiscount({ productRef: v })}
-                      />
-
-                      <TextField
-                        label={t("section2.discount.imageUrl")}
-                        value={cfg.discount.imageUrl}
-                        onChange={(v) => setDiscount({ imageUrl: v })}
-                        helpText={t("section2.helpText.offerImage")}
-                      />
-
-                      <TextField
-                        label={t("section2.discount.iconEmoji")}
-                        value={cfg.discount.iconEmoji || ""}
-                        onChange={(v) =>
-                          setDiscount({ iconEmoji: v })
-                        }
-                        helpText={t("section2.helpText.offerIconEmoji")}
-                      />
-
-                      <TextField
-                        label={t("section2.discount.iconUrl")}
-                        value={cfg.discount.iconUrl || ""}
-                        onChange={(v) => setDiscount({ iconUrl: v })}
-                        helpText={t("section2.helpText.offerIconUrl")}
-                      />
-
-                      <Select
-                        label={t("section2.discount.type")}
-                        value={cfg.discount.type}
-                        onChange={(v) => setDiscount({ type: v })}
-                        options={[
-                          {
-                            label: t("section2.discount.type.percent"),
-                            value: "percent",
-                          },
-                          {
-                            label: t("section2.discount.type.fixed"),
-                            value: "fixed",
-                          },
-                        ]}
-                      />
-                      {cfg.discount.type === "percent" && (
-                        <RangeSlider
-                          label={`${t("section2.discount.percent")} (${cfg.discount.percent}%)`}
-                          min={1}
-                          max={90}
-                          output
-                          value={cfg.discount.percent}
-                          onChange={(v) => setDiscount({ percent: v })}
-                        />
-                      )}
-                      {cfg.discount.type === "fixed" && (
-                        <TextField
-                          type="number"
-                          label={t("section2.discount.fixedAmount")}
-                          value={String(cfg.discount.fixedAmount)}
-                          onChange={(v) =>
-                            setDiscount({
-                              fixedAmount: Number(v || 0),
-                            })
-                          }
-                        />
-                      )}
-
-                      <TextField
-                        type="number"
-                        label={t("section2.discount.conditions.minQty")}
-                        value={String(cfg.discount.conditions.minQty || 0)}
-                        onChange={(v) =>
-                          setDiscCond({ minQty: Number(v || 0) })
-                        }
-                      />
-                      <TextField
-                        type="number"
-                        label={t("section2.discount.conditions.minSubtotal")}
-                        value={String(
-                          cfg.discount.conditions.minSubtotal || 0
-                        )}
-                        onChange={(v) =>
-                          setDiscCond({ minSubtotal: Number(v || 0) })
-                        }
-                      />
-                      <Checkbox
-                        label={t("section2.discount.conditions.requiresCode")}
-                        checked={!!cfg.discount.conditions.requiresCode}
-                        onChange={(v) =>
-                          setDiscCond({ requiresCode: v })
-                        }
-                      />
-                      {cfg.discount.conditions.requiresCode && (
-                        <TextField
-                          label={t("section2.discount.conditions.code")}
-                          value={cfg.discount.conditions.code || ""}
-                          onChange={(v) =>
-                            setDiscCond({ code: v.toUpperCase() })
-                          }
-                        />
-                      )}
-                      <TextField
-                        type="number"
-                        label={t("section2.discount.caps.maxDiscount")}
-                        value={String(cfg.discount.caps.maxDiscount || 0)}
-                        onChange={(v) =>
-                          setDiscCaps({ maxDiscount: Number(v || 0) })
-                        }
-                      />
-                    </Grid3>
-                  </GroupCard>
-
-                  <GroupCard title={t("section2.group.display.title")}>
-                    <Grid3>
-                      <Select
-                        label={t("section2.display.style")}
-                        value={cfg.display.style}
-                        onChange={(v) => setDisplay({ style: v })}
-                        options={OFFER_STYLES}
-                      />
-                      <Checkbox
-                        label={t("section2.display.showDiscountLine")}
-                        checked={cfg.display.showDiscountLine !== false}
-                        onChange={(v) =>
-                          setDisplay({ showDiscountLine: v })
-                        }
-                      />
-                      <Checkbox
-                        label={t("section2.display.showUpsellLine")}
-                        checked={cfg.display.showUpsellLine !== false}
-                        onChange={(v) =>
-                          setDisplay({ showUpsellLine: v })
-                        }
-                      />
-                    </Grid3>
-                    <Text variant="bodySm" tone="subdued">
-                      {t("section2.helpText.display")}
-                    </Text>
-                  </GroupCard>
-                </>
-              )}
-
-              {sel === "upsell" && (
-                <GroupCard title={t("section2.group.upsell.title")}>
+            {selectedTab === "global" && (
+              <BlockStack gap="300">
+                <GroupCard title={t("section2.group.global.title")}>
                   <Grid3>
                     <Checkbox
-                      label={t("section2.upsell.enable")}
-                      checked={!!cfg.upsell.enabled}
-                      onChange={(v) => setUpsell({ enabled: v })}
+                      label={t("section2.global.enable")}
+                      checked={!!cfg.global.enabled}
+                      onChange={(v) => setGlobal({ enabled: v })}
                     />
-
                     <Select
-                      label={t("section2.upsell.product")}
-                      value={cfg.upsell.shopifyProductId}
-                      onChange={(v) =>
-                        setUpsell({ shopifyProductId: v })
-                      }
-                      options={productOptions}
-                      helpText={t("section2.helpText.product")}
-                    />
-
-                    <TextField
-                      label={t("section2.upsell.previewTitle")}
-                      value={cfg.upsell.previewTitle}
-                      onChange={(v) =>
-                        setUpsell({ previewTitle: v })
-                      }
-                    />
-
-                    <TextField
-                      label={t("section2.upsell.previewDescription")}
-                      value={cfg.upsell.previewDescription}
-                      onChange={(v) =>
-                        setUpsell({ previewDescription: v })
-                      }
-                    />
-
-                    <TextField
-                      label={t("section2.upsell.productRef")}
-                      value={cfg.upsell.productRef}
-                      onChange={(v) => setUpsell({ productRef: v })}
-                    />
-
-                    <TextField
-                      label={t("section2.upsell.imageUrl")}
-                      value={cfg.upsell.imageUrl}
-                      onChange={(v) => setUpsell({ imageUrl: v })}
-                      helpText={t("section2.helpText.offerImage")}
-                    />
-
-                    <TextField
-                      label={t("section2.upsell.iconEmoji")}
-                      value={cfg.upsell.iconEmoji || ""}
-                      onChange={(v) =>
-                        setUpsell({ iconEmoji: v })
-                      }
-                      helpText={t("section2.helpText.giftIconEmoji")}
-                    />
-
-                    <TextField
-                      label={t("section2.upsell.iconUrl")}
-                      value={cfg.upsell.iconUrl || ""}
-                      onChange={(v) => setUpsell({ iconUrl: v })}
-                      helpText={t("section2.helpText.offerIconUrl")}
-                    />
-
-                    <Select
-                      label={t("section2.upsell.trigger.type")}
-                      value={cfg.upsell.trigger.type}
-                      onChange={(v) => setUpTrig({ type: v })}
+                      label={t("section2.global.currency")}
+                      value={cfg.global.currency}
+                      onChange={(v) => setGlobal({ currency: v })}
                       options={[
-                        {
-                          label: t("section2.upsell.trigger.type.subtotal"),
-                          value: "subtotal",
-                        },
-                        {
-                          label: t("section2.upsell.trigger.type.product"),
-                          value: "product",
-                        },
+                        { label: "DH (MAD)", value: "dh" },
+                        { label: "EUR (€)", value: "eur" },
+                        { label: "USD ($)", value: "usd" },
                       ]}
                     />
-                    {cfg.upsell.trigger.type === "subtotal" && (
-                      <TextField
-                        type="number"
-                        label={t("section2.upsell.trigger.minSubtotal")}
-                        value={String(
-                          cfg.upsell.trigger.minSubtotal || 0
-                        )}
-                        onChange={(v) =>
-                          setUpTrig({ minSubtotal: Number(v || 0) })
-                        }
-                      />
-                    )}
-                    {cfg.upsell.trigger.type === "product" && (
-                      <TextField
-                        label={t("section2.upsell.trigger.productHandle")}
-                        value={cfg.upsell.trigger.productHandle || ""}
-                        onChange={(v) =>
-                          setUpTrig({ productHandle: v })
-                        }
-                      />
-                    )}
+                    <Select
+                      label={t("section2.global.rounding")}
+                      value={cfg.global.rounding}
+                      onChange={(v) => setGlobal({ rounding: v })}
+                      options={[
+                        { label: t("section2.global.rounding.none"), value: "none" },
+                        { label: t("section2.global.rounding.unit"), value: "unit" },
+                        { label: t("section2.global.rounding.99"), value: ".99" },
+                      ]}
+                    />
                   </Grid3>
-
-                  <GroupCard title={t("section2.group.gift.title")}>
-                    <Grid3>
-                      <TextField
-                        label={t("section2.gift.title")}
-                        value={cfg.upsell.gift.title}
-                        onChange={(v) => setUpGift({ title: v })}
-                      />
-                      <TextField
-                        label={t("section2.gift.note")}
-                        value={cfg.upsell.gift.note}
-                        onChange={(v) => setUpGift({ note: v })}
-                      />
-                      <TextField
-                        type="number"
-                        label={t("section2.gift.priceBefore")}
-                        value={String(cfg.upsell.gift.priceBefore || 0)}
-                        onChange={(v) =>
-                          setUpGift({
-                            priceBefore: Number(v || 0),
-                          })
-                        }
-                      />
-                      <Checkbox
-                        label={t("section2.gift.isFree")}
-                        checked={!!cfg.upsell.gift.isFree}
-                        onChange={(v) => setUpGift({ isFree: v })}
-                      />
-                    </Grid3>
-                  </GroupCard>
                 </GroupCard>
-              )}
-            </BlockStack>
+
+                <GroupCard title={t("section2.group.display.title")}>
+                  <Grid2>
+                    <Checkbox
+                      label={t("section2.display.showOrderSummary")}
+                      checked={cfg.display.showOrderSummary}
+                      onChange={(v) => setDisplay({ showOrderSummary: v })}
+                    />
+                    <Checkbox
+                      label={t("section2.display.showOffersSection")}
+                      checked={cfg.display.showOffersSection}
+                      onChange={(v) => setDisplay({ showOffersSection: v })}
+                    />
+                  </Grid2>
+                  <Text variant="bodySm" tone="subdued">
+                    {t("section2.helpText.display")}
+                  </Text>
+                </GroupCard>
+              </BlockStack>
+            )}
+
+            {selectedTab === "offers" && (
+              <BlockStack gap="300">
+                <Text as="h2" variant="headingMd">
+                  {t("section2.rail.offers")} ({cfg.offers.length}/3)
+                </Text>
+                
+                {cfg.offers.map((offer, index) => (
+                  <OfferItemEditor
+                    key={index}
+                    offer={offer}
+                    index={index}
+                    onChange={(updated) => updateOffer(index, updated)}
+                    onRemove={() => removeOffer(index)}
+                    productOptions={productOptions}
+                    t={t}
+                    canRemove={cfg.offers.length > 1}
+                  />
+                ))}
+                
+                {cfg.offers.length < 3 && (
+                  <div className="add-button" onClick={addOffer}>
+                    <Icon source={PI.PlusIcon} />
+                    {t("section2.button.addOffer")}
+                  </div>
+                )}
+              </BlockStack>
+            )}
+
+            {selectedTab === "upsells" && (
+              <BlockStack gap="300">
+                <Text as="h2" variant="headingMd">
+                  {t("section2.rail.upsells")} ({cfg.upsells.length}/3)
+                </Text>
+                
+                {cfg.upsells.map((upsell, index) => (
+                  <UpsellItemEditor
+                    key={index}
+                    upsell={upsell}
+                    index={index}
+                    onChange={(updated) => updateUpsell(index, updated)}
+                    onRemove={() => removeUpsell(index)}
+                    productOptions={productOptions}
+                    t={t}
+                    canRemove={cfg.upsells.length > 1}
+                  />
+                ))}
+                
+                {cfg.upsells.length < 3 && (
+                  <div className="add-button" onClick={addUpsell}>
+                    <Icon source={PI.PlusIcon} />
+                    {t("section2.button.addUpsell")}
+                  </div>
+                )}
+              </BlockStack>
+            )}
           </div>
         </div>
 
-        {/* ===== Colonne droite — Preview ===== */}
+        {/* ===== Colonne preview ===== */}
         <div className="tf-preview-col">
           <div className="tf-preview-card">
-            <BlockStack gap="200">
+            <BlockStack gap="300">
               <InlineStack align="space-between" blockAlign="center">
                 <Text as="h3" variant="headingSm">
                   {t("section2.preview.title")}
                 </Text>
-                <Text as="span" tone="subdued" variant="bodySm">
-                  {t("section2.preview.subtitle")}
-                </Text>
+                <Badge tone="success">
+                  {cfg.global.enabled 
+                    ? t("section2.preview.active") 
+                    : t("section2.preview.inactive")}
+                </Badge>
               </InlineStack>
 
-              <OffersStatusBar cfg={cfg} t={t} />
-              <OffersCardsPreview
-                cfg={cfg}
-                products={shopProducts}
-                t={t}
-              />
-              <CodFormPreview currency={currency} theme={theme} t={t} />
+              <Text as="p" variant="bodySm" tone="subdued">
+                {t("section2.preview.subtitle")}
+              </Text>
+
+              {cfg.display.showOffersSection && (
+                <>
+                  <OffersPreview cfg={cfg} products={shopProducts} t={t} />
+                  <UpsellsPreview cfg={cfg} products={shopProducts} t={t} />
+                </>
+              )}
+              
+              <OrderSummaryPreview cfg={cfg} t={t} />
             </BlockStack>
           </div>
         </div>
