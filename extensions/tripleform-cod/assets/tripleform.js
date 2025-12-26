@@ -848,7 +848,7 @@ window.TripleformCOD = (function () {
         },
         {
           id: "MINAS_GERAIS",
-          name: "Minas Gerais",
+          name: "Minas Geraes",
           cities: [
             "Belo Horizonte", "Uberlândia", "Contagem", "Juiz de Fora", "Betim",
             "Montes Claros", "Ribeirão das Neves", "Uberaba", "Governador Valadares",
@@ -1179,7 +1179,60 @@ window.TripleformCOD = (function () {
   }
 
   /* ------------------------------------------------------------------ */
-  /* OFFRES / UPSELL – rendu front                                      */
+  /* NOUVEAUX TIMERS - Composant pour la prévisualisation               */
+  /* ------------------------------------------------------------------ */
+
+  function TimerComponent(minutes, message, cssClass, timeFormat) {
+    const container = document.createElement('div');
+    container.className = `offer-timer ${cssClass || ''}`;
+    
+    const timerId = 'timer-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+    let timeLeft = minutes * 60;
+    
+    function formatTime(seconds, format) {
+      const h = Math.floor(seconds / 3600);
+      const m = Math.floor((seconds % 3600) / 60);
+      const s = seconds % 60;
+      
+      switch (format) {
+        case 'hh[h] mm[m]':
+          return `${h.toString().padStart(2, '0')}h ${m.toString().padStart(2, '0')}m`;
+        case 'mm[m] ss[s]':
+          return `${m.toString().padStart(2, '0')}m ${s.toString().padStart(2, '0')}s`;
+        case 'hh[h]':
+          return `${h.toString().padStart(2, '0')}h`;
+        case 'mm:ss':
+        default:
+          return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+      }
+    }
+    
+    function updateDisplay() {
+      container.innerHTML = `
+        <span class="offer-timer-icon">⏱️</span>
+        <span>${message || '⏱️ Offre limitée dans le temps!'}</span>
+        <span class="timer-countdown" style="margin-left: auto;">
+          ${formatTime(timeLeft, timeFormat)}
+        </span>
+      `;
+    }
+    
+    updateDisplay();
+    
+    const interval = setInterval(() => {
+      if (timeLeft <= 0) {
+        clearInterval(interval);
+        return;
+      }
+      timeLeft--;
+      updateDisplay();
+    }, 1000);
+    
+    return container;
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* OFFRES / UPSELL – rendu front (NOUVEAU FORMAT)                    */
   /* ------------------------------------------------------------------ */
 
   function buildOffersHtml(offersCfg) {
@@ -1189,137 +1242,141 @@ window.TripleformCOD = (function () {
     if (!global.enabled) return "";
 
     const display = offersCfg.display || {};
-    const discount = offersCfg.discount || {};
-    const upsell = offersCfg.upsell || {};
-    const theme = offersCfg.theme || {};
-
-    const showDiscount =
-      !!discount.enabled && display.showDiscountLine !== false;
-    const showUpsell =
-      !!upsell.enabled && display.showUpsellLine !== false;
-
-    if (!showDiscount && !showUpsell) return "";
+    const offers = offersCfg.offers || [];
+    const upsells = offersCfg.upsells || [];
+    
+    // Trouver la palette de couleurs
+    const theme = global.customTheme || {};
+    
+    // Filtrer les offres et upsells activés
+    const activeOffers = offers.filter(offer => offer.enabled && offer.showInPreview);
+    const activeUpsells = upsells.filter(upsell => upsell.enabled && upsell.showInPreview);
+    
+    if (activeOffers.length === 0 && activeUpsells.length === 0) return "";
 
     const offerBg = css(theme.offerBg || "#FFFFFF");
-    const upsellBg = css(theme.upsellBg || "#FFFFFF");
+    const offerBorder = css(theme.offerBorder || "#E5E7EB");
+    const offerTitle = css(theme.offerTitle || "#0C4A6E");
+    const offerText = css(theme.offerText || "#0C4A6E");
 
     let html = "";
 
-    // OFFRE (remise)
-    if (showDiscount) {
-      const title = discount.previewTitle || "Produit avec remise";
-      const desc =
-        discount.previewDescription ||
-        "Remise appliquée automatiquement sur ce produit.";
-      const img = discount.imageUrl || "";
-      const iconEmoji = discount.iconEmoji || discount.icon || "";
-      const iconUrl = discount.iconUrl || "";
+    // OFFERS (remises)
+    activeOffers.forEach((offer, idx) => {
+      const title = offer.title || "Remise spéciale";
+      const description = offer.description || "Profitez de cette offre exclusive";
+      const img = offer.imageUrl || "";
+      const iconUrl = offer.iconUrl || "";
+      const hasTimer = offer.enableTimer && display.showTimerInPreview;
 
-      html +=
-        '<div style="border-radius:16px;background:' +
-        offerBg +
-        ';padding:10px 12px;border:1px solid #E5E7EB;box-shadow:0 12px 28px rgba(15,23,42,.16);display:grid;grid-template-columns:64px minmax(0,1fr);gap:10px;align-items:center;">';
-      html +=
-        '<div style="width:64px;height:64px;border-radius:18px;overflow:hidden;border:1px solid rgba(248,250,252,.6);display:flex;align-items:center;justify-content:center;">';
-      if (img) {
-        html +=
-          '<img src="' +
-          css(img) +
-          '" alt="Produit offre" style="width:100%;height:100%;object-fit:cover;border-radius:18px;" />';
-      } else {
-        html +=
-          '<div style="width:100%;height:100%;border-radius:18px;background:linear-gradient(135deg,#3B82F6 0%,#A855F7 40%,#F97316 100%);"></div>';
-      }
-      html += "</div>";
-      html += "<div>";
-      html +=
-        '<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;opacity:.9;display:flex;align-items:center;gap:6px;">';
-      if (iconUrl) {
-        html +=
-          '<span style="width:22px;height:22px;border-radius:999px;overflow:hidden;display:inline-grid;place-items:center;"><img src="' +
-          css(iconUrl) +
-          '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:999px;" /></span>';
-      } else if (iconEmoji) {
-        html +=
-          '<span style="width:22px;height:22px;border-radius:999px;display:inline-grid;place-items:center;font-size:13px;">' +
-          css(iconEmoji) +
-          "</span>";
-      }
-      html += "<span>OFFRE — Produit avec remise</span>";
-      html += "</div>";
-      html +=
-        '<div style="font-size:13px;font-weight:600;margin-top:2px;">' +
-        css(title) +
-        "</div>";
-      html +=
-        '<div style="font-size:12px;margin-top:1px;opacity:.9;">' +
-        css(desc) +
-        "</div>";
+      html += `
+        <div class="offers-strip" style="
+          background:${offerBg};
+          border:1px solid ${offerBorder};
+          color:${offerText};
+        ">
+          <div class="offers-strip-thumb">
+            ${img 
+              ? `<img src="${css(img)}" alt="${css(title)}" />` 
+              : '<div class="offers-strip-thumb-inner"></div>'}
+          </div>
+          <div style="flex:1;">
+            <div class="offers-strip-main" style="color:${offerTitle}">
+              ${css(title)}
+            </div>
+            <div class="offers-strip-desc">
+              ${css(description)}
+            </div>
+            
+            ${hasTimer ? `
+              <div data-tf-timer-offer="${idx}"></div>
+            ` : ''}
+          </div>
+        </div>
+      `;
+    });
 
-      html +=
-        '<div style="margin-top:6px;">' +
-        '<button type="button" data-tf-discount-toggle="1" data-tf-active="0" style="margin-top:4px;font-size:11px;padding:4px 10px;border-radius:999px;border:1px solid #0F172A;background:#0F172A;color:#F9FAFB;cursor:pointer;opacity:.9;">' +
-        "Activer cette offre" +
-        "</button>" +
-        "</div>";
-
-      html += "</div></div>";
-    }
-
-    // CADEAU / UPSELL
-    if (showUpsell) {
-      const title = upsell.previewTitle || "Cadeau offert";
-      const desc =
-        upsell.previewDescription ||
-        "Cadeau gratuit ajouté automatiquement à la commande.";
+    // UPSELLS (cadeaux)
+    activeUpsells.forEach((upsell, idx) => {
+      const title = upsell.title || "Cadeau gratuit";
+      const description = upsell.description || "Recevez un cadeau spécial avec votre commande";
       const img = upsell.imageUrl || "";
-      const iconEmoji = upsell.iconEmoji || upsell.icon || "";
       const iconUrl = upsell.iconUrl || "";
+      const hasTimer = upsell.enableTimer && display.showTimerInPreview;
 
-      html +=
-        '<div style="border-radius:16px;background:' +
-        upsellBg +
-        ';padding:10px 12px;border:1px solid #E5E7EB;box-shadow:0 12px 28px rgba(15,23,42,.16);display:grid;grid-template-columns:64px minmax(0,1fr);gap:10px;align-items:center;">';
-      html +=
-        '<div style="width:64px;height:64px;border-radius:18px;overflow:hidden;border:1px solid rgba(248,250,252,.6);display:flex;align-items:center;justify-content:center;">';
-      if (img) {
-        html +=
-          '<img src="' +
-          css(img) +
-          '" alt="Produit cadeau" style="width:100%;height:100%;object-fit:cover;border-radius:18px;" />';
-      } else {
-        html +=
-          '<div style="width:100%;height:100%;border-radius:18px;background:linear-gradient(135deg,#EC4899 0%,#F97316 40%,#22C55E 100%);"></div>';
-      }
-      html += "</div>";
-      html += "<div>";
-      html +=
-        '<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;opacity:.9;display:flex;align-items:center;gap:6px;">';
-      if (iconUrl) {
-        html +=
-          '<span style="width:22px;height:22px;border-radius:999px;overflow:hidden;display:inline-grid;place-items:center;"><img src="' +
-          css(iconUrl) +
-          '" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:999px;" /></span>';
-      } else if (iconEmoji) {
-        html +=
-          '<span style="width:22px;height:22px;border-radius:999px;display:inline-grid;place-items:center;font-size:13px;">' +
-          css(iconEmoji) +
-          "</span>";
-      }
-      html += "<span>CADEAU — Produit offert / upsell</span>";
-      html += "</div>";
-      html +=
-        '<div style="font-size:13px;font-weight:600;margin-top:2px;">' +
-        css(title) +
-        "</div>";
-      html +=
-        '<div style="font-size:12px;margin-top:1px;opacity:.9;">' +
-        css(desc) +
-        "</div>";
-      html += "</div></div>";
-    }
+      html += `
+        <div class="offers-strip" style="
+          background:${offerBg};
+          border:1px solid ${offerBorder};
+          color:${offerText};
+        ">
+          <div class="offers-strip-thumb">
+            ${img 
+              ? `<img src="${css(img)}" alt="${css(title)}" />` 
+              : '<div class="offers-strip-thumb-inner-upsell"></div>'}
+          </div>
+          <div style="flex:1;">
+            <div class="offers-strip-main" style="color:${offerTitle}">
+              ${css(title)}
+            </div>
+            <div class="offers-strip-desc">
+              ${css(description)}
+            </div>
+            
+            ${hasTimer ? `
+              <div data-tf-timer-upsell="${idx}"></div>
+            ` : ''}
+          </div>
+        </div>
+      `;
+    });
 
-    return '<div style="display:grid;gap:10px;">' + html + "</div>";
+    return html ? `<div style="display:grid;gap:10px;">${html}</div>` : "";
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Initialisation des timers après rendu                              */
+  /* ------------------------------------------------------------------ */
+
+  function initializeTimers(root, offersCfg) {
+    if (!offersCfg || typeof offersCfg !== "object") return;
+    
+    const global = offersCfg.global || {};
+    const display = offersCfg.display || {};
+    const offers = offersCfg.offers || [];
+    const upsells = offersCfg.upsells || [];
+    
+    // Initialiser les timers pour les offres
+    offers.forEach((offer, idx) => {
+      if (offer.enableTimer && display.showTimerInPreview) {
+        const timerContainer = root.querySelector(`[data-tf-timer-offer="${idx}"]`);
+        if (timerContainer) {
+          const timerElement = TimerComponent(
+            offer.timerMinutes || 60,
+            offer.timerMessage || "⏱️ Offre limitée dans le temps!",
+            offer.timerCssClass || "",
+            offer.timerTimeFormat || "mm:ss"
+          );
+          timerContainer.appendChild(timerElement);
+        }
+      }
+    });
+    
+    // Initialiser les timers pour les upsells
+    upsells.forEach((upsell, idx) => {
+      if (upsell.enableTimer && display.showTimerInPreview) {
+        const timerContainer = root.querySelector(`[data-tf-timer-upsell="${idx}"]`);
+        if (timerContainer) {
+          const timerElement = TimerComponent(
+            upsell.timerMinutes || 60,
+            upsell.timerMessage || "🎁 Cadeau limité dans le temps!",
+            upsell.timerCssClass || "",
+            upsell.timerTimeFormat || "mm:ss"
+          );
+          timerContainer.appendChild(timerElement);
+        }
+      }
+    });
   }
 
   /* ------------------------------------------------------------------ */
@@ -1567,14 +1624,6 @@ window.TripleformCOD = (function () {
 
     const offersHtml = buildOffersHtml(offersCfg || {});
 
-    const globalOffers = (offersCfg && offersCfg.global) || {};
-    const discountCfg = (offersCfg && offersCfg.discount) || {};
-    const displayOffers = (offersCfg && offersCfg.display) || {};
-    const hasDiscountRow =
-      !!globalOffers.enabled &&
-      !!discountCfg.enabled &&
-      displayOffers.showDiscountLine !== false;
-
     function orderedFieldKeys() {
       const metaOrder = (cfg.meta && cfg.meta.fieldsOrder) || [];
       const allKeys = Object.keys(f || {});
@@ -1714,15 +1763,6 @@ window.TripleformCOD = (function () {
               <div>${css(t.price || "Product price")}</div>
               <div style="font-weight:700;" data-tf="price">—</div>
             </div>
-            ${
-              hasDiscountRow
-                ? `
-            <div style="${rowStyle}">
-              <div>${css(t.discount || "Offer discount")}</div>
-              <div style="font-weight:700;" data-tf="discount">—</div>
-            </div>`
-                : ""
-            }
             <div style="${rowStyle}">
               <div>
                 <div>${css(t.shipping || "Shipping price")}</div>
@@ -2027,6 +2067,11 @@ window.TripleformCOD = (function () {
       }
     );
 
+    // Initialiser les timers après le rendu
+    setTimeout(() => {
+      initializeTimers(root, offersCfg);
+    }, 100);
+
     // dropdown wilaya/city
     setupLocationDropdowns(root, cfg, countryDef);
 
@@ -2079,11 +2124,6 @@ window.TripleformCOD = (function () {
 
     /* ===================== Geo calc (shipping) ======================= */
 
-    function isDiscountActive() {
-      const btn = root.querySelector('[data-tf-discount-toggle]');
-      return !!(btn && btn.getAttribute("data-tf-active") === "1");
-    }
-
     function computeProductTotals() {
       const vId = getVariant();
       const qty = getQty();
@@ -2107,33 +2147,11 @@ window.TripleformCOD = (function () {
       }
 
       const baseTotalCents = priceCents * qty;
-
-      let discountCents = 0;
-      if (hasDiscountRow && isDiscountActive()) {
-        const type = discountCfg.type || "percent";
-        const val =
-          Number(
-            discountCfg.value != null ? discountCfg.value : discountCfg.percent
-          ) || 0;
-
-        if (val > 0) {
-          if (type === "fixed") {
-            discountCents = Math.round(val * 100);
-          } else {
-            discountCents = Math.round((baseTotalCents * val) / 100);
-          }
-        }
-
-        if (discountCents < 0) discountCents = 0;
-        if (discountCents > baseTotalCents) discountCents = baseTotalCents;
-      }
-
-      const totalCents = baseTotalCents - discountCents;
+      const totalCents = baseTotalCents;
 
       return {
         priceCents,
         totalCents,
-        discountCents,
         baseTotalCents,
         qty,
         variantId: vId,
@@ -2295,12 +2313,11 @@ window.TripleformCOD = (function () {
     /* ===================== Money + UI =============================== */
 
     function updateMoney() {
-      const { priceCents, totalCents, discountCents } = computeProductTotals();
+      const { priceCents, totalCents } = computeProductTotals();
       const grandTotalCents = totalCents + (geoShippingCents || 0);
 
       const prices = root.querySelectorAll('[data-tf="price"]');
       const totals = root.querySelectorAll('[data-tf="total"]');
-      const discountEls = root.querySelectorAll('[data-tf="discount"]');
       const shippingEls = root.querySelectorAll('[data-tf="shipping"]');
       const shippingNoteEls = root.querySelectorAll(
         '[data-tf="shipping-note"]'
@@ -2309,11 +2326,6 @@ window.TripleformCOD = (function () {
 
       prices.forEach((el) => (el.textContent = moneyFmt(priceCents)));
       totals.forEach((el) => (el.textContent = moneyFmt(grandTotalCents)));
-
-      if (discountEls.length) {
-        const txt = discountCents ? "-" + moneyFmt(discountCents) : "—";
-        discountEls.forEach((el) => (el.textContent = txt));
-      }
 
       let shippingText = "";
       if (geoShippingCents === null) {
@@ -2337,26 +2349,6 @@ window.TripleformCOD = (function () {
       });
     }
 
-    function setupOffersInteractions(handleTotalsChange) {
-      const discountBtn = root.querySelector('[data-tf-discount-toggle]');
-      if (discountBtn) {
-        discountBtn.addEventListener("click", (e) => {
-          e.preventDefault();
-          const active = discountBtn.getAttribute("data-tf-active") === "1";
-          if (active) {
-            discountBtn.setAttribute("data-tf-active", "0");
-            discountBtn.style.opacity = "0.9";
-            discountBtn.style.boxShadow = "none";
-          } else {
-            discountBtn.setAttribute("data-tf-active", "1");
-            discountBtn.style.opacity = "1";
-            discountBtn.style.boxShadow = "0 0 0 1px rgba(15,23,42,.18)";
-          }
-          handleTotalsChange();
-        });
-      }
-    }
-
     /* ============== Collect & submit + reCAPTCHA ==================== */
 
     async function onSubmitClick() {
@@ -2369,7 +2361,6 @@ window.TripleformCOD = (function () {
       const {
         priceCents,
         totalCents,
-        discountCents,
         baseTotalCents,
         qty,
         variantId,
@@ -2424,8 +2415,6 @@ window.TripleformCOD = (function () {
         qty,
         priceCents,
         baseTotalCents,
-        discountCents,
-        discountApplied: discountCents > 0,
         shippingCents: shippingCentsToSend,
         totalCents,
         grandTotalCents,
@@ -2642,9 +2631,6 @@ window.TripleformCOD = (function () {
 
     // Sticky
     setupSticky(root, cfg, styleType, openHandler);
-
-    // offres
-    setupOffersInteractions(handleTotalsChange);
 
     // event listeners geo sur province / ville
     if (provSelect && geoEnabled) {

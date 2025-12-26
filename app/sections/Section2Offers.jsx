@@ -288,6 +288,65 @@ const LAYOUT_CSS = `
     letter-spacing:1px;
   }
 
+  /* ---- Styles avancés pour les timers ---- */
+  .timer-chrono {
+    background: linear-gradient(90deg, #1e3a8a, #3b82f6) !important;
+    color: #fff !important;
+    border: 1px solid #60a5fa !important;
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    letter-spacing: 1px;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.35);
+  }
+
+  .timer-black-friday {
+    background: linear-gradient(90deg, #000000, #dc2626) !important;
+    color: #fff !important;
+    border: 2px solid #fbbf24 !important;
+    font-weight: 800;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 6px 16px rgba(220, 38, 38, 0.4);
+  }
+
+  .timer-new-year {
+    background: linear-gradient(135deg, #0f766e, #0ea5e9, #ec4899) !important;
+    color: #fff !important;
+    border: 1px solid #fde047 !important;
+    font-weight: bold;
+    box-shadow: 0 6px 20px rgba(14, 165, 233, 0.3);
+  }
+
+  .timer-flash {
+    background: linear-gradient(90deg, #f97316, #fbbf24) !important;
+    color: #1f2937 !important;
+    border: 1px solid #f59e0b !important;
+    font-weight: 700;
+    box-shadow: 0 4px 14px rgba(249, 115, 22, 0.4);
+  }
+
+  .timer-hot {
+    background: linear-gradient(90deg, #7c2d12, #ea580c) !important;
+    color: #fff !important;
+    border: 1px solid #fdba74 !important;
+    animation: pulse 1.5s infinite;
+    font-weight: 800;
+  }
+
+  .timer-weekend {
+    background: linear-gradient(135deg, #7c3aed, #10b981) !important;
+    color: #fff !important;
+    border: 1px solid #a7f3d0 !important;
+    font-weight: bold;
+    box-shadow: 0 4px 14px rgba(124, 58, 237, 0.3);
+  }
+
+  /* Animation pour le timer "hot" */
+  @keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.8; }
+    100% { opacity: 1; }
+  }
+
   /* ---- Palette de couleurs ---- */
   .color-palette-grid {
     display:grid;
@@ -581,52 +640,64 @@ const COLOR_PALETTES = [
 /* ============================== Exemples de countdown prédéfinis ============================== */
 const COUNTDOWN_EXAMPLES = [
   {
-    id: "urgent-1h",
-    name: "Offre Urgente (1h)",
+    id: "chrono-urgent",
+    name: "Chrono Urgence (1h)",
     minutes: 60,
-    message: "⚠️ Offre spéciale! Se termine dans:"
-  },
-  {
-    id: "flash-sale",
-    name: "Vente Flash (30min)",
-    minutes: 30,
-    message: "⚡ Vente Flash! Dernière chance:"
-  },
-  {
-    id: "weekend-deal",
-    name: "Offre Weekend (24h)",
-    minutes: 1440,
-    message: "🎉 Offre du Weekend! Fini dans:"
+    template: "chrono",
+    message: "⏱️ DERNIÈRE CHANCE ! L'offre expire dans :",
+    cssClass: "timer-chrono",
+    icon: "⏱️",
+    timeFormat: "mm:ss"
   },
   {
     id: "black-friday",
-    name: "Black Friday (2h)",
+    name: "Mode Black Friday (2h)",
     minutes: 120,
-    message: "🖤 Black Friday! Plus que:"
+    template: "event",
+    message: "🖤 BLACK FRIDAY EXCLUSIF ! Plus que :",
+    cssClass: "timer-black-friday",
+    icon: "🖤",
+    timeFormat: "hh[h] mm[m]"
   },
   {
-    id: "last-chance",
-    name: "Dernière Chance (15min)",
-    minutes: 15,
-    message: "⏳ Dernière chance! Se termine dans:"
-  },
-  {
-    id: "new-year",
-    name: "Promo Nouvel An (45min)",
+    id: "new-year-promo",
+    name: "Promo Fin d'Année (45min)",
     minutes: 45,
-    message: "🎊 Bonne année! Offre spéciale:"
+    template: "event",
+    message: "🎊 BONNE ANNÉE ! Offre spéciale termine dans :",
+    cssClass: "timer-new-year",
+    icon: "🎊",
+    timeFormat: "mm[m] ss[s]"
   },
   {
-    id: "summer-sale",
-    name: "Solde d'Été (3h)",
-    minutes: 180,
-    message: "☀️ Soldes d'Été! Termine dans:"
+    id: "flash-sale",
+    name: "Flash Sale (30min)",
+    minutes: 30,
+    template: "chrono",
+    message: "⚡ VENTE ÉCLAIR ! Derniers :",
+    cssClass: "timer-flash",
+    icon: "⚡",
+    timeFormat: "mm:ss"
   },
   {
-    id: "clearance",
-    name: "Liquidation (6h)",
-    minutes: 360,
-    message: "💥 Liquidation totale! Plus que:"
+    id: "clearance-hot",
+    name: "Liquidation Chaude (15min)",
+    minutes: 15,
+    template: "urgent",
+    message: "🔥 LIQUIDATION ! Fini dans :",
+    cssClass: "timer-hot",
+    icon: "🔥",
+    timeFormat: "mm:ss"
+  },
+  {
+    id: "weekend-blast",
+    name: "Offre Weekend (24h)",
+    minutes: 1440,
+    template: "event",
+    message: "🎉 WEEKEND SPÉCIAL ! Disparaît dans :",
+    cssClass: "timer-weekend",
+    icon: "🎉",
+    timeFormat: "hh[h]"
   }
 ];
 
@@ -841,7 +912,7 @@ function CountdownExamples({ onSelect }) {
   return (
     <div style={{ marginTop: 12 }}>
       <Text as="p" variant="bodyMd" fontWeight="medium">
-        Exemples prédéfinis:
+        Modèles de timer prédéfinis:
       </Text>
       <div style={{ 
         display: 'grid', 
@@ -876,7 +947,7 @@ function CountdownExamples({ onSelect }) {
 }
 
 /* ============================== Composant Timer pour prévisualisation ============================== */
-function TimerDisplay({ minutes, message, theme }) {
+function TimerDisplay({ minutes, message, theme, cssClass, timeFormat }) {
   const [timeLeft, setTimeLeft] = useState(minutes * 60);
   
   useEffect(() => {
@@ -900,15 +971,23 @@ function TimerDisplay({ minutes, message, theme }) {
     const m = Math.floor((seconds % 3600) / 60);
     const s = seconds % 60;
     
-    if (h > 0) {
-      return `${h}h ${m}m ${s}s`;
+    // Support de différents formats définis dans les exemples
+    if (timeFormat === 'hh[h] mm[m]') {
+      return `${h.toString().padStart(2, '0')}h ${m.toString().padStart(2, '0')}m`;
     }
+    if (timeFormat === 'mm[m] ss[s]') {
+      return `${m.toString().padStart(2, '0')}m ${s.toString().padStart(2, '0')}s`;
+    }
+    if (timeFormat === 'hh[h]') {
+      return `${h.toString().padStart(2, '0')}h`;
+    }
+    // Format par défaut mm:ss
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
   
   return (
     <div 
-      className="offer-timer"
+      className={`offer-timer ${cssClass || ''}`}
       style={{
         background: theme?.timerBg || '#FEF2F2',
         color: theme?.timerText || '#DC2626',
@@ -950,6 +1029,8 @@ const DEFAULT_OFFER = {
   enableTimer: false,
   timerMinutes: 60,
   timerMessage: "⏱️ Offre limitée dans le temps!",
+  timerCssClass: "",
+  timerTimeFormat: "mm:ss",
   
   // Display
   showInPreview: true
@@ -981,6 +1062,8 @@ const DEFAULT_UPSELL = {
   enableTimer: false,
   timerMinutes: 60,
   timerMessage: "🎁 Cadeau limité dans le temps!",
+  timerCssClass: "",
+  timerTimeFormat: "mm:ss",
   
   // Display
   showInPreview: true
@@ -1096,6 +1179,8 @@ function OffersPreview({ cfg, products, t }) {
                   minutes={offer.timerMinutes} 
                   message={offer.timerMessage || t("section2.preview.timerDefaultMessage")}
                   theme={theme}
+                  cssClass={offer.timerCssClass}
+                  timeFormat={offer.timerTimeFormat}
                 />
               )}
             </div>
@@ -1151,6 +1236,8 @@ function UpsellsPreview({ cfg, products, t }) {
                   minutes={upsell.timerMinutes} 
                   message={upsell.timerMessage || t("section2.preview.timerDefaultMessage")}
                   theme={theme}
+                  cssClass={upsell.timerCssClass}
+                  timeFormat={upsell.timerTimeFormat}
                 />
               )}
             </div>
@@ -1221,7 +1308,9 @@ function OfferItemEditor({
       ...offer,
       enableTimer: true,
       timerMinutes: example.minutes,
-      timerMessage: example.message
+      timerMessage: example.message,
+      timerCssClass: example.cssClass,
+      timerTimeFormat: example.timeFormat
     });
   };
   
@@ -1422,7 +1511,9 @@ function UpsellItemEditor({
       ...upsell,
       enableTimer: true,
       timerMinutes: example.minutes,
-      timerMessage: example.message
+      timerMessage: example.message,
+      timerCssClass: example.cssClass,
+      timerTimeFormat: example.timeFormat
     });
   };
   

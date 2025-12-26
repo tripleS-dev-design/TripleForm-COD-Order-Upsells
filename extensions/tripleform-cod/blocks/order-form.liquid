@@ -253,41 +253,31 @@ Ces données sont écrites par /api/save-offers dans:
 {%- else -%}
   {%- capture tf_offers_json -%}
   {
+    "meta": { "version": 10 },
     "global": { 
       "enabled": false, 
-      "currency": "{{ shop.currency | default: 'MAD' | downcase }}", 
-      "rounding": "none" 
+      "currency": "{{ shop.currency | default: 'MAD' }}",
+      "rounding": "none",
+      "colorPalette": "blue-gradient",
+      "customTheme": {
+        "bg": "#F0F9FF",
+        "text": "#0C4A6E",
+        "border": "#E2E8F0",
+        "offerBg": "#FFFFFF",
+        "offerBorder": "#CBD5E1",
+        "offerTitle": "#0C4A6E",
+        "offerText": "#0C4A6E",
+        "timerBg": "#FEF2F2",
+        "timerText": "#DC2626",
+        "timerBorder": "#FECACA"
+      }
     },
-    "themePreset": "light",
-    "theme": {
-      "statusBarBg": "#020617",
-      "statusBarText": "#E5E7EB",
-      "offerBg": "#FFFFFF",
-      "upsellBg": "#FFFFFF",
-      "ctaBg": "#111827",
-      "ctaText": "#F9FAFB",
-      "ctaBorder": "#000000"
-    },
+    "offers": [],
+    "upsells": [],
     "display": {
-      "style": "style4",
-      "showDiscountLine": true,
-      "showUpsellLine": true
-    },
-    "discount": {
-      "enabled": false,
-      "previewTitle": "",
-      "previewDescription": "",
-      "imageUrl": "",
-      "iconEmoji": "",
-      "iconUrl": ""
-    },
-    "upsell": {
-      "enabled": false,
-      "previewTitle": "",
-      "previewDescription": "",
-      "imageUrl": "",
-      "iconEmoji": "",
-      "iconUrl": ""
+      "showOrderSummary": true,
+      "showOffersSection": true,
+      "showTimerInPreview": true
     }
   }
   {%- endcapture -%}
