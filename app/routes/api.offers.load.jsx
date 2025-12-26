@@ -19,6 +19,58 @@ export const loader = async ({ request }) => {
       );
     }
 
+    // Constantes pour les valeurs par défaut
+    const DEFAULT_OFFER = {
+      enabled: true,
+      type: "percent",
+      value: 10,
+      title: "",
+      description: "",
+      minQuantity: 2,
+      minSubtotal: 0,
+      requiresCode: false,
+      code: "",
+      maxDiscount: 0,
+      shopifyProductId: "",
+      productRef: "",
+      imageUrl: "",
+      icon: "🔥",
+      showInPreview: true
+    };
+
+    const DEFAULT_UPSELL = {
+      enabled: true,
+      title: "",
+      description: "",
+      triggerType: "subtotal",
+      minSubtotal: 30,
+      productHandle: "",
+      giftTitle: "Free Gift",
+      giftNote: "Special offer",
+      originalPrice: 9.99,
+      isFree: true,
+      shopifyProductId: "",
+      productRef: "",
+      imageUrl: "",
+      icon: "🎁",
+      showInPreview: true
+    };
+
+    const DEFAULT_CONFIG = {
+      meta: { version: 8 },
+      global: { 
+        enabled: true, 
+        currency: "MAD", 
+        rounding: "none" 
+      },
+      offers: [JSON.parse(JSON.stringify(DEFAULT_OFFER))],
+      upsells: [JSON.parse(JSON.stringify(DEFAULT_UPSELL))],
+      display: {
+        showOrderSummary: true,
+        showOffersSection: true
+      }
+    };
+
     const QUERY = `
       query offersSettingsForAdmin {
         shop {
@@ -35,55 +87,86 @@ export const loader = async ({ request }) => {
     const data = await resp.json();
     const mf = data?.data?.shop?.metafield || null;
 
-    let payload = null;
+    let payload = DEFAULT_CONFIG;
 
     if (mf?.value) {
       try {
-        payload = JSON.parse(mf.value);
+        const rawValue = JSON.parse(mf.value);
+        
+        // Convertir l'ancien format (s'il existe) au nouveau format
+        if (rawValue && typeof rawValue === 'object') {
+          // Vérifier si c'est l'ancien format (avec discount/upsell comme objets)
+          if (rawValue.discount || rawValue.upsell) {
+            // Conversion de l'ancien format au nouveau
+            const newOffers = rawValue.discount ? [{
+              ...DEFAULT_OFFER,
+              enabled: rawValue.discount.enabled || false,
+              type: rawValue.discount.type || "percent",
+              value: rawValue.discount.value || 10,
+              title: rawValue.discount.previewTitle || "",
+              description: rawValue.discount.previewDescription || "",
+              imageUrl: rawValue.discount.imageUrl || "",
+              icon: rawValue.discount.iconEmoji || "🔥"
+            }] : [DEFAULT_OFFER];
+            
+            const newUpsells = rawValue.upsell ? [{
+              ...DEFAULT_UPSELL,
+              enabled: rawValue.upsell.enabled || false,
+              title: rawValue.upsell.previewTitle || "",
+              description: rawValue.upsell.previewDescription || "",
+              imageUrl: rawValue.upsell.imageUrl || "",
+              icon: rawValue.upsell.iconEmoji || "🎁"
+            }] : [DEFAULT_UPSELL];
+            
+            payload = {
+              meta: { version: 8 },
+              global: {
+                enabled: rawValue.global?.enabled || true,
+                currency: "MAD",
+                rounding: "none"
+              },
+              offers: newOffers,
+              upsells: newUpsells,
+              display: {
+                showOrderSummary: rawValue.display?.showDiscountLine !== false,
+                showOffersSection: rawValue.display?.showDiscountLine !== false
+              }
+            };
+          } else if (Array.isArray(rawValue)) {
+            // Si c'est déjà un tableau (ancien format simple)
+            payload = {
+              ...DEFAULT_CONFIG,
+              offers: rawValue.map(offer => ({
+                ...DEFAULT_OFFER,
+                ...offer
+              }))
+            };
+          } else {
+            // Si c'est déjà le nouveau format (avec offre/upsells comme tableaux)
+            payload = {
+              ...DEFAULT_CONFIG,
+              ...rawValue,
+              offers: Array.isArray(rawValue.offers) 
+                ? rawValue.offers.map(offer => ({
+                    ...DEFAULT_OFFER,
+                    ...offer
+                  }))
+                : DEFAULT_CONFIG.offers,
+              upsells: Array.isArray(rawValue.upsells)
+                ? rawValue.upsells.map(upsell => ({
+                    ...DEFAULT_UPSELL,
+                    ...upsell
+                  }))
+                : DEFAULT_CONFIG.upsells
+            };
+          }
+        }
       } catch (e) {
-        console.warn("[Tripleform COD] offers metafield JSON invalide:", e);
+        console.warn("[Tripleform COD] offers metafield JSON invalide, utilisation des valeurs par défaut:", e);
       }
     }
 
-    // Config par défaut si rien en base
-    const DEFAULT_OFFERS = {
-      meta: { version: 1 },
-      global: { enabled: false },
-      display: {
-        showDiscountLine: true,
-        showUpsellLine: true,
-      },
-      discount: {
-        enabled: false,
-        type: "percent", // "percent" | "fixed"
-        value: 10,
-        previewTitle: "Produit avec remise",
-        previewDescription: "Remise appliquée automatiquement sur ce produit.",
-        imageUrl: "",
-        iconEmoji: "🔥",
-        iconUrl: "",
-      },
-      upsell: {
-        enabled: false,
-        previewTitle: "Cadeau offert",
-        previewDescription: "Un cadeau gratuit sera ajouté à la commande.",
-        imageUrl: "",
-        iconEmoji: "🎁",
-        iconUrl: "",
-      },
-      theme: {
-        offerBg: "#FFFFFF",
-        upsellBg: "#FFFFFF",
-      },
-    };
-
-    const offers =
-      payload && typeof payload === "object"
-        ? { ...DEFAULT_OFFERS, ...payload }
-        : DEFAULT_OFFERS;
-
-    // Toujours renvoyer un objet stable
-    return json({ ok: true, offers });
+    return json({ ok: true, offers: payload });
   } catch (e) {
     console.error("api.offers.load error:", e);
     const msg =
@@ -94,4 +177,4 @@ export const loader = async ({ request }) => {
   }
 };
 
-export const action = loader; // au cas où tu fais un POST test, ça renvoie pareil
+export const action = loader;

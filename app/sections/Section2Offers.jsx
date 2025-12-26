@@ -263,16 +263,6 @@ const LAYOUT_CSS = `
     gap:6px;
     margin-bottom:4px;
   }
-  .offers-strip-icon {
-    width:20px;
-    height:20px;
-    border-radius:999px;
-    background:#F3F4F6;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-size:12px;
-  }
   .offers-strip-main {
     font-size:14px;
     font-weight:600;
@@ -285,41 +275,65 @@ const LAYOUT_CSS = `
     line-height:1.4;
   }
 
-  /* ---- Icons palette ---- */
-  .icons-palette {
-    display:grid;
-    grid-template-columns:repeat(6, 1fr);
-    gap:8px;
-    margin-top:8px;
-  }
-  .icon-item {
-    width:32px;
-    height:32px;
-    border-radius:8px;
-    background:#F9FAFB;
-    border:1px solid #E5E7EB;
+  /* ---- Timer display for offers ---- */
+  .offer-timer {
     display:flex;
     align-items:center;
-    justify-content:center;
-    cursor:pointer;
-    transition:all 0.2s;
-    font-size:16px;
+    gap:6px;
+    font-size:11px;
+    font-weight:600;
+    color:#DC2626;
+    margin-top:6px;
+    padding:4px 8px;
+    background:#FEF2F2;
+    border-radius:6px;
+    border:1px solid #FECACA;
   }
-  .icon-item:hover {
-    background:#EFF6FF;
-    border-color:#3B82F6;
-    transform:translateY(-2px);
-  }
-  .icon-item.selected {
-    background:#DBEAFE;
-    border-color:#2563EB;
-    box-shadow:0 4px 12px rgba(37,99,235,0.15);
+  .offer-timer-icon {
+    font-size:10px;
   }
 
-  /* ---- Add button ---- */
+  /* ---- Palette de couleurs ---- */
+  .color-palette-grid {
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(140px, 1fr));
+    gap:12px;
+    margin-top:12px;
+  }
+  .color-palette-item {
+    border:1px solid #E5E7EB;
+    border-radius:10px;
+    overflow:hidden;
+    cursor:pointer;
+    transition:all 0.2s;
+  }
+  .color-palette-item:hover {
+    transform:translateY(-2px);
+    box-shadow:0 6px 16px rgba(0,0,0,0.1);
+  }
+  .color-palette-item.active {
+    outline:2px solid #00A7A3;
+  }
+  .palette-colors {
+    display:flex;
+    height:36px;
+  }
+  .palette-info {
+    padding:8px;
+    background:#fff;
+    font-size:11px;
+    font-weight:600;
+  }
+
+  /* ---- Bouton d'ajout centré ---- */
+  .add-button-container {
+    display:flex;
+    justify-content:center;
+    margin-top:20px;
+    margin-bottom:10px;
+  }
   .add-button {
-    width:100%;
-    padding:12px;
+    padding:12px 24px;
     background:#F9FAFB;
     border:2px dashed #D1D5DB;
     border-radius:10px;
@@ -332,7 +346,7 @@ const LAYOUT_CSS = `
     gap:8px;
     cursor:pointer;
     transition:all 0.2s;
-    margin-top:8px;
+    min-width:200px;
   }
   .add-button:hover {
     background:#F3F4F6;
@@ -419,26 +433,49 @@ const getCurrencyByCountry = (countryCode) => {
   return map[countryCode] || 'MAD';
 };
 
-/* ============================== Fonction pour obtenir les paramètres de design depuis Section1Forms ============================== */
-const loadFormsConfig = () => {
-  if (typeof window === "undefined") return null;
-  
-  try {
-    // Essayer de charger depuis localStorage
-    const formsConfigStr = localStorage.getItem("tripleform_cod_config");
-    if (formsConfigStr) {
-      const formsConfig = JSON.parse(formsConfigStr);
-      return formsConfig;
-    }
-    
-    // Essayer de charger via API
-    // Note: Nous allons charger via API dans useEffect
-    return null;
-  } catch (error) {
-    console.error("Erreur lors du chargement de la configuration des forms:", error);
-    return null;
-  }
-};
+/* ============================== Palettes de couleurs ============================== */
+const COLOR_PALETTES = [
+  {
+    id: "blue-gradient",
+    name: "Gradient Bleu",
+    colors: ["#0B3B82", "#7D0031", "#00A7A3", "#F0F9FF", "#0C4A6E"],
+  },
+  {
+    id: "clean-white",
+    name: "Blanc Propre",
+    colors: ["#FFFFFF", "#111827", "#E5E7EB", "#F9FAFB", "#374151"],
+  },
+  {
+    id: "dark-modern",
+    name: "Sombre Moderne",
+    colors: ["#0B1220", "#2563EB", "#1F2A44", "#101828", "#E5F0FF"],
+  },
+  {
+    id: "green-nature",
+    name: "Nature Verte",
+    colors: ["#10B981", "#065F46", "#D1FAE5", "#ECFDF5", "#F0FDF4"],
+  },
+  {
+    id: "sunset-orange",
+    name: "Orange Couchant",
+    colors: ["#F97316", "#9A3412", "#FDBA74", "#FFEDD5", "#FFF7ED"],
+  },
+  {
+    id: "purple-elegant",
+    name: "Violet Élégant",
+    colors: ["#8B5CF6", "#5B21B6", "#E9D5FF", "#F5F3FF", "#FAF5FF"],
+  },
+  {
+    id: "luxury-gold",
+    name: "Or Luxueux",
+    colors: ["#D97706", "#854D0E", "#FDE68A", "#FEF3C7", "#FEFCE8"],
+  },
+  {
+    id: "ocean-deep",
+    name: "Océan Profond",
+    colors: ["#0891B2", "#0E7490", "#A5F3FC", "#CFFAFE", "#ECFEFF"],
+  },
+];
 
 /* ============================== Small UI helpers ============================== */
 
@@ -477,25 +514,32 @@ const Grid3 = ({ children }) => (
   </div>
 );
 
-/* ============================== Icons Palette ============================== */
-
-const ICONS_PALETTE = [
-  "🔥", "🎁", "✨", "⭐", "💎", "👑",
-  "🏆", "💝", "💯", "✅", "🛒", "💰",
-  "📦", "🚚", "⚡", "❤️", "👍", "👌",
-  "🏷️", "🎯", "🆓", "🔝", "🥇", "🎊"
-];
-
-function IconsPalette({ selected, onSelect }) {
+/* ============================== Sélecteur de palette de couleurs ============================== */
+function ColorPaletteSelector({ selectedPalette, onSelect }) {
   return (
-    <div className="icons-palette">
-      {ICONS_PALETTE.map((icon, idx) => (
+    <div className="color-palette-grid">
+      {COLOR_PALETTES.map((palette) => (
         <div
-          key={idx}
-          className={`icon-item ${selected === icon ? 'selected' : ''}`}
-          onClick={() => onSelect(icon)}
+          key={palette.id}
+          className={`color-palette-item ${selectedPalette === palette.id ? 'active' : ''}`}
+          onClick={() => onSelect(palette.id)}
         >
-          {icon}
+          <div className="palette-colors">
+            {palette.colors.map((color, idx) => (
+              <div
+                key={idx}
+                style={{
+                  flex: 1,
+                  background: color,
+                  height: '100%',
+                }}
+                title={color}
+              />
+            ))}
+          </div>
+          <div className="palette-info">
+            {palette.name}
+          </div>
         </div>
       ))}
     </div>
@@ -506,8 +550,8 @@ function IconsPalette({ selected, onSelect }) {
 
 const DEFAULT_OFFER = {
   enabled: true,
-  type: "percent", // "percent" or "fixed"
-  value: 10, // percent or fixed amount
+  type: "percent",
+  value: 10,
   title: "",
   description: "",
   
@@ -516,13 +560,17 @@ const DEFAULT_OFFER = {
   minSubtotal: 0,
   requiresCode: false,
   code: "",
-  maxDiscount: 0, // 0 = unlimited
+  maxDiscount: 0,
   
   // Product selection
   shopifyProductId: "",
   productRef: "",
   imageUrl: "",
-  icon: "🔥",
+  
+  // Timer settings
+  enableTimer: false,
+  timerMinutes: 60,
+  timerMessage: "Offre spéciale limitée dans le temps!",
   
   // Display
   showInPreview: true
@@ -534,7 +582,7 @@ const DEFAULT_UPSELL = {
   description: "",
   
   // Trigger conditions
-  triggerType: "subtotal", // "subtotal" or "product"
+  triggerType: "subtotal",
   minSubtotal: 30,
   productHandle: "",
   
@@ -548,18 +596,23 @@ const DEFAULT_UPSELL = {
   shopifyProductId: "",
   productRef: "",
   imageUrl: "",
-  icon: "🎁",
+  
+  // Timer settings
+  enableTimer: false,
+  timerMinutes: 60,
+  timerMessage: "Cadeau spécial limité dans le temps!",
   
   // Display
   showInPreview: true
 };
 
 const DEFAULT_CFG = {
-  meta: { version: 8 },
+  meta: { version: 9 },
   global: { 
     enabled: true, 
-    currency: "", // Vide par défaut, sera rempli avec la devise du pays
-    rounding: "none" 
+    currency: "",
+    rounding: "none",
+    colorPalette: "blue-gradient",
   },
   
   // Multiple offers support (max 3)
@@ -571,7 +624,8 @@ const DEFAULT_CFG = {
   // Display settings
   display: {
     showOrderSummary: true,
-    showOffersSection: true
+    showOffersSection: true,
+    showTimerInPreview: true,
   }
 };
 
@@ -592,6 +646,40 @@ function withDefaults(raw = {}) {
   x.upsells = x.upsells.map(upsell => ({ ...DEFAULT_UPSELL, ...upsell }));
   
   return x;
+}
+
+/* ============================== Composant Timer pour prévisualisation ============================== */
+function TimerDisplay({ minutes, message }) {
+  const [timeLeft, setTimeLeft] = useState(minutes * 60);
+  
+  useEffect(() => {
+    if (timeLeft <= 0) return;
+    
+    const timer = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    
+    return () => clearInterval(timer);
+  }, [timeLeft]);
+  
+  const formatTime = (seconds) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  };
+  
+  return (
+    <div className="offer-timer">
+      <span className="offer-timer-icon">⏱️</span>
+      <span>{formatTime(timeLeft)} - {message}</span>
+    </div>
+  );
 }
 
 /* ============================== Preview Components ============================== */
@@ -634,34 +722,20 @@ function OffersPreview({ cfg, products, t, formsDesign }) {
                 <div className="offers-strip-thumb-inner" />
               )}
             </div>
-            <div>
-              <div 
-                className="offers-strip-title"
-                style={{ color: formsDesign?.placeholder || "#6B7280" }}
-              >
-                <span 
-                  className="offers-strip-icon"
-                  style={{ 
-                    background: formsDesign?.cartRowBg || "#F3F4F6",
-                    border: `1px solid ${formsDesign?.cartRowBorder || "#E5E7EB"}`
-                  }}
-                >
-                  {offer.icon}
-                </span>
-                <span>{t("section2.preview.offerStrip.offer")}</span>
-              </div>
-              <div 
-                className="offers-strip-main"
-                style={{ color: formsDesign?.cartTitleColor || "#111827" }}
-              >
+            <div style={{ flex: 1 }}>
+              <div className="offers-strip-main" style={{ color: formsDesign?.cartTitleColor || "#111827" }}>
                 {productName}
               </div>
-              <div 
-                className="offers-strip-desc"
-                style={{ color: formsDesign?.cartTextColor || "#6B7280" }}
-              >
+              <div className="offers-strip-desc" style={{ color: formsDesign?.cartTextColor || "#6B7280" }}>
                 {description}
               </div>
+              
+              {cfg.display.showTimerInPreview && offer.enableTimer && (
+                <TimerDisplay 
+                  minutes={offer.timerMinutes} 
+                  message={offer.timerMessage || t("section2.preview.timerDefaultMessage")}
+                />
+              )}
             </div>
           </div>
         );
@@ -699,34 +773,20 @@ function UpsellsPreview({ cfg, products, t, formsDesign }) {
                 <div className="offers-strip-thumb-inner-upsell" />
               )}
             </div>
-            <div>
-              <div 
-                className="offers-strip-title"
-                style={{ color: formsDesign?.placeholder || "#6B7280" }}
-              >
-                <span 
-                  className="offers-strip-icon"
-                  style={{ 
-                    background: formsDesign?.cartRowBg || "#F3F4F6",
-                    border: `1px solid ${formsDesign?.cartRowBorder || "#E5E7EB"}`
-                  }}
-                >
-                  {upsell.icon}
-                </span>
-                <span>{t("section2.preview.offerStrip.gift")}</span>
-              </div>
-              <div 
-                className="offers-strip-main"
-                style={{ color: formsDesign?.cartTitleColor || "#111827" }}
-              >
+            <div style={{ flex: 1 }}>
+              <div className="offers-strip-main" style={{ color: formsDesign?.cartTitleColor || "#111827" }}>
                 {productName}
               </div>
-              <div 
-                className="offers-strip-desc"
-                style={{ color: formsDesign?.cartTextColor || "#6B7280" }}
-              >
+              <div className="offers-strip-desc" style={{ color: formsDesign?.cartTextColor || "#6B7280" }}>
                 {description}
               </div>
+              
+              {cfg.display.showTimerInPreview && upsell.enableTimer && (
+                <TimerDisplay 
+                  minutes={upsell.timerMinutes} 
+                  message={upsell.timerMessage || t("section2.preview.timerDefaultMessage")}
+                />
+              )}
             </div>
           </div>
         );
@@ -915,6 +975,35 @@ function OfferItemEditor({
           )}
         </GroupCard>
         
+        <GroupCard title={t("section2.group.timer.title")}>
+          <Grid2>
+            <Checkbox
+              label={t("section2.offer.enableTimer")}
+              checked={!!offer.enableTimer}
+              onChange={(v) => handleChange('enableTimer', v)}
+              helpText={t("section2.helpText.timer")}
+            />
+            
+            {offer.enableTimer && (
+              <>
+                <TextField
+                  type="number"
+                  label={t("section2.offer.timerMinutes")}
+                  value={String(offer.timerMinutes || 60)}
+                  onChange={(v) => handleChange('timerMinutes', parseInt(v) || 60)}
+                  helpText={t("section2.helpText.timerMinutes")}
+                />
+                <TextField
+                  label={t("section2.offer.timerMessage")}
+                  value={offer.timerMessage || ""}
+                  onChange={(v) => handleChange('timerMessage', v)}
+                  helpText={t("section2.helpText.timerMessage")}
+                />
+              </>
+            )}
+          </Grid2>
+        </GroupCard>
+        
         <GroupCard title={t("section2.group.display.title")}>
           <Grid2>
             <TextField
@@ -923,23 +1012,6 @@ function OfferItemEditor({
               onChange={(v) => handleChange('imageUrl', v)}
               helpText={t("section2.helpText.offerImage")}
             />
-            
-            <div>
-              <Text as="p" variant="bodySm">
-                {t("section2.offer.icon")}
-              </Text>
-              <TextField
-                label={t("section2.offer.icon")}
-                labelHidden
-                value={offer.icon}
-                onChange={(v) => handleChange('icon', v)}
-                helpText={t("section2.helpText.offerIconEmoji")}
-              />
-              <IconsPalette
-                selected={offer.icon}
-                onSelect={(icon) => handleChange('icon', icon)}
-              />
-            </div>
           </Grid2>
           
           <Checkbox
@@ -1071,6 +1143,35 @@ function UpsellItemEditor({
           />
         </GroupCard>
         
+        <GroupCard title={t("section2.group.timer.title")}>
+          <Grid2>
+            <Checkbox
+              label={t("section2.upsell.enableTimer")}
+              checked={!!upsell.enableTimer}
+              onChange={(v) => handleChange('enableTimer', v)}
+              helpText={t("section2.helpText.timer")}
+            />
+            
+            {upsell.enableTimer && (
+              <>
+                <TextField
+                  type="number"
+                  label={t("section2.upsell.timerMinutes")}
+                  value={String(upsell.timerMinutes || 60)}
+                  onChange={(v) => handleChange('timerMinutes', parseInt(v) || 60)}
+                  helpText={t("section2.helpText.timerMinutes")}
+                />
+                <TextField
+                  label={t("section2.upsell.timerMessage")}
+                  value={upsell.timerMessage || ""}
+                  onChange={(v) => handleChange('timerMessage', v)}
+                  helpText={t("section2.helpText.timerMessage")}
+                />
+              </>
+            )}
+          </Grid2>
+        </GroupCard>
+        
         <GroupCard title={t("section2.group.display.title")}>
           <Grid2>
             <TextField
@@ -1079,23 +1180,6 @@ function UpsellItemEditor({
               onChange={(v) => handleChange('imageUrl', v)}
               helpText={t("section2.helpText.offerImage")}
             />
-            
-            <div>
-              <Text as="p" variant="bodySm">
-                {t("section2.upsell.icon")}
-              </Text>
-              <TextField
-                label={t("section2.upsell.icon")}
-                labelHidden
-                value={upsell.icon}
-                onChange={(v) => handleChange('icon', v)}
-                helpText={t("section2.helpText.giftIconEmoji")}
-              />
-              <IconsPalette
-                selected={upsell.icon}
-                onSelect={(icon) => handleChange('icon', icon)}
-              />
-            </div>
           </Grid2>
           
           <Checkbox
@@ -1201,13 +1285,13 @@ function Section2OffersInner({ products = [] }) {
   const [formsConfig, setFormsConfig] = useState(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [selectedTab, setSelectedTab] = useState("offers");
+  const [selectedTab, setSelectedTab] = useState("global");
 
   const persistLocal = (next) => {
     if (typeof window === "undefined") return;
     try {
       window.localStorage.setItem(
-        "tripleform_cod_offers_v5",
+        "tripleform_cod_offers_v6",
         JSON.stringify(withDefaults(next))
       );
     } catch {}
@@ -1217,14 +1301,12 @@ function Section2OffersInner({ products = [] }) {
   useEffect(() => {
     const loadFormsSettings = async () => {
       try {
-        // Essayer de charger via API d'abord
         const res = await fetch("/api/load-settings");
         if (res.ok) {
           const j = await res.json();
           if (j?.ok && j.settings) {
             setFormsConfig(j.settings);
             
-            // Mettre à jour la devise si elle n'est pas déjà définie
             const countryCode = j.settings.behavior?.country || "MA";
             const currency = getCurrencyByCountry(countryCode);
             
@@ -1242,7 +1324,6 @@ function Section2OffersInner({ products = [] }) {
         console.warn("Failed to load forms settings from API:", e);
       }
       
-      // Fallback: charger depuis localStorage
       try {
         const formsConfigStr = localStorage.getItem("tripleform_cod_config");
         if (formsConfigStr) {
@@ -1296,7 +1377,7 @@ function Section2OffersInner({ products = [] }) {
 
       if (!cancelled && typeof window !== "undefined") {
         try {
-          const s = window.localStorage.getItem("tripleform_cod_offers_v5");
+          const s = window.localStorage.getItem("tripleform_cod_offers_v6");
           if (s) {
             setCfg(withDefaults(JSON.parse(s)));
           }
@@ -1401,6 +1482,7 @@ function Section2OffersInner({ products = [] }) {
 
   const NAV_ITEMS = [
     { key: "global", label: t("section2.rail.global"), icon: "SettingsIcon" },
+    { key: "colors", label: t("section2.rail.colors"), icon: "PaintBrushIcon" },
     { key: "offers", label: t("section2.rail.offers"), icon: "DiscountIcon" },
     { key: "upsells", label: t("section2.rail.upsells"), icon: "GiftCardIcon" },
   ];
@@ -1515,12 +1597,29 @@ function Section2OffersInner({ products = [] }) {
                       checked={cfg.display.showOffersSection}
                       onChange={(v) => setDisplay({ showOffersSection: v })}
                     />
+                    <Checkbox
+                      label={t("section2.display.showTimerInPreview")}
+                      checked={cfg.display.showTimerInPreview}
+                      onChange={(v) => setDisplay({ showTimerInPreview: v })}
+                    />
                   </Grid2>
                   <Text variant="bodySm" tone="subdued">
                     {t("section2.helpText.display")}
                   </Text>
                 </GroupCard>
               </BlockStack>
+            )}
+
+            {selectedTab === "colors" && (
+              <GroupCard title={t("section2.group.colors.title")}>
+                <Text as="p" variant="bodySm" tone="subdued">
+                  {t("section2.colors.description")}
+                </Text>
+                <ColorPaletteSelector
+                  selectedPalette={cfg.global.colorPalette}
+                  onSelect={(paletteId) => setGlobal({ colorPalette: paletteId })}
+                />
+              </GroupCard>
             )}
 
             {selectedTab === "offers" && (
@@ -1543,9 +1642,11 @@ function Section2OffersInner({ products = [] }) {
                 ))}
                 
                 {cfg.offers.length < 3 && (
-                  <div className="add-button" onClick={addOffer}>
-                    <Icon source={PI.PlusIcon} />
-                    {t("section2.button.addOffer")}
+                  <div className="add-button-container">
+                    <div className="add-button" onClick={addOffer}>
+                      <Icon source={PI.PlusIcon} />
+                      {t("section2.button.addOffer")}
+                    </div>
                   </div>
                 )}
               </BlockStack>
@@ -1571,9 +1672,11 @@ function Section2OffersInner({ products = [] }) {
                 ))}
                 
                 {cfg.upsells.length < 3 && (
-                  <div className="add-button" onClick={addUpsell}>
-                    <Icon source={PI.PlusIcon} />
-                    {t("section2.button.addUpsell")}
+                  <div className="add-button-container">
+                    <div className="add-button" onClick={addUpsell}>
+                      <Icon source={PI.PlusIcon} />
+                      {t("section2.button.addUpsell")}
+                    </div>
                   </div>
                 )}
               </BlockStack>
