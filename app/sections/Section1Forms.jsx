@@ -132,6 +132,10 @@ const LAYOUT_CSS = `
   .tf-field-icon { width:20px; height:20px; display:flex; align-items:center; justify-content:center; color:#6B7280; }
   .tf-btn-with-icon { display:flex; align-items:center; justify-content:center; gap:8px; width:100%; text-align:center; }
 
+  /* Cart avec icône */
+  .tf-cart-with-icon { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+  .tf-cart-icon { display:flex; align-items:center; justify-content:center; width:24px; height:24px; }
+
   @media (max-width: 1200px) {
     .tf-editor { grid-template-columns: 300px 2.2fr 1.4fr; }
   }
@@ -372,6 +376,15 @@ const DESIGN_PRESETS = {
 
 /* ============================== Bibliothèque d'icônes ============================== */
 const ICON_LIBRARY = {
+  // Icônes pour le cart
+  cartTitle: [
+    { value: "CartIcon", label: "Panier", icon: "CartIcon" },
+    { value: "BagIcon", label: "Sac", icon: "BagIcon" },
+    { value: "ProductsIcon", label: "Produits", icon: "ProductsIcon" },
+    { value: "CheckoutIcon", label: "Checkout", icon: "CheckoutIcon" },
+    { value: "ReceiptIcon", label: "Reçu", icon: "ReceiptIcon" },
+    { value: "NoteIcon", label: "Note", icon: "NoteIcon" },
+  ],
   // Icônes pour les champs
   name: [
     { value: "ProfileIcon", label: "Profil", icon: "ProfileIcon" },
@@ -1176,6 +1189,7 @@ function Section1FormsLayoutInner() {
       price: "Product price",
       shipping: "Shipping price",
       total: "Total",
+      cartIcon: "CartIcon", // Nouveau champ pour l'icône du cart
     },
     uiTitles: {
       applyCoupon: "Apply",
@@ -1572,6 +1586,8 @@ function IconSelector({ fieldKey, type = "field", onSelect, selectedIcon }) {
   
   const icons = type === "field" 
     ? ICON_LIBRARY[fieldKey] || ICON_LIBRARY.name
+    : type === "cartTitle"
+    ? ICON_LIBRARY.cartTitle
     : ICON_LIBRARY.button;
   
   return (
@@ -1581,7 +1597,7 @@ function IconSelector({ fieldKey, type = "field", onSelect, selectedIcon }) {
       </div>
       <div className="tf-icon-selector">
         {icons.map((icon) => {
-          const IconComponent = icon.icon ? PI[icon.icon] : null;
+          const IconComponent = icon.icon && PI[icon.icon] ? PI[icon.icon] : null;
           return (
             <div
               key={icon.value}
@@ -1796,6 +1812,16 @@ function OutletEditor() {
                   value={config.cartTitles.total}
                   onChange={(v) => setCartT({ total: v })}
                 />
+                <div style={{ display: "grid", gap: 8 }}>
+                  <div style={{ fontSize: 13, fontWeight: 600 }}>
+                    {t("section1.cart.cartIcon")}
+                  </div>
+                  <IconSelector
+                    type="cartTitle"
+                    selectedIcon={config.cartTitles.cartIcon}
+                    onSelect={(icon) => setCartT({ cartIcon: icon })}
+                  />
+                </div>
               </Grid2>
             </GroupCard>
           )}
@@ -2061,16 +2087,8 @@ function OutletEditor() {
           {/* 5) Options : effets, sticky, pays, consentements */}
           {sel === "options" && (
             <GroupCard title={t("section1.group.options.title")}>
-              {/* PALETTES DE COULEURS EN HAUT DE OPTIONS */}
-              <BlueSection title={t("section1.options.colorPresets")} defaultOpen>
-                <p style={{ fontSize: 13, color: "#6B7280", marginBottom: 12 }}>
-                  {t("section1.presets.description")}
-                </p>
-                <ColorPaletteSelector />
-              </BlueSection>
-
               {/* OPTIONS D'AFFICHAGE & COMPORTEMENT */}
-              <BlueSection title={t("section1.options.behavior")}>
+              <BlueSection title={t("section1.options.behavior")} defaultOpen>
                 <Grid3>
                   <Select
                     label={t("section1.buttons.displayStyleLabel")}
@@ -2142,10 +2160,7 @@ function OutletEditor() {
               </BlueSection>
 
               {/* === Pays COD === */}
-              <BlueSection
-                title={t("section1.options.countries")}
-                defaultOpen
-              >
+              <BlueSection title={t("section1.options.countries")}>
                 <Select
                   label={t("section1.options.countries.storeCountryLabel")}
                   options={[
@@ -2517,7 +2532,7 @@ function PreviewPanel() {
   const renderFieldWithIcon = (f, key) => {
     if (!f?.on) return null;
     
-    const IconComponent = f.icon ? PI[f.icon] : null;
+    const IconComponent = f.icon && PI[f.icon] ? PI[f.icon] : null;
     const isTextarea = f.type === "textarea";
     
     return (
@@ -2583,18 +2598,24 @@ function PreviewPanel() {
       : `${shippingPrice.toFixed(2)} ${currency}`;
     
     const total = productPrice + (shippingPrice || 0);
+    const CartIcon = config.cartTitles.cartIcon && PI[config.cartTitles.cartIcon] ? PI[config.cartTitles.cartIcon] : null;
 
     return (
       <div style={cartBoxCSS} dir={config.design.direction || "ltr"}>
-        <div
-          style={{
-            textAlign: titleAlign,
-            fontWeight: 700,
-            marginBottom: 10,
-            color: config.design.cartTitleColor,
-          }}
-        >
-          {sStr(config.cartTitles.top)}
+        <div className="tf-cart-with-icon">
+          {CartIcon && (
+            <div className="tf-cart-icon">
+              <Icon source={CartIcon} />
+            </div>
+          )}
+          <div
+            style={{
+              fontWeight: 700,
+              color: config.design.cartTitleColor,
+            }}
+          >
+            {sStr(config.cartTitles.top)}
+          </div>
         </div>
         <div style={{ display: "grid", gap: 8 }}>
           <div style={cartRowCSS}>
@@ -2624,7 +2645,7 @@ function PreviewPanel() {
   const renderProvinceField = (f) => {
     if (!f?.on) return null;
     
-    const IconComponent = f.icon ? PI[f.icon] : null;
+    const IconComponent = f.icon && PI[f.icon] ? PI[f.icon] : null;
     
     return (
       <div key="province" className="tf-field-with-icon">
@@ -2665,7 +2686,7 @@ function PreviewPanel() {
   const renderCityField = (f) => {
     if (!f?.on) return null;
     
-    const IconComponent = f.icon ? PI[f.icon] : null;
+    const IconComponent = f.icon && PI[f.icon] ? PI[f.icon] : null;
     
     return (
       <div key="city" className="tf-field-with-icon">
@@ -2713,7 +2734,7 @@ function PreviewPanel() {
     const total = productPrice + (shippingPrice || 0);
     const orderLabel = sStr(config.uiTitles.orderNow || config.form?.buttonText || "Order now");
     const suffix = sStr(config.uiTitles.totalSuffix || "Total:");
-    const ButtonIcon = config.form.buttonIcon ? PI[config.form.buttonIcon] : null;
+    const ButtonIcon = config.form.buttonIcon && PI[config.form.buttonIcon] ? PI[config.form.buttonIcon] : null;
 
     return (
       <div style={cardCSS} dir={config.design.direction || "ltr"}>
@@ -2769,7 +2790,9 @@ function PreviewPanel() {
 
           <button type="button" style={btnCSS} className="tf-btn-with-icon">
             {ButtonIcon && <Icon source={ButtonIcon} />}
-            {orderLabel} · {suffix} {total.toFixed(2)} {currency}
+            <span style={{ flex: 1, textAlign: 'center' }}>
+              {orderLabel} · {suffix} {total.toFixed(2)} {currency}
+            </span>
           </button>
         </div>
       </div>
@@ -2796,7 +2819,7 @@ function PreviewPanel() {
     const label = sStr(
       config.behavior?.stickyLabel || config.uiTitles?.orderNow || "Order now"
     );
-    const StickyIcon = config.behavior.stickyIcon ? PI[config.behavior.stickyIcon] : null;
+    const StickyIcon = config.behavior.stickyIcon && PI[config.behavior.stickyIcon] ? PI[config.behavior.stickyIcon] : null;
 
     const miniBtnStyle = {
       ...btnCSS,
@@ -2828,7 +2851,7 @@ function PreviewPanel() {
           </span>
           <button type="button" style={miniBtnStyle} className="tf-btn-with-icon">
             {StickyIcon && <Icon source={StickyIcon} />}
-            {label}
+            <span style={{ flex: 1, textAlign: 'center' }}>{label}</span>
           </button>
         </div>
       );
@@ -2855,7 +2878,7 @@ function PreviewPanel() {
               className="tf-btn-with-icon"
             >
               {StickyIcon && <Icon source={StickyIcon} />}
-              {label}
+              <span style={{ flex: 1, textAlign: 'center' }}>{label}</span>
             </button>
             <div
               style={{
