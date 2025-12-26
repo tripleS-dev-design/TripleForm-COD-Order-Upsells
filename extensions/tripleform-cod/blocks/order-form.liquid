@@ -104,7 +104,8 @@ Lit la config OFFRES / UPSELL depuis:
       "title": "Order form",
       "subtitle": "Please enter your contact information",
       "buttonText": "Order now",
-      "successText": "Thanks! We'll contact you"
+      "successText": "Thanks! We'll contact you",
+      "buttonIcon": "CartIcon"
     },
     "design": {
       "bg": "#FFFFFF",
@@ -146,6 +147,7 @@ Lit la config OFFRES / UPSELL depuis:
       "glowPx": 18,
       "stickyType": "none",
       "stickyLabel": "Order now",
+      "stickyIcon": "CartIcon",
       "drawerDirection": "right",
       "drawerSize": "md",
       "overlayColor": "#020617",
@@ -162,7 +164,8 @@ Lit la config OFFRES / UPSELL depuis:
         "required": true,
         "type": "text",
         "label": "Full name",
-        "ph": "Your full name"
+        "ph": "Your full name",
+        "icon": "ProfileIcon"
       },
       "phone": {
         "on": true,
@@ -170,7 +173,8 @@ Lit la config OFFRES / UPSELL depuis:
         "type": "tel",
         "label": "Phone (WhatsApp)",
         "ph": "Phone number",
-        "prefix": "{{ phone_prefix }}"
+        "prefix": "{{ phone_prefix }}",
+        "icon": "PhoneIcon"
       },
       "quantity": {
         "on": true,
@@ -179,35 +183,40 @@ Lit la config OFFRES / UPSELL depuis:
         "label": "Quantity",
         "ph": "1",
         "min": 1,
-        "max": 10
+        "max": 10,
+        "icon": "HashtagIcon"
       },
       "province": {
         "on": true,
         "required": false,
         "type": "text",
         "label": "{{ province_label }}",
-        "ph": "{{ province_placeholder }}"
+        "ph": "{{ province_placeholder }}",
+        "icon": "RegionIcon"
       },
       "city": {
         "on": true,
         "required": false,
         "type": "text",
         "label": "City",
-        "ph": "Select city"
+        "ph": "Select city",
+        "icon": "CityIcon"
       },
       "address": {
         "on": false,
         "required": false,
         "type": "text",
         "label": "Address",
-        "ph": "Full address"
+        "ph": "Full address",
+        "icon": "LocationIcon"
       },
       "notes": {
         "on": false,
         "required": false,
         "type": "textarea",
         "label": "Notes",
-        "ph": "(optional)"
+        "ph": "(optional)",
+        "icon": "NoteIcon"
       }
     },
     "cartTitles": {
@@ -215,7 +224,8 @@ Lit la config OFFRES / UPSELL depuis:
       "price": "Product price",
       "shipping": "Shipping price",
       "total": "Total",
-      "shippingToCalculate": "Livraison à calculer"
+      "shippingToCalculate": "Livraison à calculer",
+      "cartIcon": "CartIcon"
     },
     "uiTitles": {
       "applyCoupon": "Apply",

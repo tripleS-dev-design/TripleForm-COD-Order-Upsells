@@ -85,6 +85,57 @@ window.TripleformCOD = (function () {
   }
 
   /* ------------------------------------------------------------------ */
+  /* Icon helpers                                                       */
+  /* ------------------------------------------------------------------ */
+
+  const ICON_MAPPING = {
+    // Cart icons
+    CartIcon: "🛒",
+    BagIcon: "🛍️",
+    ProductsIcon: "📦",
+    CheckoutIcon: "💳",
+    ReceiptIcon: "🧾",
+    NoteIcon: "📝",
+    
+    // Field icons
+    ProfileIcon: "👤",
+    PersonIcon: "👤",
+    UserIcon: "👤",
+    CustomersIcon: "👥",
+    PhoneIcon: "📱",
+    MobileIcon: "📱",
+    CallIcon: "📞",
+    ChatIcon: "💬",
+    HashtagIcon: "#️⃣",
+    NumberIcon: "🔢",
+    CirclePlusIcon: "➕",
+    LocationIcon: "📍",
+    PinIcon: "📍",
+    HomeIcon: "🏠",
+    StoreIcon: "🏪",
+    CityIcon: "🏙️",
+    GlobeIcon: "🌍",
+    MapIcon: "🗺️",
+    RegionIcon: "🗾",
+    ClipboardIcon: "📋",
+    DocumentIcon: "📄",
+    TextIcon: "📝",
+    
+    // Button icons
+    TruckIcon: "🚚",
+    CheckCircleIcon: "✅",
+    PlayIcon: "▶️",
+    ArrowRightIcon: "➡️",
+    SendIcon: "📤",
+    AppsIcon: "📱"
+  };
+
+  function getIconHtml(iconName, size = "18px") {
+    if (!iconName || !ICON_MAPPING[iconName]) return "";
+    return `<span style="display:inline-flex;align-items:center;justify-content:center;width:${size};height:${size};margin-right:8px;font-size:calc(${size} - 4px);">${ICON_MAPPING[iconName]}</span>`;
+  }
+
+  /* ------------------------------------------------------------------ */
   /* Pays / wilayas / villes COMPLET                                    */
   /* ------------------------------------------------------------------ */
 
@@ -880,27 +931,27 @@ window.TripleformCOD = (function () {
     switch (size) {
       case "sm":
         return {
-          maxWidth: "400px",
-          maxHeight: "70vh",
-          cardMaxHeight: "calc(70vh - 48px)",
+          maxWidth: "95vw",
+          maxHeight: "85vh",
+          cardMaxHeight: "calc(85vh - 40px)",
         };
       case "lg":
         return {
-          maxWidth: "520px",
-          maxHeight: "85vh",
-          cardMaxHeight: "calc(85vh - 48px)",
+          maxWidth: "95vw",
+          maxHeight: "92vh",
+          cardMaxHeight: "calc(92vh - 40px)",
         };
       case "full":
         return {
           maxWidth: "100%",
           maxHeight: "100vh",
-          cardMaxHeight: "calc(100vh - 48px)",
+          cardMaxHeight: "calc(100vh - 40px)",
         };
       default:
         return {
-          maxWidth: "440px",
-          maxHeight: "78vh",
-          cardMaxHeight: "calc(78vh - 48px)",
+          maxWidth: "95vw",
+          maxHeight: "90vh",
+          cardMaxHeight: "calc(90vh - 40px)",
         };
     }
   }
@@ -910,13 +961,13 @@ window.TripleformCOD = (function () {
     switch (size) {
       case "sm":
         return {
-          sideWidth: "min(340px,100%)",
-          edgeHeight: "min(420px,100%)",
+          sideWidth: "min(380px, 95vw)",
+          edgeHeight: "min(500px, 90vh)",
         };
       case "lg":
         return {
-          sideWidth: "min(460px,100%)",
-          edgeHeight: "min(640px,100%)",
+          sideWidth: "min(500px, 95vw)",
+          edgeHeight: "min(700px, 95vh)",
         };
       case "full":
         return {
@@ -925,8 +976,8 @@ window.TripleformCOD = (function () {
         };
       default:
         return {
-          sideWidth: "min(380px,100%)",
-          edgeHeight: "min(520px,100%)",
+          sideWidth: "min(450px, 95vw)",
+          edgeHeight: "min(600px, 92vh)",
         };
     }
   }
@@ -978,6 +1029,7 @@ window.TripleformCOD = (function () {
     const stickyLabel = css(
       cfg?.behavior?.stickyLabel || cfg?.uiTitles?.orderNow || "Order now"
     );
+    const stickyIcon = cfg?.behavior?.stickyIcon || "CartIcon";
 
     const prev = document.querySelector(`[data-tf-sticky-for="${root.id}"]`);
     if (prev && prev.parentNode) prev.parentNode.removeChild(prev);
@@ -990,10 +1042,11 @@ window.TripleformCOD = (function () {
 
     const el = document.createElement("div");
     el.setAttribute("data-tf-sticky-for", root.id);
+    el.style.zIndex = "999999";
 
     const baseStyle = `
       position:fixed;
-      z-index:9999;
+      z-index:999999;
       bottom:12px;
       display:flex;
       align-items:center;
@@ -1016,9 +1069,7 @@ window.TripleformCOD = (function () {
           box-shadow:0 18px 32px rgba(15,23,42,0.55);
           font-size:12px;
         ">
-          <span>Quick COD — ${
-            styleType === "inline" ? "scroll to form" : "open form"
-          }</span>
+          <span>Quick COD — ${styleType === "inline" ? "scroll to form" : "open form"}</span>
           <button type="button" data-tf-sticky-cta style="
             border-radius:999px;
             border:1px solid ${br};
@@ -1029,8 +1080,9 @@ window.TripleformCOD = (function () {
             font-size:13px;
             cursor:pointer;
             box-shadow:0 10px 24px rgba(0,0,0,.35);
+            display:flex; align-items:center; gap:6px;
           ">
-            ${stickyLabel}
+            ${getIconHtml(stickyIcon, "16px")}${stickyLabel}
           </button>
         </div>
       `;
@@ -1052,8 +1104,9 @@ window.TripleformCOD = (function () {
           box-shadow:0 18px 36px rgba(0,0,0,.55);
           max-width:220px;
           white-space:nowrap;
+          display:flex; align-items:center; gap:6px;
         ">
-          ${stickyLabel}
+          ${getIconHtml(stickyIcon, "16px")}${stickyLabel}
         </button>
       `;
     }
@@ -1327,7 +1380,6 @@ window.TripleformCOD = (function () {
         geoEnabledAttr === "yes");
 
     const geoEndpoint = geoEndpointAttr || "";
-    // ✅ CORRECTION CRITIQUE : Initialiser à null (pas à 0)
     let geoShippingCents = null;
     let geoNote = "";
     let geoRequestId = 0;
@@ -1417,9 +1469,12 @@ window.TripleformCOD = (function () {
       padding:${+d.padding || 16}px;
       box-shadow:${cardShadow};
       direction:${textDir};
+      font-size:${inputFontSize}px;
+      max-width:100%;
+      box-sizing:border-box;
     `;
     const inputStyle = `
-      width:100%; padding:10px 12px;
+      width:100%; padding:10px 12px 10px 40px;
       border-radius:${+d.btnRadius || 10}px;
       border:1px solid ${css(d.inputBorder)};
       background:${css(d.inputBg)};
@@ -1427,6 +1482,7 @@ window.TripleformCOD = (function () {
       outline:none;
       text-align:${fieldAlign};
       font-size:${inputFontSize}px;
+      box-sizing:border-box;
     `;
     const btnStyle = `
       width:100%;
@@ -1439,6 +1495,12 @@ window.TripleformCOD = (function () {
       letter-spacing:.2px;
       box-shadow:${btnShadow};
       font-size:${inputFontSize}px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      cursor:pointer;
+      box-sizing:border-box;
     `;
     const cartBoxStyle = `
       background:${css(d.cartBg)};
@@ -1448,6 +1510,7 @@ window.TripleformCOD = (function () {
       box-shadow:${cartShadow};
       font-size:${labelFontSize};
       direction:${textDir};
+      box-sizing:border-box;
     `;
     const cartTitleStyle = `
       font-weight:700;
@@ -1455,6 +1518,9 @@ window.TripleformCOD = (function () {
       color:${css(d.cartTitleColor)};
       font-size:${labelFontSize};
       text-align:${titleAlign};
+      display:flex;
+      align-items:center;
+      gap:8px;
     `;
     const rowStyle = `
       display:grid; grid-template-columns:1fr auto;
@@ -1466,6 +1532,7 @@ window.TripleformCOD = (function () {
       color:${css(d.cartTextColor)};
       box-shadow:${rowShadow};
       font-size:${labelFontSize};
+      box-sizing:border-box;
     `;
 
     const offersHtml = buildOffersHtml(offersCfg || {});
@@ -1493,6 +1560,7 @@ window.TripleformCOD = (function () {
       const field = f[key];
       if (!field || field.on === false) return "";
 
+      const iconHtml = field.icon ? getIconHtml(field.icon, "18px") : "";
       const req = field.required ? " *" : "";
       const label = (field.label || key) + req;
       const ph = field.ph || "";
@@ -1500,78 +1568,126 @@ window.TripleformCOD = (function () {
 
       if (key === "province") {
         return `
-          <label style="display:grid; gap:6px; text-align:${fieldAlign};">
-            <span style="font-size:${labelFontSize}; color:#475569;">${css(
-              label
-            )}</span>
-            <select data-tf-role="province" data-tf-field="${key}" style="${inputStyle}"${requiredAttr}>
-              <option value="">${css(ph || "Wilaya / Province")}</option>
-            </select>
-          </label>
+          <div style="display:grid; grid-template-columns:auto 1fr; gap:10px; align-items:center;">
+            ${iconHtml}
+            <label style="display:grid; gap:6px; flex:1;">
+              <span style="font-size:${labelFontSize}; color:#475569; text-align:${fieldAlign};">${css(label)}</span>
+              <select data-tf-role="province" data-tf-field="${key}" style="
+                width:100%; padding:10px 12px;
+                border-radius:${+d.btnRadius || 10}px;
+                border:1px solid ${css(d.inputBorder)};
+                background:${css(d.inputBg)};
+                color:${css(d.text)};
+                outline:none;
+                text-align:${fieldAlign};
+                font-size:${inputFontSize}px;
+                box-sizing:border-box;
+              " ${requiredAttr}>
+                <option value="">${css(ph || "Wilaya / Province")}</option>
+              </select>
+            </label>
+          </div>
         `;
       }
 
       if (key === "city") {
         return `
-          <label style="display:grid; gap:6px; text-align:${fieldAlign};">
-            <span style="font-size:${labelFontSize}; color:#475569;">${css(
-              label
-            )}</span>
-            <select data-tf-role="city" data-tf-field="${key}" style="${inputStyle}"${requiredAttr}>
-              <option value="">${css(ph || "Select province first")}</option>
-            </select>
-          </label>
+          <div style="display:grid; grid-template-columns:auto 1fr; gap:10px; align-items:center;">
+            ${iconHtml}
+            <label style="display:grid; gap:6px; flex:1;">
+              <span style="font-size:${labelFontSize}; color:#475569; text-align:${fieldAlign};">${css(label)}</span>
+              <select data-tf-role="city" data-tf-field="${key}" style="
+                width:100%; padding:10px 12px;
+                border-radius:${+d.btnRadius || 10}px;
+                border:1px solid ${css(d.inputBorder)};
+                background:${css(d.inputBg)};
+                color:${css(d.text)};
+                outline:none;
+                text-align:${fieldAlign};
+                font-size:${inputFontSize}px;
+                box-sizing:border-box;
+              " ${requiredAttr}>
+                <option value="">${css(ph || "Select province first")}</option>
+              </select>
+            </label>
+          </div>
         `;
       }
 
       if (field.type === "textarea") {
         return `
-          <label style="display:grid; gap:6px; text-align:${fieldAlign};">
-            <span style="font-size:${labelFontSize}; color:#475569;">${css(
-              label
-            )}</span>
-            <textarea data-tf-field="${key}" style="${inputStyle}" rows="3" placeholder="${css(
-          ph
-        )}"${requiredAttr}></textarea>
-          </label>
+          <div style="display:grid; grid-template-columns:auto 1fr; gap:10px; align-items:start;">
+            ${iconHtml}
+            <label style="display:grid; gap:6px; flex:1;">
+              <span style="font-size:${labelFontSize}; color:#475569; text-align:${fieldAlign};">${css(label)}</span>
+              <textarea data-tf-field="${key}" style="
+                width:100%; padding:10px 12px;
+                border-radius:${+d.btnRadius || 10}px;
+                border:1px solid ${css(d.inputBorder)};
+                background:${css(d.inputBg)};
+                color:${css(d.text)};
+                outline:none;
+                text-align:${fieldAlign};
+                font-size:${inputFontSize}px;
+                box-sizing:border-box;
+                min-height:80px;
+                resize:vertical;
+              " rows="3" placeholder="${css(ph)}" ${requiredAttr}></textarea>
+            </label>
+          </div>
         `;
       }
 
       if (field.type === "tel") {
         const prefix = field.prefix
-          ? `<input style="${inputStyle} text-align:center;" value="${css(
-              field.prefix
-            )}" readonly />`
+          ? `<input style="
+                width:100%; padding:10px 12px;
+                border-radius:${+d.btnRadius || 10}px;
+                border:1px solid ${css(d.inputBorder)};
+                background:${css(d.inputBg)};
+                color:${css(d.text)};
+                outline:none;
+                text-align:center;
+                font-size:${inputFontSize}px;
+                box-sizing:border-box;
+              " value="${css(field.prefix)}" readonly />`
           : "";
         const grid = field.prefix ? "minmax(88px,130px) 1fr" : "1fr";
 
         return `
-          <label style="display:grid; gap:6px; text-align:${fieldAlign};">
-            <span style="font-size:${labelFontSize}; color:#475569;">${css(
-              label
-            )}</span>
-            <div style="display:grid; grid-template-columns:${grid}; gap:8px;">
-              ${prefix}
-              <input type="tel" data-tf-field="${key}" style="${inputStyle}" placeholder="${css(
-          ph
-        )}"${requiredAttr} />
-            </div>
-          </label>
+          <div style="display:grid; grid-template-columns:auto 1fr; gap:10px; align-items:center;">
+            ${iconHtml}
+            <label style="display:grid; gap:6px; flex:1;">
+              <span style="font-size:${labelFontSize}; color:#475569; text-align:${fieldAlign};">${css(label)}</span>
+              <div style="display:grid; grid-template-columns:${grid}; gap:8px;">
+                ${prefix}
+                <input type="tel" data-tf-field="${key}" style="
+                  width:100%; padding:10px 12px;
+                  border-radius:${+d.btnRadius || 10}px;
+                  border:1px solid ${css(d.inputBorder)};
+                  background:${css(d.inputBg)};
+                  color:${css(d.text)};
+                  outline:none;
+                  text-align:${fieldAlign};
+                  font-size:${inputFontSize}px;
+                  box-sizing:border-box;
+                " placeholder="${css(ph)}" ${requiredAttr} />
+              </div>
+            </label>
+          </div>
         `;
       }
 
-      const typeAttr =
-        field.type === "number" ? 'type="number"' : 'type="text"';
+      const typeAttr = field.type === "number" ? 'type="number"' : 'type="text"';
 
       return `
-        <label style="display:grid; gap:6px; text-align:${fieldAlign};">
-          <span style="font-size:${labelFontSize}; color:#475569;">${css(
-            label
-          )}</span>
-          <input ${typeAttr} data-tf-field="${key}" style="${inputStyle}" placeholder="${css(
-        ph
-      )}"${requiredAttr} />
-        </label>
+        <div style="display:grid; grid-template-columns:auto 1fr; gap:10px; align-items:center;">
+          ${iconHtml}
+          <label style="display:grid; gap:6px; flex:1;">
+            <span style="font-size:${labelFontSize}; color:#475569; text-align:${fieldAlign};">${css(label)}</span>
+            <input ${typeAttr} data-tf-field="${key}" style="${inputStyle}" placeholder="${css(ph)}" ${requiredAttr} />
+          </label>
+        </div>
       `;
     }
 
@@ -1582,10 +1698,11 @@ window.TripleformCOD = (function () {
     }
 
     function cartSummaryHTML() {
-      // ✅ CORRECTION : Toujours afficher "shipping to calculate" au début
+      const cartIconHtml = t.cartIcon ? getIconHtml(t.cartIcon, "20px") : "";
+      
       return `
         <div style="${cartBoxStyle}">
-          <div style="${cartTitleStyle}">${css(t.top || "Order summary")}</div>
+          <div style="${cartTitleStyle}">${cartIconHtml}${css(t.top || "Order summary")}</div>
           <div style="display:grid; gap:8px;">
             <div style="${rowStyle}">
               <div>${css(t.price || "Product price")}</div>
@@ -1619,10 +1736,10 @@ window.TripleformCOD = (function () {
     }
 
     function formCardHTML(ctaKey) {
-      const orderLabel = css(
-        ui.orderNow || cfg.form?.buttonText || "Order now"
-      );
+      const orderLabel = css(ui.orderNow || cfg.form?.buttonText || "Order now");
+      const buttonIconHtml = cfg.form?.buttonIcon ? getIconHtml(cfg.form.buttonIcon, "20px") : "";
       const suffix = css(ui.totalSuffix || "Total:");
+      
       const honeypotInputHTML = `
         <input
           type="text"
@@ -1649,16 +1766,12 @@ window.TripleformCOD = (function () {
             <div style="text-align:${titleAlign}; margin-bottom:10px;">
               ${
                 cfg.form?.title
-                  ? `<div style="font-weight:700; font-size:${labelFontSize};">${css(
-                      cfg.form.title
-                    )}</div>`
+                  ? `<div style="font-weight:700; font-size:${labelFontSize};">${css(cfg.form.title)}</div>`
                   : ""
               }
               ${
                 cfg.form?.subtitle
-                  ? `<div style="opacity:.8; font-size:${smallFontSize};">${css(
-                      cfg.form.subtitle
-                    )}</div>`
+                  ? `<div style="opacity:.8; font-size:${smallFontSize};">${css(cfg.form.subtitle)}</div>`
                   : ""
               }
             </div>`
@@ -1683,9 +1796,7 @@ window.TripleformCOD = (function () {
               beh?.requireGDPR
                 ? `
               <label style="display:flex; gap:8px; align-items:center; font-size:${smallFontSize}; color:#374151;">
-                <input type="checkbox" /> ${css(
-                  beh.gdprLabel || "I accept the privacy policy"
-                )}
+                <input type="checkbox" /> ${css(beh.gdprLabel || "I accept the privacy policy")}
               </label>`
                 : ""
             }
@@ -1694,9 +1805,7 @@ window.TripleformCOD = (function () {
               beh?.whatsappOptIn
                 ? `
               <label style="display:flex; gap:8px; align-items:center; font-size:${smallFontSize}; color:#374151;">
-                <input type="checkbox" /> ${css(
-                  beh.whatsappLabel || "Receive confirmation on WhatsApp"
-                )}
+                <input type="checkbox" /> ${css(beh.whatsappLabel || "Receive confirmation on WhatsApp")}
               </label>`
                 : ""
             }
@@ -1707,14 +1816,14 @@ window.TripleformCOD = (function () {
               data-tf-cta="1"
               data-tf="${ctaKey}"
             >
-              ${orderLabel} · ${suffix} …
+              ${buttonIconHtml}${orderLabel} · ${suffix} …
             </button>
           </div>
         </div>
       `;
     }
 
-    const mainStart = `<div style="max-width:560px;margin:0 auto;display:grid;gap:12px;direction:${textDir};">`;
+    const mainStart = `<div style="max-width:560px;margin:0 auto;display:grid;gap:12px;direction:${textDir};box-sizing:border-box;">`;
     const mainEnd = "</div>";
 
     let html = "";
@@ -1741,9 +1850,7 @@ window.TripleformCOD = (function () {
             data-tf-cta="1"
             data-tf="launcher"
           >
-            ${css(ui.orderNow || cfg.form?.buttonText || "Order now")} · ${css(
-          ui.totalSuffix || "Total:"
-        )} …
+            ${cfg.form?.buttonIcon ? getIconHtml(cfg.form.buttonIcon, "20px") : ""}${css(ui.orderNow || cfg.form?.buttonText || "Order now")} · ${css(ui.totalSuffix || "Total:")} …
           </button>
           <div style="font-size:${tinyFontSize}; color:#6B7280; margin-top:4px; text-align:${titleAlign};">
             Click to open COD form (popup)
@@ -1760,31 +1867,47 @@ window.TripleformCOD = (function () {
             display:none;
             align-items:center;
             justify-content:center;
-            z-index:9999;
+            z-index:999999;
             background:${ovBg};
+            padding:20px;
+            box-sizing:border-box;
           "
         >
           <div style="
             width:100%;
             max-width:${popupCfg.maxWidth};
             max-height:${popupCfg.maxHeight};
-            padding:16px;
             box-sizing:border-box;
+            position:relative;
           ">
-            <div style="text-align:right; margin-bottom:8px;">
+            <div style="text-align:right; margin-bottom:8px; position:absolute; top:-40px; right:0;">
               <button
                 type="button"
                 data-tf="close"
-                style="background:transparent; border:none; color:#e5e7eb; font-size:24px; cursor:pointer;"
+                style="
+                  background:transparent;
+                  border:none;
+                  color:#fff;
+                  font-size:28px;
+                  cursor:pointer;
+                  width:40px;
+                  height:40px;
+                  display:flex;
+                  align-items:center;
+                  justify-content:center;
+                  border-radius:50%;
+                  background:rgba(0,0,0,0.3);
+                "
               >&times;</button>
             </div>
             <div style="
               background:${css(d.bg)};
               border-radius:${+d.radius || 12}px;
               box-shadow:${cardShadow};
-              padding:16px;
+              padding:20px;
               max-height:${popupCfg.cardMaxHeight};
               overflow:auto;
+              box-sizing:border-box;
             ">
               <div style="max-width:560px;margin:0 auto;display:grid;gap:12px;direction:${textDir};">
                 ${offersHtml}
@@ -1812,9 +1935,7 @@ window.TripleformCOD = (function () {
             data-tf-cta="1"
             data-tf="launcher"
           >
-            ${css(ui.orderNow || cfg.form?.buttonText || "Order now")} · ${css(
-          ui.totalSuffix || "Total:"
-        )} …
+            ${cfg.form?.buttonIcon ? getIconHtml(cfg.form.buttonIcon, "20px") : ""}${css(ui.orderNow || cfg.form?.buttonText || "Order now")} · ${css(ui.totalSuffix || "Total:")} …
           </button>
           <div style="font-size:${tinyFontSize}; color:#6B7280; margin-top:4px; text-align:${titleAlign};">
             Click to open COD form (drawer)
@@ -1829,9 +1950,10 @@ window.TripleformCOD = (function () {
             position:fixed;
             inset:0;
             display:none;
-            z-index:9999;
+            z-index:999999;
             background:${ovBg};
             overflow:hidden;
+            padding:0;
           "
         >
           <div
@@ -1847,20 +1969,33 @@ window.TripleformCOD = (function () {
               box-shadow:0 0 40px rgba(15,23,42,0.65);
               display:flex;
               flex-direction:column;
-              padding:16px;
+              padding:20px;
               box-sizing:border-box;
               transform:translateX(100%);
               transition:transform 260ms ease;
+              overflow:hidden;
             "
           >
             <div style="text-align:right; margin-bottom:8px;">
               <button
                 type="button"
                 data-tf="close"
-                style="background:transparent; border:none; color:#020617; font-size:24px; cursor:pointer;"
+                style="
+                  background:transparent;
+                  border:none;
+                  color:#020617;
+                  font-size:28px;
+                  cursor:pointer;
+                  width:40px;
+                  height:40px;
+                  display:flex;
+                  align-items:center;
+                  justify-content:center;
+                  border-radius:50%;
+                "
               >&times;</button>
             </div>
-            <div style="overflow:auto; flex:1; padding-right:4px;">
+            <div style="overflow:auto; flex:1; padding-right:4px; box-sizing:border-box;">
               <div style="max-width:560px;margin:0 auto;display:grid;gap:12px;direction:${textDir};">
                 ${offersHtml}
                 ${cartSummaryHTML()}
@@ -1875,7 +2010,7 @@ window.TripleformCOD = (function () {
 
     root.innerHTML = html;
 
-    // Appliquer la taille de texte sur tous les champs (sécurité)
+    // Appliquer la taille de texte sur tous les champs
     Array.from(root.querySelectorAll("input, textarea, select")).forEach(
       (el) => {
         el.style.fontSize = inputFontSize + "px";
@@ -1939,7 +2074,6 @@ window.TripleformCOD = (function () {
       return !!(btn && btn.getAttribute("data-tf-active") === "1");
     }
 
-    // ✅ Prix corrigé produit (centimes)
     function computeProductTotals() {
       const vId = getVariant();
       const qty = getQty();
@@ -1954,11 +2088,9 @@ window.TripleformCOD = (function () {
         const rawNum = Number(rawStr);
 
         if (Number.isFinite(rawNum)) {
-          // "200.00" → devise → centimes
           if (rawStr.includes(".")) {
             priceCents = Math.round(rawNum * 100);
           } else {
-            // déjà en centimes
             priceCents = Math.round(rawNum);
           }
         }
@@ -1976,10 +2108,8 @@ window.TripleformCOD = (function () {
 
         if (val > 0) {
           if (type === "fixed") {
-            // remise fixe en devise -> centimes
             discountCents = Math.round(val * 100);
           } else {
-            // remise en %
             discountCents = Math.round((baseTotalCents * val) / 100);
           }
         }
@@ -2000,10 +2130,9 @@ window.TripleformCOD = (function () {
       };
     }
 
-    // ✅ CORRECTION CRITIQUE : Shipping GEO - ne pas mettre à 0 en cas d'erreur ou de champs vides
     async function recalcGeo() {
       if (!geoEnabled || !geoEndpoint) {
-        // ✅ Ne pas changer geoShippingCents, reste null
+        geoShippingCents = null;
         geoNote = "";
         updateMoney();
         return;
@@ -2011,13 +2140,12 @@ window.TripleformCOD = (function () {
 
       const reqId = ++geoRequestId;
       const totals = computeProductTotals();
-      const baseTotalCents = totals.totalCents; // total produit après remise
+      const baseTotalCents = totals.totalCents;
 
       const province =
         getFieldValueByLabel("wilaya") || getFieldValueByLabel("province");
       const city = getFieldValueByLabel("city");
 
-      // ✅ CORRECTION : Si province et ville sont vides, ne pas appeler l'API, laisser null
       if (!province || !city) {
         if (reqId !== geoRequestId) return;
         geoShippingCents = null;
@@ -2027,7 +2155,6 @@ window.TripleformCOD = (function () {
       }
 
       try {
-        // Construire l'URL avec query string
         const url = new URL(geoEndpoint, window.location.origin);
         url.searchParams.set("country", geoCountryAttr || "");
         url.searchParams.set("province", province || "");
@@ -2048,7 +2175,6 @@ window.TripleformCOD = (function () {
             "[Tripleform COD] geo calc error:",
             json.error || res.statusText
           );
-          // ✅ CORRECTION : En cas d'erreur, laisser null (pas 0)
           geoShippingCents = null;
           geoNote = "";
         } else {
@@ -2057,7 +2183,6 @@ window.TripleformCOD = (function () {
 
           const shippingObj = json.shipping || {};
 
-          // montant principal (en devise -> centimes)
           if (shippingObj && shippingObj.amount != null) {
             const amount = Number(shippingObj.amount);
             if (Number.isFinite(amount) && amount > 0) {
@@ -2065,7 +2190,6 @@ window.TripleformCOD = (function () {
             }
           }
 
-          // frais COD éventuels (en devise -> centimes)
           if (shippingObj && shippingObj.codExtraFee != null) {
             const codAmount = Number(shippingObj.codExtraFee);
             if (Number.isFinite(codAmount) && codAmount > 0) {
@@ -2079,14 +2203,11 @@ window.TripleformCOD = (function () {
             json.message ||
             "";
 
-          // ✅ CORRECTION IMPORTANTE : Seulement si l'API retourne un montant (0 ou > 0)
-          // Si shippingCents et codFeeCents sont tous les deux 0, alors geoShippingCents = 0
           geoShippingCents = shippingCents + codFeeCents;
         }
       } catch (e) {
         if (reqId !== geoRequestId) return;
         console.warn("[Tripleform COD] geo calc network error:", e);
-        // ✅ CORRECTION : En cas d'erreur réseau, laisser null (pas 0)
         geoShippingCents = null;
         geoNote = "";
       }
@@ -2115,11 +2236,9 @@ window.TripleformCOD = (function () {
           missingLabels.push(cfgField.label || key);
           if (!firstInvalid) firstInvalid = el;
 
-          // style erreur
           el.style.borderColor = "#ef4444";
           el.style.boxShadow = "0 0 0 1px rgba(239,68,68,0.35)";
         } else {
-          // reset style si OK
           el.style.borderColor = css(d.inputBorder);
           el.style.boxShadow = "none";
         }
@@ -2186,16 +2305,12 @@ window.TripleformCOD = (function () {
         discountEls.forEach((el) => (el.textContent = txt));
       }
 
-      // ✅ CORRECTION IMPORTANTE : Logique corrigée pour utiliser les traductions
       let shippingText = "";
       if (geoShippingCents === null) {
-        // ✅ Non calculé encore - utiliser "shippingToCalculate"
         shippingText = css(t.shippingToCalculate || "Shipping to calculate");
       } else if (geoShippingCents === 0) {
-        // ✅ API a retourné 0 - gratuit
         shippingText = css(t.freeShipping || "Free");
       } else {
-        // ✅ Montant calculé > 0
         shippingText = moneyFmt(geoShippingCents);
       }
 
@@ -2204,12 +2319,11 @@ window.TripleformCOD = (function () {
         el.textContent = geoNote || "";
       });
 
-      const label = css(
-        ui.orderNow || cfg.form?.buttonText || "Order now"
-      );
+      const label = css(ui.orderNow || cfg.form?.buttonText || "Order now");
+      const buttonIconHtml = cfg.form?.buttonIcon ? getIconHtml(cfg.form.buttonIcon, "20px") : "";
       const suffix = css(ui.totalSuffix || "Total:");
       ctas.forEach((el) => {
-        el.textContent = `${label} · ${suffix} ${moneyFmt(grandTotalCents)}`;
+        el.innerHTML = `${buttonIconHtml}${label} · ${suffix} ${moneyFmt(grandTotalCents)}`;
       });
     }
 
@@ -2226,8 +2340,7 @@ window.TripleformCOD = (function () {
           } else {
             discountBtn.setAttribute("data-tf-active", "1");
             discountBtn.style.opacity = "1";
-            discountBtn.style.boxShadow =
-              "0 0 0 1px rgba(15,23,42,.18)";
+            discountBtn.style.boxShadow = "0 0 0 1px rgba(15,23,42,.18)";
           }
           handleTotalsChange();
         });
@@ -2240,7 +2353,6 @@ window.TripleformCOD = (function () {
       const ab = checkAntibotFront();
       if (!ab.ok) return;
 
-      // 🔴 Validation des champs requis
       if (!validateRequiredFields()) return;
 
       const totals = computeProductTotals();
@@ -2305,7 +2417,7 @@ window.TripleformCOD = (function () {
         discountCents,
         discountApplied: discountCents > 0,
         shippingCents: shippingCentsToSend,
-        totalCents, // produit après remise
+        totalCents,
         grandTotalCents,
         currency: root.getAttribute("data-currency") || null,
         locale: root.getAttribute("data-locale") || null,
@@ -2339,12 +2451,12 @@ window.TripleformCOD = (function () {
       const btn = formCard
         ? formCard.querySelector('[data-tf-cta="1"]')
         : null;
-      const original = btn ? btn.textContent : "";
+      const original = btn ? btn.innerHTML : "";
 
       try {
         if (btn) {
           btn.disabled = true;
-          btn.textContent = "Sending...";
+          btn.innerHTML = "Sending...";
         }
 
         const res = await fetch("/apps/tripleform-cod/submit", {
@@ -2357,24 +2469,19 @@ window.TripleformCOD = (function () {
         const json = await res.json().catch(() => ({}));
         if (res.ok && json?.ok) {
           if (btn) {
-            btn.textContent = css(
-              cfg.form?.successText || "Thanks! We'll contact you"
-            );
+            btn.innerHTML = css(cfg.form?.successText || "Thanks! We'll contact you");
           }
         } else {
           if (btn) {
             btn.disabled = false;
-            btn.textContent = original;
+            btn.innerHTML = original;
           }
-          alert(
-            "Erreur: " +
-              (json?.error || res.statusText || "Submit failed")
-          );
+          alert("Erreur: " + (json?.error || res.statusText || "Submit failed"));
         }
       } catch (e) {
         if (btn) {
           btn.disabled = false;
-          btn.textContent = original;
+          btn.innerHTML = original;
         }
         alert("Erreur réseau. Réessaie.");
       }
@@ -2409,6 +2516,7 @@ window.TripleformCOD = (function () {
       if (popup && launcher) {
         openHandler = () => {
           popup.style.display = "flex";
+          document.body.style.overflow = "hidden";
         };
         launcher.addEventListener("click", (e) => {
           e.preventDefault();
@@ -2418,14 +2526,20 @@ window.TripleformCOD = (function () {
 
       if (popup && beh.closeOnOutside !== false) {
         popup.addEventListener("click", (e) => {
-          if (e.target === popup) popup.style.display = "none";
+          if (e.target === popup) {
+            popup.style.display = "none";
+            document.body.style.overflow = "";
+          }
         });
       }
 
       closeBtns.forEach((btn) => {
         btn.addEventListener("click", (e) => {
           e.preventDefault();
-          if (popup) popup.style.display = "none";
+          if (popup) {
+            popup.style.display = "none";
+            document.body.style.overflow = "";
+          }
         });
       });
 
@@ -2473,6 +2587,7 @@ window.TripleformCOD = (function () {
       function openDrawer() {
         if (!overlay || !drawer) return;
         overlay.style.display = "block";
+        document.body.style.overflow = "hidden";
         drawer.getBoundingClientRect();
         if (origin === "bottom" || origin === "top") {
           drawer.style.transform = "translateY(0)";
@@ -2486,6 +2601,7 @@ window.TripleformCOD = (function () {
         drawer.style.transform = hiddenTransform;
         setTimeout(() => {
           overlay.style.display = "none";
+          document.body.style.overflow = "";
         }, 260);
       }
 
