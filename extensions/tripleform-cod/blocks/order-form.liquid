@@ -259,19 +259,7 @@ Ces données sont écrites par /api/save-offers dans:
       "enabled": true, 
       "currency": "{{ shop.currency | default: 'MAD' }}",
       "rounding": "none",
-      "colorPalette": "blue-gradient",
-      "customTheme": {
-        "bg": "#F0F9FF",
-        "text": "#0C4A6E",
-        "border": "#E2E8F0",
-        "offerBg": "#FFFFFF",
-        "offerBorder": "#CBD5E1",
-        "offerTitle": "#0C4A6E",
-        "offerText": "#0C4A6E",
-        "timerBg": "#FEF2F2",
-        "timerText": "#DC2626",
-        "timerBorder": "#FECACA"
-      }
+      "colorPalette": "blue-gradient"
     },
     "offers": [
       {
@@ -281,7 +269,7 @@ Ces données sont écrites par /api/save-offers dans:
         "showInPreview": true,
         "enableTimer": true,
         "timerMinutes": 60,
-        "timerMessage": "⏱️ Offre limitée dans le temps!",
+        "timerMessage": "⏱️ Offre limitée!",
         "timerCssClass": "timer-flash",
         "timerTimeFormat": "mm:ss",
         "discountType": "percentage",
@@ -291,11 +279,9 @@ Ces données sont écrites par /api/save-offers dans:
           "maxUses": 100,
           "applicableTo": "all"
         },
-        "buttonText": "Activer cette offre",
-        "buttonColor": "#10B981",
-        "buttonTextColor": "#FFFFFF",
-        "activationMode": "manual",
-        "imageUrl": ""
+        "buttonText": "Activer",
+        "imageUrl": "",
+        "currency": "{{ shop.currency | default: 'MAD' }}"
       }
     ],
     "upsells": [
@@ -306,16 +292,12 @@ Ces données sont écrites par /api/save-offers dans:
         "showInPreview": true,
         "enableTimer": true,
         "timerMinutes": 45,
-        "timerMessage": "🎁 Cadeau limité dans le temps!",
+        "timerMessage": "🎁 Cadeau limité!",
         "timerCssClass": "timer-hot",
         "timerTimeFormat": "hh[h] mm[m]",
         "giftProductId": "",
         "giftVariantId": "",
         "giftTitle": "Accessoire gratuit",
-        "buttonText": "Ajouter le cadeau",
-        "buttonColor": "#EC4899",
-        "buttonTextColor": "#FFFFFF",
-        "activationMode": "manual",
         "imageUrl": ""
       }
     ],
@@ -323,8 +305,7 @@ Ces données sont écrites par /api/save-offers dans:
       "showOrderSummary": true,
       "showOffersSection": true,
       "showTimerInPreview": true,
-      "showActivationButtons": true,
-      "activationButtonStyle": "filled"
+      "showActivationButtons": true
     }
   }
   {%- endcapture -%}
