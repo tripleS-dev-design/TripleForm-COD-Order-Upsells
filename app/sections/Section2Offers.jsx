@@ -27,7 +27,7 @@ const LAYOUT_CSS = `
   }
   .Polaris-TextField, .Polaris-Select, .Polaris-Labelled__LabelWrapper { min-width:0; }
 
-  /* HEADER — même style que Section1FormsLayout */
+  /* HEADER */
   .tf-header {
     background:linear-gradient(90deg,#0B3B82,#7D0031);
     border-bottom:none;
@@ -42,7 +42,7 @@ const LAYOUT_CSS = `
     padding:16px;
   }
 
-  /* Carte info sous le header (Offres & Cadeaux) */
+  /* Carte info sous le header */
   .tf-hero {
     background:#FFFFFF;
     border-radius:12px;
@@ -147,7 +147,7 @@ const LAYOUT_CSS = `
     border:1px solid #E5E7EB;
   }
 
-  /* >>> GRANDS TITRES des sections <<< */
+  /* >>> GRANDS TITRES <<< */
   .tf-group-title {
     padding:10px 14px;
     background:linear-gradient(90deg,#1E40AF,#7C2D12);
@@ -286,89 +286,112 @@ const LAYOUT_CSS = `
     margin-left:auto;
   }
 
-  /* ---- Styles avancés pour les timers ---- */
-  .timer-chrono {
-    background: linear-gradient(90deg, #1e3a8a, #3b82f6) !important;
-    color: #fff !important;
-    border: 1px solid #60a5fa !important;
+  /* ---- TIMER PREVIEW SECTION - 4 TYPES ---- */
+  .timer-preview-section {
+    margin-top:20px;
+    padding-top:16px;
+    border-top:1px dashed #E5E7EB;
+  }
+  .timer-preview-title {
+    font-size:14px;
+    font-weight:600;
+    color:#111827;
+    margin-bottom:12px;
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+  .timer-preview-grid {
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));
+    gap:12px;
+    margin-bottom:16px;
+  }
+  .timer-preview-card {
+    background:#FFFFFF;
+    border:1px solid #E5E7EB;
+    border-radius:10px;
+    padding:12px;
+    cursor:pointer;
+    transition:all 0.2s ease;
+  }
+  .timer-preview-card:hover {
+    transform:translateY(-2px);
+    box-shadow:0 6px 16px rgba(0,0,0,0.08);
+  }
+  .timer-preview-card.active {
+    border-color:#4F46E5;
+    background:#EEF2FF;
+  }
+  .timer-preview-name {
+    font-size:12px;
+    font-weight:600;
+    margin-bottom:8px;
+    display:flex;
+    align-items:center;
+    gap:4px;
+  }
+  .timer-preview-display {
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:8px;
+    border-radius:6px;
+    font-size:11px;
+    font-weight:600;
+  }
+  
+  /* Styles des 4 types de timer */
+  .timer-type-chrono {
+    background: linear-gradient(90deg, #1e3a8a, #3b82f6);
+    color: #fff;
+    border: 1px solid #60a5fa;
     font-family: 'Courier New', monospace;
     font-weight: bold;
     letter-spacing: 1px;
     box-shadow: 0 4px 12px rgba(59, 130, 246, 0.35);
   }
-
-  .timer-black-friday {
-    background: linear-gradient(90deg, #000000, #dc2626) !important;
-    color: #fff !important;
-    border: 2px solid #fbbf24 !important;
-    font-weight: 800;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-    box-shadow: 0 6px 16px rgba(220, 38, 38, 0.4);
+  
+  .timer-type-elegant {
+    background: linear-gradient(135deg, #8B5CF6, #EC4899);
+    color: #fff;
+    border: 1px solid #DDD6FE;
+    font-weight: 600;
+    box-shadow: 0 4px 14px rgba(139, 92, 246, 0.3);
   }
-
-  .timer-new-year {
-    background: linear-gradient(135deg, #0f766e, #0ea5e9, #ec4899) !important;
-    color: #fff !important;
-    border: 1px solid #fde047 !important;
-    font-weight: bold;
-    box-shadow: 0 6px 20px rgba(14, 165, 233, 0.3);
-  }
-
-  .timer-flash {
-    background: linear-gradient(90deg, #f97316, #fbbf24) !important;
-    color: #1f2937 !important;
-    border: 1px solid #f59e0b !important;
+  
+  .timer-type-flash {
+    background: linear-gradient(90deg, #f97316, #fbbf24);
+    color: #1f2937;
+    border: 1px solid #f59e0b;
     font-weight: 700;
     box-shadow: 0 4px 14px rgba(249, 115, 22, 0.4);
   }
-
-  .timer-hot {
-    background: linear-gradient(90deg, #7c2d12, #ea580c) !important;
-    color: #fff !important;
-    border: 1px solid #fdba74 !important;
+  
+  .timer-type-minimal {
+    background: #F9FAFB;
+    color: #374151;
+    border: 1px solid #E5E7EB;
+    font-weight: 500;
+  }
+  
+  .timer-type-hot {
+    background: linear-gradient(90deg, #7c2d12, #ea580c);
+    color: #fff;
+    border: 1px solid #fdba74;
     animation: pulse 1.5s infinite;
     font-weight: 800;
   }
 
-  .timer-weekend {
-    background: linear-gradient(135deg, #7c3aed, #10b981) !important;
-    color: #fff !important;
-    border: 1px solid #a7f3d0 !important;
-    font-weight: bold;
-    box-shadow: 0 4px 14px rgba(124, 58, 237, 0.3);
-  }
-
-  .timer-elegant {
-    background: linear-gradient(135deg, #8B5CF6, #EC4899) !important;
-    color: #fff !important;
-    border: 1px solid #DDD6FE !important;
-    font-weight: 600;
-    box-shadow: 0 4px 14px rgba(139, 92, 246, 0.3);
-  }
-
-  .timer-minimal {
-    background: #F9FAFB !important;
-    color: #374151 !important;
-    border: 1px solid #E5E7EB !important;
-    font-weight: 500;
-  }
-
-  .timer-urgent {
-    background: linear-gradient(90deg, #991B1B, #DC2626) !important;
-    color: #fff !important;
-    border: 1px solid #FCA5A5 !important;
+  .timer-type-urgent {
+    background: linear-gradient(90deg, #991B1B, #DC2626);
+    color: #fff;
+    border: 1px solid #FCA5A5;
     font-weight: 700;
     animation: blink 1s infinite;
     box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
   }
-
-  .timer-simple {
-    background: #FEF2F2 !important;
-    color: #DC2626 !important;
-    border: 1px solid #FECACA !important;
-    font-weight: 600;
-  }
-
+  
   /* Animation pour le timer "hot" */
   @keyframes pulse {
     0% { opacity: 1; }
@@ -445,7 +468,7 @@ const LAYOUT_CSS = `
     flex:1;
   }
 
-  /* ---- Bouton d'ajout centré ---- */
+  /* ---- Bouton d'ajout ---- */
   .add-button-container {
     display:flex;
     justify-content:center;
@@ -635,182 +658,132 @@ const COLOR_PALETTES = [
       timerText: "#DC2626",
       timerBorder: "#FECACA"
     }
-  },
-  {
-    id: "sunset-orange",
-    name: "Orange Couchant",
-    colors: ["#F97316", "#9A3412", "#FDBA74", "#FFEDD5", "#FFF7ED"],
-    theme: {
-      bg: "#FFF7ED",
-      text: "#9A3412",
-      border: "#FDBA74",
-      offerBg: "#FFEDD5",
-      offerBorder: "#FDBA74",
-      offerTitle: "#9A3412",
-      offerText: "#92400E",
-      timerBg: "#FEF2F2",
-      timerText: "#DC2626",
-      timerBorder: "#FECACA"
-    }
-  },
-  {
-    id: "purple-elegant",
-    name: "Violet Élégant",
-    colors: ["#8B5CF6", "#5B21B6", "#E9D5FF", "#F5F3FF", "#FAF5FF"],
-    theme: {
-      bg: "#FAF5FF",
-      text: "#5B21B6",
-      border: "#E9D5FF",
-      offerBg: "#F5F3FF",
-      offerBorder: "#DDD6FE",
-      offerTitle: "#5B21B6",
-      offerText: "#6D28D9",
-      timerBg: "#FDF4FF",
-      timerText: "#C026D3",
-      timerBorder: "#F0ABFC"
-    }
-  },
-  {
-    id: "luxury-gold",
-    name: "Or Luxueux",
-    colors: ["#D97706", "#854D0E", "#FDE68A", "#FEF3C7", "#FEFCE8"],
-    theme: {
-      bg: "#FEFCE8",
-      text: "#854D0E",
-      border: "#FDE68A",
-      offerBg: "#FEF3C7",
-      offerBorder: "#FCD34D",
-      offerTitle: "#854D0E",
-      offerText: "#92400E",
-      timerBg: "#FEF2F2",
-      timerText: "#DC2626",
-      timerBorder: "#FECACA"
-    }
-  },
-  {
-    id: "ocean-deep",
-    name: "Océan Profond",
-    colors: ["#0891B2", "#0E7490", "#A5F3FC", "#CFFAFE", "#ECFEFF"],
-    theme: {
-      bg: "#ECFEFF",
-      text: "#0E7490",
-      border: "#A5F3FC",
-      offerBg: "#CFFAFE",
-      offerBorder: "#67E8F9",
-      offerTitle: "#0E7490",
-      offerText: "#0891B2",
-      timerBg: "#F0F9FF",
-      timerText: "#0369A1",
-      timerBorder: "#BAE6FD"
-    }
   }
 ];
 
-/* ============================== Exemples de countdown prédéfinis ============================== */
+/* ============================== 4 TYPES DE TIMER DESIGN ============================== */
+const TIMER_TYPES = [
+  {
+    id: "chrono",
+    name: "Chrono Professionnel",
+    iconUrl: "https://cdn-icons-png.flaticon.com/512/3114/3114883.png",
+    cssClass: "timer-type-chrono",
+    iconEmoji: "⏱️",
+    description: "Style chronomètre professionnel avec gradient bleu",
+    timeFormat: "mm:ss",
+    defaultMessage: "⏱️ DERNIÈRE CHANCE ! Expire dans :"
+  },
+  {
+    id: "elegant",
+    name: "Élégant Violet",
+    iconUrl: "https://cdn-icons-png.flaticon.com/512/7794/7794971.png",
+    cssClass: "timer-type-elegant",
+    iconEmoji: "💎",
+    description: "Design élégant avec gradient violet-rose",
+    timeFormat: "mm[m] ss[s]",
+    defaultMessage: "💎 OFFRE EXCLUSIVE ! Termine dans :"
+  },
+  {
+    id: "flash",
+    name: "Flash Sale Orange",
+    iconUrl: "https://cdn-icons-png.flaticon.com/512/4392/4392452.png",
+    cssClass: "timer-type-flash",
+    iconEmoji: "⚡",
+    description: "Style vente flash avec gradient orange vif",
+    timeFormat: "mm:ss",
+    defaultMessage: "⚡ VENTE ÉCLAIR ! Derniers :"
+  },
+  {
+    id: "minimal",
+    name: "Minimaliste Propre",
+    iconUrl: "https://cdn-icons-png.flaticon.com/512/992/992700.png",
+    cssClass: "timer-type-minimal",
+    iconEmoji: "⏳",
+    description: "Design minimaliste et discret",
+    timeFormat: "mm:ss",
+    defaultMessage: "⏳ Dernière chance :"
+  },
+  {
+    id: "hot",
+    name: "Hot Urgent",
+    iconUrl: "https://cdn-icons-png.flaticon.com/512/1828/1828665.png",
+    cssClass: "timer-type-hot",
+    iconEmoji: "🔥",
+    description: "Style urgent avec animation pulsante",
+    timeFormat: "mm:ss",
+    defaultMessage: "🔥 LIQUIDATION ! Fini dans :"
+  },
+  {
+    id: "urgent",
+    name: "Urgent Rouge",
+    iconUrl: "https://cdn-icons-png.flaticon.com/512/1828/1828649.png",
+    cssClass: "timer-type-urgent",
+    iconEmoji: "🚨",
+    description: "Style très urgent avec clignotement rouge",
+    timeFormat: "mm:ss",
+    defaultMessage: "🚨 URGENT ! Presque fini :"
+  }
+];
+
+/* ============================== Exemples de countdown ============================== */
 const COUNTDOWN_EXAMPLES = [
   {
     id: "chrono-urgent",
     name: "Chrono Urgence (1h)",
     minutes: 60,
-    template: "chrono",
+    timerType: "chrono",
     message: "⏱️ DERNIÈRE CHANCE ! L'offre expire dans :",
-    cssClass: "timer-chrono",
-    icon: "⏱️",
+    timerIconUrl: "https://cdn-icons-png.flaticon.com/512/3114/3114883.png",
     timeFormat: "mm:ss"
   },
   {
-    id: "black-friday",
-    name: "Mode Black Friday (2h)",
-    minutes: 120,
-    template: "event",
-    message: "🖤 BLACK FRIDAY EXCLUSIF ! Plus que :",
-    cssClass: "timer-black-friday",
-    icon: "🖤",
-    timeFormat: "hh[h] mm[m]"
-  },
-  {
-    id: "new-year-promo",
-    name: "Promo Fin d'Année (45min)",
+    id: "elegant-purple",
+    name: "Élégant Violet (45min)",
     minutes: 45,
-    template: "event",
-    message: "🎊 BONNE ANNÉE ! Offre spéciale termine dans :",
-    cssClass: "timer-new-year",
-    icon: "🎊",
+    timerType: "elegant",
+    message: "💎 OFFRE EXCLUSIVE ! Termine dans :",
+    timerIconUrl: "https://cdn-icons-png.flaticon.com/512/7794/7794971.png",
     timeFormat: "mm[m] ss[s]"
   },
   {
     id: "flash-sale",
     name: "Flash Sale (30min)",
     minutes: 30,
-    template: "chrono",
+    timerType: "flash",
     message: "⚡ VENTE ÉCLAIR ! Derniers :",
-    cssClass: "timer-flash",
-    icon: "⚡",
+    timerIconUrl: "https://cdn-icons-png.flaticon.com/512/4392/4392452.png",
     timeFormat: "mm:ss"
-  },
-  {
-    id: "clearance-hot",
-    name: "Liquidation Chaude (15min)",
-    minutes: 15,
-    template: "urgent",
-    message: "🔥 LIQUIDATION ! Fini dans :",
-    cssClass: "timer-hot",
-    icon: "🔥",
-    timeFormat: "mm:ss"
-  },
-  {
-    id: "weekend-blast",
-    name: "Offre Weekend (24h)",
-    minutes: 1440,
-    template: "event",
-    message: "🎉 WEEKEND SPÉCIAL ! Disparaît dans :",
-    cssClass: "timer-weekend",
-    icon: "🎉",
-    timeFormat: "hh[h]"
-  },
-  {
-    id: "elegant-purple",
-    name: "Élégant Violet (45min)",
-    minutes: 45,
-    template: "elegant",
-    message: "💜 OFFRE EXCLUSIVE ! Termine dans :",
-    cssClass: "timer-elegant",
-    icon: "💜",
-    timeFormat: "mm[m] ss[s]"
   },
   {
     id: "minimal-clean",
     name: "Minimaliste Propre (30min)",
     minutes: 30,
-    template: "minimal",
-    message: "⏱️ Dernière chance :",
-    cssClass: "timer-minimal",
-    icon: "⏱️",
+    timerType: "minimal",
+    message: "⏳ Dernière chance :",
+    timerIconUrl: "https://cdn-icons-png.flaticon.com/512/992/992700.png",
     timeFormat: "mm:ss"
   },
   {
     id: "urgent-red",
     name: "Urgent Rouge (10min)",
     minutes: 10,
-    template: "urgent",
+    timerType: "urgent",
     message: "🚨 URGENT ! Presque fini :",
-    cssClass: "timer-urgent",
-    icon: "🚨",
+    timerIconUrl: "https://cdn-icons-png.flaticon.com/512/1828/1828649.png",
     timeFormat: "mm:ss"
   },
   {
-    id: "simple-red",
-    name: "Simple Rouge (20min)",
-    minutes: 20,
-    template: "simple",
-    message: "🔴 Offre spéciale :",
-    cssClass: "timer-simple",
-    icon: "🔴",
+    id: "hot-sale",
+    name: "Hot Sale (15min)",
+    minutes: 15,
+    timerType: "hot",
+    message: "🔥 LIQUIDATION ! Fini dans :",
+    timerIconUrl: "https://cdn-icons-png.flaticon.com/512/1828/1828665.png",
     timeFormat: "mm:ss"
   }
 ];
 
-/* ============================== Small UI helpers ============================== */
+/* ============================== UI helpers ============================== */
 
 function GroupCard({ title, children }) {
   return (
@@ -847,7 +820,7 @@ const Grid3 = ({ children }) => (
   </div>
 );
 
-/* ============================== Sélecteur de palette de couleurs ============================== */
+/* ============================== Sélecteur de palette ============================== */
 function ColorPaletteSelector({ selectedPalette, onSelect, customTheme, onCustomColorChange }) {
   const [showCustom, setShowCustom] = useState(false);
 
@@ -968,95 +941,62 @@ function ColorPaletteSelector({ selectedPalette, onSelect, customTheme, onCustom
               />
             </div>
           </div>
-          
-          <div className="color-field">
-            <div className="color-field-label">Fond du timer</div>
-            <div className="color-input-group">
-              <div 
-                className="color-preview" 
-                style={{ background: customTheme.timerBg || '#FEF2F2' }}
-                onClick={() => {
-                  const color = prompt("Entrez une couleur hexadécimale:", customTheme.timerBg || '#FEF2F2');
-                  if (color) onCustomColorChange('timerBg', color);
-                }}
-              />
-              <TextField
-                label="Fond du timer"
-                labelHidden
-                value={customTheme.timerBg || ''}
-                onChange={(value) => onCustomColorChange('timerBg', value)}
-                placeholder="#FEF2F2"
-              />
-            </div>
-          </div>
-          
-          <div className="color-field">
-            <div className="color-field-label">Texte du timer</div>
-            <div className="color-input-group">
-              <div 
-                className="color-preview" 
-                style={{ background: customTheme.timerText || '#DC2626' }}
-                onClick={() => {
-                  const color = prompt("Entrez une couleur hexadécimale:", customTheme.timerText || '#DC2626');
-                  if (color) onCustomColorChange('timerText', color);
-                }}
-              />
-              <TextField
-                label="Texte du timer"
-                labelHidden
-                value={customTheme.timerText || ''}
-                onChange={(value) => onCustomColorChange('timerText', value)}
-                placeholder="#DC2626"
-              />
-            </div>
-          </div>
         </div>
       )}
     </div>
   );
 }
 
-/* ============================== Exemples de countdown ============================== */
-function CountdownExamples({ onSelect }) {
+/* ============================== Preview des 4 types de timer ============================== */
+function TimerTypesPreview({ selectedType, onSelect }) {
   return (
-    <div style={{ marginTop: 12 }}>
-      <Text as="p" variant="bodyMd" fontWeight="medium">
-        Modèles de timer prédéfinis:
-      </Text>
-      <div style={{ 
-        display: 'grid', 
-        gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-        gap: 8,
-        marginTop: 8
-      }}>
-        {COUNTDOWN_EXAMPLES.map((example) => (
+    <div className="timer-preview-section">
+      <div className="timer-preview-title">
+        <Icon source={PI.ClockIcon} />
+        <span>Prévisualisation des 4 types de timer</span>
+      </div>
+      <div className="timer-preview-grid">
+        {TIMER_TYPES.slice(0, 4).map((type) => (
           <div
-            key={example.id}
-            style={{
-              padding: '8px 12px',
-              border: '1px solid #E5E7EB',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              backgroundColor: '#F9FAFB',
-              transition: 'all 0.2s'
-            }}
-            onClick={() => onSelect(example)}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F3F4F6'}
-            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#F9FAFB'}
+            key={type.id}
+            className={`timer-preview-card ${selectedType === type.id ? 'active' : ''}`}
+            onClick={() => onSelect(type)}
           >
-            <div style={{ fontSize: 12, fontWeight: 600 }}>{example.name}</div>
-            <div style={{ fontSize: 11, color: '#6B7280', marginTop: 2 }}>
-              {example.message}
+            <div className="timer-preview-name">
+              {type.iconEmoji && <span>{type.iconEmoji}</span>}
+              <span>{type.name}</span>
+            </div>
+            <div className={`timer-preview-display ${type.cssClass}`}>
+              {type.iconUrl && (
+                <img 
+                  src={type.iconUrl} 
+                  alt={type.name}
+                  style={{ width: '14px', height: '14px' }}
+                />
+              )}
+              <span>{type.defaultMessage.split('!')[0]}!</span>
+              <span className="timer-countdown">15:00</span>
             </div>
           </div>
         ))}
+      </div>
+      <div style={{ fontSize: '12px', color: '#6B7280', marginTop: '8px' }}>
+        Cliquez sur un style pour l'appliquer au timer
       </div>
     </div>
   );
 }
 
 /* ============================== Composant Timer pour prévisualisation ============================== */
-function TimerDisplay({ minutes, message, theme, cssClass, timeFormat }) {
+function TimerDisplay({ 
+  minutes, 
+  message, 
+  theme, 
+  cssClass, 
+  timeFormat,
+  timerIconUrl,
+  timerIconEmoji 
+}) {
   const [timeLeft, setTimeLeft] = useState(minutes * 60);
   
   useEffect(() => {
@@ -1080,7 +1020,6 @@ function TimerDisplay({ minutes, message, theme, cssClass, timeFormat }) {
     const m = Math.floor((seconds % 3600) / 60);
     const s = seconds % 60;
     
-    // Support de différents formats définis dans les exemples
     if (timeFormat === 'hh[h] mm[m]') {
       return `${h.toString().padStart(2, '0')}h ${m.toString().padStart(2, '0')}m`;
     }
@@ -1090,21 +1029,32 @@ function TimerDisplay({ minutes, message, theme, cssClass, timeFormat }) {
     if (timeFormat === 'hh[h]') {
       return `${h.toString().padStart(2, '0')}h`;
     }
-    // Format par défaut mm:ss
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
   
+  const timerType = TIMER_TYPES.find(t => t.cssClass === cssClass) || TIMER_TYPES[0];
+  
   return (
     <div 
-      className={`offer-timer ${cssClass || ''}`}
+      className={`offer-timer ${cssClass || 'timer-type-chrono'}`}
       style={{
-        background: theme?.timerBg || '#FEF2F2',
-        color: theme?.timerText || '#DC2626',
-        borderColor: theme?.timerBorder || '#FECACA'
+        background: theme?.timerBg,
+        color: theme?.timerText,
+        borderColor: theme?.timerBorder
       }}
     >
-      <span className="offer-timer-icon">⏱️</span>
-      <span>{message}</span>
+      {timerIconUrl ? (
+        <img 
+          src={timerIconUrl} 
+          alt="timer icon" 
+          style={{ width: '12px', height: '12px' }}
+        />
+      ) : timerIconEmoji ? (
+        <span>{timerIconEmoji}</span>
+      ) : (
+        <span className="offer-timer-icon">{timerType.iconEmoji}</span>
+      )}
+      <span>{message || timerType.defaultMessage}</span>
       <span className="timer-countdown">
         {formatTime(timeLeft)}
       </span>
@@ -1120,10 +1070,12 @@ const DEFAULT_OFFER = {
   description: "Profitez de -10% sur votre première commande",
   showInPreview: true,
   enableTimer: true,
-  timerMinutes: 60,
+  timerMinutes: 30,
   timerMessage: "⏱️ Offre limitée!",
-  timerCssClass: "timer-flash",
+  timerCssClass: "timer-type-chrono",
   timerTimeFormat: "mm:ss",
+  timerIconUrl: "https://cdn-icons-png.flaticon.com/512/3114/3114883.png",
+  timerIconEmoji: "⏱️",
   discountType: "percentage",
   discountValue: 10,
   conditions: {
@@ -1132,7 +1084,7 @@ const DEFAULT_OFFER = {
     applicableTo: "all"
   },
   buttonText: "Activer",
-  imageUrl: "",
+  imageUrl: "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=200&h=200&fit=crop",
   currency: "MAD"
 };
 
@@ -1144,12 +1096,14 @@ const DEFAULT_UPSELL = {
   enableTimer: true,
   timerMinutes: 45,
   timerMessage: "🎁 Cadeau limité!",
-  timerCssClass: "timer-hot",
+  timerCssClass: "timer-type-elegant",
   timerTimeFormat: "hh[h] mm[m]",
+  timerIconUrl: "https://cdn-icons-png.flaticon.com/512/7794/7794971.png",
+  timerIconEmoji: "💎",
   giftProductId: "",
   giftVariantId: "",
   giftTitle: "Accessoire gratuit",
-  imageUrl: ""
+  imageUrl: "https://images.unsplash.com/photo-1491553895911-0055eca6402d?w=200&h=200&fit=crop"
 };
 
 const DEFAULT_CFG = {
@@ -1173,13 +1127,9 @@ const DEFAULT_CFG = {
     }
   },
   
-  // Multiple offers support (max 3)
   offers: [JSON.parse(JSON.stringify(DEFAULT_OFFER))],
-  
-  // Multiple upsells support (max 3)
   upsells: [JSON.parse(JSON.stringify(DEFAULT_UPSELL))],
   
-  // Display settings
   display: {
     showOrderSummary: true,
     showOffersSection: true,
@@ -1192,15 +1142,12 @@ function withDefaults(raw = {}) {
   const d = DEFAULT_CFG;
   const x = { ...d, ...raw };
   
-  // Ensure arrays exist
   x.offers = Array.isArray(x.offers) ? x.offers : [DEFAULT_OFFER];
   x.upsells = Array.isArray(x.upsells) ? x.upsells : [DEFAULT_UPSELL];
   
-  // Limit to 3 items each
   x.offers = x.offers.slice(0, 3);
   x.upsells = x.upsells.slice(0, 3);
   
-  // Merge with defaults for each item
   x.offers = x.offers.map(offer => ({ ...DEFAULT_OFFER, ...offer }));
   x.upsells = x.upsells.map(upsell => ({ ...DEFAULT_UPSELL, ...upsell }));
   
@@ -1208,12 +1155,6 @@ function withDefaults(raw = {}) {
 }
 
 /* ============================== Preview Components ============================== */
-
-function findProductLabel(products, id) {
-  if (!id) return "";
-  const p = products.find(prod => String(prod.id) === String(id));
-  return p?.title || "";
-}
 
 function OffersPreview({ cfg, products, t }) {
   const activeOffers = cfg.offers.filter(offer => offer.enabled && offer.showInPreview);
@@ -1228,10 +1169,7 @@ function OffersPreview({ cfg, products, t }) {
       {activeOffers.map((offer, idx) => {
         const title = offer.title || "Remise spéciale";
         const description = offer.description || "Profitez de cette offre exclusive";
-        const img = offer.imageUrl || "";
-        const hasTimer = offer.enableTimer && cfg.display.showTimerInPreview;
-        const buttonText = offer.buttonText || "Activer";
-        const timerCssClass = offer.timerCssClass || "";
+        const img = offer.imageUrl || DEFAULT_OFFER.imageUrl;
         
         return (
           <div 
@@ -1244,11 +1182,10 @@ function OffersPreview({ cfg, products, t }) {
             }}
           >
             <div className="offers-strip-thumb">
-              {img ? (
-                <img src={img} alt={title} />
-              ) : (
-                <div className="offers-strip-thumb-inner" />
-              )}
+              <img src={img} alt={title} onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%233B82F6'/%3E%3Cpath d='M50 30L70 70H30Z' fill='white'/%3E%3C/svg%3E";
+              }} />
             </div>
             <div style={{ flex: 1 }}>
               <div className="offers-strip-main" style={{ color: theme.offerTitle }}>
@@ -1265,6 +1202,8 @@ function OffersPreview({ cfg, products, t }) {
                   theme={theme}
                   cssClass={offer.timerCssClass}
                   timeFormat={offer.timerTimeFormat}
+                  timerIconUrl={offer.timerIconUrl}
+                  timerIconEmoji={offer.timerIconEmoji}
                 />
               )}
               
@@ -1272,12 +1211,11 @@ function OffersPreview({ cfg, products, t }) {
                 <button 
                   className="offer-activate-btn"
                   onClick={() => {
-                    // Simulation de l'activation
                     alert(`Offre "${title}" activée!`);
                   }}
                 >
                   <span className="offer-activate-btn-icon">+</span>
-                  {buttonText}
+                  {offer.buttonText || "Activer"}
                 </button>
               )}
             </div>
@@ -1301,9 +1239,7 @@ function UpsellsPreview({ cfg, products, t }) {
       {activeUpsells.map((upsell, idx) => {
         const title = upsell.title || "Cadeau gratuit";
         const description = upsell.description || "Recevez un cadeau spécial avec votre commande";
-        const img = upsell.imageUrl || "";
-        const hasTimer = upsell.enableTimer && cfg.display.showTimerInPreview;
-        const timerCssClass = upsell.timerCssClass || "";
+        const img = upsell.imageUrl || DEFAULT_UPSELL.imageUrl;
 
         return (
           <div 
@@ -1316,11 +1252,10 @@ function UpsellsPreview({ cfg, products, t }) {
             }}
           >
             <div className="offers-strip-thumb">
-              {img ? (
-                <img src={img} alt={title} />
-              ) : (
-                <div className="offers-strip-thumb-inner-upsell" />
-              )}
+              <img src={img} alt={title} onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23EC4899'/%3E%3Ccircle cx='50' cy='50' r='30' fill='white'/%3E%3C/svg%3E";
+              }} />
             </div>
             <div style={{ flex: 1 }}>
               <div className="offers-strip-main" style={{ color: theme.offerTitle }}>
@@ -1337,6 +1272,8 @@ function UpsellsPreview({ cfg, products, t }) {
                   theme={theme}
                   cssClass={upsell.timerCssClass}
                   timeFormat={upsell.timerTimeFormat}
+                  timerIconUrl={upsell.timerIconUrl}
+                  timerIconEmoji={upsell.timerIconEmoji}
                 />
               )}
             </div>
@@ -1416,14 +1353,25 @@ function OfferItemEditor({
     onChange(newOffer);
   };
   
+  const handleTimerTypeSelect = (timerType) => {
+    onChange({
+      ...offer,
+      timerCssClass: timerType.cssClass,
+      timerIconUrl: timerType.iconUrl,
+      timerIconEmoji: timerType.iconEmoji,
+      timerMessage: timerType.defaultMessage
+    });
+  };
+  
   const handleCountdownExample = (example) => {
     onChange({
       ...offer,
       enableTimer: true,
       timerMinutes: example.minutes,
       timerMessage: example.message,
-      timerCssClass: example.cssClass,
-      timerTimeFormat: example.timeFormat
+      timerCssClass: TIMER_TYPES.find(t => t.id === example.timerType)?.cssClass || "timer-type-chrono",
+      timerTimeFormat: example.timeFormat,
+      timerIconUrl: example.timerIconUrl
     });
   };
   
@@ -1539,11 +1487,17 @@ function OfferItemEditor({
               value={offer.imageUrl}
               onChange={(v) => handleChange('imageUrl', v)}
               helpText={t("section2.helpText.offerImage")}
+              placeholder="https://example.com/image.jpg"
             />
           </Grid2>
         </GroupCard>
         
         <GroupCard title={t("section2.group.timer.title")}>
+          <TimerTypesPreview 
+            selectedType={TIMER_TYPES.find(t => t.cssClass === offer.timerCssClass)?.id}
+            onSelect={handleTimerTypeSelect}
+          />
+          
           <Grid2>
             <Checkbox
               label={t("section2.offer.enableTimer")}
@@ -1579,17 +1533,49 @@ function OfferItemEditor({
                   ]}
                 />
                 <TextField
-                  label={t("section2.offer.timerCssClass")}
-                  value={offer.timerCssClass || ""}
-                  onChange={(v) => handleChange('timerCssClass', v)}
-                  helpText={t("section2.helpText.timerCssClass")}
-                  placeholder="timer-flash, timer-hot, etc."
+                  label={t("section2.offer.timerIconUrl")}
+                  value={offer.timerIconUrl || ""}
+                  onChange={(v) => handleChange('timerIconUrl', v)}
+                  helpText={t("section2.helpText.timerIconUrl")}
+                  placeholder="https://cdn-icons-png.flaticon.com/512/..."
                 />
               </>
             )}
           </Grid2>
           
-          <CountdownExamples onSelect={handleCountdownExample} />
+          <div style={{ marginTop: 12 }}>
+            <Text as="p" variant="bodyMd" fontWeight="medium">
+              Modèles de timer prédéfinis:
+            </Text>
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+              gap: 8,
+              marginTop: 8
+            }}>
+              {COUNTDOWN_EXAMPLES.map((example) => (
+                <div
+                  key={example.id}
+                  style={{
+                    padding: '8px 12px',
+                    border: '1px solid #E5E7EB',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    backgroundColor: '#F9FAFB',
+                    transition: 'all 0.2s'
+                  }}
+                  onClick={() => handleCountdownExample(example)}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F3F4F6'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#F9FAFB'}
+                >
+                  <div style={{ fontSize: 12, fontWeight: 600 }}>{example.name}</div>
+                  <div style={{ fontSize: 11, color: '#6B7280', marginTop: 2 }}>
+                    {example.message}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </GroupCard>
         
         <GroupCard title={t("section2.group.display.title")}>
@@ -1617,14 +1603,25 @@ function UpsellItemEditor({
     onChange({ ...upsell, [field]: value });
   };
   
+  const handleTimerTypeSelect = (timerType) => {
+    onChange({
+      ...upsell,
+      timerCssClass: timerType.cssClass,
+      timerIconUrl: timerType.iconUrl,
+      timerIconEmoji: timerType.iconEmoji,
+      timerMessage: timerType.defaultMessage
+    });
+  };
+  
   const handleCountdownExample = (example) => {
     onChange({
       ...upsell,
       enableTimer: true,
       timerMinutes: example.minutes,
       timerMessage: example.message,
-      timerCssClass: example.cssClass,
-      timerTimeFormat: example.timeFormat
+      timerCssClass: TIMER_TYPES.find(t => t.id === example.timerType)?.cssClass || "timer-type-chrono",
+      timerTimeFormat: example.timeFormat,
+      timerIconUrl: example.timerIconUrl
     });
   };
   
@@ -1696,11 +1693,17 @@ function UpsellItemEditor({
               value={upsell.imageUrl}
               onChange={(v) => handleChange('imageUrl', v)}
               helpText={t("section2.helpText.offerImage")}
+              placeholder="https://example.com/image.jpg"
             />
           </Grid2>
         </GroupCard>
         
         <GroupCard title={t("section2.group.timer.title")}>
+          <TimerTypesPreview 
+            selectedType={TIMER_TYPES.find(t => t.cssClass === upsell.timerCssClass)?.id}
+            onSelect={handleTimerTypeSelect}
+          />
+          
           <Grid2>
             <Checkbox
               label={t("section2.upsell.enableTimer")}
@@ -1736,17 +1739,49 @@ function UpsellItemEditor({
                   ]}
                 />
                 <TextField
-                  label={t("section2.upsell.timerCssClass")}
-                  value={upsell.timerCssClass || ""}
-                  onChange={(v) => handleChange('timerCssClass', v)}
-                  helpText={t("section2.helpText.timerCssClass")}
-                  placeholder="timer-hot, timer-flash, etc."
+                  label={t("section2.upsell.timerIconUrl")}
+                  value={upsell.timerIconUrl || ""}
+                  onChange={(v) => handleChange('timerIconUrl', v)}
+                  helpText={t("section2.helpText.timerIconUrl")}
+                  placeholder="https://cdn-icons-png.flaticon.com/512/..."
                 />
               </>
             )}
           </Grid2>
           
-          <CountdownExamples onSelect={handleCountdownExample} />
+          <div style={{ marginTop: 12 }}>
+            <Text as="p" variant="bodyMd" fontWeight="medium">
+              Modèles de timer prédéfinis:
+            </Text>
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+              gap: 8,
+              marginTop: 8
+            }}>
+              {COUNTDOWN_EXAMPLES.map((example) => (
+                <div
+                  key={example.id}
+                  style={{
+                    padding: '8px 12px',
+                    border: '1px solid #E5E7EB',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    backgroundColor: '#F9FAFB',
+                    transition: 'all 0.2s'
+                  }}
+                  onClick={() => handleCountdownExample(example)}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F3F4F6'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#F9FAFB'}
+                >
+                  <div style={{ fontSize: 12, fontWeight: 600 }}>{example.name}</div>
+                  <div style={{ fontSize: 11, color: '#6B7280', marginTop: 2 }}>
+                    {example.message}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </GroupCard>
         
         <GroupCard title={t("section2.group.display.title")}>
@@ -1864,7 +1899,6 @@ function Section2OffersInner({ products = [] }) {
     } catch {}
   };
 
-  // Charger la configuration des offres
   useEffect(() => {
     let cancelled = false;
 
@@ -1936,7 +1970,6 @@ function Section2OffersInner({ products = [] }) {
     }
   };
 
-  // Offers management
   const addOffer = () => {
     if (cfg.offers.length >= 3) return;
     setCfg(prev => ({
@@ -1962,7 +1995,6 @@ function Section2OffersInner({ products = [] }) {
     }));
   };
 
-  // Upsells management
   const addUpsell = () => {
     if (cfg.upsells.length >= 3) return;
     setCfg(prev => ({
@@ -1988,7 +2020,6 @@ function Section2OffersInner({ products = [] }) {
     }));
   };
 
-  // Global settings
   const setGlobal = (p) =>
     setCfg((c) => ({ ...c, global: { ...c.global, ...p } }));
 
@@ -2217,7 +2248,7 @@ function Section2OffersInner({ products = [] }) {
           </div>
         </div>
 
-        {/* ===== Colonne preview avec adaptation des couleurs ===== */}
+        {/* ===== Colonne preview ===== */}
         <div className="tf-preview-col">
           <div 
             className="tf-preview-card"
@@ -2262,6 +2293,25 @@ function Section2OffersInner({ products = [] }) {
                 cfg={cfg} 
                 t={t}
               />
+              
+              {/* Section preview des 4 types de timer */}
+              {(selectedTab === "offers" || selectedTab === "upsells") && (
+                <TimerTypesPreview 
+                  selectedType={TIMER_TYPES[0].id}
+                  onSelect={(timerType) => {
+                    // Mettre à jour le timer de la première offre
+                    if (cfg.offers.length > 0) {
+                      const updatedOffer = {
+                        ...cfg.offers[0],
+                        timerCssClass: timerType.cssClass,
+                        timerIconUrl: timerType.iconUrl,
+                        timerIconEmoji: timerType.iconEmoji
+                      };
+                      updateOffer(0, updatedOffer);
+                    }
+                  }}
+                />
+              )}
             </BlockStack>
           </div>
         </div>
