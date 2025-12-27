@@ -1281,6 +1281,51 @@ window.TripleformCOD = (function () {
         letter-spacing: 1px !important;
       }
       
+      /* Bouton simple d'activation d'offre */
+      .offer-activate-btn {
+        background: #000000 !important;
+        color: #FFFFFF !important;
+        border: 1px solid #000000 !important;
+        border-radius: 4px !important;
+        padding: 4px 10px !important;
+        font-size: 11px !important;
+        font-weight: 500 !important;
+        cursor: pointer !important;
+        margin-top: 6px !important;
+        transition: all 0.2s ease !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 4px !important;
+      }
+      
+      .offer-activate-btn:hover {
+        background: #374151 !important;
+        border-color: #374151 !important;
+      }
+      
+      .offer-activate-btn.active {
+        background: #10B981 !important;
+        color: #FFFFFF !important;
+        border-color: #10B981 !important;
+      }
+      
+      .offer-activate-btn.disabled {
+        background: #9CA3AF !important;
+        color: #FFFFFF !important;
+        border-color: #9CA3AF !important;
+        cursor: not-allowed !important;
+      }
+      
+      .offer-activate-btn-icon {
+        font-size: 10px !important;
+      }
+      
+      /* Ligne de remise dans le résumé */
+      .discount-row {
+        color: #10B981 !important;
+        font-weight: 600 !important;
+      }
+      
       /* Styles avancés pour les timers */
       .timer-chrono {
         background: linear-gradient(90deg, #1e3a8a, #3b82f6) !important;
@@ -1331,74 +1376,6 @@ window.TripleformCOD = (function () {
         border: 1px solid #a7f3d0 !important;
         font-weight: bold !important;
         box-shadow: 0 4px 14px rgba(124, 58, 237, 0.3) !important;
-      }
-      
-      /* Boutons d'activation des offres */
-      .offers-strip-actions {
-        margin-top: 10px !important;
-        display: flex !important;
-        justify-content: flex-end !important;
-      }
-      
-      .offer-activate-btn {
-        background: linear-gradient(135deg, #10B981 0%, #059669 100%) !important;
-        color: #FFFFFF !important;
-        border: none !important;
-        border-radius: 8px !important;
-        padding: 8px 16px !important;
-        font-size: 12px !important;
-        font-weight: 600 !important;
-        cursor: pointer !important;
-        transition: all 0.2s ease !important;
-        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35) !important;
-        display: inline-flex !important;
-        align-items: center !important;
-        gap: 6px !important;
-      }
-      
-      .offer-activate-btn:hover {
-        transform: translateY(-2px) !important;
-        box-shadow: 0 6px 16px rgba(16, 185, 129, 0.5) !important;
-      }
-      
-      .offer-activate-btn:active {
-        transform: translateY(0) !important;
-      }
-      
-      .offer-activate-btn.applied {
-        background: linear-gradient(135deg, #6B7280 0%, #4B5563 100%) !important;
-        cursor: default !important;
-        box-shadow: none !important;
-      }
-      
-      .offer-activate-btn.upsell {
-        background: linear-gradient(135deg, #EC4899 0%, #BE185D 100%) !important;
-        box-shadow: 0 4px 12px rgba(236, 72, 153, 0.35) !important;
-      }
-      
-      .offer-activate-btn.upsell:hover {
-        box-shadow: 0 6px 16px rgba(236, 72, 153, 0.5) !important;
-      }
-      
-      .offer-activate-btn.flash {
-        background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%) !important;
-        animation: pulse 1.5s infinite !important;
-        box-shadow: 0 4px 12px rgba(245, 158, 11, 0.35) !important;
-      }
-      
-      .offer-activate-btn-icon {
-        font-size: 11px !important;
-      }
-      
-      .offer-status-badge {
-        display: inline-block !important;
-        padding: 4px 8px !important;
-        background: #10B981 !important;
-        color: white !important;
-        font-size: 10px !important;
-        font-weight: 600 !important;
-        border-radius: 6px !important;
-        margin-left: 8px !important;
       }
       
       @keyframes pulse {
@@ -1465,49 +1442,81 @@ window.TripleformCOD = (function () {
   }
 
   /* ------------------------------------------------------------------ */
-  /* Gestion de l'activation des offres                                 */
+  /* Gestion de l'activation des offres - Version PROFESSIONNELLE       */
   /* ------------------------------------------------------------------ */
 
-  function handleOfferActivation(event) {
-    const button = event.target.closest('[data-tf-offer-index]');
-    if (!button) return;
+  function toggleOfferActivation(button, offerIndex, offerType, offersList, root, updateMoney) {
+    const isActive = button.classList.contains('active');
+    const offer = offersList[offerIndex];
     
-    const index = button.getAttribute('data-tf-offer-index');
-    const type = button.getAttribute('data-tf-offer-type');
+    if (isActive) {
+      // Désactiver l'offre
+      button.classList.remove('active');
+      button.innerHTML = '<span class="offer-activate-btn-icon">+</span> Activer';
+      
+      // Retirer de localStorage
+      localStorage.removeItem(`tf_active_offer_${offerType}_${offerIndex}`);
+      
+      // Désactiver toutes les offres (une seule à la fois)
+      const allButtons = root.querySelectorAll('[data-tf-offer-toggle]');
+      allButtons.forEach(btn => {
+        btn.classList.remove('active');
+        const btnIndex = btn.getAttribute('data-tf-offer-index');
+        const btnType = btn.getAttribute('data-tf-offer-type');
+        btn.innerHTML = '<span class="offer-activate-btn-icon">+</span> Activer';
+        localStorage.removeItem(`tf_active_offer_${btnType}_${btnIndex}`);
+      });
+    } else {
+      // Désactiver toutes les autres offres d'abord
+      const allButtons = root.querySelectorAll('[data-tf-offer-toggle]');
+      allButtons.forEach(btn => {
+        btn.classList.remove('active');
+        const btnIndex = btn.getAttribute('data-tf-offer-index');
+        const btnType = btn.getAttribute('data-tf-offer-type');
+        btn.innerHTML = '<span class="offer-activate-btn-icon">+</span> Activer';
+        localStorage.removeItem(`tf_active_offer_${btnType}_${btnIndex}`);
+      });
+      
+      // Activer cette offre
+      button.classList.add('active');
+      button.innerHTML = '<span class="offer-activate-btn-icon">✓</span> Activée';
+      
+      // Sauvegarder dans localStorage
+      localStorage.setItem(`tf_active_offer_${offerType}_${offerIndex}`, 'true');
+    }
     
-    // Ajouter une classe pour indiquer que c'est appliqué
-    button.classList.add('applied');
-    button.innerHTML = `
-      <span class="offer-activate-btn-icon">✅</span>
-      Offre activée!
-    `;
-    button.disabled = true;
+    // Mettre à jour les prix
+    updateMoney();
+  }
+
+  function getActiveOfferDiscount(offersList) {
+    let totalDiscount = 0;
+    let discountMessage = '';
     
-    // Ajouter un badge de statut
-    const badge = document.createElement('span');
-    badge.className = 'offer-status-badge';
-    badge.textContent = 'Activée';
-    button.parentNode.appendChild(badge);
+    // Vérifier localStorage pour les offres actives
+    if (offersList && offersList.length) {
+      offersList.forEach((offer, index) => {
+        if (offer.enabled && localStorage.getItem(`tf_active_offer_offer_${index}`) === 'true') {
+          // Calculer la remise selon le type
+          if (offer.discountType === 'percentage' && offer.discountValue) {
+            totalDiscount += offer.discountValue; // Pourcentage
+            discountMessage = `-${offer.discountValue}%`;
+          } else if (offer.discountType === 'fixed' && offer.discountValue) {
+            totalDiscount = offer.discountValue; // Montant fixe (en cents)
+            discountMessage = `-${(offer.discountValue / 100).toFixed(2)} ${offer.currency || 'MAD'}`;
+          }
+        }
+      });
+    }
     
-    // Stocker en localStorage
-    localStorage.setItem(`tf_offer_${type}_${index}_activated`, 'true');
-    
-    // Émettre un événement pour que d'autres parties du code puissent réagir
-    const offerEvent = new CustomEvent('tf-offer-activated', {
-      detail: { index, type }
-    });
-    document.dispatchEvent(offerEvent);
-    
-    // Afficher une confirmation
-    const offerType = type === 'offer' ? 'l\'offre' : 'le cadeau';
-    alert(`✅ ${offerType} a été activé avec succès!`);
+    return { totalDiscount, discountMessage };
   }
 
   /* ------------------------------------------------------------------ */
-  /* OFFRES / UPSELL – rendu front (NOUVEAU FORMAT)                    */
+  /* OFFRES / UPSELL – rendu front PROFESSIONNEL                        */
   /* ------------------------------------------------------------------ */
 
-  function buildOffersHtml(offersCfg) {
+  function buildOffersHtml(offersCfg, rootId) {
     if (!offersCfg || typeof offersCfg !== "object") return "";
 
     const global = offersCfg.global || {};
@@ -1517,38 +1526,30 @@ window.TripleformCOD = (function () {
     const offers = offersCfg.offers || [];
     const upsells = offersCfg.upsells || [];
     
-    // Trouver la palette de couleurs
-    const theme = global.customTheme || {};
-    
     // Filtrer les offres et upsells activés
     const activeOffers = offers.filter(offer => offer.enabled && offer.showInPreview);
     const activeUpsells = upsells.filter(upsell => upsell.enabled && upsell.showInPreview);
     
     if (activeOffers.length === 0 && activeUpsells.length === 0) return "";
 
-    const offerBg = css(theme.offerBg || "#FFFFFF");
-    const offerBorder = css(theme.offerBorder || "#E5E7EB");
-    const offerTitle = css(theme.offerTitle || "#0C4A6E");
-    const offerText = css(theme.offerText || "#0C4A6E");
-
     let html = '<div class="tf-offers-container">';
 
-    // OFFERS (remises)
+    // OFFERS (remises) avec bouton d'activation
     activeOffers.forEach((offer, idx) => {
       const title = offer.title || "Remise spéciale";
       const description = offer.description || "Profitez de cette offre exclusive";
       const img = offer.imageUrl || "";
       const hasTimer = offer.enableTimer && display.showTimerInPreview;
-      const buttonText = offer.buttonText || "Activer cette offre";
-      const buttonColor = offer.buttonColor || "#10B981";
-      const buttonTextColor = offer.buttonTextColor || "#FFFFFF";
-      const activationMode = offer.activationMode || "manual";
-
+      const buttonText = offer.buttonText || "Activer";
+      
+      // Vérifier si cette offre est déjà activée dans localStorage
+      const isActive = localStorage.getItem(`tf_active_offer_offer_${idx}`) === 'true';
+      
       html += `
         <div class="offers-strip" style="
-          background:${offerBg} !important;
-          border:1px solid ${offerBorder} !important;
-          color:${offerText} !important;
+          background:#FFFFFF !important;
+          border:1px solid #E5E7EB !important;
+          color:#111827 !important;
         ">
           <div class="offers-strip-thumb">
             ${img 
@@ -1556,7 +1557,7 @@ window.TripleformCOD = (function () {
               : '<div class="offers-strip-thumb-inner"></div>'}
           </div>
           <div style="flex:1; min-width:0;">
-            <div class="offers-strip-main" style="color:${offerTitle} !important">
+            <div class="offers-strip-main">
               ${css(title)}
             </div>
             <div class="offers-strip-desc">
@@ -1567,43 +1568,33 @@ window.TripleformCOD = (function () {
               <div data-tf-timer-offer="${idx}"></div>
             ` : ''}
             
-            ${activationMode === "manual" ? `
-              <div class="offers-strip-actions">
-                <button 
-                  class="offer-activate-btn ${offer.timerCssClass ? 'flash' : ''}" 
-                  data-tf-offer-index="${idx}"
-                  data-tf-offer-type="offer"
-                  style="
-                    background: ${css(buttonColor)} !important;
-                    color: ${css(buttonTextColor)} !important;
-                  "
-                >
-                  <span class="offer-activate-btn-icon">✅</span>
-                  ${css(buttonText)}
-                </button>
-              </div>
-            ` : ''}
+            <button 
+              class="offer-activate-btn ${isActive ? 'active' : ''}" 
+              data-tf-offer-toggle="1"
+              data-tf-offer-index="${idx}"
+              data-tf-offer-type="offer"
+              data-tf-root-id="${rootId}"
+            >
+              <span class="offer-activate-btn-icon">${isActive ? '✓' : '+'}</span>
+              ${isActive ? 'Activée' : css(buttonText)}
+            </button>
           </div>
         </div>
       `;
     });
 
-    // UPSELLS (cadeaux)
+    // UPSELLS (cadeaux) - sans bouton d'activation
     activeUpsells.forEach((upsell, idx) => {
       const title = upsell.title || "Cadeau gratuit";
       const description = upsell.description || "Recevez un cadeau spécial avec votre commande";
       const img = upsell.imageUrl || "";
       const hasTimer = upsell.enableTimer && display.showTimerInPreview;
-      const buttonText = upsell.buttonText || "Ajouter le cadeau";
-      const buttonColor = upsell.buttonColor || "#EC4899";
-      const buttonTextColor = upsell.buttonTextColor || "#FFFFFF";
-      const activationMode = upsell.activationMode || "manual";
 
       html += `
         <div class="offers-strip" style="
-          background:${offerBg} !important;
-          border:1px solid ${offerBorder} !important;
-          color:${offerText} !important;
+          background:#FFFFFF !important;
+          border:1px solid #E5E7EB !important;
+          color:#111827 !important;
         ">
           <div class="offers-strip-thumb">
             ${img 
@@ -1611,7 +1602,7 @@ window.TripleformCOD = (function () {
               : '<div class="offers-strip-thumb-inner-upsell"></div>'}
           </div>
           <div style="flex:1; min-width:0;">
-            <div class="offers-strip-main" style="color:${offerTitle} !important">
+            <div class="offers-strip-main">
               ${css(title)}
             </div>
             <div class="offers-strip-desc">
@@ -1620,23 +1611,6 @@ window.TripleformCOD = (function () {
             
             ${hasTimer ? `
               <div data-tf-timer-upsell="${idx}"></div>
-            ` : ''}
-            
-            ${activationMode === "manual" ? `
-              <div class="offers-strip-actions">
-                <button 
-                  class="offer-activate-btn upsell" 
-                  data-tf-offer-index="${idx}"
-                  data-tf-offer-type="upsell"
-                  style="
-                    background: ${css(buttonColor)} !important;
-                    color: ${css(buttonTextColor)} !important;
-                  "
-                >
-                  <span class="offer-activate-btn-icon">🎁</span>
-                  ${css(buttonText)}
-                </button>
-              </div>
             ` : ''}
           </div>
         </div>
@@ -1690,14 +1664,6 @@ window.TripleformCOD = (function () {
         }
       }
     });
-    
-    // Attacher les événements aux boutons d'activation
-    setTimeout(() => {
-      const activationButtons = root.querySelectorAll('[data-tf-offer-index]');
-      activationButtons.forEach(btn => {
-        btn.addEventListener('click', handleOfferActivation);
-      });
-    }, 100);
   }
 
   /* ------------------------------------------------------------------ */
@@ -1762,6 +1728,9 @@ window.TripleformCOD = (function () {
     const ovBg = overlayBackground(beh);
     const popupCfg = popupSizeConfig(beh);
     const drawerCfg = drawerSizeConfig(beh);
+
+    // Variables pour gérer les offres
+    const offersList = offersCfg.offers || [];
 
     /* ---------------- Direction / alignement / font size ------------- */
 
@@ -1943,7 +1912,7 @@ window.TripleformCOD = (function () {
       box-sizing:border-box;
     `;
 
-    const offersHtml = buildOffersHtml(offersCfg || {});
+    const offersHtml = buildOffersHtml(offersCfg || {}, root.id);
 
     function orderedFieldKeys() {
       const metaOrder = (cfg.meta && cfg.meta.fieldsOrder) || [];
@@ -2092,6 +2061,10 @@ window.TripleformCOD = (function () {
               <div style="font-weight:700;" data-tf="shipping">
                 ${css(t.shippingToCalculate || "Shipping to calculate")}
               </div>
+            </div>
+            <div style="${rowStyle}" data-tf="discount-row" style="display:none;">
+              <div>Remise</div>
+              <div style="font-weight:700; color: #10B981;" data-tf="discount">—</div>
             </div>
             <div style="${rowStyle}">
               <div>${css(t.total || "Total")}</div>
@@ -2386,6 +2359,19 @@ window.TripleformCOD = (function () {
       initializeTimers(root, offersCfg);
     }, 100);
 
+    // Attacher les événements aux boutons d'activation d'offres
+    setTimeout(() => {
+      const offerButtons = root.querySelectorAll('[data-tf-offer-toggle]');
+      offerButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+          e.preventDefault();
+          const offerIndex = parseInt(this.getAttribute('data-tf-offer-index'));
+          const offerType = this.getAttribute('data-tf-offer-type');
+          toggleOfferActivation(this, offerIndex, offerType, offersList, root, updateMoney);
+        });
+      });
+    }, 200);
+
     // dropdown wilaya/city
     setupLocationDropdowns(root, cfg, countryDef);
 
@@ -2624,11 +2610,27 @@ window.TripleformCOD = (function () {
       return { ok: true, timeOnPageMs, hpValue };
     }
 
-    /* ===================== Money + UI =============================== */
+    /* ===================== Money + UI avec offres =================== */
 
     function updateMoney() {
       const { priceCents, totalCents } = computeProductTotals();
-      const grandTotalCents = totalCents + (geoShippingCents || 0);
+      
+      // Calculer la remise
+      let discountCents = 0;
+      let discountMessage = "";
+      const { totalDiscount, discountMessage: msg } = getActiveOfferDiscount(offersList);
+      
+      if (totalDiscount > 0) {
+        if (offersList[0]?.discountType === 'percentage') {
+          discountCents = Math.round(totalCents * totalDiscount / 100);
+        } else {
+          discountCents = totalDiscount; // Montant fixe en cents
+        }
+        discountMessage = msg;
+      }
+      
+      const discountedTotalCents = totalCents - discountCents;
+      const grandTotalCents = discountedTotalCents + (geoShippingCents || 0);
 
       const prices = root.querySelectorAll('[data-tf="price"]');
       const totals = root.querySelectorAll('[data-tf="total"]');
@@ -2636,10 +2638,26 @@ window.TripleformCOD = (function () {
       const shippingNoteEls = root.querySelectorAll(
         '[data-tf="shipping-note"]'
       );
+      const discountRow = root.querySelector('[data-tf="discount-row"]');
+      const discountAmount = root.querySelector('[data-tf="discount"]');
       const ctas = root.querySelectorAll('[data-tf-cta="1"]');
 
       prices.forEach((el) => (el.textContent = moneyFmt(priceCents)));
       totals.forEach((el) => (el.textContent = moneyFmt(grandTotalCents)));
+
+      // Gérer l'affichage de la ligne de remise
+      if (discountRow) {
+        if (discountCents > 0) {
+          discountRow.style.display = 'grid';
+          if (discountAmount) {
+            discountAmount.textContent = '-' + moneyFmt(discountCents);
+            discountAmount.style.color = '#10B981';
+            discountAmount.style.fontWeight = '700';
+          }
+        } else {
+          discountRow.style.display = 'none';
+        }
+      }
 
       let shippingText = "";
       if (geoShippingCents === null) {
@@ -2680,8 +2698,21 @@ window.TripleformCOD = (function () {
         variantId,
       } = totals;
 
+      // Calculer la remise pour l'envoi
+      let discountCents = 0;
+      const { totalDiscount } = getActiveOfferDiscount(offersList);
+      
+      if (totalDiscount > 0) {
+        if (offersList[0]?.discountType === 'percentage') {
+          discountCents = Math.round(totalCents * totalDiscount / 100);
+        } else {
+          discountCents = totalDiscount;
+        }
+      }
+      
+      const discountedTotalCents = totalCents - discountCents;
       const shippingCentsToSend = geoShippingCents || 0;
-      const grandTotalCents = totalCents + shippingCentsToSend;
+      const grandTotalCents = discountedTotalCents + shippingCentsToSend;
 
       const phone = getPhoneFields();
 
@@ -2711,6 +2742,21 @@ window.TripleformCOD = (function () {
         }
       }
 
+      // Trouver l'offre activée pour l'envoyer au backend
+      let activeOfferData = null;
+      if (offersList && offersList.length) {
+        offersList.forEach((offer, index) => {
+          if (offer.enabled && localStorage.getItem(`tf_active_offer_offer_${index}`) === 'true') {
+            activeOfferData = {
+              title: offer.title,
+              discountType: offer.discountType,
+              discountValue: offer.discountValue,
+              discountApplied: discountCents
+            };
+          }
+        });
+      }
+
       const payload = {
         fields: {
           name: getFieldValueByLabel("name"),
@@ -2729,11 +2775,14 @@ window.TripleformCOD = (function () {
         qty,
         priceCents,
         baseTotalCents,
+        discountCents,
         shippingCents: shippingCentsToSend,
-        totalCents,
+        totalCents: discountedTotalCents,
         grandTotalCents,
         currency: root.getAttribute("data-currency") || null,
         locale: root.getAttribute("data-locale") || null,
+
+        offer: activeOfferData,
 
         geo: {
           enabled: geoEnabled,
