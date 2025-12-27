@@ -272,12 +272,9 @@ const LAYOUT_CSS = `
     gap:6px;
     font-size:11px;
     font-weight:600;
-    color:#DC2626;
     margin-top:6px;
     padding:4px 8px;
-    background:#FEF2F2;
     border-radius:6px;
-    border:1px solid #FECACA;
   }
   .offer-timer-icon {
     font-size:10px;
@@ -286,6 +283,7 @@ const LAYOUT_CSS = `
     font-family:monospace;
     font-weight:bold;
     letter-spacing:1px;
+    margin-left:auto;
   }
 
   /* ---- Styles avancés pour les timers ---- */
@@ -340,11 +338,47 @@ const LAYOUT_CSS = `
     box-shadow: 0 4px 14px rgba(124, 58, 237, 0.3);
   }
 
+  .timer-elegant {
+    background: linear-gradient(135deg, #8B5CF6, #EC4899) !important;
+    color: #fff !important;
+    border: 1px solid #DDD6FE !important;
+    font-weight: 600;
+    box-shadow: 0 4px 14px rgba(139, 92, 246, 0.3);
+  }
+
+  .timer-minimal {
+    background: #F9FAFB !important;
+    color: #374151 !important;
+    border: 1px solid #E5E7EB !important;
+    font-weight: 500;
+  }
+
+  .timer-urgent {
+    background: linear-gradient(90deg, #991B1B, #DC2626) !important;
+    color: #fff !important;
+    border: 1px solid #FCA5A5 !important;
+    font-weight: 700;
+    animation: blink 1s infinite;
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+  }
+
+  .timer-simple {
+    background: #FEF2F2 !important;
+    color: #DC2626 !important;
+    border: 1px solid #FECACA !important;
+    font-weight: 600;
+  }
+
   /* Animation pour le timer "hot" */
   @keyframes pulse {
     0% { opacity: 1; }
     50% { opacity: 0.8; }
     100% { opacity: 1; }
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
   }
 
   /* ---- Palette de couleurs ---- */
@@ -469,6 +503,41 @@ const LAYOUT_CSS = `
   }
   .order-label {
     color:#6B7280;
+  }
+
+  /* ---- Bouton d'activation ---- */
+  .offer-activate-btn {
+    background:#000000;
+    color:#FFFFFF;
+    border:1px solid #000000;
+    border-radius:4px;
+    padding:4px 10px;
+    font-size:11px;
+    font-weight:500;
+    cursor:pointer;
+    margin-top:6px;
+    transition:all 0.2s ease;
+    display:inline-flex;
+    align-items:center;
+    gap:4px;
+  }
+  .offer-activate-btn:hover {
+    background:#374151;
+    border-color:#374151;
+  }
+  .offer-activate-btn.active {
+    background:#10B981;
+    color:#FFFFFF;
+    border-color:#10B981;
+  }
+  .offer-activate-btn.disabled {
+    background:#9CA3AF;
+    color:#FFFFFF;
+    border-color:#9CA3AF;
+    cursor:not-allowed;
+  }
+  .offer-activate-btn-icon {
+    font-size:10px;
   }
 
   @media (max-width: 1040px) {
@@ -698,6 +767,46 @@ const COUNTDOWN_EXAMPLES = [
     cssClass: "timer-weekend",
     icon: "🎉",
     timeFormat: "hh[h]"
+  },
+  {
+    id: "elegant-purple",
+    name: "Élégant Violet (45min)",
+    minutes: 45,
+    template: "elegant",
+    message: "💜 OFFRE EXCLUSIVE ! Termine dans :",
+    cssClass: "timer-elegant",
+    icon: "💜",
+    timeFormat: "mm[m] ss[s]"
+  },
+  {
+    id: "minimal-clean",
+    name: "Minimaliste Propre (30min)",
+    minutes: 30,
+    template: "minimal",
+    message: "⏱️ Dernière chance :",
+    cssClass: "timer-minimal",
+    icon: "⏱️",
+    timeFormat: "mm:ss"
+  },
+  {
+    id: "urgent-red",
+    name: "Urgent Rouge (10min)",
+    minutes: 10,
+    template: "urgent",
+    message: "🚨 URGENT ! Presque fini :",
+    cssClass: "timer-urgent",
+    icon: "🚨",
+    timeFormat: "mm:ss"
+  },
+  {
+    id: "simple-red",
+    name: "Simple Rouge (20min)",
+    minutes: 20,
+    template: "simple",
+    message: "🔴 Offre spéciale :",
+    cssClass: "timer-simple",
+    icon: "🔴",
+    timeFormat: "mm:ss"
   }
 ];
 
@@ -996,7 +1105,7 @@ function TimerDisplay({ minutes, message, theme, cssClass, timeFormat }) {
     >
       <span className="offer-timer-icon">⏱️</span>
       <span>{message}</span>
-      <span className="timer-countdown" style={{ marginLeft: 'auto' }}>
+      <span className="timer-countdown">
         {formatTime(timeLeft)}
       </span>
     </div>
@@ -1007,66 +1116,40 @@ function TimerDisplay({ minutes, message, theme, cssClass, timeFormat }) {
 
 const DEFAULT_OFFER = {
   enabled: true,
-  type: "percent",
-  value: 10,
-  title: "Remise Spéciale",
-  description: "Profitez de cette offre exclusive",
-  
-  // Conditions
-  minQuantity: 2,
-  minSubtotal: 0,
-  requiresCode: false,
-  code: "",
-  maxDiscount: 0,
-  
-  // Product selection
-  shopifyProductId: "",
-  productRef: "",
-  imageUrl: "",
-  iconUrl: "",
-  
-  // Timer settings
-  enableTimer: false,
+  title: "Remise spéciale -10%",
+  description: "Profitez de -10% sur votre première commande",
+  showInPreview: true,
+  enableTimer: true,
   timerMinutes: 60,
-  timerMessage: "⏱️ Offre limitée dans le temps!",
-  timerCssClass: "",
+  timerMessage: "⏱️ Offre limitée!",
+  timerCssClass: "timer-flash",
   timerTimeFormat: "mm:ss",
-  
-  // Display
-  showInPreview: true
+  discountType: "percentage",
+  discountValue: 10,
+  conditions: {
+    minAmount: 0,
+    maxUses: 100,
+    applicableTo: "all"
+  },
+  buttonText: "Activer",
+  imageUrl: "",
+  currency: "MAD"
 };
 
 const DEFAULT_UPSELL = {
   enabled: true,
-  title: "Cadeau Gratuit",
-  description: "Recevez un cadeau spécial avec votre commande",
-  
-  // Trigger conditions
-  triggerType: "subtotal",
-  minSubtotal: 30,
-  productHandle: "",
-  
-  // Gift details
-  giftTitle: "Free Gift",
-  giftNote: "Special offer",
-  originalPrice: 9.99,
-  isFree: true,
-  
-  // Product selection
-  shopifyProductId: "",
-  productRef: "",
-  imageUrl: "",
-  iconUrl: "",
-  
-  // Timer settings
-  enableTimer: false,
-  timerMinutes: 60,
-  timerMessage: "🎁 Cadeau limité dans le temps!",
-  timerCssClass: "",
-  timerTimeFormat: "mm:ss",
-  
-  // Display
-  showInPreview: true
+  title: "Cadeau gratuit inclus!",
+  description: "Recevez un accessoire en cadeau avec votre commande",
+  showInPreview: true,
+  enableTimer: true,
+  timerMinutes: 45,
+  timerMessage: "🎁 Cadeau limité!",
+  timerCssClass: "timer-hot",
+  timerTimeFormat: "hh[h] mm[m]",
+  giftProductId: "",
+  giftVariantId: "",
+  giftTitle: "Accessoire gratuit",
+  imageUrl: ""
 };
 
 const DEFAULT_CFG = {
@@ -1101,6 +1184,7 @@ const DEFAULT_CFG = {
     showOrderSummary: true,
     showOffersSection: true,
     showTimerInPreview: true,
+    showActivationButtons: true
   }
 };
 
@@ -1142,12 +1226,12 @@ function OffersPreview({ cfg, products, t }) {
   return (
     <BlockStack gap="200">
       {activeOffers.map((offer, idx) => {
-        const productName = offer.title || findProductLabel(products, offer.shopifyProductId) || 
-                          t("section2.preview.defaultOfferTitle");
-        const description = offer.description || 
-                          (offer.type === "percent" 
-                            ? t("section2.preview.discountPercent", { percent: offer.value })
-                            : t("section2.preview.discountFixed", { amount: offer.value, currency: cfg.global.currency }));
+        const title = offer.title || "Remise spéciale";
+        const description = offer.description || "Profitez de cette offre exclusive";
+        const img = offer.imageUrl || "";
+        const hasTimer = offer.enableTimer && cfg.display.showTimerInPreview;
+        const buttonText = offer.buttonText || "Activer";
+        const timerCssClass = offer.timerCssClass || "";
         
         return (
           <div 
@@ -1160,15 +1244,15 @@ function OffersPreview({ cfg, products, t }) {
             }}
           >
             <div className="offers-strip-thumb">
-              {offer.imageUrl ? (
-                <img src={offer.imageUrl} alt={productName} />
+              {img ? (
+                <img src={img} alt={title} />
               ) : (
                 <div className="offers-strip-thumb-inner" />
               )}
             </div>
             <div style={{ flex: 1 }}>
               <div className="offers-strip-main" style={{ color: theme.offerTitle }}>
-                {productName}
+                {title}
               </div>
               <div className="offers-strip-desc">
                 {description}
@@ -1182,6 +1266,19 @@ function OffersPreview({ cfg, products, t }) {
                   cssClass={offer.timerCssClass}
                   timeFormat={offer.timerTimeFormat}
                 />
+              )}
+              
+              {cfg.display.showActivationButtons && (
+                <button 
+                  className="offer-activate-btn"
+                  onClick={() => {
+                    // Simulation de l'activation
+                    alert(`Offre "${title}" activée!`);
+                  }}
+                >
+                  <span className="offer-activate-btn-icon">+</span>
+                  {buttonText}
+                </button>
               )}
             </div>
           </div>
@@ -1202,10 +1299,12 @@ function UpsellsPreview({ cfg, products, t }) {
   return (
     <BlockStack gap="200">
       {activeUpsells.map((upsell, idx) => {
-        const productName = upsell.title || findProductLabel(products, upsell.shopifyProductId) || 
-                          t("section2.preview.defaultUpsellTitle");
-        const description = upsell.description || t("section2.preview.giftDescription");
-        
+        const title = upsell.title || "Cadeau gratuit";
+        const description = upsell.description || "Recevez un cadeau spécial avec votre commande";
+        const img = upsell.imageUrl || "";
+        const hasTimer = upsell.enableTimer && cfg.display.showTimerInPreview;
+        const timerCssClass = upsell.timerCssClass || "";
+
         return (
           <div 
             key={idx} 
@@ -1217,15 +1316,15 @@ function UpsellsPreview({ cfg, products, t }) {
             }}
           >
             <div className="offers-strip-thumb">
-              {upsell.imageUrl ? (
-                <img src={upsell.imageUrl} alt={productName} />
+              {img ? (
+                <img src={img} alt={title} />
               ) : (
                 <div className="offers-strip-thumb-inner-upsell" />
               )}
             </div>
             <div style={{ flex: 1 }}>
               <div className="offers-strip-main" style={{ color: theme.offerTitle }}>
-                {productName}
+                {title}
               </div>
               <div className="offers-strip-desc">
                 {description}
@@ -1272,6 +1371,12 @@ function OrderSummaryPreview({ cfg, t }) {
         </span>
         <span>129.99 {cfg.global.currency}</span>
       </div>
+      <div className="order-row" style={{ color: '#10B981' }}>
+        <span className="order-label">
+          Remise
+        </span>
+        <span>-13.00 {cfg.global.currency}</span>
+      </div>
       <div className="order-row">
         <span className="order-label">
           {t("section2.preview.orderSummary.shipping")}
@@ -1282,7 +1387,7 @@ function OrderSummaryPreview({ cfg, t }) {
         <span className="order-label">
           {t("section2.preview.orderSummary.total")}
         </span>
-        <span style={{ fontWeight: 700 }}>129.99 {cfg.global.currency}</span>
+        <span style={{ fontWeight: 700 }}>116.99 {cfg.global.currency}</span>
       </div>
     </div>
   );
@@ -1300,7 +1405,15 @@ function OfferItemEditor({
   canRemove 
 }) {
   const handleChange = (field, value) => {
-    onChange({ ...offer, [field]: value });
+    const newOffer = { ...offer };
+    if (field.includes('.')) {
+      const [parent, child] = field.split('.');
+      if (!newOffer[parent]) newOffer[parent] = {};
+      newOffer[parent][child] = value;
+    } else {
+      newOffer[field] = value;
+    }
+    onChange(newOffer);
   };
   
   const handleCountdownExample = (example) => {
@@ -1354,39 +1467,38 @@ function OfferItemEditor({
         
         <Grid3>
           <Select
-            label={t("section2.offer.type")}
-            value={offer.type}
-            onChange={(v) => handleChange('type', v)}
+            label={t("section2.offer.discountType")}
+            value={offer.discountType}
+            onChange={(v) => handleChange('discountType', v)}
             options={[
-              { label: t("section2.offer.type.percent"), value: "percent" },
-              { label: t("section2.offer.type.fixed"), value: "fixed" }
+              { label: t("section2.offer.discountType.percentage"), value: "percentage" },
+              { label: t("section2.offer.discountType.fixed"), value: "fixed" }
             ]}
           />
           
-          {offer.type === "percent" ? (
+          {offer.discountType === "percentage" ? (
             <RangeSlider
-              label={`${t("section2.offer.percent")}: ${offer.value}%`}
+              label={`${t("section2.offer.percent")}: ${offer.discountValue}%`}
               min={1}
               max={90}
               output
-              value={offer.value}
-              onChange={(v) => handleChange('value', v)}
+              value={offer.discountValue}
+              onChange={(v) => handleChange('discountValue', v)}
             />
           ) : (
             <TextField
               type="number"
               label={t("section2.offer.fixedAmount")}
-              value={String(offer.value)}
-              onChange={(v) => handleChange('value', parseFloat(v) || 0)}
+              value={String(offer.discountValue)}
+              onChange={(v) => handleChange('discountValue', parseFloat(v) || 0)}
             />
           )}
           
-          <Select
-            label={t("section2.offer.product")}
-            value={offer.shopifyProductId}
-            onChange={(v) => handleChange('shopifyProductId', v)}
-            options={productOptions}
-            helpText={t("section2.helpText.product")}
+          <TextField
+            label={t("section2.offer.buttonText")}
+            value={offer.buttonText}
+            onChange={(v) => handleChange('buttonText', v)}
+            helpText={t("section2.helpText.buttonText")}
           />
         </Grid3>
         
@@ -1394,43 +1506,30 @@ function OfferItemEditor({
           <Grid3>
             <TextField
               type="number"
-              label={t("section2.offer.minQuantity")}
-              value={String(offer.minQuantity)}
-              onChange={(v) => handleChange('minQuantity', parseInt(v) || 0)}
-              helpText={t("section2.helpText.minQuantity")}
+              label={t("section2.offer.minAmount")}
+              value={String(offer.conditions?.minAmount || 0)}
+              onChange={(v) => handleChange('conditions.minAmount', parseInt(v) || 0)}
+              helpText={t("section2.helpText.minAmount")}
             />
             
             <TextField
               type="number"
-              label={t("section2.offer.minSubtotal")}
-              value={String(offer.minSubtotal)}
-              onChange={(v) => handleChange('minSubtotal', parseFloat(v) || 0)}
-              helpText={t("section2.helpText.minSubtotal")}
+              label={t("section2.offer.maxUses")}
+              value={String(offer.conditions?.maxUses || 100)}
+              onChange={(v) => handleChange('conditions.maxUses', parseInt(v) || 100)}
+              helpText={t("section2.helpText.maxUses")}
             />
             
-            <TextField
-              type="number"
-              label={t("section2.offer.maxDiscount")}
-              value={String(offer.maxDiscount)}
-              onChange={(v) => handleChange('maxDiscount', parseFloat(v) || 0)}
-              helpText={t("section2.helpText.maxDiscount")}
+            <Select
+              label={t("section2.offer.applicableTo")}
+              value={offer.conditions?.applicableTo || "all"}
+              onChange={(v) => handleChange('conditions.applicableTo', v)}
+              options={[
+                { label: t("section2.offer.applicableTo.all"), value: "all" },
+                { label: t("section2.offer.applicableTo.specific"), value: "specific" }
+              ]}
             />
           </Grid3>
-          
-          <Checkbox
-            label={t("section2.offer.requiresCode")}
-            checked={offer.requiresCode}
-            onChange={(v) => handleChange('requiresCode', v)}
-          />
-          
-          {offer.requiresCode && (
-            <TextField
-              label={t("section2.offer.code")}
-              value={offer.code}
-              onChange={(v) => handleChange('code', v.toUpperCase())}
-              helpText={t("section2.helpText.code")}
-            />
-          )}
         </GroupCard>
         
         <GroupCard title={t("section2.group.images.title")}>
@@ -1440,12 +1539,6 @@ function OfferItemEditor({
               value={offer.imageUrl}
               onChange={(v) => handleChange('imageUrl', v)}
               helpText={t("section2.helpText.offerImage")}
-            />
-            <TextField
-              label={t("section2.offer.iconUrl")}
-              value={offer.iconUrl}
-              onChange={(v) => handleChange('iconUrl', v)}
-              helpText={t("section2.helpText.offerIconUrl")}
             />
           </Grid2>
         </GroupCard>
@@ -1473,6 +1566,24 @@ function OfferItemEditor({
                   value={offer.timerMessage || ""}
                   onChange={(v) => handleChange('timerMessage', v)}
                   helpText={t("section2.helpText.timerMessage")}
+                />
+                <Select
+                  label={t("section2.offer.timerTimeFormat")}
+                  value={offer.timerTimeFormat || "mm:ss"}
+                  onChange={(v) => handleChange('timerTimeFormat', v)}
+                  options={[
+                    { label: "mm:ss", value: "mm:ss" },
+                    { label: "hh[h] mm[m]", value: "hh[h] mm[m]" },
+                    { label: "mm[m] ss[s]", value: "mm[m] ss[s]" },
+                    { label: "hh[h]", value: "hh[h]" }
+                  ]}
+                />
+                <TextField
+                  label={t("section2.offer.timerCssClass")}
+                  value={offer.timerCssClass || ""}
+                  onChange={(v) => handleChange('timerCssClass', v)}
+                  helpText={t("section2.helpText.timerCssClass")}
+                  placeholder="timer-flash, timer-hot, etc."
                 />
               </>
             )}
@@ -1556,71 +1667,27 @@ function UpsellItemEditor({
         </Grid2>
         
         <Grid3>
-          <Select
-            label={t("section2.upsell.product")}
-            value={upsell.shopifyProductId}
-            onChange={(v) => handleChange('shopifyProductId', v)}
-            options={productOptions}
-            helpText={t("section2.helpText.product")}
+          <TextField
+            label={t("section2.upsell.giftTitle")}
+            value={upsell.giftTitle}
+            onChange={(v) => handleChange('giftTitle', v)}
+            helpText={t("section2.helpText.giftTitle")}
           />
           
-          <Select
-            label={t("section2.upsell.triggerType")}
-            value={upsell.triggerType}
-            onChange={(v) => handleChange('triggerType', v)}
-            options={[
-              { label: t("section2.upsell.trigger.subtotal"), value: "subtotal" },
-              { label: t("section2.upsell.trigger.product"), value: "product" }
-            ]}
+          <TextField
+            label={t("section2.upsell.giftProductId")}
+            value={upsell.giftProductId}
+            onChange={(v) => handleChange('giftProductId', v)}
+            helpText={t("section2.helpText.giftProductId")}
           />
           
-          {upsell.triggerType === "subtotal" ? (
-            <TextField
-              type="number"
-              label={t("section2.upsell.minSubtotal")}
-              value={String(upsell.minSubtotal)}
-              onChange={(v) => handleChange('minSubtotal', parseFloat(v) || 0)}
-              helpText={t("section2.helpText.minSubtotal")}
-            />
-          ) : (
-            <TextField
-              label={t("section2.upsell.productHandle")}
-              value={upsell.productHandle}
-              onChange={(v) => handleChange('productHandle', v)}
-              helpText={t("section2.helpText.productHandle")}
-            />
-          )}
+          <TextField
+            label={t("section2.upsell.giftVariantId")}
+            value={upsell.giftVariantId}
+            onChange={(v) => handleChange('giftVariantId', v)}
+            helpText={t("section2.helpText.giftVariantId")}
+          />
         </Grid3>
-        
-        <GroupCard title={t("section2.group.gift.title")}>
-          <Grid3>
-            <TextField
-              label={t("section2.gift.title")}
-              value={upsell.giftTitle}
-              onChange={(v) => handleChange('giftTitle', v)}
-            />
-            
-            <TextField
-              label={t("section2.gift.note")}
-              value={upsell.giftNote}
-              onChange={(v) => handleChange('giftNote', v)}
-            />
-            
-            <TextField
-              type="number"
-              label={t("section2.gift.originalPrice")}
-              value={String(upsell.originalPrice)}
-              onChange={(v) => handleChange('originalPrice', parseFloat(v) || 0)}
-              helpText={t("section2.helpText.originalPrice")}
-            />
-          </Grid3>
-          
-          <Checkbox
-            label={t("section2.gift.isFree")}
-            checked={upsell.isFree}
-            onChange={(v) => handleChange('isFree', v)}
-          />
-        </GroupCard>
         
         <GroupCard title={t("section2.group.images.title")}>
           <Grid2>
@@ -1629,12 +1696,6 @@ function UpsellItemEditor({
               value={upsell.imageUrl}
               onChange={(v) => handleChange('imageUrl', v)}
               helpText={t("section2.helpText.offerImage")}
-            />
-            <TextField
-              label={t("section2.upsell.iconUrl")}
-              value={upsell.iconUrl}
-              onChange={(v) => handleChange('iconUrl', v)}
-              helpText={t("section2.helpText.offerIconUrl")}
             />
           </Grid2>
         </GroupCard>
@@ -1662,6 +1723,24 @@ function UpsellItemEditor({
                   value={upsell.timerMessage || ""}
                   onChange={(v) => handleChange('timerMessage', v)}
                   helpText={t("section2.helpText.timerMessage")}
+                />
+                <Select
+                  label={t("section2.upsell.timerTimeFormat")}
+                  value={upsell.timerTimeFormat || "hh[h] mm[m]"}
+                  onChange={(v) => handleChange('timerTimeFormat', v)}
+                  options={[
+                    { label: "mm:ss", value: "mm:ss" },
+                    { label: "hh[h] mm[m]", value: "hh[h] mm[m]" },
+                    { label: "mm[m] ss[s]", value: "mm[m] ss[s]" },
+                    { label: "hh[h]", value: "hh[h]" }
+                  ]}
+                />
+                <TextField
+                  label={t("section2.upsell.timerCssClass")}
+                  value={upsell.timerCssClass || ""}
+                  onChange={(v) => handleChange('timerCssClass', v)}
+                  helpText={t("section2.helpText.timerCssClass")}
+                  placeholder="timer-hot, timer-flash, etc."
                 />
               </>
             )}
@@ -2051,6 +2130,11 @@ function Section2OffersInner({ products = [] }) {
                       label={t("section2.display.showTimerInPreview")}
                       checked={cfg.display.showTimerInPreview}
                       onChange={(v) => setDisplay({ showTimerInPreview: v })}
+                    />
+                    <Checkbox
+                      label={t("section2.display.showActivationButtons")}
+                      checked={cfg.display.showActivationButtons}
+                      onChange={(v) => setDisplay({ showActivationButtons: v })}
                     />
                   </Grid3>
                   <Text variant="bodySm" tone="subdued">
