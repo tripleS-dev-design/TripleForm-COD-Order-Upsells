@@ -283,7 +283,6 @@ Ces données sont écrites par /api/save-offers dans:
   {%- endcapture -%}
 {%- endif -%}
 
-
 {%- assign current_variant = product.selected_or_first_available_variant -%}
 
 <div
@@ -311,8 +310,6 @@ Ces données sont écrites par /api/save-offers dans:
     Loading COD form…
   </div>
 </div>
-
-
 
 <script type="application/json" id="tf-product-json-{{ section.id }}">
   {{ product | json }}

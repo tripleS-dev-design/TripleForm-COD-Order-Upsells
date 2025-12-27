@@ -848,7 +848,7 @@ window.TripleformCOD = (function () {
         },
         {
           id: "MINAS_GERAIS",
-          name: "Minas Geraes",
+          name: "Minas Gerais",
           cities: [
             "Belo Horizonte", "Uberlândia", "Contagem", "Juiz de Fora", "Betim",
             "Montes Claros", "Ribeirão das Neves", "Uberaba", "Governador Valadares",
@@ -1179,6 +1179,171 @@ window.TripleformCOD = (function () {
   }
 
   /* ------------------------------------------------------------------ */
+  /* Injecter le CSS des offres dans la page produit                    */
+  /* ------------------------------------------------------------------ */
+
+  function injectOffersCSS() {
+    if (document.getElementById('tf-offers-css')) return;
+    
+    const style = document.createElement('style');
+    style.id = 'tf-offers-css';
+    style.textContent = `
+      /* CSS pour les offres dans la page produit */
+      .tf-offers-container {
+        display: grid;
+        gap: 10px;
+        margin-bottom: 16px;
+      }
+      
+      .offers-strip {
+        display: grid !important;
+        grid-template-columns: 60px minmax(0, 1fr) !important;
+        gap: 12px !important;
+        align-items: center !important;
+        background: #FFFFFF !important;
+        border: 1px solid #E5E7EB !important;
+        border-radius: 10px !important;
+        padding: 12px !important;
+        margin-bottom: 10px !important;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.04) !important;
+        box-sizing: border-box !important;
+        width: 100% !important;
+      }
+      
+      .offers-strip-thumb {
+        width: 56px !important;
+        height: 56px !important;
+        border-radius: 12px !important;
+        overflow: hidden !important;
+        border: 1px solid #E5E7EB !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        flex-shrink: 0 !important;
+      }
+      
+      .offers-strip-thumb-inner {
+        width: 100% !important;
+        height: 100% !important;
+        border-radius: 12px !important;
+        background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%) !important;
+      }
+      
+      .offers-strip-thumb-inner-upsell {
+        width: 100% !important;
+        height: 100% !important;
+        border-radius: 12px !important;
+        background: linear-gradient(135deg, #EC4899 0%, #F59E0B 100%) !important;
+      }
+      
+      .offers-strip-thumb img {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover !important;
+        border-radius: 12px !important;
+      }
+      
+      .offers-strip-main {
+        font-size: 14px !important;
+        font-weight: 600 !important;
+        color: #111827 !important;
+        margin-bottom: 2px !important;
+        line-height: 1.3 !important;
+      }
+      
+      .offers-strip-desc {
+        font-size: 12px !important;
+        color: #6B7280 !important;
+        line-height: 1.4 !important;
+      }
+      
+      .offer-timer {
+        display: flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        font-size: 11px !important;
+        font-weight: 600 !important;
+        color: #DC2626 !important;
+        margin-top: 6px !important;
+        padding: 4px 8px !important;
+        background: #FEF2F2 !important;
+        border-radius: 6px !important;
+        border: 1px solid #FECACA !important;
+      }
+      
+      .offer-timer-icon {
+        font-size: 10px !important;
+      }
+      
+      .timer-countdown {
+        font-family: monospace !important;
+        font-weight: bold !important;
+        letter-spacing: 1px !important;
+      }
+      
+      /* Styles avancés pour les timers */
+      .timer-chrono {
+        background: linear-gradient(90deg, #1e3a8a, #3b82f6) !important;
+        color: #fff !important;
+        border: 1px solid #60a5fa !important;
+        font-family: 'Courier New', monospace !important;
+        font-weight: bold !important;
+        letter-spacing: 1px !important;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.35) !important;
+      }
+      
+      .timer-black-friday {
+        background: linear-gradient(90deg, #000000, #dc2626) !important;
+        color: #fff !important;
+        border: 2px solid #fbbf24 !important;
+        font-weight: 800 !important;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
+        box-shadow: 0 6px 16px rgba(220, 38, 38, 0.4) !important;
+      }
+      
+      .timer-new-year {
+        background: linear-gradient(135deg, #0f766e, #0ea5e9, #ec4899) !important;
+        color: #fff !important;
+        border: 1px solid #fde047 !important;
+        font-weight: bold !important;
+        box-shadow: 0 6px 20px rgba(14, 165, 233, 0.3) !important;
+      }
+      
+      .timer-flash {
+        background: linear-gradient(90deg, #f97316, #fbbf24) !important;
+        color: #1f2937 !important;
+        border: 1px solid #f59e0b !important;
+        font-weight: 700 !important;
+        box-shadow: 0 4px 14px rgba(249, 115, 22, 0.4) !important;
+      }
+      
+      .timer-hot {
+        background: linear-gradient(90deg, #7c2d12, #ea580c) !important;
+        color: #fff !important;
+        border: 1px solid #fdba74 !important;
+        animation: pulse 1.5s infinite !important;
+        font-weight: 800 !important;
+      }
+      
+      .timer-weekend {
+        background: linear-gradient(135deg, #7c3aed, #10b981) !important;
+        color: #fff !important;
+        border: 1px solid #a7f3d0 !important;
+        font-weight: bold !important;
+        box-shadow: 0 4px 14px rgba(124, 58, 237, 0.3) !important;
+      }
+      
+      @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.8; }
+        100% { opacity: 1; }
+      }
+    `;
+    
+    document.head.appendChild(style);
+  }
+
+  /* ------------------------------------------------------------------ */
   /* NOUVEAUX TIMERS - Composant pour la prévisualisation               */
   /* ------------------------------------------------------------------ */
 
@@ -1259,29 +1424,28 @@ window.TripleformCOD = (function () {
     const offerTitle = css(theme.offerTitle || "#0C4A6E");
     const offerText = css(theme.offerText || "#0C4A6E");
 
-    let html = "";
+    let html = '<div class="tf-offers-container">';
 
     // OFFERS (remises)
     activeOffers.forEach((offer, idx) => {
       const title = offer.title || "Remise spéciale";
       const description = offer.description || "Profitez de cette offre exclusive";
       const img = offer.imageUrl || "";
-      const iconUrl = offer.iconUrl || "";
       const hasTimer = offer.enableTimer && display.showTimerInPreview;
 
       html += `
         <div class="offers-strip" style="
-          background:${offerBg};
-          border:1px solid ${offerBorder};
-          color:${offerText};
+          background:${offerBg} !important;
+          border:1px solid ${offerBorder} !important;
+          color:${offerText} !important;
         ">
           <div class="offers-strip-thumb">
             ${img 
               ? `<img src="${css(img)}" alt="${css(title)}" />` 
               : '<div class="offers-strip-thumb-inner"></div>'}
           </div>
-          <div style="flex:1;">
-            <div class="offers-strip-main" style="color:${offerTitle}">
+          <div style="flex:1; min-width:0;">
+            <div class="offers-strip-main" style="color:${offerTitle} !important">
               ${css(title)}
             </div>
             <div class="offers-strip-desc">
@@ -1301,22 +1465,21 @@ window.TripleformCOD = (function () {
       const title = upsell.title || "Cadeau gratuit";
       const description = upsell.description || "Recevez un cadeau spécial avec votre commande";
       const img = upsell.imageUrl || "";
-      const iconUrl = upsell.iconUrl || "";
       const hasTimer = upsell.enableTimer && display.showTimerInPreview;
 
       html += `
         <div class="offers-strip" style="
-          background:${offerBg};
-          border:1px solid ${offerBorder};
-          color:${offerText};
+          background:${offerBg} !important;
+          border:1px solid ${offerBorder} !important;
+          color:${offerText} !important;
         ">
           <div class="offers-strip-thumb">
             ${img 
               ? `<img src="${css(img)}" alt="${css(title)}" />` 
               : '<div class="offers-strip-thumb-inner-upsell"></div>'}
           </div>
-          <div style="flex:1;">
-            <div class="offers-strip-main" style="color:${offerTitle}">
+          <div style="flex:1; min-width:0;">
+            <div class="offers-strip-main" style="color:${offerTitle} !important">
               ${css(title)}
             </div>
             <div class="offers-strip-desc">
@@ -1331,7 +1494,8 @@ window.TripleformCOD = (function () {
       `;
     });
 
-    return html ? `<div style="display:grid;gap:10px;">${html}</div>` : "";
+    html += '</div>';
+    return html;
   }
 
   /* ------------------------------------------------------------------ */
@@ -2060,13 +2224,6 @@ window.TripleformCOD = (function () {
 
     root.innerHTML = html;
 
-    // Appliquer la taille de texte sur tous les champs
-    Array.from(root.querySelectorAll("input, textarea, select")).forEach(
-      (el) => {
-        el.style.fontSize = inputFontSize + "px";
-      }
-    );
-
     // Initialiser les timers après le rendu
     setTimeout(() => {
       initializeTimers(root, offersCfg);
@@ -2674,6 +2831,9 @@ window.TripleformCOD = (function () {
       byId(`tripleform-cod-${sectionId}`) ||
       document.querySelector(".tripleform-cod");
     if (!holder) return;
+
+    // Injecter le CSS des offres
+    injectOffersCSS();
 
     const cfg = parseSettingsAttr(holder);
     const offersCfg = parseOffersAttr(holder);
