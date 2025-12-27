@@ -1,3 +1,4 @@
+
 {% comment %}
 Tripleform COD – App block (product template)
 Lit la config form depuis:
@@ -255,7 +256,7 @@ Ces données sont écrites par /api/save-offers dans:
   {
     "meta": { "version": 10 },
     "global": { 
-      "enabled": false, 
+      "enabled": true, 
       "currency": "{{ shop.currency | default: 'MAD' }}",
       "rounding": "none",
       "colorPalette": "blue-gradient",
@@ -272,12 +273,58 @@ Ces données sont écrites par /api/save-offers dans:
         "timerBorder": "#FECACA"
       }
     },
-    "offers": [],
-    "upsells": [],
+    "offers": [
+      {
+        "enabled": true,
+        "title": "Remise spéciale -10%",
+        "description": "Profitez de -10% sur votre première commande",
+        "showInPreview": true,
+        "enableTimer": true,
+        "timerMinutes": 60,
+        "timerMessage": "⏱️ Offre limitée dans le temps!",
+        "timerCssClass": "timer-flash",
+        "timerTimeFormat": "mm:ss",
+        "discountType": "percentage",
+        "discountValue": 10,
+        "conditions": {
+          "minAmount": 0,
+          "maxUses": 100,
+          "applicableTo": "all"
+        },
+        "buttonText": "Activer cette offre",
+        "buttonColor": "#10B981",
+        "buttonTextColor": "#FFFFFF",
+        "activationMode": "manual",
+        "imageUrl": ""
+      }
+    ],
+    "upsells": [
+      {
+        "enabled": true,
+        "title": "Cadeau gratuit inclus!",
+        "description": "Recevez un accessoire en cadeau avec votre commande",
+        "showInPreview": true,
+        "enableTimer": true,
+        "timerMinutes": 45,
+        "timerMessage": "🎁 Cadeau limité dans le temps!",
+        "timerCssClass": "timer-hot",
+        "timerTimeFormat": "hh[h] mm[m]",
+        "giftProductId": "",
+        "giftVariantId": "",
+        "giftTitle": "Accessoire gratuit",
+        "buttonText": "Ajouter le cadeau",
+        "buttonColor": "#EC4899",
+        "buttonTextColor": "#FFFFFF",
+        "activationMode": "manual",
+        "imageUrl": ""
+      }
+    ],
     "display": {
       "showOrderSummary": true,
       "showOffersSection": true,
-      "showTimerInPreview": true
+      "showTimerInPreview": true,
+      "showActivationButtons": true,
+      "activationButtonStyle": "filled"
     }
   }
   {%- endcapture -%}

@@ -1333,6 +1333,74 @@ window.TripleformCOD = (function () {
         box-shadow: 0 4px 14px rgba(124, 58, 237, 0.3) !important;
       }
       
+      /* Boutons d'activation des offres */
+      .offers-strip-actions {
+        margin-top: 10px !important;
+        display: flex !important;
+        justify-content: flex-end !important;
+      }
+      
+      .offer-activate-btn {
+        background: linear-gradient(135deg, #10B981 0%, #059669 100%) !important;
+        color: #FFFFFF !important;
+        border: none !important;
+        border-radius: 8px !important;
+        padding: 8px 16px !important;
+        font-size: 12px !important;
+        font-weight: 600 !important;
+        cursor: pointer !important;
+        transition: all 0.2s ease !important;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35) !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+      }
+      
+      .offer-activate-btn:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 6px 16px rgba(16, 185, 129, 0.5) !important;
+      }
+      
+      .offer-activate-btn:active {
+        transform: translateY(0) !important;
+      }
+      
+      .offer-activate-btn.applied {
+        background: linear-gradient(135deg, #6B7280 0%, #4B5563 100%) !important;
+        cursor: default !important;
+        box-shadow: none !important;
+      }
+      
+      .offer-activate-btn.upsell {
+        background: linear-gradient(135deg, #EC4899 0%, #BE185D 100%) !important;
+        box-shadow: 0 4px 12px rgba(236, 72, 153, 0.35) !important;
+      }
+      
+      .offer-activate-btn.upsell:hover {
+        box-shadow: 0 6px 16px rgba(236, 72, 153, 0.5) !important;
+      }
+      
+      .offer-activate-btn.flash {
+        background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%) !important;
+        animation: pulse 1.5s infinite !important;
+        box-shadow: 0 4px 12px rgba(245, 158, 11, 0.35) !important;
+      }
+      
+      .offer-activate-btn-icon {
+        font-size: 11px !important;
+      }
+      
+      .offer-status-badge {
+        display: inline-block !important;
+        padding: 4px 8px !important;
+        background: #10B981 !important;
+        color: white !important;
+        font-size: 10px !important;
+        font-weight: 600 !important;
+        border-radius: 6px !important;
+        margin-left: 8px !important;
+      }
+      
       @keyframes pulse {
         0% { opacity: 1; }
         50% { opacity: 0.8; }
@@ -1397,6 +1465,45 @@ window.TripleformCOD = (function () {
   }
 
   /* ------------------------------------------------------------------ */
+  /* Gestion de l'activation des offres                                 */
+  /* ------------------------------------------------------------------ */
+
+  function handleOfferActivation(event) {
+    const button = event.target.closest('[data-tf-offer-index]');
+    if (!button) return;
+    
+    const index = button.getAttribute('data-tf-offer-index');
+    const type = button.getAttribute('data-tf-offer-type');
+    
+    // Ajouter une classe pour indiquer que c'est appliqué
+    button.classList.add('applied');
+    button.innerHTML = `
+      <span class="offer-activate-btn-icon">✅</span>
+      Offre activée!
+    `;
+    button.disabled = true;
+    
+    // Ajouter un badge de statut
+    const badge = document.createElement('span');
+    badge.className = 'offer-status-badge';
+    badge.textContent = 'Activée';
+    button.parentNode.appendChild(badge);
+    
+    // Stocker en localStorage
+    localStorage.setItem(`tf_offer_${type}_${index}_activated`, 'true');
+    
+    // Émettre un événement pour que d'autres parties du code puissent réagir
+    const offerEvent = new CustomEvent('tf-offer-activated', {
+      detail: { index, type }
+    });
+    document.dispatchEvent(offerEvent);
+    
+    // Afficher une confirmation
+    const offerType = type === 'offer' ? 'l\'offre' : 'le cadeau';
+    alert(`✅ ${offerType} a été activé avec succès!`);
+  }
+
+  /* ------------------------------------------------------------------ */
   /* OFFRES / UPSELL – rendu front (NOUVEAU FORMAT)                    */
   /* ------------------------------------------------------------------ */
 
@@ -1432,6 +1539,10 @@ window.TripleformCOD = (function () {
       const description = offer.description || "Profitez de cette offre exclusive";
       const img = offer.imageUrl || "";
       const hasTimer = offer.enableTimer && display.showTimerInPreview;
+      const buttonText = offer.buttonText || "Activer cette offre";
+      const buttonColor = offer.buttonColor || "#10B981";
+      const buttonTextColor = offer.buttonTextColor || "#FFFFFF";
+      const activationMode = offer.activationMode || "manual";
 
       html += `
         <div class="offers-strip" style="
@@ -1455,6 +1566,23 @@ window.TripleformCOD = (function () {
             ${hasTimer ? `
               <div data-tf-timer-offer="${idx}"></div>
             ` : ''}
+            
+            ${activationMode === "manual" ? `
+              <div class="offers-strip-actions">
+                <button 
+                  class="offer-activate-btn ${offer.timerCssClass ? 'flash' : ''}" 
+                  data-tf-offer-index="${idx}"
+                  data-tf-offer-type="offer"
+                  style="
+                    background: ${css(buttonColor)} !important;
+                    color: ${css(buttonTextColor)} !important;
+                  "
+                >
+                  <span class="offer-activate-btn-icon">✅</span>
+                  ${css(buttonText)}
+                </button>
+              </div>
+            ` : ''}
           </div>
         </div>
       `;
@@ -1466,6 +1594,10 @@ window.TripleformCOD = (function () {
       const description = upsell.description || "Recevez un cadeau spécial avec votre commande";
       const img = upsell.imageUrl || "";
       const hasTimer = upsell.enableTimer && display.showTimerInPreview;
+      const buttonText = upsell.buttonText || "Ajouter le cadeau";
+      const buttonColor = upsell.buttonColor || "#EC4899";
+      const buttonTextColor = upsell.buttonTextColor || "#FFFFFF";
+      const activationMode = upsell.activationMode || "manual";
 
       html += `
         <div class="offers-strip" style="
@@ -1488,6 +1620,23 @@ window.TripleformCOD = (function () {
             
             ${hasTimer ? `
               <div data-tf-timer-upsell="${idx}"></div>
+            ` : ''}
+            
+            ${activationMode === "manual" ? `
+              <div class="offers-strip-actions">
+                <button 
+                  class="offer-activate-btn upsell" 
+                  data-tf-offer-index="${idx}"
+                  data-tf-offer-type="upsell"
+                  style="
+                    background: ${css(buttonColor)} !important;
+                    color: ${css(buttonTextColor)} !important;
+                  "
+                >
+                  <span class="offer-activate-btn-icon">🎁</span>
+                  ${css(buttonText)}
+                </button>
+              </div>
             ` : ''}
           </div>
         </div>
@@ -1541,6 +1690,14 @@ window.TripleformCOD = (function () {
         }
       }
     });
+    
+    // Attacher les événements aux boutons d'activation
+    setTimeout(() => {
+      const activationButtons = root.querySelectorAll('[data-tf-offer-index]');
+      activationButtons.forEach(btn => {
+        btn.addEventListener('click', handleOfferActivation);
+      });
+    }, 100);
   }
 
   /* ------------------------------------------------------------------ */
