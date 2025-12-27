@@ -1442,7 +1442,7 @@ window.TripleformCOD = (function () {
   }
 
   /* ------------------------------------------------------------------ */
-  /* Gestion de l'activation des offres - Version PROFESSIONNELLE       */
+  /* Gestion de l'activation des offres - Version CORRIGÉE             */
   /* ------------------------------------------------------------------ */
 
   function toggleOfferActivation(button, offerIndex, offerType, offersList, root, updateMoney) {
@@ -1457,6 +1457,9 @@ window.TripleformCOD = (function () {
       // Retirer de localStorage
       localStorage.removeItem(`tf_active_offer_${offerType}_${offerIndex}`);
       
+      // Retirer l'offre active
+      localStorage.removeItem('tf_current_active_offer');
+      
       // Désactiver toutes les offres (une seule à la fois)
       const allButtons = root.querySelectorAll('[data-tf-offer-toggle]');
       allButtons.forEach(btn => {
@@ -1464,7 +1467,6 @@ window.TripleformCOD = (function () {
         const btnIndex = btn.getAttribute('data-tf-offer-index');
         const btnType = btn.getAttribute('data-tf-offer-type');
         btn.innerHTML = '<span class="offer-activate-btn-icon">+</span> Activer';
-        localStorage.removeItem(`tf_active_offer_${btnType}_${btnIndex}`);
       });
     } else {
       // Désactiver toutes les autres offres d'abord
@@ -1483,6 +1485,16 @@ window.TripleformCOD = (function () {
       
       // Sauvegarder dans localStorage
       localStorage.setItem(`tf_active_offer_${offerType}_${offerIndex}`, 'true');
+      
+      // Sauvegarder les données complètes de l'offre
+      localStorage.setItem('tf_current_active_offer', JSON.stringify({
+        index: offerIndex,
+        type: offerType,
+        discountType: offer.discountType,
+        discountValue: offer.discountValue,
+        title: offer.title,
+        currency: offer.currency
+      }));
     }
     
     // Mettre à jour les prix
@@ -1491,25 +1503,56 @@ window.TripleformCOD = (function () {
 
   function getActiveOfferDiscount(offersList) {
     let totalDiscount = 0;
+    let discountType = null;
+    let discountValue = 0;
     let discountMessage = '';
+    let activeOfferData = null;
     
-    // Vérifier localStorage pour les offres actives
-    if (offersList && offersList.length) {
+    // Vérifier localStorage pour l'offre active complète
+    const activeOfferJson = localStorage.getItem('tf_current_active_offer');
+    if (activeOfferJson) {
+      try {
+        activeOfferData = JSON.parse(activeOfferJson);
+        discountType = activeOfferData.discountType;
+        discountValue = activeOfferData.discountValue;
+        
+        if (discountType === 'percentage') {
+          totalDiscount = discountValue;
+          discountMessage = `-${discountValue}%`;
+        } else if (discountType === 'fixed') {
+          totalDiscount = discountValue * 100; // Convertir en cents
+          discountMessage = `-${(discountValue).toFixed(2)} ${activeOfferData.currency || 'MAD'}`;
+        }
+      } catch (e) {
+        console.error('Error parsing active offer:', e);
+      }
+    }
+    
+    // Vérifier aussi l'ancienne méthode pour compatibilité
+    if (!activeOfferData && offersList && offersList.length) {
       offersList.forEach((offer, index) => {
         if (offer.enabled && localStorage.getItem(`tf_active_offer_offer_${index}`) === 'true') {
-          // Calculer la remise selon le type
-          if (offer.discountType === 'percentage' && offer.discountValue) {
-            totalDiscount += offer.discountValue; // Pourcentage
-            discountMessage = `-${offer.discountValue}%`;
-          } else if (offer.discountType === 'fixed' && offer.discountValue) {
-            totalDiscount = offer.discountValue; // Montant fixe (en cents)
-            discountMessage = `-${(offer.discountValue / 100).toFixed(2)} ${offer.currency || 'MAD'}`;
+          discountType = offer.discountType;
+          discountValue = offer.discountValue;
+          
+          if (discountType === 'percentage') {
+            totalDiscount = discountValue;
+            discountMessage = `-${discountValue}%`;
+          } else if (discountType === 'fixed') {
+            totalDiscount = discountValue * 100; // Convertir en cents
+            discountMessage = `-${(discountValue).toFixed(2)} ${offer.currency || 'MAD'}`;
           }
         }
       });
     }
     
-    return { totalDiscount, discountMessage };
+    return { 
+      totalDiscount, 
+      discountType, 
+      discountValue, 
+      discountMessage,
+      activeOfferData 
+    };
   }
 
   /* ------------------------------------------------------------------ */
@@ -2367,7 +2410,10 @@ window.TripleformCOD = (function () {
           e.preventDefault();
           const offerIndex = parseInt(this.getAttribute('data-tf-offer-index'));
           const offerType = this.getAttribute('data-tf-offer-type');
-          toggleOfferActivation(this, offerIndex, offerType, offersList, root, updateMoney);
+          toggleOfferActivation(this, offerIndex, offerType, offersList, root, function() {
+            // Cette fonction va mettre à jour les prix
+            updateMoney();
+          });
         });
       });
     }, 200);
@@ -2618,18 +2664,23 @@ window.TripleformCOD = (function () {
       // Calculer la remise
       let discountCents = 0;
       let discountMessage = "";
-      const { totalDiscount, discountMessage: msg } = getActiveOfferDiscount(offersList);
+      const { 
+        totalDiscount, 
+        discountType, 
+        discountValue,
+        discountMessage: msg 
+      } = getActiveOfferDiscount(offersList);
       
       if (totalDiscount > 0) {
-        if (offersList[0]?.discountType === 'percentage') {
+        if (discountType === 'percentage') {
           discountCents = Math.round(totalCents * totalDiscount / 100);
         } else {
-          discountCents = totalDiscount; // Montant fixe en cents
+          discountCents = totalDiscount; // Déjà en cents
         }
         discountMessage = msg;
       }
       
-      const discountedTotalCents = totalCents - discountCents;
+      const discountedTotalCents = Math.max(0, totalCents - discountCents);
       const grandTotalCents = discountedTotalCents + (geoShippingCents || 0);
 
       const prices = root.querySelectorAll('[data-tf="price"]');
@@ -2679,6 +2730,12 @@ window.TripleformCOD = (function () {
       ctas.forEach((el) => {
         el.innerHTML = `${buttonIconHtml}${label} · ${suffix} ${moneyFmt(grandTotalCents)}`;
       });
+      
+      // Mettre à jour également le bouton principal si présent (pour popup/drawer)
+      const mainCta = root.querySelector('[data-tf="launcher"]');
+      if (mainCta) {
+        mainCta.innerHTML = `${cfg.form?.buttonIcon ? getIconHtml(cfg.form.buttonIcon, "20px") : ""}${css(ui.orderNow || cfg.form?.buttonText || "Order now")} · ${css(ui.totalSuffix || "Total:")} ${moneyFmt(grandTotalCents)}`;
+      }
     }
 
     /* ============== Collect & submit + reCAPTCHA ==================== */
@@ -2700,17 +2757,21 @@ window.TripleformCOD = (function () {
 
       // Calculer la remise pour l'envoi
       let discountCents = 0;
-      const { totalDiscount } = getActiveOfferDiscount(offersList);
+      const { 
+        totalDiscount, 
+        discountType,
+        activeOfferData 
+      } = getActiveOfferDiscount(offersList);
       
       if (totalDiscount > 0) {
-        if (offersList[0]?.discountType === 'percentage') {
+        if (discountType === 'percentage') {
           discountCents = Math.round(totalCents * totalDiscount / 100);
         } else {
           discountCents = totalDiscount;
         }
       }
       
-      const discountedTotalCents = totalCents - discountCents;
+      const discountedTotalCents = Math.max(0, totalCents - discountCents);
       const shippingCentsToSend = geoShippingCents || 0;
       const grandTotalCents = discountedTotalCents + shippingCentsToSend;
 
@@ -2742,19 +2803,16 @@ window.TripleformCOD = (function () {
         }
       }
 
-      // Trouver l'offre activée pour l'envoyer au backend
-      let activeOfferData = null;
-      if (offersList && offersList.length) {
-        offersList.forEach((offer, index) => {
-          if (offer.enabled && localStorage.getItem(`tf_active_offer_offer_${index}`) === 'true') {
-            activeOfferData = {
-              title: offer.title,
-              discountType: offer.discountType,
-              discountValue: offer.discountValue,
-              discountApplied: discountCents
-            };
-          }
-        });
+      // Préparer les données de l'offre pour l'envoi
+      let offerDataForSubmission = null;
+      if (activeOfferData) {
+        offerDataForSubmission = {
+          title: activeOfferData.title,
+          discountType: activeOfferData.discountType,
+          discountValue: activeOfferData.discountValue,
+          discountApplied: discountCents,
+          currency: activeOfferData.currency
+        };
       }
 
       const payload = {
@@ -2782,7 +2840,7 @@ window.TripleformCOD = (function () {
         currency: root.getAttribute("data-currency") || null,
         locale: root.getAttribute("data-locale") || null,
 
-        offer: activeOfferData,
+        offer: offerDataForSubmission,
 
         geo: {
           enabled: geoEnabled,
