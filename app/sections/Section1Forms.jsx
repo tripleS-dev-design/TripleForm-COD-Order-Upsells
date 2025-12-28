@@ -25,7 +25,7 @@ import { useI18n } from "../i18n/react";
 // Fonction pour obtenir une icône Polaris avec fallback sécurisé
 function getIconComponent(iconName, fallbackIcon = "AppsMajor") {
   if (!iconName || typeof iconName !== 'string') {
-    return PI[fallbackIcon] || PI.AppsMajor;
+    return PI[fallbackIcon] || PI.AppsMajor || (() => <svg />);
   }
   
   // Nettoyer le nom de l'icône
@@ -45,7 +45,7 @@ function getIconComponent(iconName, fallbackIcon = "AppsMajor") {
   }
   
   // Fallback
-  return PI[fallbackIcon] || PI.AppsMajor;
+  return PI[fallbackIcon] || PI.AppsMajor || (() => <svg />);
 }
 
 /* -------------------- deep link vers l'éditeur de thème -------------------- */
@@ -484,7 +484,7 @@ const ICON_LIBRARY = {
 /* ============================== Composant Icon Polaris ============================== */
 function PolarisIcon({ iconName, size = 20, color = "currentColor" }) {
   const IconComponent = getIconComponent(iconName);
-  return <IconComponent width={size} height={size} style={{ color }} />;
+  return IconComponent ? <IconComponent width={size} height={size} fill={color} /> : null;
 }
 
 /* ============================== Palette de couleurs ============================== */
@@ -2738,7 +2738,7 @@ function PreviewPanel() {
 
           <button type="button" style={btnCSS} className="tf-btn-with-icon">
             <span className="tf-btn-icon">
-              <PolarisIcon iconName={config.form.buttonIcon} size={18} color={config.design.btnText} />
+              <PolarisIcon iconName={config.form.buttonIcon} size={18} fill={config.design.btnText} />
             </span>
             <span style={{ flex: 1, textAlign: 'center' }}>
               {orderLabel} · {suffix} {total.toFixed(2)} {currency}
@@ -2880,7 +2880,7 @@ function PreviewPanel() {
           </span>
           <button type="button" style={miniBtnStyle} className="tf-btn-with-icon">
             <span className="tf-btn-icon">
-              <PolarisIcon iconName={config.behavior.stickyIcon} size={16} color={config.design.btnText} />
+              <PolarisIcon iconName={config.behavior.stickyIcon} size={16} fill={config.design.btnText} />
             </span>
             <span style={{ flex: 1, textAlign: 'center' }}>{label}</span>
           </button>
@@ -2909,7 +2909,7 @@ function PreviewPanel() {
               className="tf-btn-with-icon"
             >
               <span className="tf-btn-icon">
-                <PolarisIcon iconName={config.behavior.stickyIcon} size={16} color={config.design.btnText} />
+                <PolarisIcon iconName={config.behavior.stickyIcon} size={16} fill={config.design.btnText} />
               </span>
               <span style={{ flex: 1, textAlign: 'center' }}>{label}</span>
             </button>
