@@ -25,68 +25,8 @@ import React, {
 import { useRouteLoaderData } from "@remix-run/react";
 import { I18nProvider, useI18n } from "../i18n/react";
 
-/* ============================== MAPPING D'ICÔNES (émojis) ============================== */
-// Correspondance entre les noms d'icônes Polaris et les émojis
-const ICON_EMOJI_MAPPING = {
-  // Cart icons
-  CartIcon: "🛒",
-  BagIcon: "🛍️",
-  ProductsIcon: "📦",
-  CheckoutIcon: "💳",
-  ReceiptIcon: "🧾",
-  NoteIcon: "📝",
-  
-  // Field icons
-  ProfileIcon: "👤",
-  PersonIcon: "👤",
-  UserIcon: "👤",
-  CustomersIcon: "👥",
-  PhoneIcon: "📱",
-  MobileIcon: "📱",
-  CallIcon: "📞",
-  ChatIcon: "💬",
-  HashtagIcon: "#️⃣",
-  NumberIcon: "🔢",
-  CirclePlusIcon: "➕",
-  LocationIcon: "📍",
-  PinIcon: "📍",
-  HomeIcon: "🏠",
-  StoreIcon: "🏪",
-  CityIcon: "🏙️",
-  GlobeIcon: "🌍",
-  MapIcon: "🗺️",
-  RegionIcon: "🗾",
-  ClipboardIcon: "📋",
-  DocumentIcon: "📄",
-  TextIcon: "📝",
-  
-  // Button icons
-  TruckIcon: "🚚",
-  CheckCircleIcon: "✅",
-  PlayIcon: "▶️",
-  ArrowRightIcon: "➡️",
-  SendIcon: "📤",
-  AppsIcon: "📱",
-  
-  // Autres icônes communes
-  ColorIcon: "🎨",
-  SettingsIcon: "⚙️",
-  TextBlockIcon: "📝",
-  CircleInformationIcon: "ℹ️"
-};
-
-// Fonction pour obtenir l'émoji correspondant à un nom d'icône
-function getIconEmoji(iconName) {
-  if (!iconName || typeof iconName !== 'string') return "📱";
-  
-  // Nettoyer le nom de l'icône
-  const cleanName = iconName.endsWith('Icon') ? iconName : `${iconName}Icon`;
-  
-  return ICON_EMOJI_MAPPING[cleanName] || ICON_EMOJI_MAPPING[iconName] || "📱";
-}
-
 /* ============================== Fonction utilitaire pour les icônes Polaris ============================== */
-// Fonction pour obtenir une icône Polaris avec fallback sécurisé (pour l'éditeur seulement)
+// Fonction pour obtenir une icône Polaris avec fallback sécurisé
 function getIconComponent(iconName, fallbackIcon = "AppsIcon") {
   if (!iconName || typeof iconName !== 'string') {
     return PI[fallbackIcon] || PI.AppsIcon;
@@ -204,21 +144,29 @@ const LAYOUT_CSS = `
   .tf-palette-colors { display:flex; height:36px; }
   .tf-palette-info { padding:8px; background:#fff; font-size:11px; font-weight:600; }
 
-  /* Icônes pour les champs - MISE À JOUR pour émojis */
+  /* Icônes pour les champs - MISE À JOUR pour icônes Polaris */
   .tf-icon-selector { display:grid; grid-template-columns:repeat(auto-fill, minmax(44px, 1fr)); gap:8px; margin-top:8px; max-height:200px; overflow-y:auto; padding:8px; border:1px solid #E5E7EB; border-radius:8px; }
-  .tf-icon-option { width:44px; height:44px; display:flex; align-items:center; justify-content:center; border:2px solid #E5E7EB; border-radius:8px; cursor:pointer; background:#fff; transition:all 0.2s; font-size:20px; }
+  .tf-icon-option { width:44px; height:44px; display:flex; align-items:center; justify-content:center; border:2px solid #E5E7EB; border-radius:8px; cursor:pointer; background:#fff; transition:all 0.2s; }
   .tf-icon-option:hover { border-color:#00A7A3; background:#f8fafc; }
   .tf-icon-option.selected { border-color:#00A7A3; background:#ecfeff; }
+  .tf-icon-option svg { width:20px; height:20px; fill:#4B5563; }
 
-  /* Aperçu avec icônes - CORRIGÉ pour centrage du texte et émojis */
+  /* Aperçu avec icônes */
   .tf-field-with-icon { display:grid; grid-template-columns:auto 1fr; gap:10px; align-items:center; }
-  .tf-field-icon { width:20px; height:20px; display:flex; align-items:center; justify-content:center; color:#6B7280; font-size:18px; }
+  .tf-field-icon { width:20px; height:20px; display:flex; align-items:center; justify-content:center; color:#6B7280; }
+  .tf-field-icon svg { width:16px; height:16px; fill:#4B5563; }
   .tf-btn-with-icon { display:flex; align-items:center; justify-content:center; gap:8px; width:100%; text-align:center; }
-  .tf-btn-icon { font-size:18px; display:flex; align-items:center; }
+  .tf-btn-icon { display:flex; align-items:center; }
+  .tf-btn-icon svg { width:18px; height:18px; }
 
   /* Cart avec icône */
   .tf-cart-with-icon { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
-  .tf-cart-icon { display:flex; align-items:center; justify-content:center; width:24px; height:24px; font-size:20px; }
+  .tf-cart-icon { display:flex; align-items:center; justify-content:center; width:24px; height:24px; }
+  .tf-cart-icon svg { width:18px; height:18px; fill:#4B5563; }
+
+  /* Icônes dans le rail */
+  .tf-rail-icon { width:16px; height:16px; }
+  .tf-rail-icon svg { width:16px; height:16px; fill:#6B7280; }
 
   @media (max-width: 1200px) {
     .tf-editor { grid-template-columns: 300px 2.2fr 1.4fr; }
@@ -458,80 +406,86 @@ const DESIGN_PRESETS = {
   },
 };
 
-/* ============================== Bibliothèque d'icônes (émojis) ============================== */
+/* ============================== Bibliothèque d'icônes Polaris ============================== */
 const ICON_LIBRARY = {
   // Icônes pour le cart
   cartTitle: [
-    { value: "CartIcon", label: "Panier", icon: "🛒" },
-    { value: "BagIcon", label: "Sac", icon: "🛍️" },
-    { value: "ProductsIcon", label: "Produits", icon: "📦" },
-    { value: "CheckoutIcon", label: "Checkout", icon: "💳" },
-    { value: "ReceiptIcon", label: "Reçu", icon: "🧾" },
-    { value: "NoteIcon", label: "Note", icon: "📝" },
+    { value: "CartIcon", label: "Panier" },
+    { value: "BagIcon", label: "Sac" },
+    { value: "ProductsIcon", label: "Produits" },
+    { value: "CheckoutIcon", label: "Checkout" },
+    { value: "ReceiptIcon", label: "Reçu" },
+    { value: "NoteIcon", label: "Note" },
   ],
   // Icônes pour les champs
   name: [
-    { value: "ProfileIcon", label: "Profil", icon: "👤" },
-    { value: "PersonIcon", label: "Personne", icon: "👤" },
-    { value: "UserIcon", label: "Utilisateur", icon: "👤" },
-    { value: "CustomersIcon", label: "Clients", icon: "👥" },
+    { value: "ProfileIcon", label: "Profil" },
+    { value: "PersonIcon", label: "Personne" },
+    { value: "UserIcon", label: "Utilisateur" },
+    { value: "CustomersIcon", label: "Clients" },
   ],
   phone: [
-    { value: "PhoneIcon", label: "Téléphone", icon: "📱" },
-    { value: "MobileIcon", label: "Mobile", icon: "📱" },
-    { value: "CallIcon", label: "Appel", icon: "📞" },
-    { value: "ChatIcon", label: "Chat", icon: "💬" },
+    { value: "PhoneIcon", label: "Téléphone" },
+    { value: "MobileIcon", label: "Mobile" },
+    { value: "CallIcon", label: "Appel" },
+    { value: "ChatIcon", label: "Chat" },
   ],
   quantity: [
-    { value: "HashtagIcon", label: "Hashtag", icon: "#️⃣" },
-    { value: "NumberIcon", label: "Nombre", icon: "🔢" },
-    { value: "CirclePlusIcon", label: "Plus", icon: "➕" },
-    { value: "CartIcon", label: "Panier", icon: "🛒" },
+    { value: "HashtagIcon", label: "Hashtag" },
+    { value: "NumberIcon", label: "Nombre" },
+    { value: "CirclePlusIcon", label: "Plus" },
+    { value: "CartIcon", label: "Panier" },
   ],
   address: [
-    { value: "LocationIcon", label: "Localisation", icon: "📍" },
-    { value: "PinIcon", label: "Épingle", icon: "📍" },
-    { value: "HomeIcon", label: "Maison", icon: "🏠" },
-    { value: "StoreIcon", label: "Magasin", icon: "🏪" },
+    { value: "LocationIcon", label: "Localisation" },
+    { value: "PinIcon", label: "Épingle" },
+    { value: "HomeIcon", label: "Maison" },
+    { value: "StoreIcon", label: "Magasin" },
   ],
   city: [
-    { value: "CityIcon", label: "Ville", icon: "🏙️" },
-    { value: "GlobeIcon", label: "Globe", icon: "🌍" },
-    { value: "LocationIcon", label: "Localisation", icon: "📍" },
-    { value: "MapIcon", label: "Carte", icon: "🗺️" },
+    { value: "CityIcon", label: "Ville" },
+    { value: "GlobeIcon", label: "Globe" },
+    { value: "LocationIcon", label: "Localisation" },
+    { value: "MapIcon", label: "Carte" },
   ],
   province: [
-    { value: "RegionIcon", label: "Région", icon: "🗾" },
-    { value: "GlobeIcon", label: "Globe", icon: "🌍" },
-    { value: "MapIcon", label: "Carte", icon: "🗺️" },
-    { value: "LocationIcon", label: "Localisation", icon: "📍" },
+    { value: "RegionIcon", label: "Région" },
+    { value: "GlobeIcon", label: "Globe" },
+    { value: "MapIcon", label: "Carte" },
+    { value: "LocationIcon", label: "Localisation" },
   ],
   notes: [
-    { value: "NoteIcon", label: "Note", icon: "📝" },
-    { value: "ClipboardIcon", label: "Presse-papier", icon: "📋" },
-    { value: "DocumentIcon", label: "Document", icon: "📄" },
-    { value: "TextIcon", label: "Texte", icon: "📝" },
+    { value: "NoteIcon", label: "Note" },
+    { value: "ClipboardIcon", label: "Presse-papier" },
+    { value: "DocumentIcon", label: "Document" },
+    { value: "TextIcon", label: "Texte" },
   ],
   // Icônes pour les boutons
   button: [
-    { value: "CartIcon", label: "Panier", icon: "🛒" },
-    { value: "CheckoutIcon", label: "Checkout", icon: "💳" },
-    { value: "BagIcon", label: "Sac", icon: "🛍️" },
-    { value: "TruckIcon", label: "Camion", icon: "🚚" },
-    { value: "CheckCircleIcon", label: "Coche", icon: "✅" },
-    { value: "PlayIcon", label: "Play", icon: "▶️" },
-    { value: "ArrowRightIcon", label: "Flèche droite", icon: "➡️" },
-    { value: "SendIcon", label: "Envoyer", icon: "📤" },
+    { value: "CartIcon", label: "Panier" },
+    { value: "CheckoutIcon", label: "Checkout" },
+    { value: "BagIcon", label: "Sac" },
+    { value: "TruckIcon", label: "Camion" },
+    { value: "CheckCircleIcon", label: "Coche" },
+    { value: "PlayIcon", label: "Play" },
+    { value: "ArrowRightIcon", label: "Flèche droite" },
+    { value: "SendIcon", label: "Envoyer" },
   ],
   // Icônes pour le rail
   rail: {
-    cart: { icon: "📦", value: "ProductsIcon" },
-    titles: { icon: "📝", value: "TextBlockIcon" },
-    buttons: { icon: "ℹ️", value: "CircleInformationIcon" },
-    colors: { icon: "🎨", value: "ColorIcon" },
-    options: { icon: "⚙️", value: "SettingsIcon" }
+    cart: { value: "CartIcon" },
+    titles: { value: "TextBlockIcon" },
+    buttons: { value: "CircleInformationIcon" },
+    colors: { value: "ColorIcon" },
+    options: { value: "SettingsIcon" }
   }
 };
+
+/* ============================== Composant Icon Polaris ============================== */
+function PolarisIcon({ iconName, size = 20, color = "currentColor" }) {
+  const IconComponent = getIconComponent(iconName);
+  return <IconComponent width={size} height={size} fill={color} />;
+}
 
 /* ============================== Palette de couleurs ============================== */
 const COLOR_PALETTES = [
@@ -1672,7 +1626,7 @@ function ColorPaletteSelector({ onSelect }) {
   );
 }
 
-/* ============================== Sélecteur d'icônes (émojis) ============================== */
+/* ============================== Sélecteur d'icônes Polaris ============================== */
 function IconSelector({ fieldKey, type = "field", onSelect, selectedIcon }) {
   const { t } = useForms();
   
@@ -1695,7 +1649,7 @@ function IconSelector({ fieldKey, type = "field", onSelect, selectedIcon }) {
             onClick={() => onSelect(icon.value)}
             title={icon.label}
           >
-            {icon.icon}
+            <PolarisIcon iconName={icon.value} size={20} />
           </div>
         ))}
       </div>
@@ -1735,12 +1689,12 @@ function OutletEditor() {
   }, [order]);
 
   const baseItems = [
-    { key: "cart", label: t("section1.rail.cart"), icon: ICON_LIBRARY.rail.cart.icon },
-    { key: "titles", label: t("section1.rail.titles"), icon: ICON_LIBRARY.rail.titles.icon },
+    { key: "cart", label: t("section1.rail.cart"), iconName: ICON_LIBRARY.rail.cart.value },
+    { key: "titles", label: t("section1.rail.titles"), iconName: ICON_LIBRARY.rail.titles.value },
     {
       key: "buttons",
       label: t("section1.rail.buttons"),
-      icon: ICON_LIBRARY.rail.buttons.icon,
+      iconName: ICON_LIBRARY.rail.buttons.value,
     },
     { key: "sep", label: t("section1.rail.fieldsSeparator"), separator: true },
   ];
@@ -1751,7 +1705,7 @@ function OutletEditor() {
     movable: true,
     toggle: true,
     on: !!config.fields[k]?.on,
-    icon: getIconEmoji(config.fields[k]?.icon || "AppsIcon"),
+    iconName: config.fields[k]?.icon || "AppsIcon",
   }));
 
   const tailItems = [
@@ -1760,8 +1714,8 @@ function OutletEditor() {
       label: t("section1.rail.appearanceSeparator"),
       separator: true,
     },
-    { key: "colors", label: t("section1.rail.colors"), icon: ICON_LIBRARY.rail.colors.icon },
-    { key: "options", label: t("section1.rail.options"), icon: ICON_LIBRARY.rail.options.icon },
+    { key: "colors", label: t("section1.rail.colors"), iconName: ICON_LIBRARY.rail.colors.value },
+    { key: "options", label: t("section1.rail.options"), iconName: ICON_LIBRARY.rail.options.value },
   ];
 
   const items = [...baseItems, ...fieldItems, ...tailItems];
@@ -1829,8 +1783,8 @@ function OutletEditor() {
                   onDragOver={onDragOver}
                   onDrop={() => onDrop(it.key)}
                 >
-                  <div className="tf-grip">
-                    {it.icon}
+                  <div className="tf-grip tf-rail-icon">
+                    <PolarisIcon iconName={it.iconName} size={16} />
                   </div>
                   <div>{it.label}</div>
                   <div
@@ -2621,13 +2575,12 @@ function PreviewPanel() {
   const renderFieldWithIcon = (f, key) => {
     if (!f?.on) return null;
     
-    const iconEmoji = getIconEmoji(f.icon);
     const isTextarea = f.type === "textarea";
     
     return (
       <div key={key} className="tf-field-with-icon">
         <div className="tf-field-icon">
-          {iconEmoji}
+          <PolarisIcon iconName={f.icon} size={16} />
         </div>
         <label style={{ display: "grid", gap: 6, flex: 1 }}>
           <span style={{ fontSize: 13, color: "#475569", textAlign: fieldAlign }}>
@@ -2685,13 +2638,12 @@ function PreviewPanel() {
       : `${shippingPrice.toFixed(2)} ${currency}`;
     
     const total = productPrice + (shippingPrice || 0);
-    const cartIconEmoji = getIconEmoji(config.cartTitles.cartIcon);
 
     return (
       <div style={cartBoxCSS} dir={config.design.direction || "ltr"}>
         <div className="tf-cart-with-icon">
           <div className="tf-cart-icon">
-            {cartIconEmoji}
+            <PolarisIcon iconName={config.cartTitles.cartIcon} size={18} />
           </div>
           <div
             style={{
@@ -2727,95 +2679,10 @@ function PreviewPanel() {
     );
   };
 
-  const renderProvinceField = (f) => {
-    if (!f?.on) return null;
-    
-    const iconEmoji = getIconEmoji(f.icon);
-    
-    return (
-      <div key="province" className="tf-field-with-icon">
-        <div className="tf-field-icon">
-          {iconEmoji}
-        </div>
-        <label style={{ display: "grid", gap: 6, flex: 1 }}>
-          <span style={{ fontSize: 13, color: "#475569", textAlign: fieldAlign }}>
-            {sStr(f.label)}
-            {f.required ? " *" : ""}
-          </span>
-          <select
-            style={{
-              ...inputBase,
-              padding: "10px 12px",
-              background: config.design.inputBg,
-            }}
-            value={selectedProvinceKey}
-            onChange={(e) => {
-              const v = e.target.value;
-              setBehav({ provinceKey: v, cityKey: "" });
-            }}
-          >
-            <option value="">{f.ph || t("section1.preview.provincePlaceholder")}</option>
-            {provincesEntries.map(([key, p]) => (
-              <option key={key} value={key}>
-                {p.label}
-              </option>
-            ))}
-          </select>
-        </label>
-      </div>
-    );
-  };
-
-  const renderCityField = (f) => {
-    if (!f?.on) return null;
-    
-    const iconEmoji = getIconEmoji(f.icon);
-    
-    return (
-      <div key="city" className="tf-field-with-icon">
-        <div className="tf-field-icon">
-          {iconEmoji}
-        </div>
-        <label style={{ display: "grid", gap: 6, flex: 1 }}>
-          <span style={{ fontSize: 13, color: "#475569", textAlign: fieldAlign }}>
-            {sStr(f.label)}
-            {f.required ? " *" : ""}
-          </span>
-          <select
-            style={{
-              ...inputBase,
-              padding: "10px 12px",
-              backgroundColor: selectedProvinceKey ? inputBase.background : "#F3F4F6",
-            }}
-            value={config.behavior.cityKey || ""}
-            onChange={(e) => {
-              const city = e.target.value;
-              setBehav({ cityKey: city });
-              handleCityChange(city);
-            }}
-            disabled={!selectedProvinceKey}
-          >
-            <option value="">
-              {!selectedProvinceKey
-                ? t("section1.preview.cityPlaceholderNoProvince")
-                : f.ph || t("section1.preview.cityPlaceholder")}
-            </option>
-            {cities.map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
-          </select>
-        </label>
-      </div>
-    );
-  };
-
   const renderFormCard = () => {
     const total = productPrice + (shippingPrice || 0);
     const orderLabel = sStr(config.uiTitles.orderNow || config.form?.buttonText || "Order now");
     const suffix = sStr(config.uiTitles.totalSuffix || "Total:");
-    const buttonIconEmoji = getIconEmoji(config.form.buttonIcon);
 
     return (
       <div style={cardCSS} dir={config.design.direction || "ltr"}>
@@ -2870,12 +2737,94 @@ function PreviewPanel() {
           )}
 
           <button type="button" style={btnCSS} className="tf-btn-with-icon">
-            <span className="tf-btn-icon">{buttonIconEmoji}</span>
+            <span className="tf-btn-icon">
+              <PolarisIcon iconName={config.form.buttonIcon} size={18} color={config.design.btnText} />
+            </span>
             <span style={{ flex: 1, textAlign: 'center' }}>
               {orderLabel} · {suffix} {total.toFixed(2)} {currency}
             </span>
           </button>
         </div>
+      </div>
+    );
+  };
+
+  const renderProvinceField = (f) => {
+    if (!f?.on) return null;
+    
+    return (
+      <div key="province" className="tf-field-with-icon">
+        <div className="tf-field-icon">
+          <PolarisIcon iconName={f.icon} size={16} />
+        </div>
+        <label style={{ display: "grid", gap: 6, flex: 1 }}>
+          <span style={{ fontSize: 13, color: "#475569", textAlign: fieldAlign }}>
+            {sStr(f.label)}
+            {f.required ? " *" : ""}
+          </span>
+          <select
+            style={{
+              ...inputBase,
+              padding: "10px 12px",
+              background: config.design.inputBg,
+            }}
+            value={selectedProvinceKey}
+            onChange={(e) => {
+              const v = e.target.value;
+              setBehav({ provinceKey: v, cityKey: "" });
+            }}
+          >
+            <option value="">{f.ph || t("section1.preview.provincePlaceholder")}</option>
+            {provincesEntries.map(([key, p]) => (
+              <option key={key} value={key}>
+                {p.label}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+    );
+  };
+
+  const renderCityField = (f) => {
+    if (!f?.on) return null;
+    
+    return (
+      <div key="city" className="tf-field-with-icon">
+        <div className="tf-field-icon">
+          <PolarisIcon iconName={f.icon} size={16} />
+        </div>
+        <label style={{ display: "grid", gap: 6, flex: 1 }}>
+          <span style={{ fontSize: 13, color: "#475569", textAlign: fieldAlign }}>
+            {sStr(f.label)}
+            {f.required ? " *" : ""}
+          </span>
+          <select
+            style={{
+              ...inputBase,
+              padding: "10px 12px",
+              backgroundColor: selectedProvinceKey ? inputBase.background : "#F3F4F6",
+            }}
+            value={config.behavior.cityKey || ""}
+            onChange={(e) => {
+              const city = e.target.value;
+              setBehav({ cityKey: city });
+              handleCityChange(city);
+            }}
+            disabled={!selectedProvinceKey}
+          >
+            <option value="">
+              {!selectedProvinceKey
+                ? t("section1.preview.cityPlaceholderNoProvince")
+                : f.ph || t("section1.preview.cityPlaceholder")}
+            </option>
+            {cities.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
+        </label>
       </div>
     );
   };
@@ -2900,7 +2849,6 @@ function PreviewPanel() {
     const label = sStr(
       config.behavior?.stickyLabel || config.uiTitles?.orderNow || "Order now"
     );
-    const stickyIconEmoji = getIconEmoji(config.behavior.stickyIcon);
 
     const miniBtnStyle = {
       ...btnCSS,
@@ -2931,7 +2879,9 @@ function PreviewPanel() {
             {t("section1.preview.stickyBarLabel")} · {styleText}
           </span>
           <button type="button" style={miniBtnStyle} className="tf-btn-with-icon">
-            <span className="tf-btn-icon">{stickyIconEmoji}</span>
+            <span className="tf-btn-icon">
+              <PolarisIcon iconName={config.behavior.stickyIcon} size={16} color={config.design.btnText} />
+            </span>
             <span style={{ flex: 1, textAlign: 'center' }}>{label}</span>
           </button>
         </div>
@@ -2958,7 +2908,9 @@ function PreviewPanel() {
               }}
               className="tf-btn-with-icon"
             >
-              <span className="tf-btn-icon">{stickyIconEmoji}</span>
+              <span className="tf-btn-icon">
+                <PolarisIcon iconName={config.behavior.stickyIcon} size={16} color={config.design.btnText} />
+              </span>
               <span style={{ flex: 1, textAlign: 'center' }}>{label}</span>
             </button>
             <div
