@@ -23,25 +23,29 @@ import { useI18n } from "../i18n/react";
 
 /* ============================== Fonction utilitaire pour les icônes Polaris ============================== */
 // Fonction pour obtenir une icône Polaris avec fallback sécurisé
-function getIconComponent(iconName, fallbackIcon = "AppsIcon") {
+function getIconComponent(iconName, fallbackIcon = "AppsMajor") {
   if (!iconName || typeof iconName !== 'string') {
-    return PI[fallbackIcon] || PI.AppsIcon;
+    return PI[fallbackIcon] || PI.AppsMajor;
   }
   
-  // Nettoyer le nom de l'icône (enlever "Icon" si déjà présent)
-  const cleanName = iconName.endsWith('Icon') ? iconName : `${iconName}Icon`;
+  // Nettoyer le nom de l'icône
+  const iconVariants = [
+    iconName,
+    iconName.endsWith('Major') ? iconName : `${iconName}Major`,
+    iconName.endsWith('Minor') ? iconName : `${iconName}Minor`,
+    iconName.endsWith('Icon') ? iconName.replace('Icon', 'Major') : `${iconName}Major`,
+    iconName.endsWith('Icon') ? iconName : `${iconName}Icon`,
+  ];
   
-  if (PI[cleanName]) {
-    return PI[cleanName];
-  }
-  
-  // Essayer avec le nom original
-  if (PI[iconName]) {
-    return PI[iconName];
+  // Chercher la première variante disponible
+  for (const variant of iconVariants) {
+    if (PI[variant]) {
+      return PI[variant];
+    }
   }
   
   // Fallback
-  return PI[fallbackIcon] || PI.AppsIcon;
+  return PI[fallbackIcon] || PI.AppsMajor;
 }
 
 /* -------------------- deep link vers l'éditeur de thème -------------------- */
@@ -145,12 +149,12 @@ const LAYOUT_CSS = `
   .tf-icon-option { width:44px; height:44px; display:flex; align-items:center; justify-content:center; border:2px solid #E5E7EB; border-radius:8px; cursor:pointer; background:#fff; transition:all 0.2s; }
   .tf-icon-option:hover { border-color:#00A7A3; background:#f8fafc; }
   .tf-icon-option.selected { border-color:#00A7A3; background:#ecfeff; }
-  .tf-icon-option svg { width:20px; height:20px; fill:#4B5563; }
+  .tf-icon-option svg { width:20px; height:20px; color:#4B5563; }
 
   /* Aperçu avec icônes */
   .tf-field-with-icon { display:grid; grid-template-columns:auto 1fr; gap:10px; align-items:center; }
   .tf-field-icon { width:20px; height:20px; display:flex; align-items:center; justify-content:center; color:#6B7280; }
-  .tf-field-icon svg { width:16px; height:16px; fill:#4B5563; }
+  .tf-field-icon svg { width:16px; height:16px; color:#4B5563; }
   .tf-btn-with-icon { display:flex; align-items:center; justify-content:center; gap:8px; width:100%; text-align:center; }
   .tf-btn-icon { display:flex; align-items:center; }
   .tf-btn-icon svg { width:18px; height:18px; }
@@ -158,11 +162,11 @@ const LAYOUT_CSS = `
   /* Cart avec icône */
   .tf-cart-with-icon { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
   .tf-cart-icon { display:flex; align-items:center; justify-content:center; width:24px; height:24px; }
-  .tf-cart-icon svg { width:18px; height:18px; fill:#4B5563; }
+  .tf-cart-icon svg { width:18px; height:18px; color:#4B5563; }
 
   /* Icônes dans le rail */
   .tf-rail-icon { width:16px; height:16px; }
-  .tf-rail-icon svg { width:16px; height:16px; fill:#6B7280; }
+  .tf-rail-icon svg { width:16px; height:16px; color:#6B7280; }
 
   @media (max-width: 1200px) {
     .tf-editor { grid-template-columns: 300px 2.2fr 1.4fr; }
@@ -402,85 +406,85 @@ const DESIGN_PRESETS = {
   },
 };
 
-/* ============================== Bibliothèque d'icônes Polaris ============================== */
+/* ============================== Bibliothèque d'icônes Polaris MIS À JOUR ============================== */
 const ICON_LIBRARY = {
-  // Icônes pour le cart
+  // Icônes pour le cart - MIS À JOUR avec les noms corrects
   cartTitle: [
-    { value: "CartIcon", label: "Panier" },
-    { value: "BagIcon", label: "Sac" },
-    { value: "ProductsIcon", label: "Produits" },
-    { value: "CheckoutIcon", label: "Checkout" },
-    { value: "ReceiptIcon", label: "Reçu" },
-    { value: "NoteIcon", label: "Note" },
+    { value: "CartMajor", label: "Panier" },
+    { value: "BagMajor", label: "Sac" },
+    { value: "ProductsMajor", label: "Produits" },
+    { value: "CheckoutMajor", label: "Checkout" },
+    { value: "ReceiptMajor", label: "Reçu" },
+    { value: "NoteMajor", label: "Note" },
   ],
   // Icônes pour les champs
   name: [
-    { value: "ProfileIcon", label: "Profil" },
-    { value: "PersonIcon", label: "Personne" },
-    { value: "UserIcon", label: "Utilisateur" },
-    { value: "CustomersIcon", label: "Clients" },
+    { value: "ProfileMajor", label: "Profil" },
+    { value: "PersonMajor", label: "Personne" },
+    { value: "CustomersMajor", label: "Clients" },
+    { value: "UserMajor", label: "Utilisateur" },
   ],
   phone: [
-    { value: "PhoneIcon", label: "Téléphone" },
-    { value: "MobileIcon", label: "Mobile" },
-    { value: "CallIcon", label: "Appel" },
-    { value: "ChatIcon", label: "Chat" },
+    { value: "PhoneMajor", label: "Téléphone" },
+    { value: "MobileMajor", label: "Mobile" },
+    { value: "CallMajor", label: "Appel" },
+    { value: "ChatMajor", label: "Chat" },
   ],
   quantity: [
-    { value: "HashtagIcon", label: "Hashtag" },
-    { value: "NumberIcon", label: "Nombre" },
-    { value: "CirclePlusIcon", label: "Plus" },
-    { value: "CartIcon", label: "Panier" },
+    { value: "HashtagMajor", label: "Hashtag" },
+    { value: "CirclePlusMajor", label: "Plus" },
+    { value: "CartMajor", label: "Panier" },
+    { value: "NumberMajor", label: "Nombre" },
   ],
   address: [
-    { value: "LocationIcon", label: "Localisation" },
-    { value: "PinIcon", label: "Épingle" },
-    { value: "HomeIcon", label: "Maison" },
-    { value: "StoreIcon", label: "Magasin" },
+    { value: "LocationMajor", label: "Localisation" },
+    { value: "PinMajor", label: "Épingle" },
+    { value: "HomeMajor", label: "Maison" },
+    { value: "StoreMajor", label: "Magasin" },
   ],
   city: [
-    { value: "CityIcon", label: "Ville" },
-    { value: "GlobeIcon", label: "Globe" },
-    { value: "LocationIcon", label: "Localisation" },
-    { value: "MapIcon", label: "Carte" },
+    { value: "GlobeMajor", label: "Globe" },
+    { value: "LocationMajor", label: "Localisation" },
+    { value: "MapMajor", label: "Carte" },
+    { value: "CityMajor", label: "Ville" },
   ],
   province: [
-    { value: "RegionIcon", label: "Région" },
-    { value: "GlobeIcon", label: "Globe" },
-    { value: "MapIcon", label: "Carte" },
-    { value: "LocationIcon", label: "Localisation" },
+    { value: "GlobeMajor", label: "Globe" },
+    { value: "MapMajor", label: "Carte" },
+    { value: "LocationMajor", label: "Localisation" },
+    { value: "RegionMajor", label: "Région" },
   ],
   notes: [
-    { value: "NoteIcon", label: "Note" },
-    { value: "ClipboardIcon", label: "Presse-papier" },
-    { value: "DocumentIcon", label: "Document" },
-    { value: "TextIcon", label: "Texte" },
+    { value: "NoteMajor", label: "Note" },
+    { value: "ClipboardMajor", label: "Presse-papier" },
+    { value: "DocumentMajor", label: "Document" },
+    { value: "TextMajor", label: "Texte" },
   ],
   // Icônes pour les boutons
   button: [
-    { value: "CartIcon", label: "Panier" },
-    { value: "CheckoutIcon", label: "Checkout" },
-    { value: "BagIcon", label: "Sac" },
-    { value: "TruckIcon", label: "Camion" },
-    { value: "CheckCircleIcon", label: "Coche" },
-    { value: "PlayIcon", label: "Play" },
-    { value: "ArrowRightIcon", label: "Flèche droite" },
-    { value: "SendIcon", label: "Envoyer" },
+    { value: "CartMajor", label: "Panier" },
+    { value: "CheckoutMajor", label: "Checkout" },
+    { value: "BagMajor", label: "Sac" },
+    { value: "TruckMajor", label: "Camion" },
+    { value: "CheckCircleMajor", label: "Coche" },
+    { value: "ArrowRightMajor", label: "Flèche droite" },
+    { value: "SendMajor", label: "Envoyer" },
+    { value: "PlayMajor", label: "Play" },
   ],
   // Icônes pour le rail
   rail: {
-    cart: { value: "CartIcon" },
-    titles: { value: "TextBlockIcon" },
-    buttons: { value: "CircleInformationIcon" },
-    colors: { value: "ColorIcon" },
-    options: { value: "SettingsIcon" }
+    cart: { value: "CartMajor" },
+    titles: { value: "TextMajor" },
+    buttons: { value: "CircleInformationMajor" },
+    colors: { value: "ColorsMajor" },
+    options: { value: "SettingsMajor" }
   }
 };
 
 /* ============================== Composant Icon Polaris ============================== */
 function PolarisIcon({ iconName, size = 20, color = "currentColor" }) {
   const IconComponent = getIconComponent(iconName);
-  return <IconComponent width={size} height={size} fill={color} />;
+  return <IconComponent width={size} height={size} style={{ color }} />;
 }
 
 /* ============================== Palette de couleurs ============================== */
@@ -1136,7 +1140,7 @@ function Section1FormsLayoutInner() {
       subtitle: "Please enter your contact information",
       buttonText: "Order now",
       successText: "Thanks! We'll contact you",
-      buttonIcon: "CartIcon",
+      buttonIcon: "CartMajor",
     },
     design: {
       ...DESIGN_PRESETS.CleanWhite,
@@ -1156,7 +1160,7 @@ function Section1FormsLayoutInner() {
       glowPx: 18,
       stickyType: "none",
       stickyLabel: "Order now",
-      stickyIcon: "CartIcon",
+      stickyIcon: "CartMajor",
       drawerDirection: "right",
       drawerSize: "md",
       overlayColor: "#020617",
@@ -1172,7 +1176,7 @@ function Section1FormsLayoutInner() {
         type: "text",
         label: "Full name",
         ph: "Your full name",
-        icon: "ProfileIcon",
+        icon: "ProfileMajor",
       },
       phone: {
         on: true,
@@ -1181,7 +1185,7 @@ function Section1FormsLayoutInner() {
         label: "Phone (WhatsApp)",
         ph: "Phone number",
         prefix: "+212",
-        icon: "PhoneIcon",
+        icon: "PhoneMajor",
       },
       quantity: {
         on: true,
@@ -1191,7 +1195,7 @@ function Section1FormsLayoutInner() {
         ph: "1",
         min: 1,
         max: 10,
-        icon: "HashtagIcon",
+        icon: "HashtagMajor",
       },
       province: {
         on: true,
@@ -1199,7 +1203,7 @@ function Section1FormsLayoutInner() {
         type: "text",
         label: "Wilaya / Province",
         ph: "Select province",
-        icon: "RegionIcon",
+        icon: "RegionMajor",
       },
       city: {
         on: true,
@@ -1207,7 +1211,7 @@ function Section1FormsLayoutInner() {
         type: "text",
         label: "City",
         ph: "Select city",
-        icon: "CityIcon",
+        icon: "CityMajor",
       },
       address: {
         on: false,
@@ -1215,7 +1219,7 @@ function Section1FormsLayoutInner() {
         type: "text",
         label: "Address",
         ph: "Full address",
-        icon: "LocationIcon",
+        icon: "LocationMajor",
       },
       notes: {
         on: false,
@@ -1223,7 +1227,7 @@ function Section1FormsLayoutInner() {
         type: "textarea",
         label: "Notes",
         ph: "(optional)",
-        icon: "NoteIcon",
+        icon: "NoteMajor",
       },
     },
     cartTitles: {
@@ -1231,7 +1235,7 @@ function Section1FormsLayoutInner() {
       price: "Product price",
       shipping: "Shipping price",
       total: "Total",
-      cartIcon: "CartIcon",
+      cartIcon: "CartMajor",
     },
     uiTitles: {
       applyCoupon: "Apply",
@@ -1701,7 +1705,7 @@ function OutletEditor() {
     movable: true,
     toggle: true,
     on: !!config.fields[k]?.on,
-    iconName: config.fields[k]?.icon || "AppsIcon",
+    iconName: config.fields[k]?.icon || "AppsMajor",
   }));
 
   const tailItems = [
