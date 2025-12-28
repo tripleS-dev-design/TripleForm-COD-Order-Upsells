@@ -9,13 +9,9 @@ import {
   Checkbox,
   RangeSlider,
   Modal,
-  Icon,
-  Box,
-  InlineGrid,
-  Badge,
 } from "@shopify/polaris";
 import * as PI from "@shopify/polaris-icons";
-import React, {
+import {
   createContext,
   useContext,
   useEffect,
@@ -23,7 +19,7 @@ import React, {
   useState,
 } from "react";
 import { useRouteLoaderData } from "@remix-run/react";
-import { I18nProvider, useI18n } from "../i18n/react";
+import { useI18n } from "../i18n/react";
 
 /* ============================== Fonction utilitaire pour les icônes Polaris ============================== */
 // Fonction pour obtenir une icône Polaris avec fallback sécurisé
