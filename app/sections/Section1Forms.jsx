@@ -1,4 +1,4 @@
-// ===== File: app/sections/Section1FormsLayout.jsx =====
+// ===== File: app/sections/Section1FormsLayout.jsx (Partie 1) =====
 import {
   Card,
   BlockStack,
@@ -437,6 +437,42 @@ const ICON_LIBRARY = {
     { value: "CirclePlusIcon", label: "Plus" },
     { value: "CartIcon", label: "Panier" },
     { value: "NumberIcon", label: "Nombre" },
+  ],
+  pincode: [
+    { value: "LocationIcon", label: "Localisation" },
+    { value: "PinIcon", label: "Épingle" },
+    { value: "MapPinIcon", label: "Épingle de carte" },
+    { value: "HomeIcon", label: "Maison" },
+  ],
+  pincode2: [
+    { value: "LocationIcon", label: "Localisation" },
+    { value: "MapIcon", label: "Carte" },
+    { value: "GlobeIcon", label: "Globe" },
+    { value: "PinIcon", label: "Épingle" },
+  ],
+  pincode3: [
+    { value: "HashtagIcon", label: "Hashtag" },
+    { value: "NumberIcon", label: "Nombre" },
+    { value: "CircleInformationIcon", label: "Information" },
+    { value: "MarkerIcon", label: "Marqueur" },
+  ],
+  email: [
+    { value: "EmailIcon", label: "Email" },
+    { value: "EnvelopeIcon", label: "Enveloppe" },
+    { value: "SendIcon", label: "Envoyer" },
+    { value: "MailIcon", label: "Courrier" },
+  ],
+  company: [
+    { value: "StoreIcon", label: "Magasin" },
+    { value: "BuildingIcon", label: "Bâtiment" },
+    { value: "BusinessIcon", label: "Business" },
+    { value: "BagIcon", label: "Sac" },
+  ],
+  birthday: [
+    { value: "CalendarIcon", label: "Calendrier" },
+    { value: "DateIcon", label: "Date" },
+    { value: "GiftIcon", label: "Cadeau" },
+    { value: "CelebrationIcon", label: "Célébration" },
   ],
   address: [
     { value: "LocationIcon", label: "Localisation" },
@@ -1017,6 +1053,7 @@ const getShippingExample = (city, countryCode) => {
     note: "Livraison standard",
   };
 };
+// ===== File: app/sections/Section1FormsLayout.jsx (Partie 2) =====
 
 /* ============================== Contexte ============================== */
 const FormsCtx = createContext(null);
@@ -1113,7 +1150,7 @@ function Section1FormsLayoutInner() {
     meta: {
       version: 2,
       preset: "CleanWhite",
-      fieldsOrder: ["name", "phone", "quantity", "address", "city", "province", "notes"],
+      fieldsOrder: ["name", "phone", "quantity", "pincode", "pincode2", "pincode3", "email", "company", "birthday", "address", "city", "province", "notes"],
     },
     form: {
       style: "inline",
@@ -1178,8 +1215,56 @@ function Section1FormsLayoutInner() {
         max: 10,
         icon: "HashtagIcon",
       },
-      province: {
+      pincode: {
         on: true,
+        required: true,
+        type: "text",
+        label: "Pincode",
+        ph: "Enter pincode",
+        icon: "LocationIcon",
+      },
+      pincode2: {
+        on: true,
+        required: false,
+        type: "text",
+        label: "Pincode 2",
+        ph: "Additional pincode",
+        icon: "MapIcon",
+      },
+      pincode3: {
+        on: true,
+        required: false,
+        type: "text",
+        label: "Pincode 3",
+        ph: "Extra pincode info",
+        icon: "HashtagIcon",
+      },
+      email: {
+        on: true,
+        required: true,
+        type: "text",
+        label: "Email",
+        ph: "your.email@example.com",
+        icon: "EmailIcon",
+      },
+      company: {
+        on: false,
+        required: false,
+        type: "text",
+        label: "Company",
+        ph: "Your company name",
+        icon: "StoreIcon",
+      },
+      birthday: {
+        on: false,
+        required: false,
+        type: "text",
+        label: "Birthday",
+        ph: "DD/MM/YYYY",
+        icon: "CalendarIcon",
+      },
+      province: {
+        on: false,
         required: false,
         type: "text",
         label: "Wilaya / Province",
@@ -1187,7 +1272,7 @@ function Section1FormsLayoutInner() {
         icon: "RegionIcon",
       },
       city: {
-        on: true,
+        on: false,
         required: false,
         type: "text",
         label: "City",
@@ -1562,6 +1647,7 @@ function Section1FormsLayoutInner() {
     </FormsCtx.Provider>
   );
 }
+
 /* ============================== Composant pour les palettes de couleurs ============================== */
 function ColorPaletteSelector({ onSelect }) {
   const { config, setDesign, setConfig } = useForms();
@@ -1696,13 +1782,7 @@ function OutletEditor() {
     return 0;
   }, [sel]);
 
-  const baseItems = [
-    { key: "cart", label: t("section1.rail.cart"), iconName: ICON_LIBRARY.rail.cart.value },
-    { key: "titles", label: t("section1.rail.titles"), iconName: ICON_LIBRARY.rail.titles.value },
-    { key: "buttons", label: t("section1.rail.buttons"), iconName: ICON_LIBRARY.rail.buttons.value },
-    { key: "sep", label: t("section1.rail.fieldsSeparator"), separator: true },
-  ];
-
+  // ITEMS DU RAIL GAUCHE - UNIQUEMENT LES CHAMPS
   const fieldItems = order.map((k) => ({
     key: `field:${k}`,
     label: config.fields[k]?.label || k,
@@ -1712,13 +1792,7 @@ function OutletEditor() {
     iconName: config.fields[k]?.icon || "AppsIcon",
   }));
 
-  const tailItems = [
-    { key: "sep2", label: t("section1.rail.appearanceSeparator"), separator: true },
-    { key: "colors", label: t("section1.rail.colors"), iconName: ICON_LIBRARY.rail.colors.value },
-    { key: "options", label: t("section1.rail.options"), iconName: ICON_LIBRARY.rail.options.value },
-  ];
-
-  const items = [...baseItems, ...fieldItems, ...tailItems];
+  const items = [...fieldItems];
 
   const moveField = (key, dir) => {
     const k = key.replace(/^field:/, "");
@@ -1781,88 +1855,64 @@ function OutletEditor() {
 
   return (
     <>
+      {/* RAIL GAUCHE - UNIQUEMENT LES CHAMPS */}
       <div className="tf-rail">
         <div className="tf-rail-card">
-          <div className="tf-rail-head">{t("section1.rail.title")}</div>
+          <div className="tf-rail-head">{t("section1.rail.fieldsTitle")}</div>
           <div className="tf-rail-list">
-            {items.map((it) =>
-              it.separator ? (
-                <div
-                  key={it.key}
-                  style={{ fontSize: 12, color: "#6B7280", padding: "4px 6px" }}
-                >
-                  {it.label}
+            {items.map((it) => (
+              <div
+                key={it.key}
+                className="tf-rail-item"
+                data-sel={sel === it.key ? 1 : 0}
+                onClick={() => setSel(it.key)}
+                draggable={/^field:/.test(it.key)}
+                onDragStart={() => onDragStart(it.key)}
+                onDragOver={onDragOver}
+                onDrop={() => onDrop(it.key)}
+              >
+                <div className="tf-grip tf-rail-icon">
+                  <PolarisIcon iconName={it.iconName} size={16} />
                 </div>
-              ) : (
-                <div
-                  key={it.key}
-                  className="tf-rail-item"
-                  data-sel={sel === it.key ? 1 : 0}
-                  onClick={() => setSel(it.key)}
-                  draggable={/^field:/.test(it.key)}
-                  onDragStart={() => onDragStart(it.key)}
-                  onDragOver={onDragOver}
-                  onDrop={() => onDrop(it.key)}
-                >
-                  <div className="tf-grip tf-rail-icon">
-                    <PolarisIcon iconName={it.iconName} size={16} />
-                  </div>
 
-                  <div style={{ fontWeight: 600, fontSize: 13 }}>{it.label}</div>
+                <div style={{ fontWeight: 600, fontSize: 13 }}>{it.label}</div>
 
-                  <div className="tf-rail-actions">
-                    {!it.toggle && (
-                      <RailIconBtn
-                        iconName="ChevronRightIcon"
-                        title="Open"
-                        onClick={() => setSel(it.key)}
-                      />
-                    )}
-
-                    {it.toggle && (
-                      <>
-                        <RailIconBtn
-                          iconName="SettingsIcon"
-                          title="Settings"
-                          onClick={() => setSel(it.key)}
-                        />
-                        <RailIconBtn
-                          iconName={it.on ? "ViewIcon" : "HideIcon"}
-                          title={it.on ? "Hide" : "Show"}
-                          active={!!it.on}
-                          onClick={() => toggleField(it.key)}
-                        />
-                        <RailIconBtn
-                          iconName="DeleteIcon"
-                          title="Remove"
-                          danger
-                          onClick={() => removeField(it.key)}
-                        />
-                      </>
-                    )}
-
-                    {it.movable && (
-                      <>
-                        <RailIconBtn
-                          iconName="ChevronUpIcon"
-                          title="Move up"
-                          onClick={() => moveField(it.key, -1)}
-                        />
-                        <RailIconBtn
-                          iconName="ChevronDownIcon"
-                          title="Move down"
-                          onClick={() => moveField(it.key, 1)}
-                        />
-                      </>
-                    )}
-                  </div>
+                <div className="tf-rail-actions">
+                  <RailIconBtn
+                    iconName="SettingsIcon"
+                    title="Settings"
+                    onClick={() => setSel(it.key)}
+                  />
+                  <RailIconBtn
+                    iconName={it.on ? "ViewIcon" : "HideIcon"}
+                    title={it.on ? "Hide" : "Show"}
+                    active={!!it.on}
+                    onClick={() => toggleField(it.key)}
+                  />
+                  <RailIconBtn
+                    iconName="DeleteIcon"
+                    title="Remove"
+                    danger
+                    onClick={() => removeField(it.key)}
+                  />
+                  <RailIconBtn
+                    iconName="ChevronUpIcon"
+                    title="Move up"
+                    onClick={() => moveField(it.key, -1)}
+                  />
+                  <RailIconBtn
+                    iconName="ChevronDownIcon"
+                    title="Move down"
+                    onClick={() => moveField(it.key, 1)}
+                  />
                 </div>
-              )
-            )}
+              </div>
+            ))}
           </div>
         </div>
       </div>
 
+      {/* COLONNE DU MILIEU - RÉGLAGES */}
       <div className="tf-right-col">
         <div className="tf-panel">
           <div style={{ marginBottom: 12 }}>
@@ -2293,6 +2343,7 @@ function OutletEditor() {
         </div>
       </div>
 
+      {/* COLONNE DE DROITE - APERÇU */}
       <div className="tf-preview-col">
         <div className="tf-preview-card">
           <PreviewPanel />
@@ -2312,6 +2363,12 @@ function FieldEditor({ fieldKey }) {
     name: "section1.fieldEditor.titlePrefix.fullName",
     phone: "section1.fieldEditor.titlePrefix.phone",
     quantity: "section1.fieldEditor.titlePrefix.quantity",
+    pincode: "section1.fieldEditor.titlePrefix.pincode",
+    pincode2: "section1.fieldEditor.titlePrefix.pincode2",
+    pincode3: "section1.fieldEditor.titlePrefix.pincode3",
+    email: "section1.fieldEditor.titlePrefix.email",
+    company: "section1.fieldEditor.titlePrefix.company",
+    birthday: "section1.fieldEditor.titlePrefix.birthday",
     province: "section1.fieldEditor.titlePrefix.province",
     city: "section1.fieldEditor.titlePrefix.city",
     address: "section1.fieldEditor.titlePrefix.address",
