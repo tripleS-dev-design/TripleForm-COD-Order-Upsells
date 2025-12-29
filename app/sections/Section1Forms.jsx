@@ -9,6 +9,8 @@ import {
   Checkbox,
   RangeSlider,
   Modal,
+  Icon,
+  Tabs,
 } from "@shopify/polaris";
 import * as PI from "@shopify/polaris-icons";
 import {
@@ -22,30 +24,31 @@ import { useRouteLoaderData } from "@remix-run/react";
 import { useI18n } from "../i18n/react";
 
 /* ============================== Fonction utilitaire pour les icônes Polaris ============================== */
-// Fonction pour obtenir une icône Polaris avec fallback sécurisé
-function getIconComponent(iconName, fallbackIcon = "AppsMajor") {
-  if (!iconName || typeof iconName !== 'string') {
-    return PI[fallbackIcon] || PI.AppsMajor || (() => <svg />);
+/**
+ * ✅ FIX IMPORTANT :
+ * @shopify/polaris-icons fournit des "IconSource" (à passer à <Icon source={...} />)
+ * et NON des composants React.
+ */
+function getIconSource(iconName, fallbackIcon = "AppsMajor") {
+  if (!iconName || typeof iconName !== "string") {
+    return PI[fallbackIcon] || PI.AppsMajor;
   }
-  
-  // Nettoyer le nom de l'icône
+
   const iconVariants = [
     iconName,
-    iconName.endsWith('Major') ? iconName : `${iconName}Major`,
-    iconName.endsWith('Minor') ? iconName : `${iconName}Minor`,
-    iconName.endsWith('Icon') ? iconName.replace('Icon', 'Major') : `${iconName}Major`,
-    iconName.endsWith('Icon') ? iconName : `${iconName}Icon`,
+    iconName.endsWith("Major") ? iconName : `${iconName}Major`,
+    iconName.endsWith("Minor") ? iconName : `${iconName}Minor`,
+    iconName.endsWith("Icon")
+      ? iconName.replace("Icon", "Major")
+      : `${iconName}Major`,
+    iconName.endsWith("Icon") ? iconName : `${iconName}Icon`,
   ];
-  
-  // Chercher la première variante disponible
+
   for (const variant of iconVariants) {
-    if (PI[variant]) {
-      return PI[variant];
-    }
+    if (PI[variant]) return PI[variant];
   }
-  
-  // Fallback
-  return PI[fallbackIcon] || PI.AppsMajor || (() => <svg />);
+
+  return PI[fallbackIcon] || PI.AppsMajor;
 }
 
 /* -------------------- deep link vers l'éditeur de thème -------------------- */
@@ -105,12 +108,17 @@ const LAYOUT_CSS = `
   .tf-rail-card { background:#fff; border:1px solid #E5E7EB; border-radius:10px; }
   .tf-rail-head { padding:10px 12px; border-bottom:1px solid #E5E7EB; font-weight:700; }
   .tf-rail-list { padding:8px; display:grid; gap:8px; }
-  .tf-rail-item { display:grid; grid-template-columns:24px 1fr auto; align-items:center; gap:8px; background:#fff; border:1px solid #E5E7EB; border-radius:10px; padding:8px 10px; cursor:grab; }
-  .tf-rail-item:active { cursor:grabbing; }
+
+  /* Rail item style “liste + actions” */
+  .tf-rail-item { display:grid; grid-template-columns:26px 1fr auto; align-items:center; gap:10px; background:#fff; border:1px solid #E5E7EB; border-radius:12px; padding:10px 10px; cursor:pointer; }
   .tf-rail-item[data-sel="1"] { outline:2px solid #00A7A3; background:rgba(0,167,163,0.07); }
-  .tf-rail-item .tf-grip { opacity:.5; user-select:none; }
-  .tf-rail-actions { display:flex; gap:6px; }
-  .tf-icon-btn { border:1px solid #E5E7EB; background:#fff; border-radius:8px; padding:4px 6px; cursor:pointer; font-size:11px; }
+  .tf-rail-item:active { transform:scale(.998); }
+  .tf-rail-item .tf-grip { opacity:.75; user-select:none; display:flex; align-items:center; justify-content:center; }
+
+  .tf-rail-actions { display:flex; gap:6px; align-items:center; }
+  .tf-icon-btn { border:1px solid #E5E7EB; background:#fff; border-radius:10px; padding:6px; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; }
+  .tf-icon-btn:hover { border-color:#CBD5E1; background:#F8FAFC; }
+  .tf-icon-btn:active { transform:scale(.98); }
 
   .tf-right-col { display:grid; gap:16px; }
   .tf-panel   { background:#fff; border:1px solid #E5E7EB; border-radius:10px; padding:12px; }
@@ -144,29 +152,32 @@ const LAYOUT_CSS = `
   .tf-palette-colors { display:flex; height:36px; }
   .tf-palette-info { padding:8px; background:#fff; font-size:11px; font-weight:600; }
 
-  /* Icônes pour les champs - MISE À JOUR pour icônes Polaris */
+  /* Icônes - adapté à Polaris <Icon/> */
   .tf-icon-selector { display:grid; grid-template-columns:repeat(auto-fill, minmax(44px, 1fr)); gap:8px; margin-top:8px; max-height:200px; overflow-y:auto; padding:8px; border:1px solid #E5E7EB; border-radius:8px; }
-  .tf-icon-option { width:44px; height:44px; display:flex; align-items:center; justify-content:center; border:2px solid #E5E7EB; border-radius:8px; cursor:pointer; background:#fff; transition:all 0.2s; }
+  .tf-icon-option { width:44px; height:44px; display:flex; align-items:center; justify-content:center; border:2px solid #E5E7EB; border-radius:10px; cursor:pointer; background:#fff; transition:all 0.2s; color:#4B5563; }
   .tf-icon-option:hover { border-color:#00A7A3; background:#f8fafc; }
   .tf-icon-option.selected { border-color:#00A7A3; background:#ecfeff; }
-  .tf-icon-option svg { width:20px; height:20px; color:#4B5563; }
+  .tf-icon-option .Polaris-Icon { width:20px; height:20px; }
 
   /* Aperçu avec icônes */
   .tf-field-with-icon { display:grid; grid-template-columns:auto 1fr; gap:10px; align-items:center; }
   .tf-field-icon { width:20px; height:20px; display:flex; align-items:center; justify-content:center; color:#6B7280; }
-  .tf-field-icon svg { width:16px; height:16px; color:#4B5563; }
+  .tf-field-icon .Polaris-Icon { width:16px; height:16px; }
+
   .tf-btn-with-icon { display:flex; align-items:center; justify-content:center; gap:8px; width:100%; text-align:center; }
   .tf-btn-icon { display:flex; align-items:center; }
-  .tf-btn-icon svg { width:18px; height:18px; }
+  .tf-btn-icon .Polaris-Icon { width:18px; height:18px; }
 
   /* Cart avec icône */
   .tf-cart-with-icon { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
   .tf-cart-icon { display:flex; align-items:center; justify-content:center; width:24px; height:24px; }
-  .tf-cart-icon svg { width:18px; height:18px; color:#4B5563; }
+  .tf-cart-icon .Polaris-Icon { width:18px; height:18px; }
 
   /* Icônes dans le rail */
-  .tf-rail-icon { width:16px; height:16px; }
-  .tf-rail-icon svg { width:16px; height:16px; color:#6B7280; }
+  .tf-rail-icon { width:16px; height:16px; display:flex; align-items:center; justify-content:center; }
+  .tf-rail-icon .Polaris-Icon { width:16px; height:16px; }
+
+  .tf-icon-btn .Polaris-Icon { width:14px; height:14px; }
 
   @media (max-width: 1200px) {
     .tf-editor { grid-template-columns: 300px 2.2fr 1.4fr; }
@@ -406,9 +417,8 @@ const DESIGN_PRESETS = {
   },
 };
 
-/* ============================== Bibliothèque d'icônes Polaris MIS À JOUR ============================== */
+/* ============================== Bibliothèque d'icônes Polaris ============================== */
 const ICON_LIBRARY = {
-  // Icônes pour le cart - MIS À JOUR avec les noms corrects
   cartTitle: [
     { value: "CartMajor", label: "Panier" },
     { value: "BagMajor", label: "Sac" },
@@ -417,7 +427,6 @@ const ICON_LIBRARY = {
     { value: "ReceiptMajor", label: "Reçu" },
     { value: "NoteMajor", label: "Note" },
   ],
-  // Icônes pour les champs
   name: [
     { value: "ProfileMajor", label: "Profil" },
     { value: "PersonMajor", label: "Personne" },
@@ -460,7 +469,6 @@ const ICON_LIBRARY = {
     { value: "DocumentMajor", label: "Document" },
     { value: "TextMajor", label: "Texte" },
   ],
-  // Icônes pour les boutons
   button: [
     { value: "CartMajor", label: "Panier" },
     { value: "CheckoutMajor", label: "Checkout" },
@@ -471,20 +479,33 @@ const ICON_LIBRARY = {
     { value: "SendMajor", label: "Envoyer" },
     { value: "PlayMajor", label: "Play" },
   ],
-  // Icônes pour le rail
   rail: {
     cart: { value: "CartMajor" },
     titles: { value: "TextMajor" },
     buttons: { value: "CircleInformationMajor" },
     colors: { value: "ColorsMajor" },
-    options: { value: "SettingsMajor" }
-  }
+    options: { value: "SettingsMajor" },
+  },
 };
 
 /* ============================== Composant Icon Polaris ============================== */
-function PolarisIcon({ iconName, size = 20, color = "currentColor" }) {
-  const IconComponent = getIconComponent(iconName);
-  return IconComponent ? <IconComponent width={size} height={size} fill={color} /> : null;
+function PolarisIcon({ iconName, size = 20, color = "currentColor", accessibilityLabel }) {
+  const source = getIconSource(iconName);
+  return (
+    <span
+      style={{
+        width: size,
+        height: size,
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        color,
+        flex: "0 0 auto",
+      }}
+    >
+      <Icon source={source} accessibilityLabel={accessibilityLabel} />
+    </span>
+  );
 }
 
 /* ============================== Palette de couleurs ============================== */
@@ -579,6 +600,9 @@ function hexToRgba(hex, alpha) {
   const b = parseInt(m[3], 16);
   return `rgba(${r},${g},${b},${alpha})`;
 }
+
+
+
 
 /* ====== DATA Pays / Wilayas / Villes ====== */
 const COUNTRY_DATA = {
@@ -963,77 +987,73 @@ const COUNTRY_DATA = {
     }
   }
 };
-
 const PHONE_PREFIX_BY_COUNTRY = {
-  MA: "+212", DZ: "+213", TN: "+216", EG: "+20", FR: "+33", ES: "+34", 
-  SA: "+966", AE: "+971", US: "+1", NG: "+234", PK: "+92", IN: "+91", 
+  MA: "+212", DZ: "+213", TN: "+216", EG: "+20", FR: "+33", ES: "+34",
+  SA: "+966", AE: "+971", US: "+1", NG: "+234", PK: "+92", IN: "+91",
   ID: "+62", TR: "+90", BR: "+55"
 };
 
 // Fonction pour obtenir la devise en fonction du pays
 const getCurrencyByCountry = (countryCode) => {
   const map = {
-    'MA': 'MAD',
-    'DZ': 'DZD',
-    'TN': 'TND',
-    'EG': 'EGP',
-    'FR': 'EUR',
-    'ES': 'EUR',
-    'SA': 'SAR',
-    'AE': 'AED',
-    'US': 'USD',
-    'NG': 'NGN',
-    'PK': 'PKR',
-    'IN': 'INR',
-    'ID': 'IDR',
-    'TR': 'TRY',
-    'BR': 'BRL',
+    MA: "MAD",
+    DZ: "DZD",
+    TN: "TND",
+    EG: "EGP",
+    FR: "EUR",
+    ES: "EUR",
+    SA: "SAR",
+    AE: "AED",
+    US: "USD",
+    NG: "NGN",
+    PK: "PKR",
+    IN: "INR",
+    ID: "IDR",
+    TR: "TRY",
+    BR: "BRL",
   };
-  return map[countryCode] || 'MAD';
+  return map[countryCode] || "MAD";
 };
 
 // Fonction pour obtenir des exemples de prix de livraison par ville
 const getShippingExample = (city, countryCode) => {
   const shippingExamples = {
-    "MA": {
-      "Casablanca": { amount: 29, note: "Livraison standard" },
-      "Rabat": { amount: 25, note: "Livraison standard" },
-      "Marrakech": { amount: 35, note: "Livraison express" },
+    MA: {
+      Casablanca: { amount: 29, note: "Livraison standard" },
+      Rabat: { amount: 25, note: "Livraison standard" },
+      Marrakech: { amount: 35, note: "Livraison express" },
       "Fès": { amount: 30, note: "Livraison standard" },
-      "Tanger": { amount: 40, note: "Livraison express" },
-      "Agadir": { amount: 45, note: "Livraison express" },
-      "Oujda": { amount: 50, note: "Livraison express" }
+      Tanger: { amount: 40, note: "Livraison express" },
+      Agadir: { amount: 45, note: "Livraison express" },
+      Oujda: { amount: 50, note: "Livraison express" },
     },
-    "DZ": {
-      "Alger": { amount: 45, note: "Livraison standard" },
-      "Oran": { amount: 40, note: "Livraison standard" },
-      "Constantine": { amount: 50, note: "Livraison express" },
-      "Annaba": { amount: 55, note: "Livraison express" }
+    DZ: {
+      Alger: { amount: 45, note: "Livraison standard" },
+      Oran: { amount: 40, note: "Livraison standard" },
+      Constantine: { amount: 50, note: "Livraison express" },
+      Annaba: { amount: 55, note: "Livraison express" },
     },
-    "FR": {
-      "Paris": { amount: 8.5, note: "Livraison standard" },
-      "Lyon": { amount: 7.5, note: "Livraison standard" },
-      "Marseille": { amount: 8, note: "Livraison standard" },
-      "Toulouse": { amount: 9, note: "Livraison standard" }
+    FR: {
+      Paris: { amount: 8.5, note: "Livraison standard" },
+      Lyon: { amount: 7.5, note: "Livraison standard" },
+      Marseille: { amount: 8, note: "Livraison standard" },
+      Toulouse: { amount: 9, note: "Livraison standard" },
     },
-    "ES": {
-      "Madrid": { amount: 6.5, note: "Livraison standard" },
-      "Barcelona": { amount: 7, note: "Livraison standard" },
-      "Valencia": { amount: 7.5, note: "Livraison standard" }
-    }
+    ES: {
+      Madrid: { amount: 6.5, note: "Livraison standard" },
+      Barcelona: { amount: 7, note: "Livraison standard" },
+      Valencia: { amount: 7.5, note: "Livraison standard" },
+    },
   };
-  
-  const countryData = shippingExamples[countryCode] || shippingExamples["MA"];
+
+  const countryData = shippingExamples[countryCode] || shippingExamples.MA;
   const cityData = countryData[city];
-  
-  if (cityData) {
-    return cityData;
-  }
-  
-  // Valeur par défaut
+
+  if (cityData) return cityData;
+
   return {
     amount: countryCode === "MA" ? 30 : countryCode === "FR" ? 8 : 10,
-    note: "Livraison standard"
+    note: "Livraison standard",
   };
 };
 
@@ -1584,12 +1604,17 @@ function Section1FormsLayoutInner() {
 
 /* ============================== Composant pour les palettes de couleurs ============================== */
 function ColorPaletteSelector({ onSelect }) {
-  const { config, setDesign } = useForms();
-  
+  const { config, setDesign, setConfig } = useForms();
+
   const applyPalette = (paletteId) => {
-    const palette = COLOR_PALETTES.find(p => p.id === paletteId);
+    const palette = COLOR_PALETTES.find((p) => p.id === paletteId);
     if (palette && DESIGN_PRESETS[palette.preset]) {
       setDesign(DESIGN_PRESETS[palette.preset]);
+      // ✅ pour activer le badge "active" correctement
+      setConfig((c) => ({
+        ...c,
+        meta: { ...(c.meta || {}), preset: palette.preset },
+      }));
     }
   };
 
@@ -1598,7 +1623,9 @@ function ColorPaletteSelector({ onSelect }) {
       {COLOR_PALETTES.map((palette) => (
         <div
           key={palette.id}
-          className={`tf-color-palette ${config.meta?.preset === palette.preset ? 'active' : ''}`}
+          className={`tf-color-palette ${
+            config.meta?.preset === palette.preset ? "active" : ""
+          }`}
           onClick={() => {
             applyPalette(palette.id);
             if (onSelect) onSelect(palette.id);
@@ -1611,15 +1638,13 @@ function ColorPaletteSelector({ onSelect }) {
                 style={{
                   flex: 1,
                   background: color,
-                  height: '100%',
+                  height: "100%",
                 }}
                 title={color}
               />
             ))}
           </div>
-          <div className="tf-palette-info">
-            {palette.name}
-          </div>
+          <div className="tf-palette-info">{palette.name}</div>
         </div>
       ))}
     </div>
@@ -1629,13 +1654,14 @@ function ColorPaletteSelector({ onSelect }) {
 /* ============================== Sélecteur d'icônes Polaris ============================== */
 function IconSelector({ fieldKey, type = "field", onSelect, selectedIcon }) {
   const { t } = useForms();
-  
-  const icons = type === "field" 
-    ? ICON_LIBRARY[fieldKey] || ICON_LIBRARY.name
-    : type === "cartTitle"
-    ? ICON_LIBRARY.cartTitle
-    : ICON_LIBRARY.button;
-  
+
+  const icons =
+    type === "field"
+      ? ICON_LIBRARY[fieldKey] || ICON_LIBRARY.name
+      : type === "cartTitle"
+      ? ICON_LIBRARY.cartTitle
+      : ICON_LIBRARY.button;
+
   return (
     <div>
       <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8 }}>
@@ -1645,7 +1671,9 @@ function IconSelector({ fieldKey, type = "field", onSelect, selectedIcon }) {
         {icons.map((icon) => (
           <div
             key={icon.value}
-            className={`tf-icon-option ${selectedIcon === icon.value ? 'selected' : ''}`}
+            className={`tf-icon-option ${
+              selectedIcon === icon.value ? "selected" : ""
+            }`}
             onClick={() => onSelect(icon.value)}
             title={icon.label}
           >
@@ -1688,14 +1716,32 @@ function OutletEditor() {
     }
   }, [order]);
 
+  // ✅ TOP TABS
+  const tabKeys = ["cart", "titles", "buttons", "colors", "options"];
+  const tabs = useMemo(
+    () => [
+      { id: "tab-cart", content: t("section1.rail.cart"), panelID: "panel-cart" },
+      { id: "tab-titles", content: t("section1.rail.titles"), panelID: "panel-titles" },
+      { id: "tab-buttons", content: t("section1.rail.buttons"), panelID: "panel-buttons" },
+      { id: "tab-colors", content: t("section1.rail.colors"), panelID: "panel-colors" },
+      { id: "tab-options", content: t("section1.rail.options"), panelID: "panel-options" },
+    ],
+    [t]
+  );
+
+  const selectedTab = useMemo(() => {
+    if (sel === "cart") return 0;
+    if (sel === "titles" || sel.startsWith("field:")) return 1;
+    if (sel === "buttons") return 2;
+    if (sel === "colors") return 3;
+    if (sel === "options") return 4;
+    return 0;
+  }, [sel]);
+
   const baseItems = [
     { key: "cart", label: t("section1.rail.cart"), iconName: ICON_LIBRARY.rail.cart.value },
     { key: "titles", label: t("section1.rail.titles"), iconName: ICON_LIBRARY.rail.titles.value },
-    {
-      key: "buttons",
-      label: t("section1.rail.buttons"),
-      iconName: ICON_LIBRARY.rail.buttons.value,
-    },
+    { key: "buttons", label: t("section1.rail.buttons"), iconName: ICON_LIBRARY.rail.buttons.value },
     { key: "sep", label: t("section1.rail.fieldsSeparator"), separator: true },
   ];
 
@@ -1709,11 +1755,7 @@ function OutletEditor() {
   }));
 
   const tailItems = [
-    {
-      key: "sep2",
-      label: t("section1.rail.appearanceSeparator"),
-      separator: true,
-    },
+    { key: "sep2", label: t("section1.rail.appearanceSeparator"), separator: true },
     { key: "colors", label: t("section1.rail.colors"), iconName: ICON_LIBRARY.rail.colors.value },
     { key: "options", label: t("section1.rail.options"), iconName: ICON_LIBRARY.rail.options.value },
   ];
@@ -1753,6 +1795,32 @@ function OutletEditor() {
     setField(k, { on: !st.on });
   };
 
+  const removeField = (key) => {
+    const k = key.replace(/^field:/, "");
+    setField(k, { on: false, required: false });
+  };
+
+  const RailIconBtn = ({ iconName, title, onClick, active, danger }) => (
+    <button
+      className="tf-icon-btn"
+      title={title}
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick?.();
+      }}
+      style={{
+        ...(active
+          ? { background: "rgba(16,185,129,0.12)", borderColor: "#10B981" }
+          : {}),
+        ...(danger
+          ? { background: "rgba(239,68,68,0.10)", borderColor: "#EF4444" }
+          : {}),
+      }}
+    >
+      <PolarisIcon iconName={iconName} size={14} />
+    </button>
+  );
+
   return (
     <>
       {/* Rail gauche */}
@@ -1764,11 +1832,7 @@ function OutletEditor() {
               it.separator ? (
                 <div
                   key={it.key}
-                  style={{
-                    fontSize: 12,
-                    color: "#6B7280",
-                    padding: "4px 6px",
-                  }}
+                  style={{ fontSize: 12, color: "#6B7280", padding: "4px 6px" }}
                 >
                   {it.label}
                 </div>
@@ -1786,38 +1850,54 @@ function OutletEditor() {
                   <div className="tf-grip tf-rail-icon">
                     <PolarisIcon iconName={it.iconName} size={16} />
                   </div>
-                  <div>{it.label}</div>
-                  <div
-                    className="tf-rail-actions"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    {it.toggle && (
-                      <button
-                        className="tf-icon-btn"
-                        onClick={() => toggleField(it.key)}
-                        style={{
-                          background: it.on ? "#10B981" : "#EF4444",
-                          color: "#FFFFFF",
-                          border: "none",
-                        }}
-                      >
-                        {it.on ? "ON" : "OFF"}
-                      </button>
+
+                  <div style={{ fontWeight: 600, fontSize: 13 }}>{it.label}</div>
+
+                  <div className="tf-rail-actions">
+                    {/* Catégories: petit bouton “open” */}
+                    {!it.toggle && (
+                      <RailIconBtn
+                        iconName="ChevronRightMinor"
+                        title="Open"
+                        onClick={() => setSel(it.key)}
+                      />
                     )}
+
+                    {/* Champs: settings + eye + trash + move */}
+                    {it.toggle && (
+                      <>
+                        <RailIconBtn
+                          iconName="SettingsMajor"
+                          title="Settings"
+                          onClick={() => setSel(it.key)}
+                        />
+                        <RailIconBtn
+                          iconName={it.on ? "ViewMajor" : "HideMajor"}
+                          title={it.on ? "Hide" : "Show"}
+                          active={!!it.on}
+                          onClick={() => toggleField(it.key)}
+                        />
+                        <RailIconBtn
+                          iconName="DeleteMajor"
+                          title="Remove"
+                          danger
+                          onClick={() => removeField(it.key)}
+                        />
+                      </>
+                    )}
+
                     {it.movable && (
                       <>
-                        <button
-                          className="tf-icon-btn"
+                        <RailIconBtn
+                          iconName="ChevronUpMinor"
+                          title="Move up"
                           onClick={() => moveField(it.key, -1)}
-                        >
-                          ↑
-                        </button>
-                        <button
-                          className="tf-icon-btn"
+                        />
+                        <RailIconBtn
+                          iconName="ChevronDownMinor"
+                          title="Move down"
                           onClick={() => moveField(it.key, 1)}
-                        >
-                          ↓
-                        </button>
+                        />
                       </>
                     )}
                   </div>
@@ -1831,6 +1911,16 @@ function OutletEditor() {
       {/* Colonne réglages (centre) */}
       <div className="tf-right-col">
         <div className="tf-panel">
+          {/* ✅ TOP TABS */}
+          <div style={{ marginBottom: 12 }}>
+            <Tabs
+              tabs={tabs}
+              selected={selectedTab}
+              onSelect={(idx) => setSel(tabKeys[idx])}
+              fitted
+            />
+          </div>
+
           {/* 1) Cart / résumé commande */}
           {sel === "cart" && (
             <GroupCard title={t("section1.group.cart.title")}>
@@ -1931,7 +2021,6 @@ function OutletEditor() {
           {/* 4) Couleurs & layout */}
           {sel === "colors" && (
             <GroupCard title={t("section1.group.colors.title")}>
-              {/* PALETTES DE COULEURS EN HAUT */}
               <BlueSection title={t("section1.colors.presets")} defaultOpen>
                 <p style={{ fontSize: 13, color: "#6B7280", marginBottom: 12 }}>
                   {t("section1.presets.description")}
@@ -1939,7 +2028,6 @@ function OutletEditor() {
                 <ColorPaletteSelector />
               </BlueSection>
 
-              {/* COULEURS DU FORMULAIRE */}
               <BlueSection title={t("section1.colors.formSection")}>
                 <Grid3>
                   <ColorField
@@ -1975,7 +2063,6 @@ function OutletEditor() {
                 </Grid3>
               </BlueSection>
 
-              {/* COULEURS DU BOUTON */}
               <BlueSection title={t("section1.colors.buttonSection")}>
                 <Grid3>
                   <ColorField
@@ -2006,7 +2093,6 @@ function OutletEditor() {
                 </div>
               </BlueSection>
 
-              {/* COULEURS DU PANIER */}
               <BlueSection title={t("section1.colors.cartSection")}>
                 <Grid3>
                   <ColorField
@@ -2042,7 +2128,6 @@ function OutletEditor() {
                 </Grid3>
               </BlueSection>
 
-              {/* LAYOUT */}
               <BlueSection title={t("section1.colors.layoutSection")}>
                 <Grid3>
                   <RangeSlider
@@ -2113,9 +2198,7 @@ function OutletEditor() {
                     />
                     <RangeSlider
                       label={t("section1.colors.glowPx")}
-                      value={
-                        config.design.glowPx ?? config.behavior.glowPx ?? 18
-                      }
+                      value={config.design.glowPx ?? config.behavior.glowPx ?? 18}
                       min={4}
                       max={40}
                       step={1}
@@ -2127,10 +2210,9 @@ function OutletEditor() {
             </GroupCard>
           )}
 
-          {/* 5) Options : effets, sticky, pays, consentements */}
+          {/* 5) Options */}
           {sel === "options" && (
             <GroupCard title={t("section1.group.options.title")}>
-              {/* OPTIONS D'AFFICHAGE & COMPORTEMENT */}
               <BlueSection title={t("section1.options.behavior")} defaultOpen>
                 <Grid3>
                   <Select
@@ -2161,25 +2243,15 @@ function OutletEditor() {
                 </Grid3>
               </BlueSection>
 
-              {/* BOUTON STICKY */}
               <BlueSection title={t("section1.options.stickyButton")}>
                 <Grid3>
                   <Select
                     label={t("section1.options.stickyType")}
                     options={[
                       { label: t("section1.options.sticky.none"), value: "none" },
-                      {
-                        label: t("section1.options.sticky.bottomBar"),
-                        value: "bottom-bar",
-                      },
-                      {
-                        label: t("section1.options.sticky.bubbleRight"),
-                        value: "bubble-right",
-                      },
-                      {
-                        label: t("section1.options.sticky.bubbleLeft"),
-                        value: "bubble-left",
-                      },
+                      { label: t("section1.options.sticky.bottomBar"), value: "bottom-bar" },
+                      { label: t("section1.options.sticky.bubbleRight"), value: "bubble-right" },
+                      { label: t("section1.options.sticky.bubbleLeft"), value: "bubble-left" },
                     ]}
                     value={config.behavior.stickyType || "none"}
                     onChange={(v) => setBehav({ stickyType: v })}
@@ -2202,15 +2274,11 @@ function OutletEditor() {
                 </Grid3>
               </BlueSection>
 
-              {/* === Pays COD === */}
               <BlueSection title={t("section1.options.countries")}>
                 <Select
                   label={t("section1.options.countries.storeCountryLabel")}
                   options={[
-                    {
-                      label: t("section1.options.countries.selectPlaceholder"),
-                      value: "",
-                    },
+                    { label: t("section1.options.countries.selectPlaceholder"), value: "" },
                     { label: "Maroc", value: "MA" },
                     { label: "Algérie", value: "DZ" },
                     { label: "Tunisie", value: "TN" },
@@ -2225,33 +2293,20 @@ function OutletEditor() {
                     { label: "Inde", value: "IN" },
                     { label: "Indonésie", value: "ID" },
                     { label: "Turquie", value: "TR" },
-                    { label: "Brésil", value: "BR" }
+                    { label: "Brésil", value: "BR" },
                   ]}
                   value={config.behavior.country || ""}
                   onChange={(v) => {
-                    setBehav({
-                      country: v,
-                      provinceKey: "",
-                      cityKey: "",
-                    });
+                    setBehav({ country: v, provinceKey: "", cityKey: "" });
                     const prefix = PHONE_PREFIX_BY_COUNTRY[v] || "";
-                    if (prefix) {
-                      setField("phone", { prefix });
-                    }
+                    if (prefix) setField("phone", { prefix });
                   }}
                 />
-                <p
-                  style={{
-                    marginTop: 8,
-                    fontSize: 12,
-                    color: "#6B7280",
-                  }}
-                >
+                <p style={{ marginTop: 8, fontSize: 12, color: "#6B7280" }}>
                   {t("section1.options.countries.note")}
                 </p>
               </BlueSection>
 
-              {/* Consentements */}
               <BlueSection title={t("section1.options.consents")}>
                 <InlineStack gap="200" blockAlign="center">
                   <Checkbox
@@ -2265,7 +2320,9 @@ function OutletEditor() {
                     onChange={(v) => setBehav({ gdprLabel: v })}
                   />
                 </InlineStack>
+
                 <div style={{ height: 12 }} />
+
                 <InlineStack gap="200" blockAlign="center">
                   <Checkbox
                     label={t("section1.options.whatsappOptIn")}
@@ -2282,7 +2339,7 @@ function OutletEditor() {
             </GroupCard>
           )}
 
-          {/* Si on clique sur un champ dans le rail, on affiche son éditeur */}
+          {/* Si on clique sur un champ dans le rail */}
           {sel.startsWith("field:") && (
             <FieldEditor fieldKey={sel.replace(/^field:/, "")} />
           )}
@@ -2316,12 +2373,10 @@ function FieldEditor({ fieldKey }) {
   };
 
   const titleKey = titleKeyMap[fieldKey];
-  const titleText = titleKey ? t(titleKey) : (st.label || fieldKey);
+  const titleText = titleKey ? t(titleKey) : st.label || fieldKey;
 
   return (
-    <GroupCard
-      title={titleText}
-    >
+    <GroupCard title={titleText}>
       <InlineStack align="space-between" blockAlign="center">
         <InlineStack gap="200" blockAlign="center">
           <Checkbox
@@ -2338,28 +2393,18 @@ function FieldEditor({ fieldKey }) {
         <Select
           label={t("section1.fieldEditor.typeLabel")}
           options={[
-            {
-              label: t("section1.fieldEditor.type.text"),
-              value: "text",
-            },
-            {
-              label: t("section1.fieldEditor.type.phone"),
-              value: "tel",
-            },
-            {
-              label: t("section1.fieldEditor.type.textarea"),
-              value: "textarea",
-            },
-            {
-              label: t("section1.fieldEditor.type.number"),
-              value: "number",
-            },
+            { label: t("section1.fieldEditor.type.text"), value: "text" },
+            { label: t("section1.fieldEditor.type.phone"), value: "tel" },
+            { label: t("section1.fieldEditor.type.textarea"), value: "textarea" },
+            { label: t("section1.fieldEditor.type.number"), value: "number" },
           ]}
           value={type}
           onChange={(v) => setField(fieldKey, { type: v })}
         />
       </InlineStack>
+
       <div style={{ height: 8 }} />
+
       <Grid2>
         <TextField
           label={t("section1.fieldEditor.labelLabel")}
@@ -2371,6 +2416,7 @@ function FieldEditor({ fieldKey }) {
           value={st.ph || ""}
           onChange={(v) => setField(fieldKey, { ph: v })}
         />
+
         {type === "tel" && (
           <TextField
             label={t("section1.fieldEditor.phonePrefixLabel")}
@@ -2378,33 +2424,27 @@ function FieldEditor({ fieldKey }) {
             onChange={(v) => setField(fieldKey, { prefix: v })}
           />
         )}
+
         {type === "number" && (
           <>
             <TextField
               type="number"
               label={t("section1.fieldEditor.minLabel")}
               value={String(st.min ?? 1)}
-              onChange={(v) =>
-                setField(fieldKey, { min: Number(v || 0) })
-              }
+              onChange={(v) => setField(fieldKey, { min: Number(v || 0) })}
             />
             <TextField
               type="number"
               label={t("section1.fieldEditor.maxLabel")}
-              value={
-                st.max !== undefined && st.max !== null
-                  ? String(st.max)
-                  : ""
-              }
+              value={st.max !== undefined && st.max !== null ? String(st.max) : ""}
               onChange={(v) =>
-                setField(fieldKey, {
-                  max: v === "" ? null : Number(v),
-                })
+                setField(fieldKey, { max: v === "" ? null : Number(v) })
               }
             />
           </>
         )}
       </Grid2>
+
       <div style={{ marginTop: 16 }}>
         <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8 }}>
           {t("section1.fieldEditor.iconLabel")}
@@ -2443,10 +2483,7 @@ function BlueSection({ title, children, defaultOpen = true }) {
       >
         {open ? "▾" : "▸"} {title}
       </button>
-      <div
-        className="tf-accordion__body"
-        style={{ display: open ? "block" : "none" }}
-      >
+      <div className="tf-accordion__body" style={{ display: open ? "block" : "none" }}>
         {children}
       </div>
     </div>
@@ -2496,11 +2533,7 @@ function ColorField({ label, value, onChange }) {
             background: "#fff",
           }}
         />
-        <TextField
-          label={t("section1.colors.hexLabel")}
-          value={value}
-          onChange={onChange}
-        />
+        <TextField label={t("section1.colors.hexLabel")} value={value} onChange={onChange} />
       </div>
     </div>
   );
@@ -2519,7 +2552,6 @@ function PreviewPanel() {
     t,
   } = useForms();
 
-  // États pour le prix de livraison dans la prévisualisation
   const [shippingPrice, setShippingPrice] = useState(null);
   const [shippingNote, setShippingNote] = useState("");
 
@@ -2543,7 +2575,6 @@ function PreviewPanel() {
     ];
   }, [config.meta?.fieldsOrder, fieldKeys]);
 
-  // Prix fixe pour la prévisualisation
   const productPrice = 99.99;
   const currency = getCurrencyByCountry(countryKey);
 
@@ -2552,21 +2583,17 @@ function PreviewPanel() {
     ? fieldAlignRaw
     : "left";
 
-  // Réinitialiser le prix de livraison quand la province change
   useEffect(() => {
     setShippingPrice(null);
     setShippingNote("");
   }, [selectedProvinceKey]);
 
-  // Fonction pour simuler le prix de livraison quand la ville change
   const handleCityChange = (city) => {
     if (!city) {
       setShippingPrice(null);
       setShippingNote("");
       return;
     }
-
-    // Simulation du prix de livraison
     const shippingData = getShippingExample(city, countryKey);
     setShippingPrice(shippingData.amount);
     setShippingNote(`${t("section1.preview.shippingTo")} ${city} - ${shippingData.note}`);
@@ -2574,9 +2601,8 @@ function PreviewPanel() {
 
   const renderFieldWithIcon = (f, key) => {
     if (!f?.on) return null;
-    
     const isTextarea = f.type === "textarea";
-    
+
     return (
       <div key={key} className="tf-field-with-icon">
         <div className="tf-field-icon">
@@ -2587,13 +2613,10 @@ function PreviewPanel() {
             {sStr(f.label)}
             {f.required ? " *" : ""}
           </span>
+
           {isTextarea ? (
             <textarea
-              style={{
-                ...inputBase,
-                padding: "10px 12px",
-                minHeight: 80,
-              }}
+              style={{ ...inputBase, padding: "10px 12px", minHeight: 80 }}
               placeholder={sStr(f.ph)}
               rows={3}
             />
@@ -2607,11 +2630,7 @@ function PreviewPanel() {
             >
               {f.prefix && (
                 <input
-                  style={{
-                    ...inputBase,
-                    textAlign: "center",
-                    padding: "10px 12px",
-                  }}
+                  style={{ ...inputBase, textAlign: "center", padding: "10px 12px" }}
                   value={f.prefix}
                   readOnly
                 />
@@ -2633,10 +2652,13 @@ function PreviewPanel() {
   };
 
   const renderCartBox = () => {
-    const shippingDisplay = shippingPrice === null 
-      ? (countryKey ? t("section1.preview.shippingToCalculate") : "Gratuit")
-      : `${shippingPrice.toFixed(2)} ${currency}`;
-    
+    const shippingDisplay =
+      shippingPrice === null
+        ? countryKey
+          ? t("section1.preview.shippingToCalculate")
+          : "Gratuit"
+        : `${shippingPrice.toFixed(2)} ${currency}`;
+
     const total = productPrice + (shippingPrice || 0);
 
     return (
@@ -2645,20 +2667,19 @@ function PreviewPanel() {
           <div className="tf-cart-icon">
             <PolarisIcon iconName={config.cartTitles.cartIcon} size={18} />
           </div>
-          <div
-            style={{
-              fontWeight: 700,
-              color: config.design.cartTitleColor,
-            }}
-          >
+          <div style={{ fontWeight: 700, color: config.design.cartTitleColor }}>
             {sStr(config.cartTitles.top)}
           </div>
         </div>
+
         <div style={{ display: "grid", gap: 8 }}>
           <div style={cartRowCSS}>
             <div>{sStr(config.cartTitles.price)}</div>
-            <div style={{ fontWeight: 700 }}>{productPrice.toFixed(2)} {currency}</div>
+            <div style={{ fontWeight: 700 }}>
+              {productPrice.toFixed(2)} {currency}
+            </div>
           </div>
+
           <div style={cartRowCSS}>
             <div>
               <div>{sStr(config.cartTitles.shipping)}</div>
@@ -2670,80 +2691,13 @@ function PreviewPanel() {
             </div>
             <div style={{ fontWeight: 700 }}>{shippingDisplay}</div>
           </div>
+
           <div style={cartRowCSS}>
             <div>{sStr(config.cartTitles.total)}</div>
-            <div style={{ fontWeight: 700 }}>{total.toFixed(2)} {currency}</div>
+            <div style={{ fontWeight: 700 }}>
+              {total.toFixed(2)} {currency}
+            </div>
           </div>
-        </div>
-      </div>
-    );
-  };
-
-  const renderFormCard = () => {
-    const total = productPrice + (shippingPrice || 0);
-    const orderLabel = sStr(config.uiTitles.orderNow || config.form?.buttonText || "Order now");
-    const suffix = sStr(config.uiTitles.totalSuffix || "Total:");
-
-    return (
-      <div style={cardCSS} dir={config.design.direction || "ltr"}>
-        {(config.form.title || config.form.subtitle) && (
-          <div style={{ marginBottom: 10, textAlign: titleAlign }}>
-            {config.form.title && (
-              <div style={{ fontWeight: 700 }}>
-                {sStr(config.form.title)}
-              </div>
-            )}
-            {config.form.subtitle && (
-              <div style={{ opacity: 0.8 }}>
-                {sStr(config.form.subtitle)}
-              </div>
-            )}
-          </div>
-        )}
-        <div style={{ display: "grid", gap: 10 }}>
-          {orderedFields.map((key) => {
-            const f = config.fields[key];
-            if (!f?.on) return null;
-            if (key === "province") return renderProvinceField(f);
-            if (key === "city") return renderCityField(f);
-            return renderFieldWithIcon(f, key);
-          })}
-
-          {config.behavior.requireGDPR && (
-            <label
-              style={{
-                display: "flex",
-                gap: 8,
-                alignItems: "center",
-                fontSize: 13,
-                color: "#374151",
-              }}
-            >
-              <input type="checkbox" /> {sStr(config.behavior.gdprLabel)}
-            </label>
-          )}
-          {config.behavior.whatsappOptIn && (
-            <label
-              style={{
-                display: "flex",
-                gap: 8,
-                alignItems: "center",
-                fontSize: 13,
-                color: "#374151",
-              }}
-            >
-              <input type="checkbox" /> {sStr(config.behavior.whatsappLabel)}
-            </label>
-          )}
-
-          <button type="button" style={btnCSS} className="tf-btn-with-icon">
-            <span className="tf-btn-icon">
-              <PolarisIcon iconName={config.form.buttonIcon} size={18} fill={config.design.btnText} />
-            </span>
-            <span style={{ flex: 1, textAlign: 'center' }}>
-              {orderLabel} · {suffix} {total.toFixed(2)} {currency}
-            </span>
-          </button>
         </div>
       </div>
     );
@@ -2751,7 +2705,7 @@ function PreviewPanel() {
 
   const renderProvinceField = (f) => {
     if (!f?.on) return null;
-    
+
     return (
       <div key="province" className="tf-field-with-icon">
         <div className="tf-field-icon">
@@ -2763,16 +2717,9 @@ function PreviewPanel() {
             {f.required ? " *" : ""}
           </span>
           <select
-            style={{
-              ...inputBase,
-              padding: "10px 12px",
-              background: config.design.inputBg,
-            }}
+            style={{ ...inputBase, padding: "10px 12px", background: config.design.inputBg }}
             value={selectedProvinceKey}
-            onChange={(e) => {
-              const v = e.target.value;
-              setBehav({ provinceKey: v, cityKey: "" });
-            }}
+            onChange={(e) => setBehav({ provinceKey: e.target.value, cityKey: "" })}
           >
             <option value="">{f.ph || t("section1.preview.provincePlaceholder")}</option>
             {provincesEntries.map(([key, p]) => (
@@ -2788,7 +2735,7 @@ function PreviewPanel() {
 
   const renderCityField = (f) => {
     if (!f?.on) return null;
-    
+
     return (
       <div key="city" className="tf-field-with-icon">
         <div className="tf-field-icon">
@@ -2829,26 +2776,68 @@ function PreviewPanel() {
     );
   };
 
+  const renderFormCard = () => {
+    const total = productPrice + (shippingPrice || 0);
+    const orderLabel = sStr(config.uiTitles.orderNow || config.form?.buttonText || "Order now");
+    const suffix = sStr(config.uiTitles.totalSuffix || "Total:");
+
+    return (
+      <div style={cardCSS} dir={config.design.direction || "ltr"}>
+        {(config.form.title || config.form.subtitle) && (
+          <div style={{ marginBottom: 10, textAlign: titleAlign }}>
+            {config.form.title && <div style={{ fontWeight: 700 }}>{sStr(config.form.title)}</div>}
+            {config.form.subtitle && <div style={{ opacity: 0.8 }}>{sStr(config.form.subtitle)}</div>}
+          </div>
+        )}
+
+        <div style={{ display: "grid", gap: 10 }}>
+          {orderedFields.map((key) => {
+            const f = config.fields[key];
+            if (!f?.on) return null;
+            if (key === "province") return renderProvinceField(f);
+            if (key === "city") return renderCityField(f);
+            return renderFieldWithIcon(f, key);
+          })}
+
+          {config.behavior.requireGDPR && (
+            <label style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 13, color: "#374151" }}>
+              <input type="checkbox" /> {sStr(config.behavior.gdprLabel)}
+            </label>
+          )}
+          {config.behavior.whatsappOptIn && (
+            <label style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 13, color: "#374151" }}>
+              <input type="checkbox" /> {sStr(config.behavior.whatsappLabel)}
+            </label>
+          )}
+
+          <button type="button" style={btnCSS} className="tf-btn-with-icon">
+            <span className="tf-btn-icon">
+              <PolarisIcon iconName={config.form.buttonIcon} size={18} color={config.design.btnText} />
+            </span>
+            <span style={{ flex: 1, textAlign: "center" }}>
+              {orderLabel} · {suffix} {total.toFixed(2)} {currency}
+            </span>
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   const StickyPreview = () => {
     const type = config.behavior?.stickyType || "none";
     if (type === "none") return null;
 
     const styleType = config.form?.style || "inline";
+    const styleText =
+      styleType === "inline"
+        ? t("section1.preview.style.inline")
+        : styleType === "popup"
+        ? t("section1.preview.style.popup")
+        : styleType === "drawer"
+        ? t("section1.preview.style.drawer")
+        : styleType;
 
-    let styleText;
-    if (styleType === "inline") {
-      styleText = t("section1.preview.style.inline");
-    } else if (styleType === "popup") {
-      styleText = t("section1.preview.style.popup");
-    } else if (styleType === "drawer") {
-      styleText = t("section1.preview.style.drawer");
-    } else {
-      styleText = styleType;
-    }
-
-    const label = sStr(
-      config.behavior?.stickyLabel || config.uiTitles?.orderNow || "Order now"
-    );
+    const label = sStr(config.behavior?.stickyLabel || config.uiTitles?.orderNow || "Order now");
 
     const miniBtnStyle = {
       ...btnCSS,
@@ -2880,9 +2869,9 @@ function PreviewPanel() {
           </span>
           <button type="button" style={miniBtnStyle} className="tf-btn-with-icon">
             <span className="tf-btn-icon">
-              <PolarisIcon iconName={config.behavior.stickyIcon} size={16} fill={config.design.btnText} />
+              <PolarisIcon iconName={config.behavior.stickyIcon} size={16} color={config.design.btnText} />
             </span>
-            <span style={{ flex: 1, textAlign: 'center' }}>{label}</span>
+            <span style={{ flex: 1, textAlign: "center" }}>{label}</span>
           </button>
         </div>
       );
@@ -2892,35 +2881,18 @@ function PreviewPanel() {
       const isLeft = type === "bubble-left";
       return (
         <div style={{ marginTop: 8, position: "relative", height: 72 }}>
-          <div
-            style={{
-              position: "absolute",
-              bottom: 4,
-              [isLeft ? "left" : "right"]: 4,
-            }}
-          >
+          <div style={{ position: "absolute", bottom: 4, [isLeft ? "left" : "right"]: 4 }}>
             <button
               type="button"
-              style={{
-                ...miniBtnStyle,
-                borderRadius: 999,
-                boxShadow: "0 8px 18px rgba(15,23,42,0.28)",
-              }}
+              style={{ ...miniBtnStyle, borderRadius: 999, boxShadow: "0 8px 18px rgba(15,23,42,0.28)" }}
               className="tf-btn-with-icon"
             >
               <span className="tf-btn-icon">
-                <PolarisIcon iconName={config.behavior.stickyIcon} size={16} fill={config.design.btnText} />
+                <PolarisIcon iconName={config.behavior.stickyIcon} size={16} color={config.design.btnText} />
               </span>
-              <span style={{ flex: 1, textAlign: 'center' }}>{label}</span>
+              <span style={{ flex: 1, textAlign: "center" }}>{label}</span>
             </button>
-            <div
-              style={{
-                marginTop: 4,
-                fontSize: 11,
-                color: "#6B7280",
-                textAlign: isLeft ? "left" : "right",
-              }}
-            >
+            <div style={{ marginTop: 4, fontSize: 11, color: "#6B7280", textAlign: isLeft ? "left" : "right" }}>
               {t("section1.preview.stickyBubbleLabel")} · {styleText}
             </div>
           </div>
