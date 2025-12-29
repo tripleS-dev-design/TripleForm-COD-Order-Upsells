@@ -24,31 +24,24 @@ import { useRouteLoaderData } from "@remix-run/react";
 import { useI18n } from "../i18n/react";
 
 /* ============================== Fonction utilitaire pour les icônes Polaris ============================== */
-/**
- * ✅ FIX IMPORTANT :
- * @shopify/polaris-icons fournit des "IconSource" (à passer à <Icon source={...} />)
- * et NON des composants React.
- */
-function getIconSource(iconName, fallbackIcon = "AppsMajor") {
+function getIconSource(iconName, fallbackIcon = "AppsIcon") {
   if (!iconName || typeof iconName !== "string") {
-    return PI[fallbackIcon] || PI.AppsMajor;
+    return PI[fallbackIcon] || PI.AppsIcon;
   }
 
   const iconVariants = [
     iconName,
-    iconName.endsWith("Major") ? iconName : `${iconName}Major`,
-    iconName.endsWith("Minor") ? iconName : `${iconName}Minor`,
-    iconName.endsWith("Icon")
-      ? iconName.replace("Icon", "Major")
-      : `${iconName}Major`,
     iconName.endsWith("Icon") ? iconName : `${iconName}Icon`,
+    iconName.endsWith("Major") ? iconName.replace("Major", "Icon") : `${iconName}Icon`,
+    iconName.endsWith("Minor") ? iconName.replace("Minor", "Icon") : `${iconName}Icon`,
+    iconName + "Icon",
   ];
 
   for (const variant of iconVariants) {
     if (PI[variant]) return PI[variant];
   }
 
-  return PI[fallbackIcon] || PI.AppsMajor;
+  return PI[fallbackIcon] || PI.AppsIcon;
 }
 
 /* -------------------- deep link vers l'éditeur de thème -------------------- */
@@ -109,7 +102,7 @@ const LAYOUT_CSS = `
   .tf-rail-head { padding:10px 12px; border-bottom:1px solid #E5E7EB; font-weight:700; }
   .tf-rail-list { padding:8px; display:grid; gap:8px; }
 
-  /* Rail item style “liste + actions” */
+  /* Rail item style "liste + actions" */
   .tf-rail-item { display:grid; grid-template-columns:26px 1fr auto; align-items:center; gap:10px; background:#fff; border:1px solid #E5E7EB; border-radius:12px; padding:10px 10px; cursor:pointer; }
   .tf-rail-item[data-sel="1"] { outline:2px solid #00A7A3; background:rgba(0,167,163,0.07); }
   .tf-rail-item:active { transform:scale(.998); }
@@ -420,71 +413,71 @@ const DESIGN_PRESETS = {
 /* ============================== Bibliothèque d'icônes Polaris ============================== */
 const ICON_LIBRARY = {
   cartTitle: [
-    { value: "CartMajor", label: "Panier" },
-    { value: "BagMajor", label: "Sac" },
-    { value: "ProductsMajor", label: "Produits" },
-    { value: "CheckoutMajor", label: "Checkout" },
-    { value: "ReceiptMajor", label: "Reçu" },
-    { value: "NoteMajor", label: "Note" },
+    { value: "CartIcon", label: "Panier" },
+    { value: "BagIcon", label: "Sac" },
+    { value: "ProductsIcon", label: "Produits" },
+    { value: "CheckoutIcon", label: "Checkout" },
+    { value: "ReceiptIcon", label: "Reçu" },
+    { value: "NoteIcon", label: "Note" },
   ],
   name: [
-    { value: "ProfileMajor", label: "Profil" },
-    { value: "PersonMajor", label: "Personne" },
-    { value: "CustomersMajor", label: "Clients" },
-    { value: "UserMajor", label: "Utilisateur" },
+    { value: "ProfileIcon", label: "Profil" },
+    { value: "PersonIcon", label: "Personne" },
+    { value: "CustomersIcon", label: "Clients" },
+    { value: "UserIcon", label: "Utilisateur" },
   ],
   phone: [
-    { value: "PhoneMajor", label: "Téléphone" },
-    { value: "MobileMajor", label: "Mobile" },
-    { value: "CallMajor", label: "Appel" },
-    { value: "ChatMajor", label: "Chat" },
+    { value: "PhoneIcon", label: "Téléphone" },
+    { value: "MobileIcon", label: "Mobile" },
+    { value: "CallIcon", label: "Appel" },
+    { value: "ChatIcon", label: "Chat" },
   ],
   quantity: [
-    { value: "HashtagMajor", label: "Hashtag" },
-    { value: "CirclePlusMajor", label: "Plus" },
-    { value: "CartMajor", label: "Panier" },
-    { value: "NumberMajor", label: "Nombre" },
+    { value: "HashtagIcon", label: "Hashtag" },
+    { value: "CirclePlusIcon", label: "Plus" },
+    { value: "CartIcon", label: "Panier" },
+    { value: "NumberIcon", label: "Nombre" },
   ],
   address: [
-    { value: "LocationMajor", label: "Localisation" },
-    { value: "PinMajor", label: "Épingle" },
-    { value: "HomeMajor", label: "Maison" },
-    { value: "StoreMajor", label: "Magasin" },
+    { value: "LocationIcon", label: "Localisation" },
+    { value: "PinIcon", label: "Épingle" },
+    { value: "HomeIcon", label: "Maison" },
+    { value: "StoreIcon", label: "Magasin" },
   ],
   city: [
-    { value: "GlobeMajor", label: "Globe" },
-    { value: "LocationMajor", label: "Localisation" },
-    { value: "MapMajor", label: "Carte" },
-    { value: "CityMajor", label: "Ville" },
+    { value: "GlobeIcon", label: "Globe" },
+    { value: "LocationIcon", label: "Localisation" },
+    { value: "MapIcon", label: "Carte" },
+    { value: "CityIcon", label: "Ville" },
   ],
   province: [
-    { value: "GlobeMajor", label: "Globe" },
-    { value: "MapMajor", label: "Carte" },
-    { value: "LocationMajor", label: "Localisation" },
-    { value: "RegionMajor", label: "Région" },
+    { value: "GlobeIcon", label: "Globe" },
+    { value: "MapIcon", label: "Carte" },
+    { value: "LocationIcon", label: "Localisation" },
+    { value: "RegionIcon", label: "Région" },
   ],
   notes: [
-    { value: "NoteMajor", label: "Note" },
-    { value: "ClipboardMajor", label: "Presse-papier" },
-    { value: "DocumentMajor", label: "Document" },
-    { value: "TextMajor", label: "Texte" },
+    { value: "NoteIcon", label: "Note" },
+    { value: "ClipboardIcon", label: "Presse-papier" },
+    { value: "DocumentIcon", label: "Document" },
+    { value: "TextIcon", label: "Texte" },
   ],
   button: [
-    { value: "CartMajor", label: "Panier" },
-    { value: "CheckoutMajor", label: "Checkout" },
-    { value: "BagMajor", label: "Sac" },
-    { value: "TruckMajor", label: "Camion" },
-    { value: "CheckCircleMajor", label: "Coche" },
-    { value: "ArrowRightMajor", label: "Flèche droite" },
-    { value: "SendMajor", label: "Envoyer" },
-    { value: "PlayMajor", label: "Play" },
+    { value: "CartIcon", label: "Panier" },
+    { value: "CheckoutIcon", label: "Checkout" },
+    { value: "BagIcon", label: "Sac" },
+    { value: "TruckIcon", label: "Camion" },
+    { value: "CheckCircleIcon", label: "Coche" },
+    { value: "ArrowRightIcon", label: "Flèche droite" },
+    { value: "SendIcon", label: "Envoyer" },
+    { value: "PlayIcon", label: "Play" },
   ],
   rail: {
-    cart: { value: "CartMajor" },
-    titles: { value: "TextMajor" },
-    buttons: { value: "CircleInformationMajor" },
-    colors: { value: "ColorsMajor" },
-    options: { value: "SettingsMajor" },
+    cart: { value: "CartIcon" },
+    titles: { value: "TextIcon" },
+    buttons: { value: "CircleInformationIcon" },
+    colors: { value: "ColorsIcon" },
+    options: { value: "SettingsIcon" },
   },
 };
 
@@ -503,7 +496,7 @@ function PolarisIcon({ iconName, size = 20, color = "currentColor", accessibilit
         flex: "0 0 auto",
       }}
     >
-      <Icon source={source} accessibilityLabel={accessibilityLabel} />
+      <Icon source={source} accessibilityLabel={accessibilityLabel || iconName} />
     </span>
   );
 }
@@ -601,12 +594,8 @@ function hexToRgba(hex, alpha) {
   return `rgba(${r},${g},${b},${alpha})`;
 }
 
-
-
-
 /* ====== DATA Pays / Wilayas / Villes ====== */
 const COUNTRY_DATA = {
-  // ========== MAROC (MA) ==========
   MA: {
     label: "Maroc",
     provinces: {
@@ -644,8 +633,6 @@ const COUNTRY_DATA = {
       }
     }
   },
-
-  // ========== ALGÉRIE (DZ) ==========
   DZ: {
     label: "Algérie",
     provinces: {
@@ -679,8 +666,6 @@ const COUNTRY_DATA = {
       }
     }
   },
-
-  // ========== TUNISIE (TN) ==========
   TN: {
     label: "Tunisie",
     provinces: {
@@ -710,8 +695,6 @@ const COUNTRY_DATA = {
       }
     }
   },
-
-  // ========== ÉGYPTE (EG) ==========
   EG: {
     label: "Égypte",
     provinces: {
@@ -733,8 +716,6 @@ const COUNTRY_DATA = {
       }
     }
   },
-
-  // ========== FRANCE (FR) ==========
   FR: {
     label: "France",
     provinces: {
@@ -756,8 +737,6 @@ const COUNTRY_DATA = {
       }
     }
   },
-
-  // ========== ESPAGNE (ES) ==========
   ES: {
     label: "España",
     provinces: {
@@ -779,8 +758,6 @@ const COUNTRY_DATA = {
       }
     }
   },
-
-  // ========== ARABIE SAOUDITE (SA) ==========
   SA: {
     label: "Arabie Saoudite",
     provinces: {
@@ -802,8 +779,6 @@ const COUNTRY_DATA = {
       }
     }
   },
-
-  // ========== ÉMIRATS ARABES UNIS (AE) ==========
   AE: {
     label: "Émirats Arabes Unis",
     provinces: {
@@ -825,8 +800,6 @@ const COUNTRY_DATA = {
       }
     }
   },
-
-  // ========== ÉTATS-UNIS (US) ==========
   US: {
     label: "United States",
     provinces: {
@@ -848,8 +821,6 @@ const COUNTRY_DATA = {
       }
     }
   },
-
-  // ========== NIGERIA (NG) ==========
   NG: {
     label: "Nigeria",
     provinces: {
@@ -871,8 +842,6 @@ const COUNTRY_DATA = {
       }
     }
   },
-
-  // ========== PAKISTAN (PK) ==========
   PK: {
     label: "Pakistan",
     provinces: {
@@ -894,8 +863,6 @@ const COUNTRY_DATA = {
       }
     }
   },
-
-  // ========== INDE (IN) ==========
   IN: {
     label: "India",
     provinces: {
@@ -917,8 +884,6 @@ const COUNTRY_DATA = {
       }
     }
   },
-
-  // ========== INDONÉSIE (ID) ==========
   ID: {
     label: "Indonesia",
     provinces: {
@@ -940,8 +905,6 @@ const COUNTRY_DATA = {
       }
     }
   },
-
-  // ========== TURQUIE (TR) ==========
   TR: {
     label: "Türkiye",
     provinces: {
@@ -963,8 +926,6 @@ const COUNTRY_DATA = {
       }
     }
   },
-
-  // ========== BRÉSIL (BR) ==========
   BR: {
     label: "Brazil",
     provinces: {
@@ -1160,7 +1121,7 @@ function Section1FormsLayoutInner() {
       subtitle: "Please enter your contact information",
       buttonText: "Order now",
       successText: "Thanks! We'll contact you",
-      buttonIcon: "CartMajor",
+      buttonIcon: "CartIcon",
     },
     design: {
       ...DESIGN_PRESETS.CleanWhite,
@@ -1180,7 +1141,7 @@ function Section1FormsLayoutInner() {
       glowPx: 18,
       stickyType: "none",
       stickyLabel: "Order now",
-      stickyIcon: "CartMajor",
+      stickyIcon: "CartIcon",
       drawerDirection: "right",
       drawerSize: "md",
       overlayColor: "#020617",
@@ -1196,7 +1157,7 @@ function Section1FormsLayoutInner() {
         type: "text",
         label: "Full name",
         ph: "Your full name",
-        icon: "ProfileMajor",
+        icon: "ProfileIcon",
       },
       phone: {
         on: true,
@@ -1205,7 +1166,7 @@ function Section1FormsLayoutInner() {
         label: "Phone (WhatsApp)",
         ph: "Phone number",
         prefix: "+212",
-        icon: "PhoneMajor",
+        icon: "PhoneIcon",
       },
       quantity: {
         on: true,
@@ -1215,7 +1176,7 @@ function Section1FormsLayoutInner() {
         ph: "1",
         min: 1,
         max: 10,
-        icon: "HashtagMajor",
+        icon: "HashtagIcon",
       },
       province: {
         on: true,
@@ -1223,7 +1184,7 @@ function Section1FormsLayoutInner() {
         type: "text",
         label: "Wilaya / Province",
         ph: "Select province",
-        icon: "RegionMajor",
+        icon: "RegionIcon",
       },
       city: {
         on: true,
@@ -1231,7 +1192,7 @@ function Section1FormsLayoutInner() {
         type: "text",
         label: "City",
         ph: "Select city",
-        icon: "CityMajor",
+        icon: "CityIcon",
       },
       address: {
         on: false,
@@ -1239,7 +1200,7 @@ function Section1FormsLayoutInner() {
         type: "text",
         label: "Address",
         ph: "Full address",
-        icon: "LocationMajor",
+        icon: "LocationIcon",
       },
       notes: {
         on: false,
@@ -1247,7 +1208,7 @@ function Section1FormsLayoutInner() {
         type: "textarea",
         label: "Notes",
         ph: "(optional)",
-        icon: "NoteMajor",
+        icon: "NoteIcon",
       },
     },
     cartTitles: {
@@ -1255,7 +1216,7 @@ function Section1FormsLayoutInner() {
       price: "Product price",
       shipping: "Shipping price",
       total: "Total",
-      cartIcon: "CartMajor",
+      cartIcon: "CartIcon",
     },
     uiTitles: {
       applyCoupon: "Apply",
@@ -1601,7 +1562,6 @@ function Section1FormsLayoutInner() {
     </FormsCtx.Provider>
   );
 }
-
 /* ============================== Composant pour les palettes de couleurs ============================== */
 function ColorPaletteSelector({ onSelect }) {
   const { config, setDesign, setConfig } = useForms();
@@ -1610,7 +1570,6 @@ function ColorPaletteSelector({ onSelect }) {
     const palette = COLOR_PALETTES.find((p) => p.id === paletteId);
     if (palette && DESIGN_PRESETS[palette.preset]) {
       setDesign(DESIGN_PRESETS[palette.preset]);
-      // ✅ pour activer le badge "active" correctement
       setConfig((c) => ({
         ...c,
         meta: { ...(c.meta || {}), preset: palette.preset },
@@ -1716,7 +1675,6 @@ function OutletEditor() {
     }
   }, [order]);
 
-  // ✅ TOP TABS
   const tabKeys = ["cart", "titles", "buttons", "colors", "options"];
   const tabs = useMemo(
     () => [
@@ -1751,7 +1709,7 @@ function OutletEditor() {
     movable: true,
     toggle: true,
     on: !!config.fields[k]?.on,
-    iconName: config.fields[k]?.icon || "AppsMajor",
+    iconName: config.fields[k]?.icon || "AppsIcon",
   }));
 
   const tailItems = [
@@ -1823,7 +1781,6 @@ function OutletEditor() {
 
   return (
     <>
-      {/* Rail gauche */}
       <div className="tf-rail">
         <div className="tf-rail-card">
           <div className="tf-rail-head">{t("section1.rail.title")}</div>
@@ -1854,31 +1811,29 @@ function OutletEditor() {
                   <div style={{ fontWeight: 600, fontSize: 13 }}>{it.label}</div>
 
                   <div className="tf-rail-actions">
-                    {/* Catégories: petit bouton “open” */}
                     {!it.toggle && (
                       <RailIconBtn
-                        iconName="ChevronRightMinor"
+                        iconName="ChevronRightIcon"
                         title="Open"
                         onClick={() => setSel(it.key)}
                       />
                     )}
 
-                    {/* Champs: settings + eye + trash + move */}
                     {it.toggle && (
                       <>
                         <RailIconBtn
-                          iconName="SettingsMajor"
+                          iconName="SettingsIcon"
                           title="Settings"
                           onClick={() => setSel(it.key)}
                         />
                         <RailIconBtn
-                          iconName={it.on ? "ViewMajor" : "HideMajor"}
+                          iconName={it.on ? "ViewIcon" : "HideIcon"}
                           title={it.on ? "Hide" : "Show"}
                           active={!!it.on}
                           onClick={() => toggleField(it.key)}
                         />
                         <RailIconBtn
-                          iconName="DeleteMajor"
+                          iconName="DeleteIcon"
                           title="Remove"
                           danger
                           onClick={() => removeField(it.key)}
@@ -1889,12 +1844,12 @@ function OutletEditor() {
                     {it.movable && (
                       <>
                         <RailIconBtn
-                          iconName="ChevronUpMinor"
+                          iconName="ChevronUpIcon"
                           title="Move up"
                           onClick={() => moveField(it.key, -1)}
                         />
                         <RailIconBtn
-                          iconName="ChevronDownMinor"
+                          iconName="ChevronDownIcon"
                           title="Move down"
                           onClick={() => moveField(it.key, 1)}
                         />
@@ -1908,10 +1863,8 @@ function OutletEditor() {
         </div>
       </div>
 
-      {/* Colonne réglages (centre) */}
       <div className="tf-right-col">
         <div className="tf-panel">
-          {/* ✅ TOP TABS */}
           <div style={{ marginBottom: 12 }}>
             <Tabs
               tabs={tabs}
@@ -1921,7 +1874,6 @@ function OutletEditor() {
             />
           </div>
 
-          {/* 1) Cart / résumé commande */}
           {sel === "cart" && (
             <GroupCard title={t("section1.group.cart.title")}>
               <Grid2>
@@ -1959,7 +1911,6 @@ function OutletEditor() {
             </GroupCard>
           )}
 
-          {/* 2) Titres + champs */}
           {sel === "titles" && (
             <GroupCard title={t("section1.group.formTexts.title")}>
               <Grid2>
@@ -1985,7 +1936,6 @@ function OutletEditor() {
             </GroupCard>
           )}
 
-          {/* 3) Boutons & textes d'action */}
           {sel === "buttons" && (
             <GroupCard title={t("section1.group.buttons.title")}>
               <Grid2>
@@ -2018,7 +1968,6 @@ function OutletEditor() {
             </GroupCard>
           )}
 
-          {/* 4) Couleurs & layout */}
           {sel === "colors" && (
             <GroupCard title={t("section1.group.colors.title")}>
               <BlueSection title={t("section1.colors.presets")} defaultOpen>
@@ -2210,7 +2159,6 @@ function OutletEditor() {
             </GroupCard>
           )}
 
-          {/* 5) Options */}
           {sel === "options" && (
             <GroupCard title={t("section1.group.options.title")}>
               <BlueSection title={t("section1.options.behavior")} defaultOpen>
@@ -2339,14 +2287,12 @@ function OutletEditor() {
             </GroupCard>
           )}
 
-          {/* Si on clique sur un champ dans le rail */}
           {sel.startsWith("field:") && (
             <FieldEditor fieldKey={sel.replace(/^field:/, "")} />
           )}
         </div>
       </div>
 
-      {/* Colonne preview (droite) */}
       <div className="tf-preview-col">
         <div className="tf-preview-card">
           <PreviewPanel />
