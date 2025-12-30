@@ -61,98 +61,185 @@ import {
 import { useRouteLoaderData } from "@remix-run/react";
 import { useI18n } from "../i18n/react";
 
-/* ============================== Fonction utilitaire améliorée pour les icônes Polaris ============================== */
+/* ============================== Fonction utilitaire CORRIGÉE pour les icônes Polaris ============================== */
+// Cache pour les performances
+const iconCache = new Map();
+
 function getIconSource(iconName, fallbackIcon = "AppsMajor") {
+  // Si vide ou non string, retourner fallback
   if (!iconName || typeof iconName !== "string") {
-    console.warn("Invalid icon name:", iconName);
-    return PI[fallbackIcon] || PI.AppsMajor;
+    const fallback = PI[fallbackIcon] || PI.AppsMajor;
+    return fallback;
   }
 
-  // 1. Vérifier si c'est déjà un composant valide
-  if (typeof iconName === 'function') return iconName;
-  
-  // 2. Noms directs
+  // Vérifier cache
+  if (iconCache.has(iconName)) {
+    return iconCache.get(iconName);
+  }
+
+  // Si c'est déjà un composant React
+  if (typeof iconName === 'function') {
+    iconCache.set(iconName, iconName);
+    return iconName;
+  }
+
+  // 1. Chercher le nom exact
   if (PI[iconName]) {
+    iconCache.set(iconName, PI[iconName]);
     return PI[iconName];
   }
-  
-  // 3. Ajouter "Major" suffix si nécessaire (format standard Polaris)
-  const withMajor = iconName.endsWith("Major") ? iconName : `${iconName}Major`;
-  if (PI[withMajor]) {
-    return PI[withMajor];
-  }
-  
-  // 4. Ajouter "Icon" suffix (pour compatibilité)
-  const withIcon = iconName.endsWith("Icon") ? iconName : `${iconName}Icon`;
-  if (PI[withIcon]) {
-    return PI[withIcon];
-  }
-  
-  // 5. Essayer différentes variantes
-  const variants = [
-    iconName,
-    withIcon,
-    withMajor,
-    `${iconName}Minor`,
-    `${iconName}Filled`,
-    iconName.replace(/Icon$/, "Major"),
-    iconName.replace(/Icon$/, "Minor"),
-    iconName.replace(/Major$/, "Icon"),
-    iconName.replace(/Minor$/, "Icon"),
-    iconName.replace(/Filled$/, "Icon"),
-    iconName.replace(/Outline$/, "Icon"),
-    // Pour les noms communs
-    iconName === "Cart" ? "CartMajor" : null,
-    iconName === "Bag" ? "BagMajor" : null,
-    iconName === "Profile" ? "ProfileMajor" : null,
-    iconName === "Person" ? "PersonMajor" : null,
-    iconName === "Phone" ? "PhoneMajor" : null,
-    iconName === "Location" ? "LocationMajor" : null,
-    iconName === "Email" ? "EmailMajor" : null,
-    iconName === "Calendar" ? "CalendarMajor" : null,
-    iconName === "Note" ? "NoteMajor" : null,
-    iconName === "Settings" ? "SettingsMajor" : null,
-    iconName === "Checkout" ? "CheckoutMajor" : null,
-    iconName === "Receipt" ? "ReceiptMajor" : null,
-    iconName === "User" ? "UserMajor" : null,
-    iconName === "Chat" ? "ChatMajor" : null,
-    iconName === "Hashtag" ? "HashtagMajor" : null,
-    iconName === "CirclePlus" ? "CirclePlusMajor" : null,
-    iconName === "Map" ? "MapMajor" : null,
-    iconName === "Globe" ? "GlobeMajor" : null,
-    iconName === "Home" ? "HomeMajor" : null,
-    iconName === "Store" ? "StoreMajor" : null,
-    iconName === "Building" ? "BuildingMajor" : null,
-    iconName === "Gift" ? "GiftMajor" : null,
-    iconName === "City" ? "CityMajor" : null,
-    iconName === "Region" ? "LocationMajor" : null,
-    iconName === "Clipboard" ? "ClipboardMajor" : null,
-    iconName === "Document" ? "DocumentMajor" : null,
-    iconName === "Truck" ? "TruckMajor" : null,
-    iconName === "CheckCircle" ? "CheckCircleMajor" : null,
-    iconName === "ArrowRight" ? "ArrowRightMajor" : null,
-    iconName === "Send" ? "SendMajor" : null,
-    iconName === "Play" ? "PlayMajor" : null,
-    iconName === "Text" ? "TextMajor" : null,
-    iconName === "CircleInformation" ? "CircleInformationMajor" : null,
-    iconName === "Colors" ? "ColorsMajor" : null,
-    iconName === "View" ? "ViewMajor" : null,
-    iconName === "Hide" ? "HideMajor" : null,
-    iconName === "Delete" ? "DeleteMajor" : null,
-    iconName === "ChevronUp" ? "ChevronUpMajor" : null,
-    iconName === "ChevronDown" ? "ChevronDownMajor" : null,
-    iconName === "Add" ? "AddMajor" : null,
-  ].filter(Boolean);
 
-  for (const variant of variants) {
-    if (PI[variant]) {
-      console.log("Found icon variant:", variant, "for", iconName);
-      return PI[variant];
+  // 2. Si le nom ne se termine pas par un suffixe connu, essayer avec "Major"
+  const hasKnownSuffix = iconName.endsWith("Major") || iconName.endsWith("Minor") || 
+                         iconName.endsWith("Icon") || iconName.endsWith("Filled") || 
+                         iconName.endsWith("Outline");
+  
+  if (!hasKnownSuffix) {
+    // Essayer avec "Major" (le plus courant dans Polaris v9)
+    const withMajor = iconName + "Major";
+    if (PI[withMajor]) {
+      iconCache.set(iconName, PI[withMajor]);
+      return PI[withMajor];
+    }
+
+    // Essayer avec "Icon"
+    const withIcon = iconName + "Icon";
+    if (PI[withIcon]) {
+      iconCache.set(iconName, PI[withIcon]);
+      return PI[withIcon];
     }
   }
 
-  console.warn("Icon not found:", iconName, "using fallback", fallbackIcon);
-  return PI[fallbackIcon] || PI.AppsMajor;
+  // 3. Capitaliser la première lettre et essayer
+  const capitalized = iconName.charAt(0).toUpperCase() + iconName.slice(1);
+  if (PI[capitalized]) {
+    iconCache.set(iconName, PI[capitalized]);
+    return PI[capitalized];
+  }
+
+  // 4. Capitaliser + "Major"
+  const capitalizedWithMajor = capitalized + "Major";
+  if (PI[capitalizedWithMajor]) {
+    iconCache.set(iconName, PI[capitalizedWithMajor]);
+    return PI[capitalizedWithMajor];
+  }
+
+  // 5. Mapping pour noms courants (en minuscules)
+  const lowerIconName = iconName.toLowerCase();
+  const commonMappings = {
+    'cart': 'CartMajor',
+    'bag': 'BagMajor',
+    'shoppingcart': 'CartMajor',
+    'profile': 'ProfileMajor',
+    'person': 'PersonMajor',
+    'user': 'PersonMajor',
+    'phone': 'PhoneMajor',
+    'mobile': 'MobileMajor',
+    'call': 'PhoneMajor',
+    'chat': 'ChatMajor',
+    'email': 'EmailMajor',
+    'mail': 'EmailMajor',
+    'envelope': 'EmailMajor',
+    'location': 'LocationMajor',
+    'pin': 'LocationMajor',
+    'mappin': 'MapPinMajor',
+    'map': 'MapMajor',
+    'globe': 'GlobeMajor',
+    'home': 'HomeMajor',
+    'house': 'HomeMajor',
+    'store': 'StoreMajor',
+    'shop': 'StoreMajor',
+    'building': 'BuildingMajor',
+    'company': 'StoreMajor',
+    'business': 'StoreMajor',
+    'calendar': 'CalendarMajor',
+    'date': 'CalendarMajor',
+    'time': 'ClockMajor',
+    'clock': 'ClockMajor',
+    'birthday': 'GiftMajor',
+    'gift': 'GiftMajor',
+    'present': 'GiftMajor',
+    'note': 'NoteMajor',
+    'document': 'DocumentMajor',
+    'file': 'DocumentMajor',
+    'clipboard': 'ClipboardMajor',
+    'text': 'TextMajor',
+    'hashtag': 'HashtagMajor',
+    'number': 'HashtagMajor',
+    'quantity': 'HashtagMajor',
+    'count': 'HashtagMajor',
+    'add': 'AddMajor',
+    'plus': 'AddMajor',
+    'create': 'AddMajor',
+    'delete': 'DeleteMajor',
+    'remove': 'DeleteMajor',
+    'trash': 'DeleteMajor',
+    'edit': 'EditMajor',
+    'settings': 'SettingsMajor',
+    'gear': 'SettingsMajor',
+    'config': 'SettingsMajor',
+    'view': 'ViewMajor',
+    'show': 'ViewMajor',
+    'eye': 'ViewMajor',
+    'hide': 'HideMajor',
+    'check': 'CheckCircleMajor',
+    'tick': 'CheckCircleMajor',
+    'success': 'CheckCircleMajor',
+    'arrowright': 'ArrowRightMajor',
+    'arrowleft': 'ArrowLeftMajor',
+    'arrowup': 'ArrowUpMajor',
+    'arrowdown': 'ArrowDownMajor',
+    'chevronup': 'ChevronUpMajor',
+    'chevrondown': 'ChevronDownMajor',
+    'chevronleft': 'ChevronLeftMajor',
+    'chevronright': 'ChevronRightMajor',
+    'truck': 'TruckMajor',
+    'shipping': 'TruckMajor',
+    'delivery': 'TruckMajor',
+    'checkout': 'CheckoutMajor',
+    'receipt': 'ReceiptMajor',
+    'order': 'ReceiptMajor',
+    'payment': 'CreditCardMajor',
+    'colors': 'ColorsMajor',
+    'color': 'ColorsMajor',
+    'palette': 'ColorsMajor',
+    'city': 'CityMajor',
+    'town': 'CityMajor',
+    'region': 'GlobeMajor',
+    'province': 'GlobeMajor',
+    'info': 'CircleInformationMajor',
+    'information': 'CircleInformationMajor',
+    'help': 'CircleInformationMajor',
+    'play': 'PlayMajor',
+    'start': 'PlayMajor',
+  };
+
+  // Nettoyer le nom pour le mapping (enlever espaces, tirets)
+  const cleanName = lowerIconName.replace(/[^a-z0-9]/g, '');
+  if (commonMappings[cleanName] && PI[commonMappings[cleanName]]) {
+    const mappedIcon = commonMappings[cleanName];
+    iconCache.set(iconName, PI[mappedIcon]);
+    return PI[mappedIcon];
+  }
+
+  // 6. Dernier recours: chercher par similarité dans toutes les clés
+  const iconKeys = Object.keys(PI);
+  // Enlever les suffixes pour la comparaison
+  const cleanIconName = iconName.replace(/Major$|Minor$|Icon$|Filled$|Outline$/i, '');
+  
+  for (const key of iconKeys) {
+    const cleanKey = key.replace(/Major$|Minor$|Icon$|Filled$|Outline$/i, '');
+    if (cleanKey.toLowerCase() === cleanIconName.toLowerCase()) {
+      iconCache.set(iconName, PI[key]);
+      return PI[key];
+    }
+  }
+
+  // 7. Fallback final
+  console.warn("Icon not found:", iconName, "-> using fallback", fallbackIcon);
+  const fallback = PI[fallbackIcon] || PI.AppsMajor;
+  iconCache.set(iconName, fallback);
+  return fallback;
 }
 
 /* -------------------- deep link vers l'éditeur de thème -------------------- */
@@ -632,27 +719,26 @@ const ICON_LIBRARY = {
 function PolarisIcon({ iconName, size = 20, color = "currentColor", accessibilityLabel, tone = "base", variant = "base" }) {
   const source = getIconSource(iconName);
   
-  // Vérifier si source est valide
-  if (!source || typeof source === 'string') {
-    console.error("Icon source is invalid for:", iconName, "source:", source);
+  // Vérifier si source est valide - version simplifiée
+  if (!source) {
+    console.error("Icon source is null for:", iconName);
     return (
       <div 
         style={{
           width: size,
           height: size,
-          backgroundColor: '#ff000020',
-          border: '1px dashed red',
+          backgroundColor: '#f5f5f5',
+          border: '1px solid #ddd',
           borderRadius: '4px',
           display: 'inline-flex',
           alignItems: 'center',
           justifyContent: 'center',
           fontSize: Math.max(size * 0.5, 10),
-          color: 'red',
-          fontWeight: 'bold',
+          color: '#999',
         }}
-        title={`Icon missing: ${iconName}`}
+        title={`Icon: ${iconName}`}
       >
-        !
+        ?
       </div>
     );
   }
