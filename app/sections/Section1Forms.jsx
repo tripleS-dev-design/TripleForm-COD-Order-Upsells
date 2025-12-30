@@ -1,4 +1,11 @@
 // ===== File: app/sections/Section1FormsLayout.jsx =====
+import React, {  // Ajoutez React ici
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import {
   Card,
   BlockStack,
@@ -51,13 +58,6 @@ import {
   Clickable,
 } from "@shopify/polaris";
 import * as PI from "@shopify/polaris-icons";
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
 import { useRouteLoaderData } from "@remix-run/react";
 import { useI18n } from "../i18n/react";
 
