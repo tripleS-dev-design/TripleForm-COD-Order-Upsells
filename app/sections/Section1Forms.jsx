@@ -26,21 +26,35 @@ import { useI18n } from "../i18n/react";
 /* ============================== Fonction utilitaire pour les icônes Polaris ============================== */
 function getIconSource(iconName, fallbackIcon = "AppsIcon") {
   if (!iconName || typeof iconName !== "string") {
+    console.warn("Invalid icon name:", iconName);
     return PI[fallbackIcon] || PI.AppsIcon;
   }
 
-  const iconVariants = [
+  // Noms directs
+  if (PI[iconName]) return PI[iconName];
+  
+  // Ajouter "Icon" suffix
+  const withIcon = iconName.endsWith("Icon") ? iconName : `${iconName}Icon`;
+  if (PI[withIcon]) return PI[withIcon];
+  
+  // Gérer les variantes Major/Minor
+  const variants = [
     iconName,
-    iconName.endsWith("Icon") ? iconName : `${iconName}Icon`,
-    iconName.endsWith("Major") ? iconName.replace("Major", "Icon") : `${iconName}Icon`,
-    iconName.endsWith("Minor") ? iconName.replace("Minor", "Icon") : `${iconName}Icon`,
-    iconName + "Icon",
+    withIcon,
+    iconName.replace("Major", "Icon"),
+    iconName.replace("Minor", "Icon"),
+    iconName.replace("Filled", "Icon"),
+    iconName.replace("Outline", "Icon"),
   ];
 
-  for (const variant of iconVariants) {
-    if (PI[variant]) return PI[variant];
+  for (const variant of variants) {
+    if (PI[variant]) {
+      console.log("Found icon variant:", variant, "for", iconName);
+      return PI[variant];
+    }
   }
 
+  console.warn("Icon not found:", iconName, "using fallback");
   return PI[fallbackIcon] || PI.AppsIcon;
 }
 
@@ -520,6 +534,30 @@ const ICON_LIBRARY = {
 /* ============================== Composant Icon Polaris ============================== */
 function PolarisIcon({ iconName, size = 20, color = "currentColor", accessibilityLabel }) {
   const source = getIconSource(iconName);
+  
+  // Si l'icône n'est pas trouvée, utiliser une div vide avec un message de débogage
+  if (!source) {
+    console.error("Icon source is undefined for:", iconName);
+    return (
+      <div 
+        style={{
+          width: size,
+          height: size,
+          backgroundColor: '#ff000020',
+          border: '1px dashed red',
+          borderRadius: '4px',
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: '10px',
+        }}
+        title={`Missing icon: ${iconName}`}
+      >
+        ?
+      </div>
+    );
+  }
+
   return (
     <span
       style={{
@@ -1150,7 +1188,7 @@ function Section1FormsLayoutInner() {
     meta: {
       version: 2,
       preset: "CleanWhite",
-      fieldsOrder: ["name", "phone", "quantity", "pincode", "pincode2", "pincode3", "email", "company", "birthday", "address", "city", "province", "notes"],
+      fieldsOrder: ["name", "phone", "quantity", "pincode", "pincode2", "pincode3", "email", "company", "birthday", "province", "city", "address", "notes"],
     },
     form: {
       style: "inline",
@@ -1188,113 +1226,19 @@ function Section1FormsLayoutInner() {
       cityKey: "",
     },
     fields: {
-      name: {
-        on: true,
-        required: true,
-        type: "text",
-        label: "Full name",
-        ph: "Your full name",
-        icon: "ProfileIcon",
-      },
-      phone: {
-        on: true,
-        required: true,
-        type: "tel",
-        label: "Phone (WhatsApp)",
-        ph: "Phone number",
-        prefix: "+212",
-        icon: "PhoneIcon",
-      },
-      quantity: {
-        on: true,
-        required: true,
-        type: "number",
-        label: "Quantity",
-        ph: "1",
-        min: 1,
-        max: 10,
-        icon: "HashtagIcon",
-      },
-      pincode: {
-        on: true,
-        required: true,
-        type: "text",
-        label: "Pincode",
-        ph: "Enter pincode",
-        icon: "LocationIcon",
-      },
-      pincode2: {
-        on: true,
-        required: false,
-        type: "text",
-        label: "Pincode 2",
-        ph: "Additional pincode",
-        icon: "MapIcon",
-      },
-      pincode3: {
-        on: true,
-        required: false,
-        type: "text",
-        label: "Pincode 3",
-        ph: "Extra pincode info",
-        icon: "HashtagIcon",
-      },
-      email: {
-        on: true,
-        required: true,
-        type: "text",
-        label: "Email",
-        ph: "your.email@example.com",
-        icon: "EmailIcon",
-      },
-      company: {
-        on: false,
-        required: false,
-        type: "text",
-        label: "Company",
-        ph: "Your company name",
-        icon: "StoreIcon",
-      },
-      birthday: {
-        on: false,
-        required: false,
-        type: "text",
-        label: "Birthday",
-        ph: "DD/MM/YYYY",
-        icon: "CalendarIcon",
-      },
-      province: {
-        on: false,
-        required: false,
-        type: "text",
-        label: "Wilaya / Province",
-        ph: "Select province",
-        icon: "RegionIcon",
-      },
-      city: {
-        on: false,
-        required: false,
-        type: "text",
-        label: "City",
-        ph: "Select city",
-        icon: "CityIcon",
-      },
-      address: {
-        on: false,
-        required: false,
-        type: "text",
-        label: "Address",
-        ph: "Full address",
-        icon: "LocationIcon",
-      },
-      notes: {
-        on: false,
-        required: false,
-        type: "textarea",
-        label: "Notes",
-        ph: "(optional)",
-        icon: "NoteIcon",
-      },
+      name: { on: true, required: true, type: "text", label: "Full name", ph: "Your full name", icon: "ProfileIcon" },
+      phone: { on: true, required: true, type: "tel", label: "Phone (WhatsApp)", ph: "Phone number", prefix: "+212", icon: "PhoneIcon" },
+      quantity: { on: true, required: true, type: "number", label: "Quantity", ph: "1", min: 1, max: 10, icon: "HashtagIcon" },
+      pincode: { on: true, required: true, type: "text", label: "Pincode", ph: "Enter pincode", icon: "LocationIcon" },
+      pincode2: { on: true, required: false, type: "text", label: "Pincode 2", ph: "Additional pincode", icon: "MapIcon" },
+      pincode3: { on: true, required: false, type: "text", label: "Pincode 3", ph: "Extra pincode info", icon: "HashtagIcon" },
+      email: { on: true, required: true, type: "text", label: "Email", ph: "your.email@example.com", icon: "EmailIcon" },
+      company: { on: true, required: false, type: "text", label: "Company", ph: "Your company name", icon: "StoreIcon" },
+      birthday: { on: true, required: false, type: "text", label: "Birthday", ph: "DD/MM/YYYY", icon: "CalendarIcon" },
+      province: { on: true, required: false, type: "text", label: "Wilaya / Province", ph: "Select province", icon: "RegionIcon" },
+      city: { on: true, required: false, type: "text", label: "City", ph: "Select city", icon: "CityIcon" },
+      address: { on: true, required: false, type: "text", label: "Address", ph: "Full address", icon: "LocationIcon" },
+      notes: { on: true, required: false, type: "textarea", label: "Notes", ph: "(optional)", icon: "NoteIcon" },
     },
     cartTitles: {
       top: "Order summary",
@@ -1782,17 +1726,27 @@ function OutletEditor() {
     return 0;
   }, [sel]);
 
-  // ITEMS DU RAIL GAUCHE - UNIQUEMENT LES CHAMPS
-  const fieldItems = order.map((k) => ({
-    key: `field:${k}`,
-    label: config.fields[k]?.label || k,
-    movable: true,
-    toggle: true,
-    on: !!config.fields[k]?.on,
-    iconName: config.fields[k]?.icon || "AppsIcon",
-  }));
+  // ITEMS DU RAIL GAUCHE - TOUS LES CHAMPS, MÊME CACHÉS
+  const fieldItems = Object.keys(config.fields || {}).map((k) => {
+    const field = config.fields[k];
+    return {
+      key: `field:${k}`,
+      label: field?.label || k,
+      movable: true,
+      toggle: true,
+      on: field?.on !== false, // Par défaut true si non défini
+      iconName: field?.icon || "AppsIcon",
+    };
+  });
 
-  const items = [...fieldItems];
+  // Trier selon l'ordre défini dans meta.fieldsOrder
+  const sortedFieldItems = [...fieldItems].sort((a, b) => {
+    const orderA = order.indexOf(a.key.replace('field:', ''));
+    const orderB = order.indexOf(b.key.replace('field:', ''));
+    return (orderA === -1 ? 999 : orderA) - (orderB === -1 ? 999 : orderB);
+  });
+
+  const items = sortedFieldItems;
 
   const moveField = (key, dir) => {
     const k = key.replace(/^field:/, "");
@@ -1829,7 +1783,13 @@ function OutletEditor() {
 
   const removeField = (key) => {
     const k = key.replace(/^field:/, "");
-    setField(k, { on: false, required: false });
+    // NE PAS désactiver ou réinitialiser, juste sélectionner
+    setSel(`field:${k}`);
+    
+    // Optionnel: ouvrir une modal de confirmation
+    if (window.confirm(t("section1.confirmRemoveField"))) {
+      setField(k, { on: false });
+    }
   };
 
   const RailIconBtn = ({ iconName, title, onClick, active, danger }) => (
@@ -1855,7 +1815,7 @@ function OutletEditor() {
 
   return (
     <>
-      {/* RAIL GAUCHE - UNIQUEMENT LES CHAMPS */}
+      {/* RAIL GAUCHE - TOUS LES CHAMPS */}
       <div className="tf-rail">
         <div className="tf-rail-card">
           <div className="tf-rail-head">{t("section1.rail.fieldsTitle")}</div>
@@ -1908,6 +1868,40 @@ function OutletEditor() {
                 </div>
               </div>
             ))}
+            
+            {/* Bouton pour ajouter un nouveau champ */}
+            <div 
+              className="tf-rail-item"
+              style={{ 
+                background: 'linear-gradient(135deg, #f0f9ff, #e0f2fe)',
+                border: '2px dashed #0ea5e9',
+                cursor: 'pointer',
+              }}
+              onClick={() => {
+                // Ouvrir une modal ou un formulaire pour ajouter un nouveau champ
+                const newFieldKey = `custom_${Date.now()}`;
+                setField(newFieldKey, {
+                  on: true,
+                  required: false,
+                  type: 'text',
+                  label: t('section1.newFieldLabel'),
+                  ph: t('section1.newFieldPlaceholder'),
+                  icon: 'AddIcon',
+                });
+                setFieldsOrder([...order, newFieldKey]);
+                setSel(`field:${newFieldKey}`);
+              }}
+            >
+              <div className="tf-grip tf-rail-icon">
+                <PolarisIcon iconName="AddIcon" size={16} color="#0ea5e9" />
+              </div>
+              <div style={{ fontWeight: 600, fontSize: 13, color: '#0ea5e9' }}>
+                {t('section1.addNewField')}
+              </div>
+              <div className="tf-rail-actions">
+                <div style={{ width: 44 }}></div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
