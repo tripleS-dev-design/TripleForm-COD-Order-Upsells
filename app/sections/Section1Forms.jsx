@@ -1,4 +1,4 @@
-// ===== File: app/sections/Section1FormsLayout.jsx (Partie 1) =====
+// ===== File: app/sections/Section1FormsLayout.jsx =====
 import {
   Card,
   BlockStack,
@@ -11,6 +11,44 @@ import {
   Modal,
   Icon,
   Tabs,
+  Badge,
+  Banner,
+  Spinner,
+  Checkbox as PolarisCheckbox,
+  ChoiceList,
+  ColorPicker,
+  DatePicker,
+  DropZone,
+  EmailField,
+  MoneyField,
+  NumberField,
+  PasswordField,
+  SearchField,
+  Switch,
+  TextArea,
+  URLField,
+  Avatar,
+  Image,
+  Thumbnail,
+  Popover,
+  Tooltip,
+  Box,
+  Divider,
+  Grid,
+  OrderedList,
+  Page,
+  Section,
+  Stack,
+  Table,
+  UnorderedList,
+  Heading,
+  Paragraph,
+  Text,
+  Chip,
+  ClickableChip,
+  Link,
+  Menu,
+  Clickable,
 } from "@shopify/polaris";
 import * as PI from "@shopify/polaris-icons";
 import {
@@ -23,29 +61,88 @@ import {
 import { useRouteLoaderData } from "@remix-run/react";
 import { useI18n } from "../i18n/react";
 
-/* ============================== Fonction utilitaire pour les icônes Polaris ============================== */
-function getIconSource(iconName, fallbackIcon = "AppsIcon") {
+/* ============================== Fonction utilitaire améliorée pour les icônes Polaris ============================== */
+function getIconSource(iconName, fallbackIcon = "AppsMajor") {
   if (!iconName || typeof iconName !== "string") {
     console.warn("Invalid icon name:", iconName);
-    return PI[fallbackIcon] || PI.AppsIcon;
+    return PI[fallbackIcon] || PI.AppsMajor;
   }
 
-  // Noms directs
-  if (PI[iconName]) return PI[iconName];
+  // 1. Vérifier si c'est déjà un composant valide
+  if (typeof iconName === 'function') return iconName;
   
-  // Ajouter "Icon" suffix
+  // 2. Noms directs
+  if (PI[iconName]) {
+    return PI[iconName];
+  }
+  
+  // 3. Ajouter "Major" suffix si nécessaire (format standard Polaris)
+  const withMajor = iconName.endsWith("Major") ? iconName : `${iconName}Major`;
+  if (PI[withMajor]) {
+    return PI[withMajor];
+  }
+  
+  // 4. Ajouter "Icon" suffix (pour compatibilité)
   const withIcon = iconName.endsWith("Icon") ? iconName : `${iconName}Icon`;
-  if (PI[withIcon]) return PI[withIcon];
+  if (PI[withIcon]) {
+    return PI[withIcon];
+  }
   
-  // Gérer les variantes Major/Minor
+  // 5. Essayer différentes variantes
   const variants = [
     iconName,
     withIcon,
-    iconName.replace("Major", "Icon"),
-    iconName.replace("Minor", "Icon"),
-    iconName.replace("Filled", "Icon"),
-    iconName.replace("Outline", "Icon"),
-  ];
+    withMajor,
+    `${iconName}Minor`,
+    `${iconName}Filled`,
+    iconName.replace(/Icon$/, "Major"),
+    iconName.replace(/Icon$/, "Minor"),
+    iconName.replace(/Major$/, "Icon"),
+    iconName.replace(/Minor$/, "Icon"),
+    iconName.replace(/Filled$/, "Icon"),
+    iconName.replace(/Outline$/, "Icon"),
+    // Pour les noms communs
+    iconName === "Cart" ? "CartMajor" : null,
+    iconName === "Bag" ? "BagMajor" : null,
+    iconName === "Profile" ? "ProfileMajor" : null,
+    iconName === "Person" ? "PersonMajor" : null,
+    iconName === "Phone" ? "PhoneMajor" : null,
+    iconName === "Location" ? "LocationMajor" : null,
+    iconName === "Email" ? "EmailMajor" : null,
+    iconName === "Calendar" ? "CalendarMajor" : null,
+    iconName === "Note" ? "NoteMajor" : null,
+    iconName === "Settings" ? "SettingsMajor" : null,
+    iconName === "Checkout" ? "CheckoutMajor" : null,
+    iconName === "Receipt" ? "ReceiptMajor" : null,
+    iconName === "User" ? "UserMajor" : null,
+    iconName === "Chat" ? "ChatMajor" : null,
+    iconName === "Hashtag" ? "HashtagMajor" : null,
+    iconName === "CirclePlus" ? "CirclePlusMajor" : null,
+    iconName === "Map" ? "MapMajor" : null,
+    iconName === "Globe" ? "GlobeMajor" : null,
+    iconName === "Home" ? "HomeMajor" : null,
+    iconName === "Store" ? "StoreMajor" : null,
+    iconName === "Building" ? "BuildingMajor" : null,
+    iconName === "Gift" ? "GiftMajor" : null,
+    iconName === "City" ? "CityMajor" : null,
+    iconName === "Region" ? "LocationMajor" : null,
+    iconName === "Clipboard" ? "ClipboardMajor" : null,
+    iconName === "Document" ? "DocumentMajor" : null,
+    iconName === "Truck" ? "TruckMajor" : null,
+    iconName === "CheckCircle" ? "CheckCircleMajor" : null,
+    iconName === "ArrowRight" ? "ArrowRightMajor" : null,
+    iconName === "Send" ? "SendMajor" : null,
+    iconName === "Play" ? "PlayMajor" : null,
+    iconName === "Text" ? "TextMajor" : null,
+    iconName === "CircleInformation" ? "CircleInformationMajor" : null,
+    iconName === "Colors" ? "ColorsMajor" : null,
+    iconName === "View" ? "ViewMajor" : null,
+    iconName === "Hide" ? "HideMajor" : null,
+    iconName === "Delete" ? "DeleteMajor" : null,
+    iconName === "ChevronUp" ? "ChevronUpMajor" : null,
+    iconName === "ChevronDown" ? "ChevronDownMajor" : null,
+    iconName === "Add" ? "AddMajor" : null,
+  ].filter(Boolean);
 
   for (const variant of variants) {
     if (PI[variant]) {
@@ -54,8 +151,8 @@ function getIconSource(iconName, fallbackIcon = "AppsIcon") {
     }
   }
 
-  console.warn("Icon not found:", iconName, "using fallback");
-  return PI[fallbackIcon] || PI.AppsIcon;
+  console.warn("Icon not found:", iconName, "using fallback", fallbackIcon);
+  return PI[fallbackIcon] || PI.AppsMajor;
 }
 
 /* -------------------- deep link vers l'éditeur de thème -------------------- */
@@ -424,120 +521,120 @@ const DESIGN_PRESETS = {
   },
 };
 
-/* ============================== Bibliothèque d'icônes Polaris ============================== */
+/* ============================== Bibliothèque d'icônes Polaris mise à jour ============================== */
 const ICON_LIBRARY = {
   cartTitle: [
-    { value: "CartIcon", label: "Panier" },
-    { value: "BagIcon", label: "Sac" },
-    { value: "ProductsIcon", label: "Produits" },
-    { value: "CheckoutIcon", label: "Checkout" },
-    { value: "ReceiptIcon", label: "Reçu" },
-    { value: "NoteIcon", label: "Note" },
+    { value: "CartMajor", label: "Panier" },
+    { value: "BagMajor", label: "Sac" },
+    { value: "ProductsMajor", label: "Produits" },
+    { value: "CheckoutMajor", label: "Checkout" },
+    { value: "ReceiptMajor", label: "Reçu" },
+    { value: "NoteMajor", label: "Note" },
   ],
   name: [
-    { value: "ProfileIcon", label: "Profil" },
-    { value: "PersonIcon", label: "Personne" },
-    { value: "CustomersIcon", label: "Clients" },
-    { value: "UserIcon", label: "Utilisateur" },
+    { value: "ProfileMajor", label: "Profil" },
+    { value: "PersonMajor", label: "Personne" },
+    { value: "CustomersMajor", label: "Clients" },
+    { value: "UserMajor", label: "Utilisateur" },
   ],
   phone: [
-    { value: "PhoneIcon", label: "Téléphone" },
-    { value: "MobileIcon", label: "Mobile" },
-    { value: "CallIcon", label: "Appel" },
-    { value: "ChatIcon", label: "Chat" },
+    { value: "PhoneMajor", label: "Téléphone" },
+    { value: "MobileMajor", label: "Mobile" },
+    { value: "CallMajor", label: "Appel" },
+    { value: "ChatMajor", label: "Chat" },
   ],
   quantity: [
-    { value: "HashtagIcon", label: "Hashtag" },
-    { value: "CirclePlusIcon", label: "Plus" },
-    { value: "CartIcon", label: "Panier" },
-    { value: "NumberIcon", label: "Nombre" },
+    { value: "HashtagMajor", label: "Hashtag" },
+    { value: "CirclePlusMajor", label: "Plus" },
+    { value: "CartMajor", label: "Panier" },
+    { value: "NumberMajor", label: "Nombre" },
   ],
   pincode: [
-    { value: "LocationIcon", label: "Localisation" },
-    { value: "PinIcon", label: "Épingle" },
-    { value: "MapPinIcon", label: "Épingle de carte" },
-    { value: "HomeIcon", label: "Maison" },
+    { value: "LocationMajor", label: "Localisation" },
+    { value: "PinMajor", label: "Épingle" },
+    { value: "MapPinMajor", label: "Épingle de carte" },
+    { value: "HomeMajor", label: "Maison" },
   ],
   pincode2: [
-    { value: "LocationIcon", label: "Localisation" },
-    { value: "MapIcon", label: "Carte" },
-    { value: "GlobeIcon", label: "Globe" },
-    { value: "PinIcon", label: "Épingle" },
+    { value: "LocationMajor", label: "Localisation" },
+    { value: "MapMajor", label: "Carte" },
+    { value: "GlobeMajor", label: "Globe" },
+    { value: "PinMajor", label: "Épingle" },
   ],
   pincode3: [
-    { value: "HashtagIcon", label: "Hashtag" },
-    { value: "NumberIcon", label: "Nombre" },
-    { value: "CircleInformationIcon", label: "Information" },
-    { value: "MarkerIcon", label: "Marqueur" },
+    { value: "HashtagMajor", label: "Hashtag" },
+    { value: "NumberMajor", label: "Nombre" },
+    { value: "CircleInformationMajor", label: "Information" },
+    { value: "MarkerMajor", label: "Marqueur" },
   ],
   email: [
-    { value: "EmailIcon", label: "Email" },
-    { value: "EnvelopeIcon", label: "Enveloppe" },
-    { value: "SendIcon", label: "Envoyer" },
-    { value: "MailIcon", label: "Courrier" },
+    { value: "EmailMajor", label: "Email" },
+    { value: "EnvelopeMajor", label: "Enveloppe" },
+    { value: "SendMajor", label: "Envoyer" },
+    { value: "MailMajor", label: "Courrier" },
   ],
   company: [
-    { value: "StoreIcon", label: "Magasin" },
-    { value: "BuildingIcon", label: "Bâtiment" },
-    { value: "BusinessIcon", label: "Business" },
-    { value: "BagIcon", label: "Sac" },
+    { value: "StoreMajor", label: "Magasin" },
+    { value: "BuildingMajor", label: "Bâtiment" },
+    { value: "BusinessMajor", label: "Business" },
+    { value: "BagMajor", label: "Sac" },
   ],
   birthday: [
-    { value: "CalendarIcon", label: "Calendrier" },
-    { value: "DateIcon", label: "Date" },
-    { value: "GiftIcon", label: "Cadeau" },
-    { value: "CelebrationIcon", label: "Célébration" },
+    { value: "CalendarMajor", label: "Calendrier" },
+    { value: "DateMajor", label: "Date" },
+    { value: "GiftMajor", label: "Cadeau" },
+    { value: "CelebrationMajor", label: "Célébration" },
   ],
   address: [
-    { value: "LocationIcon", label: "Localisation" },
-    { value: "PinIcon", label: "Épingle" },
-    { value: "HomeIcon", label: "Maison" },
-    { value: "StoreIcon", label: "Magasin" },
+    { value: "LocationMajor", label: "Localisation" },
+    { value: "PinMajor", label: "Épingle" },
+    { value: "HomeMajor", label: "Maison" },
+    { value: "StoreMajor", label: "Magasin" },
   ],
   city: [
-    { value: "GlobeIcon", label: "Globe" },
-    { value: "LocationIcon", label: "Localisation" },
-    { value: "MapIcon", label: "Carte" },
-    { value: "CityIcon", label: "Ville" },
+    { value: "GlobeMajor", label: "Globe" },
+    { value: "LocationMajor", label: "Localisation" },
+    { value: "MapMajor", label: "Carte" },
+    { value: "CityMajor", label: "Ville" },
   ],
   province: [
-    { value: "GlobeIcon", label: "Globe" },
-    { value: "MapIcon", label: "Carte" },
-    { value: "LocationIcon", label: "Localisation" },
-    { value: "RegionIcon", label: "Région" },
+    { value: "GlobeMajor", label: "Globe" },
+    { value: "MapMajor", label: "Carte" },
+    { value: "LocationMajor", label: "Localisation" },
+    { value: "RegionMajor", label: "Région" },
   ],
   notes: [
-    { value: "NoteIcon", label: "Note" },
-    { value: "ClipboardIcon", label: "Presse-papier" },
-    { value: "DocumentIcon", label: "Document" },
-    { value: "TextIcon", label: "Texte" },
+    { value: "NoteMajor", label: "Note" },
+    { value: "ClipboardMajor", label: "Presse-papier" },
+    { value: "DocumentMajor", label: "Document" },
+    { value: "TextMajor", label: "Texte" },
   ],
   button: [
-    { value: "CartIcon", label: "Panier" },
-    { value: "CheckoutIcon", label: "Checkout" },
-    { value: "BagIcon", label: "Sac" },
-    { value: "TruckIcon", label: "Camion" },
-    { value: "CheckCircleIcon", label: "Coche" },
-    { value: "ArrowRightIcon", label: "Flèche droite" },
-    { value: "SendIcon", label: "Envoyer" },
-    { value: "PlayIcon", label: "Play" },
+    { value: "CartMajor", label: "Panier" },
+    { value: "CheckoutMajor", label: "Checkout" },
+    { value: "BagMajor", label: "Sac" },
+    { value: "TruckMajor", label: "Camion" },
+    { value: "CheckCircleMajor", label: "Coche" },
+    { value: "ArrowRightMajor", label: "Flèche droite" },
+    { value: "SendMajor", label: "Envoyer" },
+    { value: "PlayMajor", label: "Play" },
   ],
   rail: {
-    cart: { value: "CartIcon" },
-    titles: { value: "TextIcon" },
-    buttons: { value: "CircleInformationIcon" },
-    colors: { value: "ColorsIcon" },
-    options: { value: "SettingsIcon" },
+    cart: { value: "CartMajor" },
+    titles: { value: "TextMajor" },
+    buttons: { value: "CircleInformationMajor" },
+    colors: { value: "ColorsMajor" },
+    options: { value: "SettingsMajor" },
   },
 };
 
-/* ============================== Composant Icon Polaris ============================== */
-function PolarisIcon({ iconName, size = 20, color = "currentColor", accessibilityLabel }) {
+/* ============================== Composant Icon Polaris amélioré ============================== */
+function PolarisIcon({ iconName, size = 20, color = "currentColor", accessibilityLabel, tone = "base", variant = "base" }) {
   const source = getIconSource(iconName);
   
-  // Si l'icône n'est pas trouvée, utiliser une div vide avec un message de débogage
-  if (!source) {
-    console.error("Icon source is undefined for:", iconName);
+  // Vérifier si source est valide
+  if (!source || typeof source === 'string') {
+    console.error("Icon source is invalid for:", iconName, "source:", source);
     return (
       <div 
         style={{
@@ -549,11 +646,13 @@ function PolarisIcon({ iconName, size = 20, color = "currentColor", accessibilit
           display: 'inline-flex',
           alignItems: 'center',
           justifyContent: 'center',
-          fontSize: '10px',
+          fontSize: Math.max(size * 0.5, 10),
+          color: 'red',
+          fontWeight: 'bold',
         }}
-        title={`Missing icon: ${iconName}`}
+        title={`Icon missing: ${iconName}`}
       >
-        ?
+        !
       </div>
     );
   }
@@ -570,7 +669,12 @@ function PolarisIcon({ iconName, size = 20, color = "currentColor", accessibilit
         flex: "0 0 auto",
       }}
     >
-      <Icon source={source} accessibilityLabel={accessibilityLabel || iconName} />
+      <Icon 
+        source={source} 
+        accessibilityLabel={accessibilityLabel || iconName}
+        color={color}
+        tone={tone}
+      />
     </span>
   );
 }
@@ -1091,7 +1195,6 @@ const getShippingExample = (city, countryCode) => {
     note: "Livraison standard",
   };
 };
-// ===== File: app/sections/Section1FormsLayout.jsx (Partie 2) =====
 
 /* ============================== Contexte ============================== */
 const FormsCtx = createContext(null);
@@ -1196,7 +1299,7 @@ function Section1FormsLayoutInner() {
       subtitle: "Please enter your contact information",
       buttonText: "Order now",
       successText: "Thanks! We'll contact you",
-      buttonIcon: "CartIcon",
+      buttonIcon: "CartMajor",
     },
     design: {
       ...DESIGN_PRESETS.CleanWhite,
@@ -1216,7 +1319,7 @@ function Section1FormsLayoutInner() {
       glowPx: 18,
       stickyType: "none",
       stickyLabel: "Order now",
-      stickyIcon: "CartIcon",
+      stickyIcon: "CartMajor",
       drawerDirection: "right",
       drawerSize: "md",
       overlayColor: "#020617",
@@ -1226,26 +1329,26 @@ function Section1FormsLayoutInner() {
       cityKey: "",
     },
     fields: {
-      name: { on: true, required: true, type: "text", label: "Full name", ph: "Your full name", icon: "ProfileIcon" },
-      phone: { on: true, required: true, type: "tel", label: "Phone (WhatsApp)", ph: "Phone number", prefix: "+212", icon: "PhoneIcon" },
-      quantity: { on: true, required: true, type: "number", label: "Quantity", ph: "1", min: 1, max: 10, icon: "HashtagIcon" },
-      pincode: { on: true, required: true, type: "text", label: "Pincode", ph: "Enter pincode", icon: "LocationIcon" },
-      pincode2: { on: true, required: false, type: "text", label: "Pincode 2", ph: "Additional pincode", icon: "MapIcon" },
-      pincode3: { on: true, required: false, type: "text", label: "Pincode 3", ph: "Extra pincode info", icon: "HashtagIcon" },
-      email: { on: true, required: true, type: "text", label: "Email", ph: "your.email@example.com", icon: "EmailIcon" },
-      company: { on: true, required: false, type: "text", label: "Company", ph: "Your company name", icon: "StoreIcon" },
-      birthday: { on: true, required: false, type: "text", label: "Birthday", ph: "DD/MM/YYYY", icon: "CalendarIcon" },
-      province: { on: true, required: false, type: "text", label: "Wilaya / Province", ph: "Select province", icon: "RegionIcon" },
-      city: { on: true, required: false, type: "text", label: "City", ph: "Select city", icon: "CityIcon" },
-      address: { on: true, required: false, type: "text", label: "Address", ph: "Full address", icon: "LocationIcon" },
-      notes: { on: true, required: false, type: "textarea", label: "Notes", ph: "(optional)", icon: "NoteIcon" },
+      name: { on: true, required: true, type: "text", label: "Full name", ph: "Your full name", icon: "ProfileMajor" },
+      phone: { on: true, required: true, type: "tel", label: "Phone (WhatsApp)", ph: "Phone number", prefix: "+212", icon: "PhoneMajor" },
+      quantity: { on: true, required: true, type: "number", label: "Quantity", ph: "1", min: 1, max: 10, icon: "HashtagMajor" },
+      pincode: { on: true, required: true, type: "text", label: "Pincode", ph: "Enter pincode", icon: "LocationMajor" },
+      pincode2: { on: true, required: false, type: "text", label: "Pincode 2", ph: "Additional pincode", icon: "MapMajor" },
+      pincode3: { on: true, required: false, type: "text", label: "Pincode 3", ph: "Extra pincode info", icon: "HashtagMajor" },
+      email: { on: true, required: true, type: "text", label: "Email", ph: "your.email@example.com", icon: "EmailMajor" },
+      company: { on: true, required: false, type: "text", label: "Company", ph: "Your company name", icon: "StoreMajor" },
+      birthday: { on: true, required: false, type: "text", label: "Birthday", ph: "DD/MM/YYYY", icon: "CalendarMajor" },
+      province: { on: true, required: false, type: "text", label: "Wilaya / Province", ph: "Select province", icon: "GlobeMajor" },
+      city: { on: true, required: false, type: "text", label: "City", ph: "Select city", icon: "LocationMajor" },
+      address: { on: true, required: false, type: "text", label: "Address", ph: "Full address", icon: "HomeMajor" },
+      notes: { on: true, required: false, type: "textarea", label: "Notes", ph: "(optional)", icon: "NoteMajor" },
     },
     cartTitles: {
       top: "Order summary",
       price: "Product price",
       shipping: "Shipping price",
       total: "Total",
-      cartIcon: "CartIcon",
+      cartIcon: "CartMajor",
     },
     uiTitles: {
       applyCoupon: "Apply",
@@ -1735,7 +1838,7 @@ function OutletEditor() {
       movable: true,
       toggle: true,
       on: field?.on !== false, // Par défaut true si non défini
-      iconName: field?.icon || "AppsIcon",
+      iconName: field?.icon || "AppsMajor",
     };
   });
 
@@ -1839,29 +1942,29 @@ function OutletEditor() {
 
                 <div className="tf-rail-actions">
                   <RailIconBtn
-                    iconName="SettingsIcon"
+                    iconName="SettingsMajor"
                     title="Settings"
                     onClick={() => setSel(it.key)}
                   />
                   <RailIconBtn
-                    iconName={it.on ? "ViewIcon" : "HideIcon"}
+                    iconName={it.on ? "ViewMajor" : "HideMajor"}
                     title={it.on ? "Hide" : "Show"}
                     active={!!it.on}
                     onClick={() => toggleField(it.key)}
                   />
                   <RailIconBtn
-                    iconName="DeleteIcon"
+                    iconName="DeleteMajor"
                     title="Remove"
                     danger
                     onClick={() => removeField(it.key)}
                   />
                   <RailIconBtn
-                    iconName="ChevronUpIcon"
+                    iconName="ChevronUpMajor"
                     title="Move up"
                     onClick={() => moveField(it.key, -1)}
                   />
                   <RailIconBtn
-                    iconName="ChevronDownIcon"
+                    iconName="ChevronDownMajor"
                     title="Move down"
                     onClick={() => moveField(it.key, 1)}
                   />
@@ -1886,14 +1989,14 @@ function OutletEditor() {
                   type: 'text',
                   label: t('section1.newFieldLabel'),
                   ph: t('section1.newFieldPlaceholder'),
-                  icon: 'AddIcon',
+                  icon: 'AddMajor',
                 });
                 setFieldsOrder([...order, newFieldKey]);
                 setSel(`field:${newFieldKey}`);
               }}
             >
               <div className="tf-grip tf-rail-icon">
-                <PolarisIcon iconName="AddIcon" size={16} color="#0ea5e9" />
+                <PolarisIcon iconName="AddMajor" size={16} color="#0ea5e9" />
               </div>
               <div style={{ fontWeight: 600, fontSize: 13, color: '#0ea5e9' }}>
                 {t('section1.addNewField')}
