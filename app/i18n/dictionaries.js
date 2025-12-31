@@ -5943,52 +5943,35 @@ export const DICTIONARIES = {
 
 export function resolveLocale(locale) {
   if (!locale) {
-    return {
-      code: DEFAULT_LANGUAGE,
-      dict: DICTIONARIES[DEFAULT_LANGUAGE],
-    };
+    return { code: DEFAULT_LANGUAGE, dict: DICTIONARIES[DEFAULT_LANGUAGE] };
   }
 
-  // 1) alias exact (ex : es-ES -> es)
+  // 1) alias exact
   const alias = LOCALE_ALIASES[locale];
-  if (alias && DICTIONARIES[alias]) {
-    return { code: alias, dict: DICTIONARIES[alias] };
-  }
+  if (alias && DICTIONARIES[alias]) return { code: alias, dict: DICTIONARIES[alias] };
 
-  // 2) code complet ou court (ex : "es-ES" -> "es")
+  // 2) code complet ou short
   const short = locale.split("-")[0];
-  if (DICTIONARIES[locale]) {
-    return { code: locale, dict: DICTIONARIES[locale] };
-  }
-  if (DICTIONARIES[short]) {
-    return { code: short, dict: DICTIONARIES[short] };
-  }
+  if (DICTIONARIES[locale]) return { code: locale, dict: DICTIONARIES[locale] };
+  if (DICTIONARIES[short]) return { code: short, dict: DICTIONARIES[short] };
 
   // 3) fallback
-  return {
-    code: DEFAULT_LANGUAGE,
-    dict: DICTIONARIES[DEFAULT_LANGUAGE],
-  };
+  return { code: DEFAULT_LANGUAGE, dict: DICTIONARIES[DEFAULT_LANGUAGE] };
 }
 
 /**
- * translate(dict, key, vars)   -> ancien usage (on donne le dictionnaire)
- * translate("fr", key, vars)   -> nouveau usage (on donne la locale)
+ * translate(dict, key, vars)   -> ancien usage
+ * translate("fr", key, vars)   -> nouveau usage
  */
 export function translate(localeOrDict, key, vars) {
   let dict;
 
   if (typeof localeOrDict === "string") {
-    // on nous a passé "fr", "fr-FR", "es-ES", etc.
-    const resolved = resolveLocale(localeOrDict);
-    dict = resolved.dict;
+    dict = resolveLocale(localeOrDict).dict;
   } else if (localeOrDict && typeof localeOrDict === "object") {
-    // on nous a passé directement EN / FR / ES / AR
     dict = localeOrDict;
   } else {
-    // fallback
-    const resolved = resolveLocale(DEFAULT_LANGUAGE);
-    dict = resolved.dict;
+    dict = resolveLocale(DEFAULT_LANGUAGE).dict;
   }
 
   let text = dict[key] ?? key;
