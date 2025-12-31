@@ -1466,7 +1466,12 @@ const EN = {
 "section2.preview.orderSummary.title": "Order summary",
 "section2.preview.orderSummary.subtotal": "Subtotal",
 "section2.preview.orderSummary.shipping": "Shipping",
-"section2.preview.orderSummary.total": "Total"
+"section2.preview.orderSummary.total": "Total",
+"section1.preview.shippingTo": "Shipping to",
+"section1.newFieldPlaceholder": "New field placeholder",
+"section1.newFieldLabel": "New field label",
+"section1.addNewField": "Add new field",
+"section1.rail.fieldsTitle": "Form fields"
 
 };
 
@@ -2918,7 +2923,12 @@ const FR = {
 "section2.preview.orderSummary.title": "Récapitulatif de commande",
 "section2.preview.orderSummary.subtotal": "Sous-total",
 "section2.preview.orderSummary.shipping": "Livraison",
-"section2.preview.orderSummary.total": "Total"
+"section2.preview.orderSummary.total": "Total",
+"section1.preview.shippingTo": "Livraison à",
+"section1.newFieldPlaceholder": "Placeholder nouveau champ",
+"section1.newFieldLabel": "Label nouveau champ",
+"section1.addNewField": "Ajouter un nouveau champ",
+"section1.rail.fieldsTitle": "Champs du formulaire"
 
 };
 
@@ -4378,7 +4388,12 @@ const ES = {
 "section2.preview.orderSummary.title": "Resumen del pedido",
 "section2.preview.orderSummary.subtotal": "Subtotal",
 "section2.preview.orderSummary.shipping": "Envío",
-"section2.preview.orderSummary.total": "Total"
+"section2.preview.orderSummary.total": "Total",
+"section1.preview.shippingTo": "Envío a",
+"section1.newFieldPlaceholder": "Marcador de posición del nuevo campo",
+"section1.newFieldLabel": "Etiqueta del nuevo campo",
+"section1.addNewField": "Agregar nuevo campo",
+"section1.rail.fieldsTitle": "Campos del formulario"
 
 };
 
@@ -5836,7 +5851,12 @@ const AR = {
 "section2.preview.orderSummary.title": "ملخص الطلب",
 "section2.preview.orderSummary.subtotal": "المجموع الفرعي",
 "section2.preview.orderSummary.shipping": "الشحن",
-"section2.preview.orderSummary.total": "المجموع"
+"section2.preview.orderSummary.total": "المجموع",
+"section1.preview.shippingTo": "الشحن إلى",
+"section1.newFieldPlaceholder": "مؤشر موضع الحقل الجديد",
+"section1.newFieldLabel": "تسمية الحقل الجديد",
+"section1.addNewField": "إضافة حقل جديد",
+"section1.rail.fieldsTitle": "حقول النموذج"
 
 };
 

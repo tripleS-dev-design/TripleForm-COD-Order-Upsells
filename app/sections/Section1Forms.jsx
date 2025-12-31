@@ -880,10 +880,7 @@ const DEFAULT_FIELDS_ORDER = Object.keys(DEFAULT_FIELDS);
 function mergeFieldsOrder(savedOrder, fieldsObj) {
   const keys = Object.keys(fieldsObj || {});
   const base = Array.isArray(savedOrder) ? savedOrder : [];
-  return [
-    ...base.filter((k) => keys.includes(k)),
-    ...keys.filter((k) => !base.includes(k)),
-  ];
+  return [...base.filter((k) => keys.includes(k)), ...keys.filter((k) => !base.includes(k))];
 }
 
 /* ============================== Contexte ============================== */
@@ -1561,14 +1558,6 @@ function OutletEditor() {
     setField(k, { on: !currentOn });
   };
 
-  const removeField = (key) => {
-    const k = key.replace(/^field:/, "");
-    setSel(`field:${k}`);
-    if (window.confirm(t("section1.confirmRemoveField"))) {
-      setField(k, { on: false });
-    }
-  };
-
   const RailIconBtn = ({ iconName, title, onClick, active, danger }) => (
     <button
       className="tf-icon-btn"
@@ -1633,16 +1622,28 @@ function OutletEditor() {
                 <div className="tf-rail-label">{it.label}</div>
 
                 <div className="tf-rail-actions">
-                  <RailIconBtn iconName="SettingsIcon" title="Settings" onClick={() => setSel(it.key)} />
+                  <RailIconBtn
+                    iconName="SettingsIcon"
+                    title="Settings"
+                    onClick={() => setSel(it.key)}
+                  />
+                  {/* ✅ on garde seulement l'oeil (show/hide), et on supprime l'icône delete */}
                   <RailIconBtn
                     iconName={it.on ? "ViewIcon" : "HideIcon"}
                     title={it.on ? "Hide" : "Show"}
                     active={!!it.on}
                     onClick={() => toggleField(it.key)}
                   />
-                  <RailIconBtn iconName="DeleteIcon" title="Remove" danger onClick={() => removeField(it.key)} />
-                  <RailIconBtn iconName="ChevronUpIcon" title="Move up" onClick={() => moveField(it.key, -1)} />
-                  <RailIconBtn iconName="ChevronDownIcon" title="Move down" onClick={() => moveField(it.key, 1)} />
+                  <RailIconBtn
+                    iconName="ChevronUpIcon"
+                    title="Move up"
+                    onClick={() => moveField(it.key, -1)}
+                  />
+                  <RailIconBtn
+                    iconName="ChevronDownIcon"
+                    title="Move down"
+                    onClick={() => moveField(it.key, 1)}
+                  />
                 </div>
               </div>
             ))}
@@ -1746,9 +1747,7 @@ function OutletEditor() {
                   onChange={(v) => setCartT({ total: v })}
                 />
                 <div style={{ display: "grid", gap: 8 }}>
-                  <div style={{ fontSize: 13, fontWeight: 600 }}>
-                    {t("section1.cart.cartIcon")}
-                  </div>
+                  <div style={{ fontSize: 13, fontWeight: 600 }}>{t("section1.cart.cartIcon")}</div>
                   <IconSelector
                     type="cartTitle"
                     selectedIcon={config.cartTitles.cartIcon}
@@ -1803,9 +1802,7 @@ function OutletEditor() {
                   onChange={(v) => setForm({ successText: v })}
                 />
                 <div style={{ display: "grid", gap: 8 }}>
-                  <div style={{ fontSize: 13, fontWeight: 600 }}>
-                    {t("section1.buttons.buttonIcon")}
-                  </div>
+                  <div style={{ fontSize: 13, fontWeight: 600 }}>{t("section1.buttons.buttonIcon")}</div>
                   <IconSelector
                     type="button"
                     selectedIcon={config.form.buttonIcon}
@@ -1827,56 +1824,20 @@ function OutletEditor() {
 
               <BlueSection title={t("section1.colors.formSection")}>
                 <Grid3>
-                  <ColorField
-                    label={t("section1.colors.bg")}
-                    value={config.design.bg}
-                    onChange={(v) => setDesign({ bg: v })}
-                  />
-                  <ColorField
-                    label={t("section1.colors.text")}
-                    value={config.design.text}
-                    onChange={(v) => setDesign({ text: v })}
-                  />
-                  <ColorField
-                    label={t("section1.colors.border")}
-                    value={config.design.border}
-                    onChange={(v) => setDesign({ border: v })}
-                  />
-                  <ColorField
-                    label={t("section1.colors.inputBg")}
-                    value={config.design.inputBg}
-                    onChange={(v) => setDesign({ inputBg: v })}
-                  />
-                  <ColorField
-                    label={t("section1.colors.inputBorder")}
-                    value={config.design.inputBorder}
-                    onChange={(v) => setDesign({ inputBorder: v })}
-                  />
-                  <ColorField
-                    label={t("section1.colors.placeholder")}
-                    value={config.design.placeholder}
-                    onChange={(v) => setDesign({ placeholder: v })}
-                  />
+                  <ColorField label={t("section1.colors.bg")} value={config.design.bg} onChange={(v) => setDesign({ bg: v })} />
+                  <ColorField label={t("section1.colors.text")} value={config.design.text} onChange={(v) => setDesign({ text: v })} />
+                  <ColorField label={t("section1.colors.border")} value={config.design.border} onChange={(v) => setDesign({ border: v })} />
+                  <ColorField label={t("section1.colors.inputBg")} value={config.design.inputBg} onChange={(v) => setDesign({ inputBg: v })} />
+                  <ColorField label={t("section1.colors.inputBorder")} value={config.design.inputBorder} onChange={(v) => setDesign({ inputBorder: v })} />
+                  <ColorField label={t("section1.colors.placeholder")} value={config.design.placeholder} onChange={(v) => setDesign({ placeholder: v })} />
                 </Grid3>
               </BlueSection>
 
               <BlueSection title={t("section1.colors.buttonSection")}>
                 <Grid3>
-                  <ColorField
-                    label={t("section1.colors.btnBg")}
-                    value={config.design.btnBg}
-                    onChange={(v) => setDesign({ btnBg: v })}
-                  />
-                  <ColorField
-                    label={t("section1.colors.btnText")}
-                    value={config.design.btnText}
-                    onChange={(v) => setDesign({ btnText: v })}
-                  />
-                  <ColorField
-                    label={t("section1.colors.btnBorder")}
-                    value={config.design.btnBorder}
-                    onChange={(v) => setDesign({ btnBorder: v })}
-                  />
+                  <ColorField label={t("section1.colors.btnBg")} value={config.design.btnBg} onChange={(v) => setDesign({ btnBg: v })} />
+                  <ColorField label={t("section1.colors.btnText")} value={config.design.btnText} onChange={(v) => setDesign({ btnText: v })} />
+                  <ColorField label={t("section1.colors.btnBorder")} value={config.design.btnBorder} onChange={(v) => setDesign({ btnBorder: v })} />
                 </Grid3>
                 <div style={{ marginTop: 12 }}>
                   <RangeSlider
@@ -1892,65 +1853,20 @@ function OutletEditor() {
 
               <BlueSection title={t("section1.colors.cartSection")}>
                 <Grid3>
-                  <ColorField
-                    label={t("section1.colors.cartBg")}
-                    value={config.design.cartBg}
-                    onChange={(v) => setDesign({ cartBg: v })}
-                  />
-                  <ColorField
-                    label={t("section1.colors.cartBorder")}
-                    value={config.design.cartBorder}
-                    onChange={(v) => setDesign({ cartBorder: v })}
-                  />
-                  <ColorField
-                    label={t("section1.colors.cartRowBg")}
-                    value={config.design.cartRowBg}
-                    onChange={(v) => setDesign({ cartRowBg: v })}
-                  />
-                  <ColorField
-                    label={t("section1.colors.cartRowBorder")}
-                    value={config.design.cartRowBorder}
-                    onChange={(v) => setDesign({ cartRowBorder: v })}
-                  />
-                  <ColorField
-                    label={t("section1.colors.cartTitle")}
-                    value={config.design.cartTitleColor}
-                    onChange={(v) => setDesign({ cartTitleColor: v })}
-                  />
-                  <ColorField
-                    label={t("section1.colors.cartText")}
-                    value={config.design.cartTextColor}
-                    onChange={(v) => setDesign({ cartTextColor: v })}
-                  />
+                  <ColorField label={t("section1.colors.cartBg")} value={config.design.cartBg} onChange={(v) => setDesign({ cartBg: v })} />
+                  <ColorField label={t("section1.colors.cartBorder")} value={config.design.cartBorder} onChange={(v) => setDesign({ cartBorder: v })} />
+                  <ColorField label={t("section1.colors.cartRowBg")} value={config.design.cartRowBg} onChange={(v) => setDesign({ cartRowBg: v })} />
+                  <ColorField label={t("section1.colors.cartRowBorder")} value={config.design.cartRowBorder} onChange={(v) => setDesign({ cartRowBorder: v })} />
+                  <ColorField label={t("section1.colors.cartTitle")} value={config.design.cartTitleColor} onChange={(v) => setDesign({ cartTitleColor: v })} />
+                  <ColorField label={t("section1.colors.cartText")} value={config.design.cartTextColor} onChange={(v) => setDesign({ cartTextColor: v })} />
                 </Grid3>
               </BlueSection>
 
               <BlueSection title={t("section1.colors.layoutSection")}>
                 <Grid3>
-                  <RangeSlider
-                    label={t("section1.colors.radius")}
-                    value={config.design.radius || 12}
-                    min={0}
-                    max={24}
-                    step={1}
-                    onChange={(v) => setDesign({ radius: v })}
-                  />
-                  <RangeSlider
-                    label={t("section1.colors.padding")}
-                    value={config.design.padding || 16}
-                    min={8}
-                    max={32}
-                    step={1}
-                    onChange={(v) => setDesign({ padding: v })}
-                  />
-                  <RangeSlider
-                    label={t("section1.colors.fontSize")}
-                    value={config.design.fontSize || 14}
-                    min={12}
-                    max={18}
-                    step={1}
-                    onChange={(v) => setDesign({ fontSize: v })}
-                  />
+                  <RangeSlider label={t("section1.colors.radius")} value={config.design.radius || 12} min={0} max={24} step={1} onChange={(v) => setDesign({ radius: v })} />
+                  <RangeSlider label={t("section1.colors.padding")} value={config.design.padding || 16} min={8} max={32} step={1} onChange={(v) => setDesign({ padding: v })} />
+                  <RangeSlider label={t("section1.colors.fontSize")} value={config.design.fontSize || 14} min={12} max={18} step={1} onChange={(v) => setDesign({ fontSize: v })} />
                 </Grid3>
 
                 <div style={{ marginTop: 12, display: "grid", gap: 12 }}>
@@ -1985,16 +1901,8 @@ function OutletEditor() {
                   />
 
                   <InlineStack gap="200" blockAlign="center">
-                    <Checkbox
-                      label={t("section1.colors.shadow")}
-                      checked={!!config.design.shadow}
-                      onChange={(v) => setDesign({ shadow: v })}
-                    />
-                    <Checkbox
-                      label={t("section1.colors.glow")}
-                      checked={!!config.design.glow}
-                      onChange={(v) => setDesign({ glow: v })}
-                    />
+                    <Checkbox label={t("section1.colors.shadow")} checked={!!config.design.shadow} onChange={(v) => setDesign({ shadow: v })} />
+                    <Checkbox label={t("section1.colors.glow")} checked={!!config.design.glow} onChange={(v) => setDesign({ glow: v })} />
                     <RangeSlider
                       label={t("section1.colors.glowPx")}
                       value={config.design.glowPx ?? config.behavior.glowPx ?? 18}
@@ -2060,9 +1968,7 @@ function OutletEditor() {
                     onChange={(v) => setBehav({ stickyLabel: v })}
                   />
                   <div style={{ display: "grid", gap: 8 }}>
-                    <div style={{ fontSize: 13, fontWeight: 600 }}>
-                      {t("section1.options.stickyIcon")}
-                    </div>
+                    <div style={{ fontSize: 13, fontWeight: 600 }}>{t("section1.options.stickyIcon")}</div>
                     <IconSelector
                       type="button"
                       selectedIcon={config.behavior.stickyIcon}
@@ -2216,11 +2122,7 @@ function FieldEditor({ fieldKey }) {
         <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8 }}>
           {t("section1.fieldEditor.iconLabel")}
         </div>
-        <IconSelector
-          fieldKey={fieldKey}
-          selectedIcon={st.icon}
-          onSelect={(icon) => setField(fieldKey, { icon })}
-        />
+        <IconSelector fieldKey={fieldKey} selectedIcon={st.icon} onSelect={(icon) => setField(fieldKey, { icon })} />
       </div>
     </GroupCard>
   );
@@ -2320,10 +2222,7 @@ function PreviewPanel() {
 
   // ✅ Provinces + Cities from dynamic dataset
   const provinces = useMemo(() => getProvinces(countryKey) || [], [countryKey]);
-  const cities = useMemo(
-    () => getCities(countryKey, selectedProvinceKey) || [],
-    [countryKey, selectedProvinceKey]
-  );
+  const cities = useMemo(() => getCities(countryKey, selectedProvinceKey) || [], [countryKey, selectedProvinceKey]);
 
   const titleAlign = config.design.titleAlign || "left";
 
@@ -2371,25 +2270,11 @@ function PreviewPanel() {
           </span>
 
           {isTextarea ? (
-            <textarea
-              style={{ ...inputBase, padding: "10px 12px", minHeight: 80 }}
-              placeholder={sStr(f.ph)}
-              rows={3}
-            />
+            <textarea style={{ ...inputBase, padding: "10px 12px", minHeight: 80 }} placeholder={sStr(f.ph)} rows={3} />
           ) : f.type === "tel" ? (
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: f.prefix ? "minmax(88px,130px) 1fr" : "1fr",
-                gap: 8,
-              }}
-            >
+            <div style={{ display: "grid", gridTemplateColumns: f.prefix ? "minmax(88px,130px) 1fr" : "1fr", gap: 8 }}>
               {f.prefix && (
-                <input
-                  style={{ ...inputBase, textAlign: "center", padding: "10px 12px" }}
-                  value={f.prefix}
-                  readOnly
-                />
+                <input style={{ ...inputBase, textAlign: "center", padding: "10px 12px" }} value={f.prefix} readOnly />
               )}
               <input type="tel" style={inputBase} placeholder={sStr(f.ph)} />
             </div>
@@ -2423,9 +2308,7 @@ function PreviewPanel() {
           <div className="tf-cart-icon">
             <PolarisIcon iconName={config.cartTitles.cartIcon} size={18} />
           </div>
-          <div style={{ fontWeight: 700, color: config.design.cartTitleColor }}>
-            {sStr(config.cartTitles.top)}
-          </div>
+          <div style={{ fontWeight: 700, color: config.design.cartTitleColor }}>{sStr(config.cartTitles.top)}</div>
         </div>
 
         <div style={{ display: "grid", gap: 8 }}>
@@ -2439,9 +2322,7 @@ function PreviewPanel() {
           <div style={cartRowCSS}>
             <div>
               <div>{sStr(config.cartTitles.shipping)}</div>
-              {shippingNote && (
-                <div style={{ fontSize: 10, opacity: 0.8, marginTop: 2 }}>{shippingNote}</div>
-              )}
+              {shippingNote && <div style={{ fontSize: 10, opacity: 0.8, marginTop: 2 }}>{shippingNote}</div>}
             </div>
             <div style={{ fontWeight: 700 }}>{shippingDisplay}</div>
           </div>
@@ -2476,12 +2357,11 @@ function PreviewPanel() {
             onChange={(e) => setBehav({ provinceKey: e.target.value, cityKey: "" })}
           >
             <option value="">{f.ph || t("section1.preview.provincePlaceholder")}</option>
-           {(provinces || []).map((p) => (
+            {(provinces || []).map((p) => (
               <option key={p.code} value={p.code}>
                 {p.label}
               </option>
             ))}
-
           </select>
         </label>
       </div>
