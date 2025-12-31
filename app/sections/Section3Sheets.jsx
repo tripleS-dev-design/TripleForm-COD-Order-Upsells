@@ -13,14 +13,10 @@ import {
   Badge,
   Tabs,
   Icon,
-  Box,
-  Divider,
   Spinner,
-  Toast,
 } from "@shopify/polaris";
+import * as PolarisIcons from "@shopify/polaris-icons";
 import { useI18n } from "../i18n/react";
-import PlanUsageWidget from "../components/PlanUsageWidget";
-import { CreditCardCancelIcon, AlertTriangleIcon } from '@shopify/polaris-icons';
 
 const LAYOUT_CSS = `
   html, body { margin:0; background:#F6F7F9; }
@@ -43,46 +39,20 @@ const LAYOUT_CSS = `
 
   .tf-shell { padding:16px; }
 
-  .tf-editor {
-    display:grid;
-    grid-template-columns: 260px minmax(0,1fr) 320px;
-    gap:16px;
-    align-items:start;
-  }
-
-  .tf-rail {
-    position:sticky;
-    top:84px;
-    max-height:calc(100vh - 100px);
-    overflow:auto;
-  }
-  .tf-rail-card {
+  .tf-topnav{
+    margin-bottom:16px;
     background:#fff;
     border:1px solid #E5E7EB;
     border-radius:12px;
-    margin-bottom:12px;
-  }
-  .tf-rail-head {
-    padding:10px 12px;
-    border-bottom:1px solid #E5E7EB;
-    font-weight:700;
-  }
-  .tf-rail-list {
-    padding:8px;
-    display:grid;
-    gap:8px;
-  }
-  .tf-rail-item {
-    background:#fff;
-    border:1px solid #E5E7EB;
-    border-radius:10px;
     padding:8px 10px;
-    cursor:pointer;
-    font-size:13px;
   }
-  .tf-rail-item[data-sel="1"] {
-    outline:2px solid #2563EB;
-    box-shadow:0 12px 26px rgba(37,99,235,.25);
+
+  /* 2 columns: main + right */
+  .tf-editor{
+    display:grid;
+    grid-template-columns: minmax(0,1fr) 340px;
+    gap:16px;
+    align-items:start;
   }
 
   .tf-main-col {
@@ -90,6 +60,7 @@ const LAYOUT_CSS = `
     gap:16px;
     min-width:0;
   }
+
   .tf-panel {
     background:#fff;
     border:1px solid #E5E7EB;
@@ -98,15 +69,16 @@ const LAYOUT_CSS = `
     min-width:0;
   }
 
-  .tf-side-col {
+  .tf-side-col{
     position:sticky;
     top:84px;
     max-height:calc(100vh - 100px);
-    overflow-y: auto;
-    overflow-x: hidden;
-    width:320px;
+    overflow-y:auto;
+    overflow-x:hidden;
+    width:340px;
     flex:none;
   }
+
   .tf-side-card {
     background:#fff;
     border:1px solid #E5E7EB;
@@ -125,56 +97,6 @@ const LAYOUT_CSS = `
     letter-spacing:.2px;
     margin-bottom:10px;
     box-shadow:0 6px 18px rgba(11,59,130,0.35);
-  }
-
-  .tf-usage-card {
-    margin-top:14px;
-    background:#ffffff;
-    border-radius:10px;
-    border:1px solid #E5E7EB;
-    box-shadow:0 10px 24px rgba(15,23,42,0.12);
-    padding:10px 12px 12px;
-  }
-  .tf-usage-title {
-    font-size:13px;
-    font-weight:700;
-    margin-bottom:4px;
-    color:#0F172A;
-  }
-  .tf-usage-sub {
-    font-size:11px;
-    color:#6B7280;
-    margin-bottom:8px;
-  }
-  .tf-usage-row {
-    display:flex;
-    align-items:center;
-    gap:10px;
-  }
-  .tf-usage-meta {
-    font-size:12px;
-    color:#111827;
-    display:grid;
-    gap:4px;
-  }
-  .tf-usage-pill {
-    display:inline-flex;
-    align-items:center;
-    gap:4px;
-    padding:3px 8px;
-    border-radius:999px;
-    font-size:11px;
-    background:rgba(11,59,130,0.06);
-    color:#0B3B82;
-    border:1px solid rgba(11,59,130,0.18);
-  }
-  .tf-usage-value-main {
-    font-size:18px;
-    font-weight:800;
-  }
-  .tf-usage-value-sub {
-    font-size:11px;
-    color:#6B7280;
   }
 
   .col-board-wrap { position:relative; }
@@ -203,6 +125,7 @@ const LAYOUT_CSS = `
     overflow-anchor:none;
     contain:layout paint;
   }
+
   .pill {
     font-size:11px;
     font-weight:700;
@@ -243,25 +166,6 @@ const LAYOUT_CSS = `
   .edge-left  { left:0;  background:linear-gradient(90deg,#fff,rgba(255,255,255,0)); }
   .edge-right { right:0; background:linear-gradient(-90deg,#fff,rgba(255,255,255,0)); }
 
-  .table-mini {
-    width:100%;
-    border-collapse:separate;
-    border-spacing:0;
-    table-layout:fixed;
-  }
-  .table-mini th, .table-mini td {
-    border:1px solid #E5E7EB;
-    padding:8px 10px;
-    overflow:hidden;
-    text-overflow:ellipsis;
-    white-space:nowrap;
-  }
-  .table-mini th {
-    background:#F9FAFB;
-    font-weight:700;
-    font-size:12px;
-  }
-
   .tf-orders-table {
     width:100%;
     border-collapse:separate;
@@ -290,14 +194,8 @@ const LAYOUT_CSS = `
     margin-bottom:16px;
   }
 
-  .tf-tabs {
-    margin-bottom:20px;
-  }
-
   /* WhatsApp Modern Styles - PROFESSIONNEL */
-  .whatsapp-section {
-    margin-top: 0;
-  }
+  .whatsapp-section { margin-top: 0; }
 
   .whatsapp-header-card {
     background: linear-gradient(135deg, #25D366 0%, #075E54 100%);
@@ -307,19 +205,6 @@ const LAYOUT_CSS = `
     margin-bottom: 24px;
     box-shadow: 0 12px 32px rgba(37, 211, 102, 0.25);
     border: none;
-  }
-
-  .whatsapp-status-indicator {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 16px;
-    border-radius: 24px;
-    font-size: 14px;
-    font-weight: 600;
-    background: rgba(255, 255, 255, 0.15);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
   }
 
   .whatsapp-qr-section {
@@ -362,27 +247,6 @@ const LAYOUT_CSS = `
     margin: 0 auto;
   }
 
-  .whatsapp-config-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-    gap: 20px;
-    margin-top: 24px;
-  }
-
-  .whatsapp-config-card {
-    background: white;
-    border: 1px solid #E5E7EB;
-    border-radius: 16px;
-    padding: 24px;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  .whatsapp-config-card:hover {
-    border-color: #25D366;
-    box-shadow: 0 12px 32px rgba(37, 211, 102, 0.15);
-    transform: translateY(-2px);
-  }
-
   .whatsapp-card-header {
     display: flex;
     align-items: center;
@@ -401,163 +265,17 @@ const LAYOUT_CSS = `
     align-items: center;
     justify-content: center;
     color: white;
-    font-size: 24px;
   }
 
-  .whatsapp-stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 16px;
-    margin: 24px 0;
-  }
-
-  .whatsapp-stat-item {
-    background: white;
-    border-radius: 12px;
-    padding: 20px;
-    border: 1px solid #E5E7EB;
-    text-align: center;
-    transition: all 0.2s ease;
-  }
-
-  .whatsapp-stat-item:hover {
-    border-color: #25D366;
-    box-shadow: 0 8px 24px rgba(37, 211, 102, 0.1);
-  }
-
-  .whatsapp-stat-value {
-    font-size: 32px;
-    font-weight: 700;
-    color: #075E54;
-    margin: 8px 0;
-    line-height: 1;
-  }
-
-  .whatsapp-stat-label {
-    font-size: 13px;
-    color: #6B7280;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    font-weight: 600;
-  }
-
-  .whatsapp-variables-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 10px;
-    margin-top: 16px;
-  }
-
-  .whatsapp-variable-chip {
-    background: #F0F9FF;
-    border: 1px solid #BAE6FD;
-    border-radius: 8px;
-    padding: 10px 14px;
-    font-size: 13px;
-    font-family: 'SF Mono', Menlo, Monaco, Consolas, monospace;
-    cursor: pointer;
-    transition: all 0.2s ease;
+  .whatsapp-loading-overlay {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(255, 255, 255, 0.9);
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-  }
-
-  .whatsapp-variable-chip:hover {
-    background: #E0F2FE;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(37, 211, 102, 0.15);
-  }
-
-  .whatsapp-preview-card {
-    background: linear-gradient(135deg, #F8FAFC 0%, #FFFFFF 100%);
-    border: 1px solid #E5E7EB;
     border-radius: 16px;
-    padding: 28px;
-    margin-top: 32px;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .whatsapp-preview-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, #25D366, #128C7E);
-  }
-
-  .whatsapp-message-preview {
-    background: white;
-    border-radius: 12px;
-    padding: 20px;
-    border: 1px solid #E5E7EB;
-    margin: 16px 0;
-    position: relative;
-  }
-
-  .whatsapp-message-preview::before {
-    content: '💬';
-    position: absolute;
-    top: -12px;
-    left: 20px;
-    background: white;
-    padding: 0 8px;
-    font-size: 20px;
-  }
-
-  .whatsapp-action-buttons {
-    display: flex;
-    gap: 12px;
-    margin-top: 24px;
-    flex-wrap: wrap;
-  }
-
-  .whatsapp-pro-button {
-    background: linear-gradient(135deg, #25D366, #128C7E) !important;
-    color: white !important;
-    border: none !important;
-    font-weight: 600 !important;
-    padding: 12px 24px !important;
-    border-radius: 12px !important;
-    transition: all 0.3s ease !important;
-  }
-
-  .whatsapp-pro-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(37, 211, 102, 0.3) !important;
-  }
-
-  .whatsapp-outline-button {
-    background: white !important;
-    color: #075E54 !important;
-    border: 2px solid #25D366 !important;
-    font-weight: 600 !important;
-    padding: 12px 24px !important;
-    border-radius: 12px !important;
-    transition: all 0.3s ease !important;
-  }
-
-  .whatsapp-outline-button:hover {
-    background: #F0F9FF !important;
-    transform: translateY(-2px);
-  }
-
-  .whatsapp-danger-button {
-    background: linear-gradient(135deg, #EF4444, #DC2626) !important;
-    color: white !important;
-    border: none !important;
-    font-weight: 600 !important;
-    padding: 12px 24px !important;
-    border-radius: 12px !important;
-    transition: all 0.3s ease !important;
-  }
-
-  .whatsapp-danger-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(239, 68, 68, 0.3) !important;
+    z-index: 10;
   }
 
   .whatsapp-step-list {
@@ -565,6 +283,7 @@ const LAYOUT_CSS = `
     flex-direction: column;
     gap: 12px;
     margin: 20px 0;
+    text-align: left;
   }
 
   .whatsapp-step {
@@ -591,40 +310,9 @@ const LAYOUT_CSS = `
     flex-shrink: 0;
   }
 
-  .whatsapp-loading-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(255, 255, 255, 0.9);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 16px;
-    z-index: 10;
-  }
-
-  .whatsapp-connection-success {
-    background: linear-gradient(135deg, #DCFCE7, #BBF7D0);
-    border: 2px solid #22C55E;
-    border-radius: 16px;
-    padding: 24px;
-    margin: 20px 0;
-  }
-
-  .whatsapp-token-section {
-    background: #FEF3C7;
-    border: 2px solid #F59E0B;
-    border-radius: 12px;
-    padding: 20px;
-    margin: 16px 0;
-  }
-
   @media (max-width: 980px) {
     .tf-editor { grid-template-columns: 1fr; }
-    .tf-rail, .tf-side-col { position:static; max-height:none; width:auto; }
-    .whatsapp-config-grid { grid-template-columns: 1fr; }
+    .tf-side-col { position:static; max-height:none; width:auto; }
     .whatsapp-qr-box { width: 240px; height: 240px; }
   }
 `;
@@ -688,8 +376,7 @@ function inferType(v = "") {
   const s = v.toLowerCase();
   if (s.includes("date")) return "datetime";
   if (s.includes("phone")) return "phone";
-  if (s.includes("total") || s.includes("price") || s.includes("amount"))
-    return "currency";
+  if (s.includes("total") || s.includes("price") || s.includes("amount")) return "currency";
   if (s.includes("quantity") || s.includes("qty")) return "number";
   return "string";
 }
@@ -708,25 +395,15 @@ const labelFromValue = (v, t) => {
 const defaultCfg = () => ({
   meta: { version: 8 },
   sheet: { spreadsheetId: "", tabName: "Orders", headerRowIndex: 1 },
-  abandonedSheet: {
-    spreadsheetId: "",
-    tabName: "Abandoned",
-    headerRowIndex: 1,
-  },
-  display: {
-    mode: "none",
-    height: 420,
-  },
+  abandonedSheet: { spreadsheetId: "", tabName: "Abandoned", headerRowIndex: 1 },
+  display: { mode: "none", height: 420 },
   formats: {
     dateFormat: "YYYY-MM-DD HH:mm",
     numberFormat: "0.00",
     currency: "MAD",
     timezone: "shop",
   },
-  stats: {
-    periodDays: 15,
-    codOnly: false,
-  },
+  stats: { periodDays: 15, codOnly: false },
   columns: [
     {
       id: "c1",
@@ -793,19 +470,6 @@ const defaultCfg = () => ({
   ],
 });
 
-const PLAN_MAP = {
-  EVERY_30_DAYS: { 0.99: "starter", 4.99: "basic", 9.99: "premium" },
-  ANNUAL: { 9.99: "starter", 49: "basic", 99: "premium" },
-};
-function resolveCurrentPlan(billingPlan) {
-  if (!billingPlan) return { currentKey: null, currentTerm: null };
-  const interval = billingPlan.interval || "EVERY_30_DAYS";
-  const amount = Number(billingPlan.amount || 0);
-  const key = PLAN_MAP[interval]?.[amount] || null;
-  const term = interval === "ANNUAL" ? "annual" : "monthly";
-  return { currentKey: key, currentTerm: key ? term : null };
-}
-
 function GoogleIcon() {
   return (
     <span
@@ -827,28 +491,7 @@ function GoogleIcon() {
   );
 }
 
-function WhatsAppIcon({ size = 20, color = "white" }) {
-  return (
-    <span
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        justifyContent: "center",
-        width: size,
-        height: size,
-        borderRadius: "50%",
-        background: "#25D366",
-        color: color,
-      }}
-    >
-      <svg width={size * 0.6} height={size * 0.6} viewBox="0 0 24 24" fill="currentColor">
-        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.149-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.372-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.095 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.75.982.998-3.667-.236-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.897 6.994c-.004 5.45-4.438 9.88-9.888 9.88m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.333.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.333 11.893-11.893 0-3.18-1.24-6.162-3.495-8.411" />
-      </svg>
-    </span>
-  );
-}
-
-/* ====== HEADER avec bouton Save dans la bande colorée ====== */
+/* ====== HEADER avec bouton Save ====== */
 function PageShell({ children, onSave, saving }) {
   const { t } = useI18n();
   return (
@@ -879,30 +522,16 @@ function PageShell({ children, onSave, saving }) {
               />
             </div>
             <div>
-              <div style={{ fontWeight: 700, color: "#F9FAFB" }}>
-                {t("section3.header.title")}
-              </div>
-              <div
-                style={{
-                  fontSize: 12,
-                  color: "rgba(249,250,251,0.8)",
-                }}
-              >
+              <div style={{ fontWeight: 700, color: "#F9FAFB" }}>{t("section3.header.title")}</div>
+              <div style={{ fontSize: 12, color: "rgba(249,250,251,0.8)" }}>
                 {t("section3.header.subtitle")}
               </div>
             </div>
           </InlineStack>
 
           <InlineStack gap="200" blockAlign="center">
-            <div style={{ fontSize: 12, color: "rgba(249,250,251,0.9)" }}>
-              {t("section3.header.pill")}
-            </div>
-            <Button
-              variant="primary"
-              size="slim"
-              onClick={onSave}
-              loading={saving}
-            >
+            <div style={{ fontSize: 12, color: "rgba(249,250,251,0.9)" }}>{t("section3.header.pill")}</div>
+            <Button variant="primary" size="slim" onClick={onSave} loading={saving}>
               {t("section3.rail.filters.save")}
             </Button>
           </InlineStack>
@@ -914,9 +543,9 @@ function PageShell({ children, onSave, saving }) {
   );
 }
 
-function SheetConfigSection({ 
-  title, 
-  sheetConfig, 
+function SheetConfigSection({
+  title,
+  sheetConfig,
   onConfigChange,
   onTest,
   onOpen,
@@ -925,29 +554,25 @@ function SheetConfigSection({
   googleSpreadsheets,
   availableTabs,
   loadingSpreadsheets,
-  loadingTabs
+  loadingTabs,
 }) {
   const { t } = useI18n();
 
   return (
     <div className="tf-sheet-config">
-      <Text variant="headingMd" fontWeight="bold">{t(title)}</Text>
+      <Text variant="headingMd" fontWeight="bold">
+        {t(title)}
+      </Text>
       <BlockStack gap="300" marginBlockStart="300">
         <Select
           label={t("section3.sheetsConfiguration.selectSpreadsheet")}
           helpText={t("section3.sheetsConfiguration.selectSpreadsheetHelp")}
           options={[
             { label: t("section3.sheetsConfiguration.chooseSpreadsheet"), value: "" },
-            ...googleSpreadsheets.map(sheet => ({
-              label: sheet.name,
-              value: sheet.id
-            }))
+            ...googleSpreadsheets.map((sheet) => ({ label: sheet.name, value: sheet.id })),
           ]}
           value={sheetConfig.spreadsheetId || ""}
-          onChange={(value) => {
-            const newConfig = { ...sheetConfig, spreadsheetId: value };
-            onConfigChange(newConfig);
-          }}
+          onChange={(value) => onConfigChange({ ...sheetConfig, spreadsheetId: value })}
           disabled={!isConnected || isLoading || loadingSpreadsheets}
         />
 
@@ -957,10 +582,7 @@ function SheetConfigSection({
             helpText={t("section3.sheetsConfiguration.selectTabHelp")}
             options={[
               { label: t("section3.sheetsConfiguration.chooseTab"), value: "" },
-              ...availableTabs.map(tab => ({
-                label: tab.name,
-                value: tab.name
-              }))
+              ...availableTabs.map((tab) => ({ label: tab.name, value: tab.name })),
             ]}
             value={sheetConfig.tabName || ""}
             onChange={(value) => onConfigChange({ ...sheetConfig, tabName: value })}
@@ -978,7 +600,7 @@ function SheetConfigSection({
           onChange={(value) => onConfigChange({ ...sheetConfig, headerRowIndex: value })}
           disabled={!isConnected || isLoading}
         />
-        
+
         <InlineStack gap="200">
           <Button
             variant="primary"
@@ -988,11 +610,8 @@ function SheetConfigSection({
           >
             {t("section3.sheetsConfiguration.testConnection")}
           </Button>
-          
-          <Button
-            onClick={onOpen}
-            disabled={!isConnected || !sheetConfig.spreadsheetId || isLoading}
-          >
+
+          <Button onClick={onOpen} disabled={!isConnected || !sheetConfig.spreadsheetId || isLoading}>
             {t("section3.sheetsConfiguration.openSheet")}
           </Button>
         </InlineStack>
@@ -1001,48 +620,43 @@ function SheetConfigSection({
   );
 }
 
-/* ====== NOUVELLE SECTION WHATSAPP SIMPLIFIÉE ====== */
+/* ====== WHATSAPP (t() partout, pas de texte dur) ====== */
 function SimpleWhatsAppConfig() {
   const { t } = useI18n();
-  
+
   const [whatsappStatus, setWhatsappStatus] = useState({
     loading: true,
     connected: false,
     phoneNumber: null,
     qrCode: null,
     lastConnected: null,
-    messagesSent: 0
+    messagesSent: 0,
   });
 
-  const [whatsappConfig, setWhatsappConfig] = useState({
-    // Pour petites boutiques (sans token)
-    phoneNumber: '',
-    businessName: '',
-    
-    // Messages simples
-    orderMessage: "✅ Commande #{orderId} confirmée! Livraison dans 2-3 jours. Merci!",
+  const [whatsappConfig, setWhatsappConfig] = useState(() => ({
+    phoneNumber: "",
+    businessName: "",
+    orderMessage: t("whatsapp.defaults.orderMessage"),
     sendAutomatically: true,
-    
-    // Pour grandes boutiques (avec token)
     useToken: false,
-    permanentToken: ''
-  });
+    permanentToken: "",
+  }));
 
   const [isGeneratingQR, setIsGeneratingQR] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [activeToast, setActiveToast] = useState(null);
 
-  // Charger le statut
   useEffect(() => {
     loadWhatsAppStatus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadWhatsAppStatus = async () => {
-    setWhatsappStatus(prev => ({ ...prev, loading: true }));
+    setWhatsappStatus((prev) => ({ ...prev, loading: true }));
     try {
       const res = await fetch("/api/whatsapp/status", { credentials: "include" });
       const data = await res.json();
-      
+
       if (data.ok) {
         setWhatsappStatus({
           loading: false,
@@ -1050,19 +664,24 @@ function SimpleWhatsAppConfig() {
           phoneNumber: data.config?.phoneNumber || data.phoneNumber,
           qrCode: data.qrCode,
           lastConnected: data.lastConnected,
-          messagesSent: data.messagesSent || 0
+          messagesSent: data.messagesSent || 0,
         });
-        
+
         if (data.config) {
-          setWhatsappConfig(prev => ({ ...prev, ...data.config }));
+          setWhatsappConfig((prev) => ({ ...prev, ...data.config }));
         }
       }
     } catch (error) {
       console.error("Error loading WhatsApp status:", error);
+      setWhatsappStatus((prev) => ({ ...prev, loading: false }));
     }
   };
 
-  // ✅ FONCTION CORRECTE POUR GÉNÉRER QR
+  const showToast = (message, tone = "success") => {
+    setActiveToast({ message, tone });
+    setTimeout(() => setActiveToast(null), 3000);
+  };
+
   const generateQRCode = async () => {
     setIsGeneratingQR(true);
     try {
@@ -1071,26 +690,22 @@ function SimpleWhatsAppConfig() {
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({
-          // Envoie la config si besoin
           phoneNumber: whatsappConfig.phoneNumber,
-          useToken: whatsappConfig.useToken
+          useToken: whatsappConfig.useToken,
         }),
       });
-      
+
       const data = await res.json();
-      
+
       if (data.ok && data.qrCode) {
-        setWhatsappStatus(prev => ({ 
-          ...prev, 
-          qrCode: data.qrCode
-        }));
-        showToast(t("whatsapp.qr.generated"), 'success');
+        setWhatsappStatus((prev) => ({ ...prev, qrCode: data.qrCode }));
+        showToast(t("whatsapp.qr.generated"), "success");
       } else {
-        throw new Error(data.error || 'QR generation failed');
+        throw new Error(data.error || "QR generation failed");
       }
     } catch (error) {
       console.error("Error generating QR code:", error);
-      showToast(t("whatsapp.errors.qrGeneration"), 'critical');
+      showToast(t("whatsapp.errors.qrGeneration"), "critical");
     } finally {
       setIsGeneratingQR(false);
     }
@@ -1103,20 +718,15 @@ function SimpleWhatsAppConfig() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ 
-          config: whatsappConfig,
-          mode: 'simple' 
-        }),
+        body: JSON.stringify({ config: whatsappConfig, mode: "simple" }),
       });
-      
+
       const data = await res.json();
-      
-      if (data.ok) {
-        showToast(t("whatsapp.configSaved"), 'success');
-      }
+      if (data.ok) showToast(t("whatsapp.configSaved"), "success");
+      else showToast(t("whatsapp.errors.saveConfig"), "critical");
     } catch (error) {
       console.error("Error saving WhatsApp config:", error);
-      showToast(t("whatsapp.errors.saveConfig"), 'critical');
+      showToast(t("whatsapp.errors.saveConfig"), "critical");
     } finally {
       setIsSaving(false);
     }
@@ -1125,19 +735,10 @@ function SimpleWhatsAppConfig() {
   const disconnectWhatsApp = async () => {
     if (confirm(t("whatsapp.confirmDisconnect"))) {
       try {
-        const res = await fetch("/api/whatsapp/disconnect", {
-          method: "POST",
-          credentials: "include",
-        });
-        
+        const res = await fetch("/api/whatsapp/disconnect", { method: "POST", credentials: "include" });
         if (res.ok) {
-          setWhatsappStatus(prev => ({ 
-            ...prev, 
-            connected: false, 
-            qrCode: null,
-            phoneNumber: null 
-          }));
-          showToast(t("whatsapp.disconnected"), 'success');
+          setWhatsappStatus((prev) => ({ ...prev, connected: false, qrCode: null, phoneNumber: null }));
+          showToast(t("whatsapp.disconnected"), "success");
         }
       } catch (error) {
         console.error("Error disconnecting WhatsApp:", error);
@@ -1145,35 +746,44 @@ function SimpleWhatsAppConfig() {
     }
   };
 
-  const showToast = (message, tone = 'success') => {
-    setActiveToast({ message, tone });
-    setTimeout(() => setActiveToast(null), 3000);
-  };
+  // icons safe (namespace import -> no crash on missing named export)
+  const RefreshSrc = PolarisIcons.RefreshIcon || PolarisIcons.ReplayIcon || PolarisIcons.ArrowRotateLeftIcon;
+  const CloseSrc = PolarisIcons.XIcon || PolarisIcons.CancelSmallIcon || PolarisIcons.CancelIcon;
+  const CheckSrc = PolarisIcons.CheckCircleIcon || PolarisIcons.CircleTickIcon || PolarisIcons.TickIcon;
+  const ChatSrc = PolarisIcons.ChatIcon || PolarisIcons.ChatBubbleIcon || PolarisIcons.ConversationIcon;
+  const StoreSrc = PolarisIcons.StoreIcon || PolarisIcons.ShopIcon || PolarisIcons.BuildingStorefrontIcon;
+  const RocketSrc = PolarisIcons.RocketIcon || PolarisIcons.PlaneIcon || PolarisIcons.StarFilledIcon;
+  const KeySrc = PolarisIcons.KeyIcon || PolarisIcons.LockIcon || PolarisIcons.PasswordIcon;
+  const PhoneSrc = PolarisIcons.PhoneIcon || PolarisIcons.MobileIcon || PolarisIcons.PhoneInIcon;
+  const AlertSrc = PolarisIcons.AlertTriangleIcon || PolarisIcons.AlertCircleIcon;
 
   return (
     <div className="whatsapp-section">
-      {/* Toast notifications */}
+      {/* Toast */}
       {activeToast && (
-        <div style={{
-          position: 'fixed',
-          top: '20px',
-          right: '20px',
-          zIndex: 1000,
-          background: activeToast.tone === 'success' ? '#DCFCE7' : '#FEE2E2',
-          border: '2px solid',
-          borderColor: activeToast.tone === 'success' ? '#22C55E' : '#EF4444',
-          padding: '16px',
-          borderRadius: '12px',
-          boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
-          minWidth: '300px'
-        }}>
+        <div
+          style={{
+            position: "fixed",
+            top: "20px",
+            right: "20px",
+            zIndex: 1000,
+            background: activeToast.tone === "success" ? "#DCFCE7" : "#FEE2E2",
+            border: "2px solid",
+            borderColor: activeToast.tone === "success" ? "#22C55E" : "#EF4444",
+            padding: "16px",
+            borderRadius: "12px",
+            boxShadow: "0 10px 25px rgba(0,0,0,0.1)",
+            minWidth: "300px",
+          }}
+        >
           <InlineStack align="space-between" blockAlign="center">
-            <Text as="p" fontWeight="medium">{activeToast.message}</Text>
-            <Button
-              variant="plain"
-              onClick={() => setActiveToast(null)}
-            >
-              ×
+            <Text as="p" fontWeight="medium">
+              {activeToast.message}
+            </Text>
+            <Button variant="plain" onClick={() => setActiveToast(null)} accessibilityLabel={t("common.close")}>
+              <InlineStack gap="100" blockAlign="center">
+                {CloseSrc ? <Icon source={CloseSrc} /> : <span>×</span>}
+              </InlineStack>
             </Button>
           </InlineStack>
         </div>
@@ -1183,298 +793,351 @@ function SimpleWhatsAppConfig() {
       <div className="whatsapp-header-card">
         <InlineStack align="space-between" blockAlign="center">
           <InlineStack gap="200" blockAlign="center">
-            <div style={{
-              width: 40,
-              height: 40,
-              borderRadius: '50%',
-              background: '#25D366',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'white',
-              fontSize: '20px'
-            }}>
-              💬
+            <div
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: "12px",
+                background: "rgba(255,255,255,.18)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              {ChatSrc ? <Icon source={ChatSrc} color="base" /> : <span style={{ fontSize: 18 }}>💬</span>}
             </div>
             <div>
               <Text as="h3" variant="headingLg" color="text-inverse" fontWeight="bold">
-                WhatsApp pour votre boutique
+                {t("whatsapp.header.title")}
               </Text>
               <Text as="p" color="text-inverse">
-                Envoyez des confirmations de commandes COD automatiquement
+                {t("whatsapp.header.subtitle")}
               </Text>
             </div>
           </InlineStack>
-          
-          <div style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '8px 16px',
-            borderRadius: '24px',
-            fontSize: '14px',
-            fontWeight: '600',
-            background: 'rgba(255, 255, 255, 0.15)',
-            backdropFilter: 'blur(10px)',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            color: 'white'
-          }}>
+
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "8px",
+              padding: "8px 16px",
+              borderRadius: "24px",
+              fontSize: "14px",
+              fontWeight: "600",
+              background: "rgba(255, 255, 255, 0.15)",
+              backdropFilter: "blur(10px)",
+              border: "1px solid rgba(255, 255, 255, 0.2)",
+              color: "white",
+            }}
+          >
             {whatsappStatus.connected ? (
               <>
-                <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#22C55E' }} />
-                <span>Connecté à {whatsappStatus.phoneNumber}</span>
+                <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#22C55E" }} />
+                <span>{t("whatsapp.status.connectedTo", { phone: whatsappStatus.phoneNumber || "" })}</span>
               </>
             ) : (
               <>
-                <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#EF4444' }} />
-                <span>Non connecté</span>
+                <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#EF4444" }} />
+                <span>{t("whatsapp.status.notConnected")}</span>
               </>
             )}
           </div>
         </InlineStack>
       </div>
 
-      {/* Mode sélection */}
-      <Card marginBlockStart="400">
+      {/* Mode selection */}
+      <Card>
         <BlockStack gap="300">
           <Text as="h3" variant="headingMd" fontWeight="bold">
-            Choisissez votre mode WhatsApp
+            {t("whatsapp.mode.title")}
           </Text>
-          
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-            gap: '20px',
-            marginTop: '16px'
-          }}>
-            {/* Mode Simple */}
-            <div style={{
-              padding: '24px',
-              border: `2px solid ${!whatsappConfig.useToken ? '#25D366' : '#E5E7EB'}`,
-              borderRadius: '16px',
-              background: !whatsappConfig.useToken ? '#F0F9FF' : 'white',
-              cursor: 'pointer'
-            }} onClick={() => setWhatsappConfig(prev => ({ ...prev, useToken: false }))}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-                <div style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: '12px',
-                  background: 'linear-gradient(135deg, #3B82F6, #1D4ED8)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'white',
-                  fontSize: '20px'
-                }}>
-                  🏪
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+              gap: "20px",
+              marginTop: "16px",
+            }}
+          >
+            {/* Simple */}
+            <div
+              style={{
+                padding: "24px",
+                border: `2px solid ${!whatsappConfig.useToken ? "#25D366" : "#E5E7EB"}`,
+                borderRadius: "16px",
+                background: !whatsappConfig.useToken ? "#F0F9FF" : "white",
+                cursor: "pointer",
+              }}
+              onClick={() => setWhatsappConfig((prev) => ({ ...prev, useToken: false }))}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "16px" }}>
+                <div
+                  style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: "12px",
+                    background: "linear-gradient(135deg, #3B82F6, #1D4ED8)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "white",
+                  }}
+                >
+                  {StoreSrc ? <Icon source={StoreSrc} color="base" /> : <span>🏪</span>}
                 </div>
                 <div>
-                  <Text as="h4" variant="headingSm" fontWeight="bold">Mode Simple</Text>
-                  <Text as="p" tone="subdued" variant="bodySm">Pour petites boutiques</Text>
+                  <Text as="h4" variant="headingSm" fontWeight="bold">
+                    {t("whatsapp.mode.simple.title")}
+                  </Text>
+                  <Text as="p" tone="subdued" variant="bodySm">
+                    {t("whatsapp.mode.simple.subtitle")}
+                  </Text>
                 </div>
               </div>
-              
-              <ul style={{ margin: 0, paddingLeft: '20px' }}>
-                <li style={{ marginBottom: '8px' }}><Text as="span" variant="bodySm">Numéro de téléphone seulement</Text></li>
-                <li style={{ marginBottom: '8px' }}><Text as="span" variant="bodySm">Gratuit et simple</Text></li>
-                <li style={{ marginBottom: '8px' }}><Text as="span" variant="bodySm">Parfait pour 10-50 commandes/mois</Text></li>
-                <li><Text as="span" variant="bodySm">Scannez simplement le QR code</Text></li>
+
+              <ul style={{ margin: 0, paddingLeft: "20px" }}>
+                <li style={{ marginBottom: "8px" }}>
+                  <Text as="span" variant="bodySm">
+                    {t("whatsapp.mode.simple.b1")}
+                  </Text>
+                </li>
+                <li style={{ marginBottom: "8px" }}>
+                  <Text as="span" variant="bodySm">
+                    {t("whatsapp.mode.simple.b2")}
+                  </Text>
+                </li>
+                <li style={{ marginBottom: "8px" }}>
+                  <Text as="span" variant="bodySm">
+                    {t("whatsapp.mode.simple.b3")}
+                  </Text>
+                </li>
+                <li>
+                  <Text as="span" variant="bodySm">
+                    {t("whatsapp.mode.simple.b4")}
+                  </Text>
+                </li>
               </ul>
             </div>
 
-            {/* Mode Avancé */}
-            <div style={{
-              padding: '24px',
-              border: `2px solid ${whatsappConfig.useToken ? '#25D366' : '#E5E7EB'}`,
-              borderRadius: '16px',
-              background: whatsappConfig.useToken ? '#F0F9FF' : 'white',
-              cursor: 'pointer'
-            }} onClick={() => setWhatsappConfig(prev => ({ ...prev, useToken: true }))}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-                <div style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: '12px',
-                  background: 'linear-gradient(135deg, #10B981, #059669)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'white',
-                  fontSize: '20px'
-                }}>
-                  🚀
+            {/* Advanced */}
+            <div
+              style={{
+                padding: "24px",
+                border: `2px solid ${whatsappConfig.useToken ? "#25D366" : "#E5E7EB"}`,
+                borderRadius: "16px",
+                background: whatsappConfig.useToken ? "#F0F9FF" : "white",
+                cursor: "pointer",
+              }}
+              onClick={() => setWhatsappConfig((prev) => ({ ...prev, useToken: true }))}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "16px" }}>
+                <div
+                  style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: "12px",
+                    background: "linear-gradient(135deg, #10B981, #059669)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "white",
+                  }}
+                >
+                  {RocketSrc ? <Icon source={RocketSrc} color="base" /> : <span>🚀</span>}
                 </div>
                 <div>
-                  <Text as="h4" variant="headingSm" fontWeight="bold">Mode Avancé</Text>
-                  <Text as="p" tone="subdued" variant="bodySm">Pour grandes boutiques</Text>
+                  <Text as="h4" variant="headingSm" fontWeight="bold">
+                    {t("whatsapp.mode.advanced.title")}
+                  </Text>
+                  <Text as="p" tone="subdued" variant="bodySm">
+                    {t("whatsapp.mode.advanced.subtitle")}
+                  </Text>
                 </div>
               </div>
-              
-              <ul style={{ margin: 0, paddingLeft: '20px' }}>
-                <li style={{ marginBottom: '8px' }}><Text as="span" variant="bodySm">Token WhatsApp Business</Text></li>
-                <li style={{ marginBottom: '8px' }}><Text as="span" variant="bodySm">Volume illimité</Text></li>
-                <li style={{ marginBottom: '8px' }}><Text as="span" variant="bodySm">Messages automatiques avancés</Text></li>
-                <li><Text as="span" variant="bodySm">Requiert WhatsApp Business API</Text></li>
+
+              <ul style={{ margin: 0, paddingLeft: "20px" }}>
+                <li style={{ marginBottom: "8px" }}>
+                  <Text as="span" variant="bodySm">
+                    {t("whatsapp.mode.advanced.b1")}
+                  </Text>
+                </li>
+                <li style={{ marginBottom: "8px" }}>
+                  <Text as="span" variant="bodySm">
+                    {t("whatsapp.mode.advanced.b2")}
+                  </Text>
+                </li>
+                <li style={{ marginBottom: "8px" }}>
+                  <Text as="span" variant="bodySm">
+                    {t("whatsapp.mode.advanced.b3")}
+                  </Text>
+                </li>
+                <li>
+                  <Text as="span" variant="bodySm">
+                    {t("whatsapp.mode.advanced.b4")}
+                  </Text>
+                </li>
               </ul>
             </div>
           </div>
         </BlockStack>
       </Card>
 
-      {/* Configuration selon le mode */}
-      <Card marginBlockStart="400">
+      {/* Config */}
+      <Card>
         <BlockStack gap="400">
           {!whatsappConfig.useToken ? (
-            /* === MODE SIMPLE === */
             <>
               <div className="whatsapp-card-header">
-                <div className="whatsapp-icon-circle">📱</div>
+                <div className="whatsapp-icon-circle">{PhoneSrc ? <Icon source={PhoneSrc} color="base" /> : <span>📱</span>}</div>
                 <div>
                   <Text as="h3" variant="headingMd" fontWeight="bold">
-                    Configuration WhatsApp Simple
+                    {t("whatsapp.simple.title")}
                   </Text>
                   <Text as="p" tone="subdued" variant="bodySm">
-                    Utilisez votre numéro personnel ou un numéro dédié
+                    {t("whatsapp.simple.subtitle")}
                   </Text>
                 </div>
               </div>
 
               <TextField
-                label="Numéro WhatsApp"
+                label={t("whatsapp.fields.phone.label")}
                 type="tel"
-                placeholder="+212 600 000 000"
-                helpText="Numéro avec indicatif pays (+212 pour Maroc)"
-                value={whatsappConfig.phoneNumber || ''}
-                onChange={(value) => setWhatsappConfig(prev => ({ ...prev, phoneNumber: value }))}
+                placeholder={t("whatsapp.fields.phone.placeholder")}
+                helpText={t("whatsapp.fields.phone.help")}
+                value={whatsappConfig.phoneNumber || ""}
+                onChange={(value) => setWhatsappConfig((prev) => ({ ...prev, phoneNumber: value }))}
               />
 
               <TextField
-                label="Nom de votre boutique"
-                placeholder="Ma Boutique"
-                helpText="S'affichera dans les messages"
-                value={whatsappConfig.businessName || ''}
-                onChange={(value) => setWhatsappConfig(prev => ({ ...prev, businessName: value }))}
+                label={t("whatsapp.fields.businessName.label")}
+                placeholder={t("whatsapp.fields.businessName.placeholder")}
+                helpText={t("whatsapp.fields.businessName.help")}
+                value={whatsappConfig.businessName || ""}
+                onChange={(value) => setWhatsappConfig((prev) => ({ ...prev, businessName: value }))}
               />
 
-              {/* Avertissements */}
-              <div style={{
-                background: '#FFFBEB',
-                border: '2px solid #F59E0B',
-                borderRadius: '12px',
-                padding: '20px',
-                marginTop: '16px'
-              }}>
+              <div
+                style={{
+                  background: "#FFFBEB",
+                  border: "2px solid #F59E0B",
+                  borderRadius: "12px",
+                  padding: "20px",
+                  marginTop: "16px",
+                }}
+              >
                 <InlineStack gap="100" blockAlign="center" marginBlockEnd="200">
-                  <Icon source={AlertTriangleIcon} color="warning" />
+                  {AlertSrc ? <Icon source={AlertSrc} color="warning" /> : null}
                   <Text as="h4" variant="headingSm" fontWeight="bold">
-                    Important à savoir
+                    {t("whatsapp.warning.title")}
                   </Text>
                 </InlineStack>
-                
-                <ul style={{ margin: 0, paddingLeft: '20px' }}>
-                  <li style={{ marginBottom: '8px' }}>
-                    <Text as="span" fontWeight="medium">Utilisez un numéro DÉDIÉ à votre boutique</Text>
+
+                <ul style={{ margin: 0, paddingLeft: "20px" }}>
+                  <li style={{ marginBottom: "8px" }}>
+                    <Text as="span" fontWeight="medium">
+                      {t("whatsapp.warning.b1")}
+                    </Text>
                   </li>
-                  <li style={{ marginBottom: '8px' }}>
-                    <Text as="span" fontWeight="medium">Ne spammez pas vos clients</Text>
+                  <li style={{ marginBottom: "8px" }}>
+                    <Text as="span" fontWeight="medium">
+                      {t("whatsapp.warning.b2")}
+                    </Text>
                   </li>
-                  <li style={{ marginBottom: '8px' }}>
-                    <Text as="span" fontWeight="medium">Maximum 50-100 messages/jour pour éviter le bannissement</Text>
+                  <li style={{ marginBottom: "8px" }}>
+                    <Text as="span" fontWeight="medium">
+                      {t("whatsapp.warning.b3")}
+                    </Text>
                   </li>
                   <li>
-                    <Text as="span" fontWeight="medium">Pour plus de volume, passez au Mode Avancé</Text>
+                    <Text as="span" fontWeight="medium">
+                      {t("whatsapp.warning.b4")}
+                    </Text>
                   </li>
                 </ul>
               </div>
             </>
           ) : (
-            /* === MODE AVANCÉ === */
             <>
               <div className="whatsapp-card-header">
-                <div className="whatsapp-icon-circle">🔑</div>
+                <div className="whatsapp-icon-circle">{KeySrc ? <Icon source={KeySrc} color="base" /> : <span>🔑</span>}</div>
                 <div>
                   <Text as="h3" variant="headingMd" fontWeight="bold">
-                    Configuration WhatsApp Business API
+                    {t("whatsapp.advanced.title")}
                   </Text>
                   <Text as="p" tone="subdued" variant="bodySm">
-                    Pour les boutiques avec volume élevé (WhatsApp Business API requis)
+                    {t("whatsapp.advanced.subtitle")}
                   </Text>
                 </div>
               </div>
 
               <TextField
-                label="Token Permanent WhatsApp Business"
+                label={t("whatsapp.fields.token.label")}
                 type="password"
-                placeholder="Votre token WhatsApp Business API"
-                helpText="Obtenez ce token depuis Facebook Business Manager"
-                value={whatsappConfig.permanentToken || ''}
-                onChange={(value) => setWhatsappConfig(prev => ({ ...prev, permanentToken: value }))}
+                placeholder={t("whatsapp.fields.token.placeholder")}
+                helpText={t("whatsapp.fields.token.help")}
+                value={whatsappConfig.permanentToken || ""}
+                onChange={(value) => setWhatsappConfig((prev) => ({ ...prev, permanentToken: value }))}
               />
 
-              <div style={{
-                background: '#F0F9FF',
-                border: '2px solid #0EA5E9',
-                borderRadius: '12px',
-                padding: '20px',
-                marginTop: '16px'
-              }}>
+              <div
+                style={{
+                  background: "#F0F9FF",
+                  border: "2px solid #0EA5E9",
+                  borderRadius: "12px",
+                  padding: "20px",
+                  marginTop: "16px",
+                }}
+              >
                 <Text as="p" variant="bodySm">
-                  <strong>Note :</strong> WhatsApp Business API nécessite un compte Facebook Business vérifié. 
-                  Coût : ~0.085€ par conversation. Parfait pour les boutiques avec plus de 100 commandes/mois.
+                  {t("whatsapp.noteApi")}
                 </Text>
               </div>
             </>
           )}
 
-          {/* Message template commun */}
           <TextField
-            label="Message de confirmation de commande"
+            label={t("whatsapp.fields.message.label")}
             multiline={4}
-            placeholder="✅ Commande #{orderId} confirmée! Livraison dans 2-3 jours. Merci pour votre confiance!"
-            helpText="Utilisez {orderId}, {customerName}, {productName} comme variables"
-            value={whatsappConfig.orderMessage || ''}
-            onChange={(value) => setWhatsappConfig(prev => ({ ...prev, orderMessage: value }))}
+            placeholder={t("whatsapp.fields.message.placeholder")}
+            helpText={t("whatsapp.fields.message.help")}
+            value={whatsappConfig.orderMessage || ""}
+            onChange={(value) => setWhatsappConfig((prev) => ({ ...prev, orderMessage: value }))}
           />
 
           <Checkbox
-            label="Envoyer automatiquement après chaque commande COD"
-            checked={whatsappConfig.sendAutomatically}
-            onChange={(checked) => setWhatsappConfig(prev => ({ ...prev, sendAutomatically: checked }))}
+            label={t("whatsapp.fields.autoSend.label")}
+            checked={!!whatsappConfig.sendAutomatically}
+            onChange={(checked) => setWhatsappConfig((prev) => ({ ...prev, sendAutomatically: checked }))}
           />
 
           <InlineStack gap="200" align="end">
-            <Button
-              onClick={saveWhatsAppConfig}
-              loading={isSaving}
-            >
-              Sauvegarder
+            <Button onClick={saveWhatsAppConfig} loading={isSaving}>
+              {t("common.save")}
             </Button>
-            
+
             {whatsappStatus.connected && (
-              <Button
-                tone="critical"
-                onClick={disconnectWhatsApp}
-              >
-                Déconnecter
+              <Button tone="critical" onClick={disconnectWhatsApp}>
+                {t("common.disconnect")}
               </Button>
             )}
           </InlineStack>
         </BlockStack>
       </Card>
 
-      {/* QR Code Section */}
+      {/* QR Code */}
       {!whatsappStatus.connected && (
-        <Card marginBlockStart="400">
+        <Card>
           <BlockStack gap="400">
             <div className="whatsapp-card-header">
-              <div className="whatsapp-icon-circle">📲</div>
+              <div className="whatsapp-icon-circle">{ChatSrc ? <Icon source={ChatSrc} color="base" /> : <span>💬</span>}</div>
               <div>
                 <Text as="h3" variant="headingMd" fontWeight="bold">
-                  Connectez votre WhatsApp
+                  {t("whatsapp.qr.title")}
                 </Text>
                 <Text as="p" tone="subdued" variant="bodySm">
-                  Scannez le QR code avec votre téléphone
+                  {t("whatsapp.qr.subtitle")}
                 </Text>
               </div>
             </div>
@@ -1487,82 +1150,68 @@ function SimpleWhatsAppConfig() {
                       <Spinner size="large" />
                     </div>
                   ) : whatsappStatus.qrCode ? (
-                    <img 
-                      src={whatsappStatus.qrCode} 
-                      alt="WhatsApp QR Code" 
-                      style={{ 
-                        width: '100%', 
-                        height: '100%', 
-                        objectFit: 'contain',
-                        borderRadius: '8px'
-                      }}
+                    <img
+                      src={whatsappStatus.qrCode}
+                      alt="WhatsApp QR Code"
+                      style={{ width: "100%", height: "100%", objectFit: "contain", borderRadius: "8px" }}
                     />
                   ) : (
-                    <div style={{ 
-                      display: 'flex', 
-                      flexDirection: 'column', 
-                      alignItems: 'center',
-                      gap: '16px'
-                    }}>
-                      <div style={{
-                        width: 64,
-                        height: 64,
-                        borderRadius: '50%',
-                        background: '#25D366',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: 'white',
-                        fontSize: '32px'
-                      }}>
-                        💬
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "16px" }}>
+                      <div
+                        style={{
+                          width: 64,
+                          height: 64,
+                          borderRadius: "12px",
+                          background: "#25D366",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          color: "white",
+                        }}
+                      >
+                        {ChatSrc ? <Icon source={ChatSrc} color="base" /> : <span style={{ fontSize: 26 }}>💬</span>}
                       </div>
                       <Text as="p" tone="subdued" alignment="center">
-                        Cliquez sur "Générer QR Code" pour commencer
+                        {t("whatsapp.qr.empty")}
                       </Text>
                     </div>
                   )}
                 </div>
-                
+
                 <div className="whatsapp-qr-instructions">
                   <Text as="h4" variant="headingSm" fontWeight="bold" marginBlockEnd="200">
-                    Comment connecter :
+                    {t("whatsapp.qr.howTo")}
                   </Text>
+
                   <div className="whatsapp-step-list">
                     <div className="whatsapp-step">
                       <div className="whatsapp-step-number">1</div>
-                      <Text as="p">Cliquez sur "Générer QR Code"</Text>
+                      <Text as="p">{t("whatsapp.qr.step1")}</Text>
                     </div>
                     <div className="whatsapp-step">
                       <div className="whatsapp-step-number">2</div>
-                      <Text as="p">Ouvrez WhatsApp sur votre téléphone</Text>
+                      <Text as="p">{t("whatsapp.qr.step2")}</Text>
                     </div>
                     <div className="whatsapp-step">
                       <div className="whatsapp-step-number">3</div>
-                      <Text as="p">Menu → Appareils connectés → Scanner</Text>
+                      <Text as="p">{t("whatsapp.qr.step3")}</Text>
                     </div>
                   </div>
-                  
+
                   <InlineStack gap="200" align="center">
-                    {/* ✅ CORRIGÉ : Bouton avec generateQRCode défini */}
                     <Button
                       variant="primary"
                       onClick={generateQRCode}
                       loading={isGeneratingQR}
                       disabled={whatsappStatus.loading}
-                      className="whatsapp-pro-button"
                     >
-                      {whatsappStatus.qrCode ? 'Régénérer QR Code' : 'Générer QR Code'}
+                      {whatsappStatus.qrCode ? t("whatsapp.qr.regenerate") : t("whatsapp.qr.generate")}
                     </Button>
-                    
-                    <Button
-                      onClick={loadWhatsAppStatus}
-                      disabled={whatsappStatus.loading}
-                      className="whatsapp-outline-button"
-                    >
+
+                    <Button onClick={loadWhatsAppStatus} disabled={whatsappStatus.loading}>
                       <InlineStack gap="100" blockAlign="center">
-                        <span style={{ fontSize: '16px' }}>🔄</span>
-                        Actualiser
+                        {RefreshSrc ? <Icon source={RefreshSrc} /> : <span>↻</span>}
+                        <span>{t("whatsapp.qr.refresh")}</span>
                       </InlineStack>
                     </Button>
                   </InlineStack>
@@ -1573,55 +1222,61 @@ function SimpleWhatsAppConfig() {
         </Card>
       )}
 
-      {/* Statut connecté */}
+      {/* Connected status */}
       {whatsappStatus.connected && (
-        <Card marginBlockStart="400">
+        <Card>
           <BlockStack gap="300">
-            <div style={{
-              background: 'linear-gradient(135deg, #DCFCE7, #BBF7D0)',
-              border: '2px solid #22C55E',
-              borderRadius: '16px',
-              padding: '24px'
-            }}>
+            <div
+              style={{
+                background: "linear-gradient(135deg, #DCFCE7, #BBF7D0)",
+                border: "2px solid #22C55E",
+                borderRadius: "16px",
+                padding: "24px",
+              }}
+            >
               <InlineStack align="space-between" blockAlign="center">
                 <InlineStack gap="200" blockAlign="center">
-                  <div style={{ 
-                    width: 24, 
-                    height: 24, 
-                    borderRadius: '50%', 
-                    background: '#22C55E',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: 'white',
-                    fontSize: '14px',
-                    fontWeight: 'bold'
-                  }}>
-                    ✓
+                  <div
+                    style={{
+                      width: 28,
+                      height: 28,
+                      borderRadius: "50%",
+                      background: "#22C55E",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      color: "white",
+                    }}
+                  >
+                    {CheckSrc ? <Icon source={CheckSrc} color="base" /> : <span>✓</span>}
                   </div>
+
                   <div>
                     <Text as="h4" variant="headingSm" fontWeight="bold">
-                      WhatsApp connecté
+                      {t("whatsapp.connected.title")}
                     </Text>
                     <Text as="p" variant="bodyLg" fontWeight="bold">
                       {whatsappStatus.phoneNumber}
                     </Text>
+
                     {whatsappStatus.lastConnected && (
                       <Text as="p" tone="subdued" variant="bodySm">
-                        Dernière connexion : {new Date(whatsappStatus.lastConnected).toLocaleString()}
+                        {t("whatsapp.connected.last", {
+                          date: new Date(whatsappStatus.lastConnected).toLocaleString(),
+                        })}
                       </Text>
                     )}
                   </div>
                 </InlineStack>
-                
+
                 <Badge tone="success">
-                  {whatsappStatus.messagesSent} messages envoyés
+                  {t("whatsapp.connected.sent", { count: whatsappStatus.messagesSent })}
                 </Badge>
               </InlineStack>
             </div>
-            
+
             <Text as="p" tone="subdued">
-              Votre WhatsApp est maintenant connecté et prêt à envoyer des confirmations de commandes automatiquement.
+              {t("whatsapp.connected.ready")}
             </Text>
           </BlockStack>
         </Card>
@@ -1644,19 +1299,6 @@ export default function Section3Sheets() {
   const periodDays = cfg.stats?.periodDays ?? 15;
   const codOnly = !!cfg.stats?.codOnly;
 
-  const [billing, setBilling] = useState({
-    loading: true,
-    active: false,
-    plan: null,
-  });
-  const [currentKey, setCurrentKey] = useState(null);
-  const [currentTerm, setCurrentTerm] = useState(null);
-  const [planUsage, setPlanUsage] = useState({
-    loading: true,
-    ordersUsed: 0,
-    sinceLabel: null,
-  });
-
   const [googleStatus, setGoogleStatus] = useState({
     loading: true,
     connected: false,
@@ -1675,45 +1317,28 @@ export default function Section3Sheets() {
 
   const [sheetTab, setSheetTab] = useState(0);
   const sheetTabs = [
-    {
-      id: 'orders',
-      content: t('section3.sheetsTabs.orders'),
-      accessibilityLabel: t('section3.sheetsTabs.orders'),
-      panelID: 'orders-panel',
-    },
-    {
-      id: 'abandoned',
-      content: t('section3.sheetsTabs.abandoned'),
-      accessibilityLabel: t('section3.sheetsTabs.abandoned'),
-      panelID: 'abandoned-panel',
-    },
+    { id: "orders", content: t("section3.sheetsTabs.orders"), accessibilityLabel: t("section3.sheetsTabs.orders"), panelID: "orders-panel" },
+    { id: "abandoned", content: t("section3.sheetsTabs.abandoned"), accessibilityLabel: t("section3.sheetsTabs.abandoned"), panelID: "abandoned-panel" },
   ];
 
   useEffect(() => {
     const handleMessage = (event) => {
-      console.log("Message reçu de la popup:", event.data);
-      
-      if (event.data && event.data.type === 'GOOGLE_OAUTH_SUCCESS') {
-        console.log("Connexion Google réussie pour:", event.data.email);
-        
+      if (event.data && event.data.type === "GOOGLE_OAUTH_SUCCESS") {
         fetchGoogleStatus();
         loadGoogleSpreadsheets();
-      }
-      else if (event.data && event.data.type === 'GOOGLE_OAUTH_ERROR') {
-        console.error("Erreur Google OAuth:", event.data.error);
+      } else if (event.data && event.data.type === "GOOGLE_OAUTH_ERROR") {
         alert(t("section3.connection.testError", { error: event.data.error }));
       }
     };
 
-    window.addEventListener('message', handleMessage);
-    return () => window.removeEventListener('message', handleMessage);
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchGoogleStatus = async () => {
     try {
-      const r = await fetch("/api/google/status", {
-        credentials: "include",
-      });
+      const r = await fetch("/api/google/status", { credentials: "include" });
       const j = await r.json().catch(() => null);
       if (!r.ok || !j) throw new Error("bad status");
       setGoogleStatus({
@@ -1725,7 +1350,7 @@ export default function Section3Sheets() {
       });
     } catch (e) {
       console.error("google/status error", e);
-      setGoogleStatus(prev => ({ ...prev, loading: false }));
+      setGoogleStatus((prev) => ({ ...prev, loading: false }));
     }
   };
 
@@ -1734,16 +1359,12 @@ export default function Section3Sheets() {
     try {
       const res = await fetch("/api/load-sheets", { credentials: "include" });
       const data = await res.json();
-      
+
       if (data.ok) {
         setGoogleSpreadsheets(data.spreadsheets || []);
-        
+
         if (data.config) {
-          setCfg(prev => ({
-            ...prev,
-            ...data.config
-          }));
-          
+          setCfg((prev) => ({ ...prev, ...data.config }));
           if (data.config.sheet?.spreadsheetId) {
             loadSpreadsheetTabs(data.config.sheet.spreadsheetId);
           }
@@ -1760,25 +1381,18 @@ export default function Section3Sheets() {
 
   const loadSpreadsheetTabs = async (spreadsheetId) => {
     if (!spreadsheetId) return;
-    
     setLoadingTabs(true);
     try {
       const res = await fetch(`/api/google-sheets/tabs?spreadsheetId=${encodeURIComponent(spreadsheetId)}`, {
-        credentials: "include"
+        credentials: "include",
       });
       const data = await res.json();
-      
+
       if (data.ok && data.tabs) {
         setAvailableTabs(data.tabs);
-        
+
         if (!cfg.sheet.tabName && data.tabs.length > 0) {
-          setCfg(prev => ({
-            ...prev,
-            sheet: {
-              ...prev.sheet,
-              tabName: data.tabs[0].name
-            }
-          }));
+          setCfg((prev) => ({ ...prev, sheet: { ...prev.sheet, tabName: data.tabs[0].name } }));
         }
       }
     } catch (error) {
@@ -1792,25 +1406,19 @@ export default function Section3Sheets() {
   useEffect(() => {
     loadGoogleSpreadsheets();
     fetchGoogleStatus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function loadDashboard() {
     setDashLoading(true);
     setDashError("");
     try {
-      const res = await fetch(
-        `/api/orders/dashboard?days=${periodDays}&codOnly=${codOnly ? "1" : "0"}`,
-        { credentials: "include" }
-      );
-      const json = await res.json().catch(() => ({}));
-      if (!res.ok || json?.ok === false) {
-        throw new Error(json?.error || "Erreur de chargement");
-      }
-      setDash({
-        points: json.points || [],
-        latest: json.latest || [],
-        totals: json.totals || null,
+      const res = await fetch(`/api/orders/dashboard?days=${periodDays}&codOnly=${codOnly ? "1" : "0"}`, {
+        credentials: "include",
       });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || json?.ok === false) throw new Error(json?.error || "Erreur de chargement");
+      setDash({ points: json.points || [], latest: json.latest || [], totals: json.totals || null });
     } catch (e) {
       setDashError(e?.message || "Erreur inconnue");
     } finally {
@@ -1820,49 +1428,8 @@ export default function Section3Sheets() {
 
   useEffect(() => {
     loadDashboard();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [periodDays, codOnly]);
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const r = await fetch("/api/billing/guard", {
-          credentials: "include",
-        });
-        const j = await r.json();
-        const active = !!j.active;
-        const plan = j.plan || null;
-        setBilling({ loading: false, active, plan });
-        const resolved = resolveCurrentPlan(plan);
-        setCurrentKey(resolved.currentKey);
-        setCurrentTerm(resolved.currentTerm);
-      } catch (e) {
-        console.error("billing.guard error", e);
-        setBilling({ loading: false, active: false, plan: null });
-        setCurrentKey(null);
-        setCurrentTerm(null);
-      }
-    })();
-  }, []);
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const r = await fetch("/api/plan-usage", {
-          credentials: "include",
-        });
-        if (!r.ok) throw new Error("bad status");
-        const j = await r.json();
-        setPlanUsage({
-          loading: false,
-          ordersUsed: j.ordersUsed ?? 0,
-          sinceLabel: j.sinceLabel ?? null,
-        });
-      } catch (e) {
-        console.error("plan-usage error", e);
-        setPlanUsage((prev) => ({ ...prev, loading: false }));
-      }
-    })();
-  }, []);
 
   const handleSaveRemote = async () => {
     try {
@@ -1874,9 +1441,7 @@ export default function Section3Sheets() {
         body: JSON.stringify({ sheets: cfg }),
       });
       const j = await res.json().catch(() => ({ ok: true }));
-      if (!res.ok || j?.ok === false) {
-        throw new Error(j?.error || "Save failed");
-      }
+      if (!res.ok || j?.ok === false) throw new Error(j?.error || "Save failed");
       alert(t("section3.save.success"));
     } catch (e) {
       alert(
@@ -1891,48 +1456,35 @@ export default function Section3Sheets() {
 
   const startGoogleConnect = async (target) => {
     try {
-      console.log("Début de la connexion Google pour target:", target);
-      
-      const response = await fetch(
-        `/api/google/connect?target=${encodeURIComponent(target || "orders")}`,
-        {
-          method: "GET",
-          credentials: "include",
-          headers: {
-            "Accept": "application/json",
-            "Content-Type": "application/json",
-          }
-        }
-      );
+      const response = await fetch(`/api/google/connect?target=${encodeURIComponent(target || "orders")}`, {
+        method: "GET",
+        credentials: "include",
+        headers: { Accept: "application/json", "Content-Type": "application/json" },
+      });
 
       const data = await response.json();
-
       if (!response.ok) {
         if (data.requiresReauth) {
-          alert("Votre session Shopify a expiré. Veuillez rafraîchir la page.");
+          alert(t("section3.errors.sessionExpired"));
           window.location.reload();
           return;
         }
-        throw new Error(data.error || "Erreur lors de la connexion à Google");
+        throw new Error(data.error || "Google connect error");
       }
 
-      if (!data.url) {
-        throw new Error("URL Google OAuth non reçue");
-      }
+      if (!data.url) throw new Error("Missing Google OAuth URL");
 
-      console.log("URL Google OAuth reçue:", data.url);
-      
       const popup = window.open(
         data.url,
         "Google OAuth",
         "width=600,height=700,menubar=no,toolbar=no,location=yes,status=no,scrollbars=yes,resizable=yes"
       );
-      
+
       if (!popup) {
         alert(t("section3.connection.popupBlocked"));
         return;
       }
-      
+
       const popupCheck = setInterval(() => {
         if (popup.closed) {
           clearInterval(popupCheck);
@@ -1942,7 +1494,6 @@ export default function Section3Sheets() {
           }, 1000);
         }
       }, 500);
-
     } catch (error) {
       console.error("Erreur lors de la connexion Google:", error);
       alert(t("section3.connection.error", { error: error.message }));
@@ -1953,7 +1504,6 @@ export default function Section3Sheets() {
     setTesting(true);
     try {
       await fetchGoogleStatus();
-      
       if (!googleStatus.connected) {
         alert(t("section3.connection.notConnected"));
         return;
@@ -1966,11 +1516,8 @@ export default function Section3Sheets() {
         body: JSON.stringify({ sheet, kind }),
       });
       const j = await res.json();
-      if (j.ok) {
-        alert(t("section3.sheetsConfiguration.testSuccess"));
-      } else {
-        alert(t("section3.sheetsConfiguration.testError", { error: j.error }));
-      }
+      if (j.ok) alert(t("section3.sheetsConfiguration.testSuccess"));
+      else alert(t("section3.sheetsConfiguration.testError", { error: j.error }));
     } catch (e) {
       alert(t("section3.sheetsConfiguration.testError", { error: e.message }));
     } finally {
@@ -1979,35 +1526,25 @@ export default function Section3Sheets() {
   };
 
   const openSheet = (spreadsheetId) => {
-    if (spreadsheetId) {
-      window.open(
-        `https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit`,
-        "_blank"
-      );
-    } else {
-      alert(t("section3.sheetsConfiguration.noSpreadsheetId"));
-    }
+    if (spreadsheetId) window.open(`https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit`, "_blank");
+    else alert(t("section3.sheetsConfiguration.noSpreadsheetId"));
   };
 
   const disconnectGoogle = async () => {
     if (confirm(t("section3.sheetsConfiguration.disconnectConfirm"))) {
       try {
-        await fetch("/api/google/disconnect", {
-          method: "POST",
-          credentials: "include"
-        });
-        
+        await fetch("/api/google/disconnect", { method: "POST", credentials: "include" });
+
         setGoogleStatus({
           loading: false,
           connected: false,
           accountEmail: null,
           mainSheetName: null,
-          abandonedSheetName: null
+          abandonedSheetName: null,
         });
-        
+
         setGoogleSpreadsheets([]);
         setAvailableTabs([]);
-        
         alert(t("section3.sheetsConfiguration.disconnected"));
       } catch (error) {
         alert(t("section3.sheetsConfiguration.disconnectError", { error: error.message }));
@@ -2015,6 +1552,7 @@ export default function Section3Sheets() {
     }
   };
 
+  /* Mapping board */
   const boardRef = useRef(null);
   const [atStart, setAtStart] = useState(true);
   const [atEnd, setAtEnd] = useState(false);
@@ -2035,10 +1573,8 @@ export default function Section3Sheets() {
     });
   };
 
-  const scrollLeft = () =>
-    getBoard()?.scrollBy({ left: -SCROLL_STEP, behavior: "smooth" });
-  const scrollRight = () =>
-    getBoard()?.scrollBy({ left: +SCROLL_STEP, behavior: "smooth" });
+  const scrollLeft = () => getBoard()?.scrollBy({ left: -SCROLL_STEP, behavior: "smooth" });
+  const scrollRight = () => getBoard()?.scrollBy({ left: +SCROLL_STEP, behavior: "smooth" });
 
   const updateScrollEdges = () => {
     const el = getBoard();
@@ -2061,10 +1597,10 @@ export default function Section3Sheets() {
       el.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onResize);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [boardRef.current, cfg.columns.length]);
 
-  const nextIdx = () =>
-    Math.max(0, ...cfg.columns.map((c) => c.idx || 0)) + 1;
+  const nextIdx = () => Math.max(0, ...cfg.columns.map((c) => c.idx || 0)) + 1;
 
   const quickAdd = (fieldValue) => {
     if (!fieldValue) return;
@@ -2095,9 +1631,7 @@ export default function Section3Sheets() {
     keepScroll(() => {
       setCfg((c) => ({
         ...c,
-        columns: c.columns.map((col) =>
-          col.id === id ? { ...col, ...patch } : col
-        ),
+        columns: c.columns.map((col) => (col.id === id ? { ...col, ...patch } : col)),
       }));
     });
   };
@@ -2106,10 +1640,7 @@ export default function Section3Sheets() {
     keepScroll(() => {
       setCfg((c) => ({
         ...c,
-        columns:
-          c.columns.length > 1
-            ? c.columns.filter((x) => x.id !== id)
-            : c.columns,
+        columns: c.columns.length > 1 ? c.columns.filter((x) => x.id !== id) : c.columns,
       }));
     });
   };
@@ -2117,9 +1648,7 @@ export default function Section3Sheets() {
   const swapWith = (idxDelta, colId) => {
     keepScroll(() => {
       setCfg((c) => {
-        const order = [...c.columns].sort(
-          (a, b) => (a.idx || 0) - (b.idx || 0)
-        );
+        const order = [...c.columns].sort((a, b) => (a.idx || 0) - (b.idx || 0));
         const i = order.findIndex((x) => x.id === colId);
         const j = i + idxDelta;
         if (i < 0 || j < 0 || j >= order.length) return c;
@@ -2131,16 +1660,10 @@ export default function Section3Sheets() {
     });
   };
 
-  const sortedCols = [...cfg.columns].sort(
-    (a, b) => (a.idx || 0) - (b.idx || 0)
-  );
+  const sortedCols = [...cfg.columns].sort((a, b) => (a.idx || 0) - (b.idx || 0));
+  const sortedAbandonedCols = [...(cfg.columnsAbandoned || [])].sort((a, b) => (a.idx || 0) - (b.idx || 0));
 
-  const sortedAbandonedCols = [...(cfg.columnsAbandoned || [])].sort(
-    (a, b) => (a.idx || 0) - (b.idx || 0)
-  );
-
-  const nextIdxAbandoned = (cols) =>
-    Math.max(0, ...(cols || []).map((c) => c.idx || 0)) + 1;
+  const nextIdxAbandoned = (cols) => Math.max(0, ...(cols || []).map((c) => c.idx || 0)) + 1;
 
   const quickAddAbandoned = (fieldValue) => {
     if (!fieldValue) return;
@@ -2171,28 +1694,20 @@ export default function Section3Sheets() {
   const patchAbandonedCol = (id, patch) => {
     setCfg((c) => ({
       ...c,
-      columnsAbandoned: (c.columnsAbandoned || []).map((col) =>
-        col.id === id ? { ...col, ...patch } : col
-      ),
+      columnsAbandoned: (c.columnsAbandoned || []).map((col) => (col.id === id ? { ...col, ...patch } : col)),
     }));
   };
 
   const removeAbandonedCol = (id) => {
     setCfg((c) => {
       const cols = c.columnsAbandoned || [];
-      return {
-        ...c,
-        columnsAbandoned:
-          cols.length > 1 ? cols.filter((x) => x.id !== id) : cols,
-      };
+      return { ...c, columnsAbandoned: cols.length > 1 ? cols.filter((x) => x.id !== id) : cols };
     });
   };
 
   const swapAbandonedWith = (idxDelta, colId) => {
     setCfg((c) => {
-      const cols = [...(c.columnsAbandoned || [])].sort(
-        (a, b) => (a.idx || 0) - (b.idx || 0)
-      );
+      const cols = [...(c.columnsAbandoned || [])].sort((a, b) => (a.idx || 0) - (b.idx || 0));
       const i = cols.findIndex((x) => x.id === colId);
       const j = i + idxDelta;
       if (i < 0 || j < 0 || j >= cols.length) return c;
@@ -2203,206 +1718,37 @@ export default function Section3Sheets() {
     });
   };
 
-  const panels = [
-    {
-      key: "sheets",
-      label: t("section3.rail.panels.sheets"),
-    },
-    {
-      key: "abandons",
-      label: t("section3.rail.panels.abandons"),
-    },
-    {
-      key: "realtime",
-      label: t("section3.rail.panels.realtime"),
-    },
-    {
-      key: "whatsapp",
-      label: t("section3.rail.panels.whatsapp"),
-    },
-  ];
-
   const totalOrders = dash.totals?.count || 0;
   const totalAmountCents = dash.totals?.totalCents || 0;
-  const totalCurrency =
-    dash.totals?.currency || cfg.formats.currency || "MAD";
+  const totalCurrency = dash.totals?.currency || cfg.formats.currency || "MAD";
 
   const formatMoney = (cents) =>
-    new Intl.NumberFormat("fr-FR", {
-      style: "currency",
-      currency: totalCurrency,
-    }).format((cents || 0) / 100);
+    new Intl.NumberFormat("fr-FR", { style: "currency", currency: totalCurrency }).format((cents || 0) / 100);
 
-  const isSubscribed = billing.active;
+  const topTabs = [
+    { id: "sheets", content: t("section3.rail.panels.sheets"), panelID: "p-sheets" },
+    { id: "abandons", content: t("section3.rail.panels.abandons"), panelID: "p-abandons" },
+    { id: "realtime", content: t("section3.rail.panels.realtime"), panelID: "p-realtime" },
+    { id: "whatsapp", content: t("section3.rail.panels.whatsapp"), panelID: "p-whatsapp" },
+  ];
+  const topSelected = ["sheets", "abandons", "realtime", "whatsapp"].indexOf(view);
 
   return (
     <PageShell onSave={handleSaveRemote} saving={saving}>
+      {/* NAV TOP (comme section Form) */}
+      <div className="tf-topnav">
+        <Tabs
+          tabs={topTabs}
+          selected={topSelected < 0 ? 0 : topSelected}
+          onSelect={(idx) => {
+            const map = ["sheets", "abandons", "realtime", "whatsapp"];
+            setView(map[idx] || "sheets");
+          }}
+        />
+      </div>
+
       <div className="tf-editor">
-        <div className="tf-rail">
-          <div className="tf-rail-card">
-            <div className="tf-rail-head">
-              {t("section3.rail.panelsTitle")}
-            </div>
-            <div className="tf-rail-list">
-              {panels.map((it) => (
-                <div
-                  key={it.key}
-                  className="tf-rail-item"
-                  data-sel={view === it.key ? 1 : 0}
-                  onClick={() => setView(it.key)}
-                >
-                  {it.label}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="tf-rail-card">
-            <div className="tf-rail-head">
-              {t("section3.rail.previewOrders")}
-            </div>
-            <div style={{ padding: 10, overflowX: "auto" }}>
-              <table className="table-mini">
-                <thead>
-                  <tr>
-                    {sortedCols.map((c) => (
-                      <th key={c.id} style={{ minWidth: c.width || 160 }}>
-                        {t(c.header)}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    {sortedCols.map((c) => (
-                      <td key={c.id} style={{ minWidth: c.width || 160 }}>
-                        <em style={{ color: "#6B7280" }}>{c.appField}</em>
-                      </td>
-                    ))}
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <div className="tf-rail-card">
-            <div className="tf-rail-head">
-              {t("section3.rail.previewAbandons")}
-            </div>
-            <div style={{ padding: 10, overflowX: "auto" }}>
-              {sortedAbandonedCols.length ? (
-                <table className="table-mini">
-                  <thead>
-                    <tr>
-                      {sortedAbandonedCols.map((c) => (
-                        <th key={c.id} style={{ minWidth: c.width || 160 }}>
-                          {t(c.header)}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      {sortedAbandonedCols.map((c) => (
-                        <td key={c.id} style={{ minWidth: c.width || 160 }}>
-                          <em style={{ color: "#6B7280" }}>{c.appField}</em>
-                        </td>
-                      ))}
-                    </tr>
-                  </tbody>
-                </table>
-              ) : (
-                <Text tone="subdued" as="p">
-                  {t("section3.rail.noAbandonedColumns")}
-                </Text>
-              )}
-            </div>
-          </div>
-
-          <div className="tf-rail-card">
-            <div className="tf-rail-head">
-              {t("section3.rail.filtersTitle")}
-            </div>
-            <div style={{ padding: 10 }}>
-              <div
-                style={{
-                  fontSize: 12,
-                  marginBottom: 10,
-                  padding: "6px 8px",
-                  borderRadius: 8,
-                  background: "#F9FAFB",
-                  border: "1px solid #E5E7EB",
-                }}
-              >
-                <strong>{t("section3.rail.stats.period")}</strong>{" "}
-                {periodDays} {t("section3.rail.stats.days")}{" "}
-                {codOnly
-                  ? t("section3.rail.stats.codOnly")
-                  : t("section3.rail.stats.allOrders")}{" "}
-                · <strong>{t("section3.rail.stats.orders")}</strong>{" "}
-                {totalOrders} ·{" "}
-                <strong>{t("section3.rail.stats.total")}</strong>{" "}
-                {formatMoney(totalAmountCents)}
-              </div>
-
-              <BlockStack gap="150">
-                <Select
-                  label={t("section3.rail.filters.period")}
-                  value={String(periodDays)}
-                  onChange={(v) =>
-                    setCfg((c) => ({
-                      ...c,
-                      stats: {
-                        ...c.stats,
-                        periodDays: Number(v || 15),
-                      },
-                    }))
-                  }
-                  options={[
-                    {
-                      label: t(
-                        "section3.rail.filters.periodOptions.7days"
-                      ),
-                      value: "7",
-                    },
-                    {
-                      label: t(
-                        "section3.rail.filters.periodOptions.15days"
-                      ),
-                      value: "15",
-                    },
-                    {
-                      label: t(
-                        "section3.rail.filters.periodOptions.30days"
-                      ),
-                      value: "30",
-                    },
-                    {
-                      label: t(
-                        "section3.rail.filters.periodOptions.60days"
-                      ),
-                      value: "60",
-                    },
-                  ]}
-                />
-                <Checkbox
-                  label={t("section3.rail.filters.codOnly")}
-                  checked={codOnly}
-                  onChange={(v) =>
-                    setCfg((c) => ({
-                      ...c,
-                      stats: { ...c.stats, codOnly: v },
-                    }))
-                  }
-                />
-                <Text tone="subdued" as="p">
-                  {t("section3.rail.filters.description")}
-                </Text>
-              </BlockStack>
-            </div>
-          </div>
-        </div>
-
+        {/* MAIN */}
         <div className="tf-main-col">
           {view === "sheets" && (
             <div className="tf-panel">
@@ -2418,19 +1764,14 @@ export default function Section3Sheets() {
                         {googleStatus.connected ? (
                           <>
                             <Text as="p">
-                              {t("section3.connection.accountConnected")}{" "}
-                              <b>{googleStatus.accountEmail}</b>
+                              {t("section3.connection.accountConnected")} <b>{googleStatus.accountEmail}</b>
                             </Text>
                             <Text tone="subdued" as="p">
                               {t("section3.connection.mainSheet")}{" "}
                               <b>
-                                {googleStatus.mainSheetName ||
-                                  cfg.sheet.tabName ||
-                                  t("section3.connection.notDefined")}
+                                {googleStatus.mainSheetName || cfg.sheet.tabName || t("section3.connection.notDefined")}
                               </b>
-                              {cfg.sheet.spreadsheetId
-                                ? ` · ${t("section3.connection.id")}: ${cfg.sheet.spreadsheetId}`
-                                : ""}
+                              {cfg.sheet.spreadsheetId ? ` · ${t("section3.connection.id")}: ${cfg.sheet.spreadsheetId}` : ""}
                             </Text>
                             <Text tone="subdued" as="p">
                               {t("section3.connection.revocable")}
@@ -2438,9 +1779,7 @@ export default function Section3Sheets() {
                           </>
                         ) : (
                           <>
-                            <Text as="p">
-                              {t("section3.connection.description")}
-                            </Text>
+                            <Text as="p">{t("section3.connection.description")}</Text>
                             <Text tone="subdued" as="p">
                               {t("section3.connection.authorization")}
                             </Text>
@@ -2448,14 +1787,8 @@ export default function Section3Sheets() {
                         )}
 
                         <InlineStack gap="200">
-                          <Button
-                            variant="primary"
-                            onClick={() => startGoogleConnect("orders")}
-                          >
-                            <InlineStack
-                              gap="100"
-                              blockAlign="center"
-                            >
+                          <Button variant="primary" onClick={() => startGoogleConnect("orders")}>
+                            <InlineStack gap="100" blockAlign="center">
                               <GoogleIcon />
                               <span>
                                 {googleStatus.connected
@@ -2467,16 +1800,10 @@ export default function Section3Sheets() {
 
                           {googleStatus.connected && (
                             <>
-                              <Button
-                                onClick={fetchGoogleStatus}
-                                disabled={googleStatus.loading}
-                              >
+                              <Button onClick={fetchGoogleStatus} disabled={googleStatus.loading}>
                                 {t("section3.connection.refresh")}
                               </Button>
-                              <Button
-                                tone="critical"
-                                onClick={disconnectGoogle}
-                              >
+                              <Button tone="critical" onClick={disconnectGoogle}>
                                 {t("section3.sheetsConfiguration.disconnect")}
                               </Button>
                             </>
@@ -2488,13 +1815,9 @@ export default function Section3Sheets() {
                 </GroupCard>
 
                 <GroupCard title="section3.sheetsConfiguration.title">
-                  <Tabs
-                    tabs={sheetTabs}
-                    selected={sheetTab}
-                    onSelect={setSheetTab}
-                  >
+                  <Tabs tabs={sheetTabs} selected={sheetTab} onSelect={setSheetTab}>
                     {sheetTab === 0 && (
-                      <div style={{ marginTop: '16px' }}>
+                      <div style={{ marginTop: "16px" }}>
                         <SheetConfigSection
                           title="section3.sheetsConfiguration.ordersSheet"
                           sheetConfig={cfg.sheet}
@@ -2515,15 +1838,18 @@ export default function Section3Sheets() {
                         />
                       </div>
                     )}
-                    
+
                     {sheetTab === 1 && (
-                      <div style={{ marginTop: '16px' }}>
+                      <div style={{ marginTop: "16px" }}>
                         <SheetConfigSection
                           title="section3.sheetsConfiguration.abandonedSheet"
                           sheetConfig={cfg.abandonedSheet}
                           onConfigChange={(newSheetConfig) => {
                             setCfg((c) => ({ ...c, abandonedSheet: newSheetConfig }));
-                            if (newSheetConfig.spreadsheetId && newSheetConfig.spreadsheetId !== cfg.abandonedSheet.spreadsheetId) {
+                            if (
+                              newSheetConfig.spreadsheetId &&
+                              newSheetConfig.spreadsheetId !== cfg.abandonedSheet.spreadsheetId
+                            ) {
                               loadSpreadsheetTabs(newSheetConfig.spreadsheetId);
                             }
                           }}
@@ -2545,28 +1871,19 @@ export default function Section3Sheets() {
                   <InlineStack gap="200" wrap={false}>
                     <Select
                       label={t("section3.mapping.selectField")}
-                      placeholder={t(
-                        "section3.mapping.selectPlaceholder"
-                      )}
-                      options={APP_FIELDS.map((f) => ({
-                        label: t(f.label),
-                        value: f.value,
-                      }))}
+                      placeholder={t("section3.mapping.selectPlaceholder")}
+                      options={APP_FIELDS.map((f) => ({ label: t(f.label), value: f.value }))}
                       value=""
                       onChange={(v) => quickAdd(v)}
                     />
-                    <Button onClick={() => quickAdd("customer.name")}>
-                      {t("section3.mapping.exampleName")}
-                    </Button>
+                    <Button onClick={() => quickAdd("customer.name")}>{t("section3.mapping.exampleName")}</Button>
                   </InlineStack>
+
                   <Text tone="subdued" as="p">
                     {t("section3.mapping.description")}
                   </Text>
 
-                  <div
-                    className="tf-group-title"
-                    style={{ marginTop: 8, marginBottom: 6 }}
-                  >
+                  <div className="tf-group-title" style={{ marginTop: 8, marginBottom: 6 }}>
                     {t("section3.mapping.configuredColumns")}
                   </div>
 
@@ -2594,49 +1911,22 @@ export default function Section3Sheets() {
                     <div ref={boardRef} className="col-board">
                       {sortedCols.map((col, i) => (
                         <div key={col.id} className="col-card">
-                          <InlineStack
-                            align="space-between"
-                            blockAlign="center"
-                          >
-                            <InlineStack
-                              gap="150"
-                              blockAlign="center"
-                            >
+                          <InlineStack align="space-between" blockAlign="center">
+                            <InlineStack gap="150" blockAlign="center">
                               <Badge>
-                                {t("section3.mapping.column")}{" "}
-                                {i + 1}
+                                {t("section3.mapping.column")} {i + 1}
                               </Badge>
-                              <span className="pill">
-                                {col.type}
-                              </span>
-                              <Badge tone="subdued">
-                                w: {col.width || 180}px
-                              </Badge>
+                              <span className="pill">{col.type}</span>
+                              <Badge tone="subdued">w: {col.width || 180}px</Badge>
                             </InlineStack>
                             <InlineStack gap="100">
-                              <Button
-                                size="slim"
-                                onClick={() =>
-                                  swapWith(-1, col.id)
-                                }
-                              >
+                              <Button size="slim" onClick={() => swapWith(-1, col.id)}>
                                 ←
                               </Button>
-                              <Button
-                                size="slim"
-                                onClick={() =>
-                                  swapWith(+1, col.id)
-                                }
-                              >
+                              <Button size="slim" onClick={() => swapWith(+1, col.id)}>
                                 →
                               </Button>
-                              <Button
-                                tone="critical"
-                                size="slim"
-                                onClick={() =>
-                                  removeCol(col.id)
-                                }
-                              >
+                              <Button tone="critical" size="slim" onClick={() => removeCol(col.id)}>
                                 {t("section3.mapping.delete")}
                               </Button>
                             </InlineStack>
@@ -2645,14 +1935,8 @@ export default function Section3Sheets() {
                           <div style={{ height: 8 }} />
 
                           <Select
-                            label={t(
-                              "section3.mapping.fieldForColumn",
-                              { number: i + 1 }
-                            )}
-                            options={APP_FIELDS.map((f) => ({
-                              label: t(f.label),
-                              value: f.value,
-                            }))}
+                            label={t("section3.mapping.fieldForColumn", { number: i + 1 })}
+                            options={APP_FIELDS.map((f) => ({ label: t(f.label), value: f.value }))}
                             value={col.appField}
                             onChange={(v) => {
                               const tType = inferType(v);
@@ -2660,17 +1944,8 @@ export default function Section3Sheets() {
                                 appField: v,
                                 type: tType,
                                 header: labelFromValue(v, t),
-                                width:
-                                  tType === "datetime"
-                                    ? 220
-                                    : tType ===
-                                      "currency"
-                                    ? 160
-                                    : 180,
-                                asLink:
-                                  tType === "link"
-                                    ? true
-                                    : col.asLink,
+                                width: tType === "datetime" ? 220 : tType === "currency" ? 160 : 180,
+                                asLink: tType === "link" ? true : col.asLink,
                               });
                             }}
                           />
@@ -2678,49 +1953,27 @@ export default function Section3Sheets() {
                           {(col.type === "link" || col.asLink) && (
                             <>
                               <Checkbox
-                                label={t(
-                                  "section3.mapping.asLink"
-                                )}
+                                label={t("section3.mapping.asLink")}
                                 checked={!!col.asLink}
-                                onChange={(v) =>
-                                  patchCol(col.id, {
-                                    asLink: v,
-                                  })
-                                }
+                                onChange={(v) => patchCol(col.id, { asLink: v })}
                               />
                               <TextField
-                                label={t(
-                                  "section3.mapping.linkTemplate"
-                                )}
-                                helpText={t(
-                                  "section3.mapping.linkExample"
-                                )}
-                                value={
-                                  col.linkTemplate ||
-                                  "{value}"
-                                }
-                                onChange={(v) =>
-                                  patchCol(col.id, {
-                                    linkTemplate: v,
-                                  })
-                                }
+                                label={t("section3.mapping.linkTemplate")}
+ contando
+                                helpText={t("section3.mapping.linkExample")}
+                                value={col.linkTemplate || "{value}"}
+                                onChange={(v) => patchCol(col.id, { linkTemplate: v })}
                               />
                             </>
                           )}
 
                           <RangeSlider
-                            label={`${t(
-                              "section3.mapping.width"
-                            )} (${col.width || 180}px)`}
+                            label={`${t("section3.mapping.width")} (${col.width || 180}px)`}
                             min={140}
                             max={420}
                             output
                             value={col.width || 180}
-                            onChange={(v) =>
-                              patchCol(col.id, {
-                                width: v,
-                              })
-                            }
+                            onChange={(v) => patchCol(col.id, { width: v })}
                           />
                         </div>
                       ))}
@@ -2733,49 +1986,21 @@ export default function Section3Sheets() {
                     <Select
                       label={t("section3.display.mode")}
                       value={cfg.display.mode}
-                      onChange={(v) =>
-                        setCfg((c) => ({
-                          ...c,
-                          display: { ...c.display, mode: v },
-                        }))
-                      }
+                      onChange={(v) => setCfg((c) => ({ ...c, display: { ...c.display, mode: v } }))}
                       options={[
-                        {
-                          label: t("section3.display.options.none"),
-                          value: "none",
-                        },
-                        {
-                          label: t("section3.display.options.link"),
-                          value: "link",
-                        },
-                        {
-                          label: t(
-                            "section3.display.options.embedTop"
-                          ),
-                          value: "embed_top",
-                        },
-                        {
-                          label: t(
-                            "section3.display.options.embedBottom"
-                          ),
-                          value: "embed_bottom",
-                        },
+                        { label: t("section3.display.options.none"), value: "none" },
+                        { label: t("section3.display.options.link"), value: "link" },
+                        { label: t("section3.display.options.embedTop"), value: "embed_top" },
+                        { label: t("section3.display.options.embedBottom"), value: "embed_bottom" },
                       ]}
                     />
                     <RangeSlider
-                      label={`${t(
-                        "section3.display.height"
-                      )} (${cfg.display.height}px)`}
+                      label={`${t("section3.display.height")} (${cfg.display.height}px)`}
                       min={260}
                       max={1000}
                       output
                       value={cfg.display.height}
-                      onChange={(v) =>
-                        setCfg((c) => ({
-                          ...c,
-                          display: { ...c.display, height: v },
-                        }))
-                      }
+                      onChange={(v) => setCfg((c) => ({ ...c, display: { ...c.display, height: v } }))}
                     />
                   </Grid3>
                   <Text tone="subdued" as="p">
@@ -2800,28 +2025,17 @@ export default function Section3Sheets() {
                         {googleStatus.connected ? (
                           <>
                             <Text as="p">
-                              {t(
-                                "section3.connection.accountConnected"
-                              )}{" "}
-                              <b>{googleStatus.accountEmail}</b>
+                              {t("section3.connection.accountConnected")} <b>{googleStatus.accountEmail}</b>
                             </Text>
                             <Text tone="subdued" as="p">
-                              {t(
-                                "section3.abandoned.selectedSheet"
-                              )}{" "}
+                              {t("section3.abandoned.selectedSheet")}{" "}
                               <b>
                                 {googleStatus.abandonedSheetName ||
-                                  cfg.abandonedSheet
-                                    .tabName ||
-                                  t(
-                                    "section3.connection.notDefined"
-                                  )}
+                                  cfg.abandonedSheet.tabName ||
+                                  t("section3.connection.notDefined")}
                               </b>
-                              {cfg.abandonedSheet
-                                .spreadsheetId
-                                ? ` · ${t(
-                                    "section3.connection.id"
-                                  )}: ${cfg.abandonedSheet.spreadsheetId}`
+                              {cfg.abandonedSheet.spreadsheetId
+                                ? ` · ${t("section3.connection.id")}: ${cfg.abandonedSheet.spreadsheetId}`
                                 : ""}
                             </Text>
                             <Text tone="subdued" as="p">
@@ -2830,30 +2044,16 @@ export default function Section3Sheets() {
                           </>
                         ) : (
                           <>
-                            <Text as="p">
-                              {t(
-                                "section3.abandoned.useSecondSheet"
-                              )}
-                            </Text>
+                            <Text as="p">{t("section3.abandoned.useSecondSheet")}</Text>
                             <Text tone="subdued" as="p">
-                              {t(
-                                "section3.abandoned.whenAbandoned"
-                              )}
+                              {t("section3.abandoned.whenAbandoned")}
                             </Text>
                           </>
                         )}
 
                         <InlineStack gap="200">
-                          <Button
-                            variant="primary"
-                            onClick={() =>
-                              startGoogleConnect("abandons")
-                            }
-                          >
-                            <InlineStack
-                              gap="100"
-                              blockAlign="center"
-                            >
+                          <Button variant="primary" onClick={() => startGoogleConnect("abandons")}>
+                            <InlineStack gap="100" blockAlign="center">
                               <GoogleIcon />
                               <span>
                                 {googleStatus.connected
@@ -2865,16 +2065,10 @@ export default function Section3Sheets() {
 
                           {googleStatus.connected && (
                             <>
-                              <Button
-                                onClick={fetchGoogleStatus}
-                                disabled={googleStatus.loading}
-                              >
+                              <Button onClick={fetchGoogleStatus} disabled={googleStatus.loading}>
                                 {t("section3.connection.refresh")}
                               </Button>
-                              <Button
-                                tone="critical"
-                                onClick={disconnectGoogle}
-                              >
+                              <Button tone="critical" onClick={disconnectGoogle}>
                                 {t("section3.sheetsConfiguration.disconnect")}
                               </Button>
                             </>
@@ -2889,32 +2083,21 @@ export default function Section3Sheets() {
                   <InlineStack gap="200" wrap={false}>
                     <Select
                       label={t("section3.mapping.selectField")}
-                      placeholder={t(
-                        "section3.mapping.selectPlaceholder"
-                      )}
-                      options={APP_FIELDS.map((f) => ({
-                        label: t(f.label),
-                        value: f.value,
-                      }))}
+                      placeholder={t("section3.mapping.selectPlaceholder")}
+                      options={APP_FIELDS.map((f) => ({ label: t(f.label), value: f.value }))}
                       value=""
                       onChange={(v) => quickAddAbandoned(v)}
                     />
-                    <Button
-                      onClick={() =>
-                        quickAddAbandoned("customer.phone")
-                      }
-                    >
+                    <Button onClick={() => quickAddAbandoned("customer.phone")}>
                       {t("section3.abandoned.examplePhone")}
                     </Button>
                   </InlineStack>
+
                   <Text tone="subdued" as="p">
                     {t("section3.abandoned.mappingDescription")}
                   </Text>
 
-                  <div
-                    className="tf-group-title"
-                    style={{ marginTop: 8, marginBottom: 6 }}
-                  >
+                  <div className="tf-group-title" style={{ marginTop: 8, marginBottom: 6 }}>
                     {t("section3.mapping.configuredColumns")}
                   </div>
 
@@ -2925,49 +2108,22 @@ export default function Section3Sheets() {
                     <div className="col-board">
                       {sortedAbandonedCols.map((col, i) => (
                         <div key={col.id} className="col-card">
-                          <InlineStack
-                            align="space-between"
-                            blockAlign="center"
-                          >
-                            <InlineStack
-                              gap="150"
-                              blockAlign="center"
-                            >
+                          <InlineStack align="space-between" blockAlign="center">
+                            <InlineStack gap="150" blockAlign="center">
                               <Badge>
-                                {t("section3.abandoned.abandonedColumn")}{" "}
-                                {i + 1}
+                                {t("section3.abandoned.abandonedColumn")} {i + 1}
                               </Badge>
-                              <span className="pill">
-                                {col.type}
-                              </span>
-                              <Badge tone="subdued">
-                                w: {col.width || 180}px
-                              </Badge>
+                              <span className="pill">{col.type}</span>
+                              <Badge tone="subdued">w: {col.width || 180}px</Badge>
                             </InlineStack>
                             <InlineStack gap="100">
-                              <Button
-                                size="slim"
-                                onClick={() =>
-                                  swapAbandonedWith(-1, col.id)
-                                }
-                              >
+                              <Button size="slim" onClick={() => swapAbandonedWith(-1, col.id)}>
                                 ←
                               </Button>
-                              <Button
-                                size="slim"
-                                onClick={() =>
-                                  swapAbandonedWith(+1, col.id)
-                                }
-                              >
+                              <Button size="slim" onClick={() => swapAbandonedWith(+1, col.id)}>
                                 →
                               </Button>
-                              <Button
-                                tone="critical"
-                                size="slim"
-                                onClick={() =>
-                                  removeAbandonedCol(col.id)
-                                }
-                              >
+                              <Button tone="critical" size="slim" onClick={() => removeAbandonedCol(col.id)}>
                                 {t("section3.mapping.delete")}
                               </Button>
                             </InlineStack>
@@ -2976,14 +2132,8 @@ export default function Section3Sheets() {
                           <div style={{ height: 8 }} />
 
                           <Select
-                            label={t(
-                              "section3.mapping.fieldForColumn",
-                              { number: i + 1 }
-                            )}
-                            options={APP_FIELDS.map((f) => ({
-                              label: t(f.label),
-                              value: f.value,
-                            }))}
+                            label={t("section3.mapping.fieldForColumn", { number: i + 1 })}
+                            options={APP_FIELDS.map((f) => ({ label: t(f.label), value: f.value }))}
                             value={col.appField}
                             onChange={(v) => {
                               const tType = inferType(v);
@@ -2991,16 +2141,8 @@ export default function Section3Sheets() {
                                 appField: v,
                                 type: tType,
                                 header: labelFromValue(v, t),
-                                width:
-                                  tType === "datetime"
-                                    ? 220
-                                    : tType === "currency"
-                                    ? 160
-                                    : 180,
-                                asLink:
-                                  tType === "link"
-                                    ? true
-                                    : col.asLink,
+                                width: tType === "datetime" ? 220 : tType === "currency" ? 160 : 180,
+                                asLink: tType === "link" ? true : col.asLink,
                               });
                             }}
                           />
@@ -3010,21 +2152,13 @@ export default function Section3Sheets() {
                               <Checkbox
                                 label={t("section3.mapping.asLink")}
                                 checked={!!col.asLink}
-                                onChange={(v) =>
-                                  patchAbandonedCol(col.id, {
-                                    asLink: v,
-                                  })
-                                }
+                                onChange={(v) => patchAbandonedCol(col.id, { asLink: v })}
                               />
                               <TextField
                                 label={t("section3.mapping.linkTemplate")}
                                 helpText={t("section3.mapping.linkExample")}
                                 value={col.linkTemplate || "{value}"}
-                                onChange={(v) =>
-                                  patchAbandonedCol(col.id, {
-                                    linkTemplate: v,
-                                  })
-                                }
+                                onChange={(v) => patchAbandonedCol(col.id, { linkTemplate: v })}
                               />
                             </>
                           )}
@@ -3035,11 +2169,7 @@ export default function Section3Sheets() {
                             max={420}
                             output
                             value={col.width || 180}
-                            onChange={(v) =>
-                              patchAbandonedCol(col.id, {
-                                width: v,
-                              })
-                            }
+                            onChange={(v) => patchAbandonedCol(col.id, { width: v })}
                           />
                         </div>
                       ))}
@@ -3058,22 +2188,17 @@ export default function Section3Sheets() {
 
           {view === "realtime" && (
             <div className="tf-panel">
-              <div className="tf-group-title">
-                {t("section3.realtime.title")}
-              </div>
+              <div className="tf-group-title">{t("section3.realtime.title")}</div>
+
               <BlockStack gap="200">
-                {dashLoading && (
-                  <Text>{t("section3.realtime.loading")}</Text>
-                )}
+                {dashLoading && <Text>{t("section3.realtime.loading")}</Text>}
+
                 {dashError && (
                   <Text tone="critical">
-                    {t("section3.realtime.error", {
-                      error:
-                        dashError ||
-                        t("section3.realtime.unknownError"),
-                    })}
+                    {t("section3.realtime.error", { error: dashError || t("section3.realtime.unknownError") })}
                   </Text>
                 )}
+
                 {!dashLoading && !dashError && (
                   <>
                     {dash.latest && dash.latest.length ? (
@@ -3081,30 +2206,14 @@ export default function Section3Sheets() {
                         <table className="tf-orders-table">
                           <thead>
                             <tr>
-                              <th style={{ width: 80 }}>
-                                {t("section3.preview.columnHeaders.date")}
-                              </th>
-                              <th style={{ width: 90 }}>
-                                {t("section3.preview.columnHeaders.orderId")}
-                              </th>
-                              <th style={{ width: 160 }}>
-                                {t("section3.preview.columnHeaders.customer")}
-                              </th>
-                              <th style={{ width: 130 }}>
-                                {t("section3.preview.columnHeaders.phone")}
-                              </th>
-                              <th style={{ width: 130 }}>
-                                {t("section3.preview.columnHeaders.city")}
-                              </th>
-                              <th style={{ width: 220 }}>
-                                {t("section3.preview.columnHeaders.product")}
-                              </th>
-                              <th style={{ width: 110 }}>
-                                {t("section3.preview.columnHeaders.total")}
-                              </th>
-                              <th style={{ width: 70 }}>
-                                {t("section3.preview.columnHeaders.country")}
-                              </th>
+                              <th style={{ width: 80 }}>{t("section3.preview.columnHeaders.date")}</th>
+                              <th style={{ width: 90 }}>{t("section3.preview.columnHeaders.orderId")}</th>
+                              <th style={{ width: 160 }}>{t("section3.preview.columnHeaders.customer")}</th>
+                              <th style={{ width: 130 }}>{t("section3.preview.columnHeaders.phone")}</th>
+                              <th style={{ width: 130 }}>{t("section3.preview.columnHeaders.city")}</th>
+                              <th style={{ width: 220 }}>{t("section3.preview.columnHeaders.product")}</th>
+                              <th style={{ width: 110 }}>{t("section3.preview.columnHeaders.total")}</th>
+                              <th style={{ width: 70 }}>{t("section3.preview.columnHeaders.country")}</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -3112,44 +2221,23 @@ export default function Section3Sheets() {
                               <tr key={o.id}>
                                 <td>{o.dateLabel}</td>
                                 <td>{o.name || o.shortId}</td>
-                                <td>
-                                  {o.customerName ||
-                                    t("section3.preview.empty")}
-                                </td>
-                                <td>
-                                  {o.customerPhone ||
-                                    t("section3.preview.empty")}
-                                </td>
-                                <td>
-                                  {o.city ||
-                                    t("section3.preview.empty")}
-                                </td>
-                                <td>
-                                  {o.productTitle ||
-                                    t("section3.preview.empty")}
-                                </td>
+                                <td>{o.customerName || t("section3.preview.empty")}</td>
+                                <td>{o.customerPhone || t("section3.preview.empty")}</td>
+                                <td>{o.city || t("section3.preview.empty")}</td>
+                                <td>{o.productTitle || t("section3.preview.empty")}</td>
                                 <td>
                                   {new Intl.NumberFormat("fr-FR", {
                                     style: "currency",
-                                    currency:
-                                      o.currency || "MAD",
-                                  }).format(
-                                    (o.totalCents || 0) / 100
-                                  )}
+                                    currency: o.currency || "MAD",
+                                  }).format((o.totalCents || 0) / 100)}
                                 </td>
-                                <td>
-                                  {o.country ||
-                                    t("section3.preview.empty")}
-                                </td>
+                                <td>{o.country || t("section3.preview.empty")}</td>
                               </tr>
                             ))}
 
                             {!dash.latest.length && (
                               <tr>
-                                <td
-                                  colSpan={8}
-                                  style={{ textAlign: "center" }}
-                                >
+                                <td colSpan={8} style={{ textAlign: "center" }}>
                                   <Text tone="subdued" as="span">
                                     {t("section3.realtime.noOrders")}
                                   </Text>
@@ -3160,9 +2248,7 @@ export default function Section3Sheets() {
                         </table>
                       </div>
                     ) : (
-                      <Text tone="subdued">
-                        {t("section3.realtime.noOrders")}
-                      </Text>
+                      <Text tone="subdued">{t("section3.realtime.noOrders")}</Text>
                     )}
                   </>
                 )}
@@ -3177,6 +2263,7 @@ export default function Section3Sheets() {
           )}
         </div>
 
+        {/* RIGHT */}
         <div className="tf-side-col">
           <div className="tf-side-card">
             <Text as="h3" variant="headingSm">
@@ -3187,38 +2274,80 @@ export default function Section3Sheets() {
               className="tf-guide-text"
               style={{ marginTop: 8, fontSize: 13, lineHeight: 1.5 }}
             >
-              <ul
-                style={{
-                  paddingLeft: "1.2rem",
-                  margin: 0,
-                }}
-              >
+              <ul style={{ paddingLeft: "1.2rem", margin: 0 }}>
                 <li>
-                  <b>{t("section3.guide.panelSheets")}</b> :{" "}
-                  {t("section3.guide.panelSheetsDesc")}
+                  <b>{t("section3.guide.panelSheets")}</b> : {t("section3.guide.panelSheetsDesc")}
                 </li>
                 <li>
-                  <b>{t("section3.guide.panelAbandons")}</b> :{" "}
-                  {t("section3.guide.panelAbandonsDesc")}
+                  <b>{t("section3.guide.panelAbandons")}</b> : {t("section3.guide.panelAbandonsDesc")}
                 </li>
                 <li>
-                  <b>{t("section3.guide.panelRealtime")}</b> :{" "}
-                  {t("section3.guide.panelRealtimeDesc")}
+                  <b>{t("section3.guide.panelRealtime")}</b> : {t("section3.guide.panelRealtimeDesc")}
                 </li>
                 <li>
-                  <b>{t("section3.guide.panelWhatsapp")}</b> :{" "}
-                  {t("section3.guide.panelWhatsappDesc")}
+                  <b>{t("section3.guide.panelWhatsapp")}</b> : {t("section3.guide.panelWhatsappDesc")}
                 </li>
               </ul>
             </BlockStack>
           </div>
 
-          <PlanUsageWidget
-            isSubscribed={isSubscribed}
-            planKey={currentKey}
-            currentTerm={currentTerm}
-            usage={planUsage}
-          />
+          {/* STATS (déplacé à droite, à la place du plan) */}
+          <div className="tf-side-card">
+            <Text as="h3" variant="headingSm">
+              {t("section3.statsCard.title")}
+            </Text>
+
+            <div
+              style={{
+                marginTop: 10,
+                padding: "10px 12px",
+                borderRadius: 10,
+                background: "#F9FAFB",
+                border: "1px solid #E5E7EB",
+                fontSize: 13,
+              }}
+            >
+              <div>
+                <b>{t("section3.rail.stats.period")}</b> {periodDays} {t("section3.rail.stats.days")}{" "}
+                {codOnly ? t("section3.rail.stats.codOnly") : t("section3.rail.stats.allOrders")}
+              </div>
+              <div style={{ marginTop: 6 }}>
+                <b>{t("section3.rail.stats.orders")}</b> {totalOrders} {" · "}
+                <b>{t("section3.rail.stats.total")}</b> {formatMoney(totalAmountCents)}
+              </div>
+            </div>
+
+            <div style={{ marginTop: 12 }}>
+              <BlockStack gap="200">
+                <Select
+                  label={t("section3.rail.filters.period")}
+                  value={String(periodDays)}
+                  onChange={(v) =>
+                    setCfg((c) => ({
+                      ...c,
+                      stats: { ...c.stats, periodDays: Number(v || 15) },
+                    }))
+                  }
+                  options={[
+                    { label: t("section3.rail.filters.periodOptions.7days"), value: "7" },
+                    { label: t("section3.rail.filters.periodOptions.15days"), value: "15" },
+                    { label: t("section3.rail.filters.periodOptions.30days"), value: "30" },
+                    { label: t("section3.rail.filters.periodOptions.60days"), value: "60" },
+                  ]}
+                />
+
+                <Checkbox
+                  label={t("section3.rail.filters.codOnly")}
+                  checked={codOnly}
+                  onChange={(v) => setCfg((c) => ({ ...c, stats: { ...c.stats, codOnly: v } }))}
+                />
+
+                <Text tone="subdued" as="p">
+                  {t("section3.rail.filters.description")}
+                </Text>
+              </BlockStack>
+            </div>
+          </div>
         </div>
       </div>
     </PageShell>
