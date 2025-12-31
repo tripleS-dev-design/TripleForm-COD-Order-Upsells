@@ -1,5 +1,5 @@
 // ===== File: app/sections/Section1FormsLayout.jsx =====
-import React, {  // Ajoutez React ici
+import React, {
   createContext,
   useContext,
   useEffect,
@@ -302,7 +302,7 @@ function buildThemeEditorUrl({
     template
   )}&addAppBlockId=${encodeURIComponent(
     apiKey
-  )}/${encodeURIComponent(blockHandle)}&target=main`;
+    )}/${encodeURIComponent(blockHandle)}&target=main`;
 }
 
 /* ======================= CSS / layout ======================= */
@@ -314,85 +314,150 @@ const LAYOUT_CSS = `
   .tf-header { background:linear-gradient(90deg,#0B3B82,#7D0031); border-bottom:none; padding:12px 16px; position:sticky; top:0; z-index:40; box-shadow:0 10px 28px rgba(11,59,130,0.45); }
   .tf-shell { padding:16px; }
 
-  .tf-editor { display:grid; grid-template-columns: 340px 3fr 1.4fr; gap:16px; align-items:start; }
+  .tf-editor { display:grid; grid-template-columns: 420px 3fr 1.4fr; gap:20px; align-items:start; }
 
-  .tf-rail { position:sticky; top:68px; max-height:calc(100vh - 84px); overflow:auto; }
-  .tf-rail-card { background:#fff; border:1px solid #E5E7EB; border-radius:10px; }
-  .tf-rail-head { padding:10px 12px; border-bottom:1px solid #E5E7EB; font-weight:700; }
-  .tf-rail-list { padding:8px; display:grid; gap:8px; }
+  .tf-rail { position:sticky; top:68px; max-height:calc(100vh - 84px); overflow:auto; background:#fff; border-radius:12px; border:1px solid #E5E7EB; padding:12px; }
+  .tf-rail-card { background:#fff; border:1px solid #E5E7EB; border-radius:10px; overflow:hidden; }
+  .tf-rail-head { padding:14px 16px; border-bottom:1px solid #E5E7EB; font-weight:700; font-size:15px; color:#111827; background:#F8FAFC; }
+  .tf-rail-list { padding:8px; display:grid; gap:10px; max-height:calc(100vh - 180px); overflow-y:auto; }
 
-  /* Rail item style "liste + actions" */
-  .tf-rail-item { display:grid; grid-template-columns:26px 1fr auto; align-items:center; gap:10px; background:#fff; border:1px solid #E5E7EB; border-radius:12px; padding:10px 10px; cursor:pointer; }
-  .tf-rail-item[data-sel="1"] { outline:2px solid #00A7A3; background:rgba(0,167,163,0.07); }
-  .tf-rail-item:active { transform:scale(.998); }
-  .tf-rail-item .tf-grip { opacity:.75; user-select:none; display:flex; align-items:center; justify-content:center; }
+  /* Rail item style "liste + actions" - CORRIGÉ */
+  .tf-rail-item { 
+    display:grid; 
+    grid-template-columns:36px 1fr auto; 
+    align-items:center; 
+    gap:12px; 
+    background:#fff; 
+    border:2px solid #E5E7EB; 
+    border-radius:14px; 
+    padding:14px 12px; 
+    cursor:pointer; 
+    transition:all 0.2s;
+    min-height:56px;
+  }
+  .tf-rail-item:hover { border-color:#CBD5E1; background:#F8FAFC; }
+  .tf-rail-item[data-sel="1"] { outline:3px solid #00A7A3; background:rgba(0,167,163,0.07); border-color:#00A7A3; }
+  .tf-rail-item:active { transform:scale(.995); }
+
+  .tf-rail-item .tf-grip { 
+    opacity:0.85; 
+    user-select:none; 
+    display:flex; 
+    align-items:center; 
+    justify-content:center;
+    width:36px;
+    height:36px;
+    border-radius:10px;
+    background:#F3F4F6;
+  }
+
+  .tf-rail-content { 
+    display:flex; 
+    flex-direction:column; 
+    gap:4px; 
+    min-width:0;
+    overflow:hidden;
+  }
+  .tf-rail-label { 
+    font-weight:600; 
+    font-size:14px; 
+    color:#111827; 
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .tf-rail-subtitle { 
+    font-size:12px; 
+    color:#6B7280; 
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
 
   .tf-rail-actions { display:flex; gap:6px; align-items:center; }
-  .tf-icon-btn { border:1px solid #E5E7EB; background:#fff; border-radius:10px; padding:6px; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; }
-  .tf-icon-btn:hover { border-color:#CBD5E1; background:#F8FAFC; }
-  .tf-icon-btn:active { transform:scale(.98); }
+  .tf-icon-btn { 
+    border:1.5px solid #E5E7EB; 
+    background:#fff; 
+    border-radius:10px; 
+    padding:8px; 
+    cursor:pointer; 
+    display:inline-flex; 
+    align-items:center; 
+    justify-content:center;
+    width:36px;
+    height:36px;
+    transition:all 0.2s;
+  }
+  .tf-icon-btn:hover { border-color:#00A7A3; background:#f0fdfa; }
+  .tf-icon-btn:active { transform:scale(.95); }
 
-  .tf-right-col { display:grid; gap:16px; }
-  .tf-panel   { background:#fff; border:1px solid #E5E7EB; border-radius:10px; padding:12px; }
+  .tf-right-col { display:grid; gap:20px; }
+  .tf-panel   { background:#fff; border:1px solid #E5E7EB; border-radius:12px; padding:16px; }
 
   .tf-preview-col { position:sticky; top:68px; max-height:calc(100vh - 84px); overflow:auto; }
-  .tf-preview-card { background:#fff; border:1px solid #E5E7EB; border-radius:10px; padding:12px; }
+  .tf-preview-card { background:#fff; border:1px solid #E5E7EB; border-radius:12px; padding:16px; }
 
   /* >>> GRAND TITRES — même style que Offres & Sheets <<< */
   .tf-group-title {
-    padding:10px 12px;
+    padding:14px 16px;
     background:linear-gradient(90deg,#0B3B82,#7D0031);
     border:1px solid rgba(0,167,163,0.85);
     color:#F9FAFB;
-    border-radius:10px;
+    border-radius:12px;
     font-weight:800;
     letter-spacing:.02em;
-    margin-bottom:10px;
-    font-size:13px;
+    margin-bottom:12px;
+    font-size:14px;
     box-shadow:0 6px 18px rgba(11,59,130,0.35);
   }
 
-  .tf-accordion { border:1px solid #E5E7EB; border-radius:10px; background:#FFFFFF; margin-bottom:10px; }
-  .tf-accordion__btn { width:100%; text-align:left; padding:10px 12px; background:#F8FAFC; color:#111827; border:none; cursor:pointer; font-weight:700; border-radius:10px; border-bottom:1px solid #E5E7EB; }
-  .tf-accordion__body { padding:12px; background:#FFFFFF; }
+  .tf-accordion { border:1px solid #E5E7EB; border-radius:12px; background:#FFFFFF; margin-bottom:12px; }
+  .tf-accordion__btn { width:100%; text-align:left; padding:14px 16px; background:#F8FAFC; color:#111827; border:none; cursor:pointer; font-weight:700; border-radius:12px; border-bottom:1px solid #E5E7EB; font-size:14px; }
+  .tf-accordion__body { padding:16px; background:#FFFFFF; }
 
   /* Palettes de couleurs */
-  .tf-color-palettes { display:grid; grid-template-columns:repeat(auto-fill, minmax(140px, 1fr)); gap:12px; margin-top:12px; }
-  .tf-color-palette { border:1px solid #E5E7EB; border-radius:10px; overflow:hidden; cursor:pointer; transition:all 0.2s; }
-  .tf-color-palette:hover { transform:translateY(-2px); box-shadow:0 6px 16px rgba(0,0,0,0.1); }
-  .tf-color-palette.active { outline:2px solid #00A7A3; }
-  .tf-palette-colors { display:flex; height:36px; }
-  .tf-palette-info { padding:8px; background:#fff; font-size:11px; font-weight:600; }
+  .tf-color-palettes { display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:14px; margin-top:14px; }
+  .tf-color-palette { border:1px solid #E5E7EB; border-radius:12px; overflow:hidden; cursor:pointer; transition:all 0.2s; }
+  .tf-color-palette:hover { transform:translateY(-2px); box-shadow:0 8px 20px rgba(0,0,0,0.12); }
+  .tf-color-palette.active { outline:3px solid #00A7A3; }
+  .tf-palette-colors { display:flex; height:40px; }
+  .tf-palette-info { padding:10px; background:#fff; font-size:12px; font-weight:600; text-align:center; }
 
   /* Icônes - adapté à Polaris <Icon/> */
-  .tf-icon-selector { display:grid; grid-template-columns:repeat(auto-fill, minmax(44px, 1fr)); gap:8px; margin-top:8px; max-height:200px; overflow-y:auto; padding:8px; border:1px solid #E5E7EB; border-radius:8px; }
-  .tf-icon-option { width:44px; height:44px; display:flex; align-items:center; justify-content:center; border:2px solid #E5E7EB; border-radius:10px; cursor:pointer; background:#fff; transition:all 0.2s; color:#4B5563; }
-  .tf-icon-option:hover { border-color:#00A7A3; background:#f8fafc; }
-  .tf-icon-option.selected { border-color:#00A7A3; background:#ecfeff; }
-  .tf-icon-option .Polaris-Icon { width:20px; height:20px; }
+  .tf-icon-selector { display:grid; grid-template-columns:repeat(auto-fill, minmax(48px, 1fr)); gap:10px; margin-top:10px; max-height:240px; overflow-y:auto; padding:12px; border:1px solid #E5E7EB; border-radius:10px; }
+  .tf-icon-option { width:48px; height:48px; display:flex; align-items:center; justify-content:center; border:2px solid #E5E7EB; border-radius:12px; cursor:pointer; background:#fff; transition:all 0.2s; color:#4B5563; }
+  .tf-icon-option:hover { border-color:#00A7A3; background:#f8fafc; transform:scale(1.05); }
+  .tf-icon-option.selected { border-color:#00A7A3; background:#ecfeff; box-shadow:0 4px 12px rgba(0,167,163,0.2); }
+  .tf-icon-option .Polaris-Icon { width:22px; height:22px; }
 
   /* Aperçu avec icônes */
-  .tf-field-with-icon { display:grid; grid-template-columns:auto 1fr; gap:10px; align-items:center; }
-  .tf-field-icon { width:20px; height:20px; display:flex; align-items:center; justify-content:center; color:#6B7280; }
-  .tf-field-icon .Polaris-Icon { width:16px; height:16px; }
+  .tf-field-with-icon { display:grid; grid-template-columns:auto 1fr; gap:12px; align-items:center; }
+  .tf-field-icon { width:24px; height:24px; display:flex; align-items:center; justify-content:center; color:#6B7280; }
+  .tf-field-icon .Polaris-Icon { width:18px; height:18px; }
 
-  .tf-btn-with-icon { display:flex; align-items:center; justify-content:center; gap:8px; width:100%; text-align:center; }
+  .tf-btn-with-icon { display:flex; align-items:center; justify-content:center; gap:10px; width:100%; text-align:center; }
   .tf-btn-icon { display:flex; align-items:center; }
-  .tf-btn-icon .Polaris-Icon { width:18px; height:18px; }
+  .tf-btn-icon .Polaris-Icon { width:20px; height:20px; }
 
   /* Cart avec icône */
-  .tf-cart-with-icon { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
-  .tf-cart-icon { display:flex; align-items:center; justify-content:center; width:24px; height:24px; }
-  .tf-cart-icon .Polaris-Icon { width:18px; height:18px; }
+  .tf-cart-with-icon { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+  .tf-cart-icon { display:flex; align-items:center; justify-content:center; width:28px; height:28px; }
+  .tf-cart-icon .Polaris-Icon { width:20px; height:20px; }
 
-  /* Icônes dans le rail */
-  .tf-rail-icon { width:16px; height:16px; display:flex; align-items:center; justify-content:center; }
-  .tf-rail-icon .Polaris-Icon { width:16px; height:16px; }
+  /* Icônes dans le rail - CORRIGÉ */
+  .tf-rail-icon { width:20px; height:20px; display:flex; align-items:center; justify-content:center; }
+  .tf-rail-icon .Polaris-Icon { width:18px; height:18px; color:#4B5563; }
 
-  .tf-icon-btn .Polaris-Icon { width:14px; height:14px; }
+  .tf-icon-btn .Polaris-Icon { width:16px; height:16px; color:#4B5563; }
+
+  /* Amélioration des champs dans le rail */
+  .tf-rail-item[data-field-type="phone"] .tf-rail-subtitle { color:#059669; }
+  .tf-rail-item[data-field-type="email"] .tf-rail-subtitle { color:#7C3AED; }
+  .tf-rail-item[data-field-type="pincode"] .tf-rail-subtitle { color:#DC2626; }
+  .tf-rail-item[data-field-type="quantity"] .tf-rail-subtitle { color:#0EA5E9; }
 
   @media (max-width: 1200px) {
-    .tf-editor { grid-template-columns: 300px 2.2fr 1.4fr; }
+    .tf-editor { grid-template-columns: 380px 2.2fr 1.4fr; }
   }
   @media (max-width: 980px) {
     .tf-editor { grid-template-columns: 1fr; }
@@ -1406,7 +1471,7 @@ function Section1FormsLayoutInner() {
       subtitle: "Please enter your contact information",
       buttonText: "Order now",
       successText: "Thanks! We'll contact you",
-      buttonIcon: "CartIcon", // Changé de CartMajor à CartIcon
+      buttonIcon: "CartIcon",
     },
     design: {
       ...DESIGN_PRESETS.CleanWhite,
@@ -1426,7 +1491,7 @@ function Section1FormsLayoutInner() {
       glowPx: 18,
       stickyType: "none",
       stickyLabel: "Order now",
-      stickyIcon: "CartIcon", // Changé de CartMajor à CartIcon
+      stickyIcon: "CartIcon",
       drawerDirection: "right",
       drawerSize: "md",
       overlayColor: "#020617",
@@ -1436,26 +1501,26 @@ function Section1FormsLayoutInner() {
       cityKey: "",
     },
     fields: {
-      name: { on: true, required: true, type: "text", label: "Full name", ph: "Your full name", icon: "ProfileIcon" }, // Changé de ProfileMajor
-      phone: { on: true, required: true, type: "tel", label: "Phone (WhatsApp)", ph: "Phone number", prefix: "+212", icon: "PhoneIcon" }, // Changé de PhoneMajor
-      quantity: { on: true, required: true, type: "number", label: "Quantity", ph: "1", min: 1, max: 10, icon: "HashtagIcon" }, // Changé de HashtagMajor
-      pincode: { on: true, required: true, type: "text", label: "Pincode", ph: "Enter pincode", icon: "LocationIcon" }, // Changé de LocationMajor
-      pincode2: { on: true, required: false, type: "text", label: "Pincode 2", ph: "Additional pincode", icon: "MapIcon" }, // Changé de MapMajor
-      pincode3: { on: true, required: false, type: "text", label: "Pincode 3", ph: "Extra pincode info", icon: "HashtagIcon" }, // Changé de HashtagMajor
-      email: { on: true, required: true, type: "text", label: "Email", ph: "your.email@example.com", icon: "EmailIcon" }, // Changé de EmailMajor
-      company: { on: true, required: false, type: "text", label: "Company", ph: "Your company name", icon: "StoreIcon" }, // Changé de StoreMajor
-      birthday: { on: true, required: false, type: "text", label: "Birthday", ph: "DD/MM/YYYY", icon: "CalendarIcon" }, // Changé de CalendarMajor
-      province: { on: true, required: false, type: "text", label: "Wilaya / Province", ph: "Select province", icon: "GlobeIcon" }, // Changé de GlobeMajor
-      city: { on: true, required: false, type: "text", label: "City", ph: "Select city", icon: "LocationIcon" }, // Changé de LocationMajor
-      address: { on: true, required: false, type: "text", label: "Address", ph: "Full address", icon: "HomeIcon" }, // Changé de HomeMajor
-      notes: { on: true, required: false, type: "textarea", label: "Notes", ph: "(optional)", icon: "NoteIcon" }, // Changé de NoteMajor
+      name: { on: true, required: true, type: "text", label: "Full name", ph: "Your full name", icon: "ProfileIcon" },
+      phone: { on: true, required: true, type: "tel", label: "Phone (WhatsApp)", ph: "Phone number", prefix: "+212", icon: "PhoneIcon" },
+      quantity: { on: true, required: true, type: "number", label: "Quantity", ph: "1", min: 1, max: 10, icon: "HashtagIcon" },
+      pincode: { on: true, required: true, type: "text", label: "Pincode", ph: "Enter pincode", icon: "LocationIcon" },
+      pincode2: { on: true, required: false, type: "text", label: "Pincode 2", ph: "Additional pincode", icon: "MapIcon" },
+      pincode3: { on: true, required: false, type: "text", label: "Pincode 3", ph: "Extra pincode info", icon: "HashtagIcon" },
+      email: { on: true, required: true, type: "text", label: "Email", ph: "your.email@example.com", icon: "EmailIcon" },
+      company: { on: true, required: false, type: "text", label: "Company", ph: "Your company name", icon: "StoreIcon" },
+      birthday: { on: true, required: false, type: "text", label: "Birthday", ph: "DD/MM/YYYY", icon: "CalendarIcon" },
+      province: { on: true, required: false, type: "text", label: "Wilaya / Province", ph: "Select province", icon: "GlobeIcon" },
+      city: { on: true, required: false, type: "text", label: "City", ph: "Select city", icon: "LocationIcon" },
+      address: { on: true, required: false, type: "text", label: "Address", ph: "Full address", icon: "HomeIcon" },
+      notes: { on: true, required: false, type: "textarea", label: "Notes", ph: "(optional)", icon: "NoteIcon" },
     },
     cartTitles: {
       top: "Order summary",
       price: "Product price",
       shipping: "Shipping price",
       total: "Total",
-      cartIcon: "CartIcon", // Changé de CartMajor à CartIcon
+      cartIcon: "CartIcon",
     },
     uiTitles: {
       applyCoupon: "Apply",
@@ -1939,13 +2004,21 @@ function OutletEditor() {
   // ITEMS DU RAIL GAUCHE - TOUS LES CHAMPS, MÊME CACHÉS
   const fieldItems = Object.keys(config.fields || {}).map((k) => {
     const field = config.fields[k];
+    const type = field?.type || "text";
+    const fieldType = type === "tel" ? "phone" : 
+                     type === "number" ? "quantity" : 
+                     k.includes("pincode") ? "pincode" : 
+                     k.includes("email") ? "email" : k;
+    
     return {
       key: `field:${k}`,
       label: field?.label || k,
+      type: fieldType,
+      required: field?.required,
       movable: true,
       toggle: true,
-      on: field?.on !== false, // Par défaut true si non défini
-      iconName: field?.icon || "AppsIcon", // Changé de AppsMajor à AppsIcon
+      on: field?.on !== false,
+      iconName: field?.icon || "AppsIcon",
     };
   });
 
@@ -1993,10 +2066,6 @@ function OutletEditor() {
 
   const removeField = (key) => {
     const k = key.replace(/^field:/, "");
-    // NE PAS désactiver ou réinitialiser, juste sélectionner
-    setSel(`field:${k}`);
-    
-    // Optionnel: ouvrir une modal de confirmation
     if (window.confirm(t("section1.confirmRemoveField"))) {
       setField(k, { on: false });
     }
@@ -2019,7 +2088,7 @@ function OutletEditor() {
           : {}),
       }}
     >
-      <PolarisIcon iconName={iconName} size={14} />
+      <PolarisIcon iconName={iconName} size={16} />
     </button>
   );
 
@@ -2028,51 +2097,61 @@ function OutletEditor() {
       {/* RAIL GAUCHE - TOUS LES CHAMPS */}
       <div className="tf-rail">
         <div className="tf-rail-card">
-          <div className="tf-rail-head">{t("section1.rail.fieldsTitle")}</div>
+          <div className="tf-rail-head">{t("section1.rail.fieldsTitle")} ({items.filter(it => it.on).length}/{items.length})</div>
           <div className="tf-rail-list">
             {items.map((it) => (
               <div
                 key={it.key}
                 className="tf-rail-item"
                 data-sel={sel === it.key ? 1 : 0}
+                data-field-type={it.type}
                 onClick={() => setSel(it.key)}
                 draggable={/^field:/.test(it.key)}
                 onDragStart={() => onDragStart(it.key)}
                 onDragOver={onDragOver}
                 onDrop={() => onDrop(it.key)}
               >
-                <div className="tf-grip tf-rail-icon">
-                  <PolarisIcon iconName={it.iconName} size={16} />
+                <div className="tf-grip">
+                  <div className="tf-rail-icon">
+                    <PolarisIcon iconName={it.iconName} size={18} />
+                  </div>
                 </div>
 
-                <div style={{ fontWeight: 600, fontSize: 13 }}>{it.label}</div>
+                <div className="tf-rail-content">
+                  <div className="tf-rail-label">
+                    {it.label} {it.required && <span style={{color: '#EF4444'}}>*</span>}
+                  </div>
+                  <div className="tf-rail-subtitle">
+                    {it.on ? t("section1.rail.fieldActive") : t("section1.rail.fieldInactive")} • {it.type}
+                  </div>
+                </div>
 
                 <div className="tf-rail-actions">
                   <RailIconBtn
-                    iconName="SettingsIcon" // Changé de SettingsMajor
+                    iconName="SettingsIcon"
                     title="Settings"
                     onClick={() => setSel(it.key)}
                   />
                   <RailIconBtn
-                    iconName={it.on ? "ViewIcon" : "HideIcon"} // Changé de ViewMajor/HideMajor
-                    title={it.on ? "Hide" : "Show"}
+                    iconName={it.on ? "ViewIcon" : "HideIcon"}
+                    title={it.on ? t("section1.rail.hideField") : t("section1.rail.showField")}
                     active={!!it.on}
                     onClick={() => toggleField(it.key)}
                   />
                   <RailIconBtn
-                    iconName="DeleteIcon" // Changé de DeleteMajor
-                    title="Remove"
+                    iconName="DeleteIcon"
+                    title={t("section1.rail.removeField")}
                     danger
                     onClick={() => removeField(it.key)}
                   />
                   <RailIconBtn
-                    iconName="ChevronUpIcon" // Changé de ChevronUpMajor
-                    title="Move up"
+                    iconName="ChevronUpIcon"
+                    title={t("section1.rail.moveUp")}
                     onClick={() => moveField(it.key, -1)}
                   />
                   <RailIconBtn
-                    iconName="ChevronDownIcon" // Changé de ChevronDownMajor
-                    title="Move down"
+                    iconName="ChevronDownIcon"
+                    title={t("section1.rail.moveDown")}
                     onClick={() => moveField(it.key, 1)}
                   />
                 </div>
@@ -2088,7 +2167,6 @@ function OutletEditor() {
                 cursor: 'pointer',
               }}
               onClick={() => {
-                // Ouvrir une modal ou un formulaire pour ajouter un nouveau champ
                 const newFieldKey = `custom_${Date.now()}`;
                 setField(newFieldKey, {
                   on: true,
@@ -2096,17 +2174,24 @@ function OutletEditor() {
                   type: 'text',
                   label: t('section1.newFieldLabel'),
                   ph: t('section1.newFieldPlaceholder'),
-                  icon: 'AddIcon', // Changé de AddMajor
+                  icon: 'AddIcon',
                 });
                 setFieldsOrder([...order, newFieldKey]);
                 setSel(`field:${newFieldKey}`);
               }}
             >
-              <div className="tf-grip tf-rail-icon">
-                <PolarisIcon iconName="AddIcon" size={16} color="#0ea5e9" /> {/* Changé de AddMajor */}
+              <div className="tf-grip">
+                <div className="tf-rail-icon">
+                  <PolarisIcon iconName="AddIcon" size={18} color="#0ea5e9" />
+                </div>
               </div>
-              <div style={{ fontWeight: 600, fontSize: 13, color: '#0ea5e9' }}>
-                {t('section1.addNewField')}
+              <div className="tf-rail-content">
+                <div className="tf-rail-label" style={{ color: '#0ea5e9' }}>
+                  {t('section1.addNewField')}
+                </div>
+                <div className="tf-rail-subtitle" style={{ color: '#0ea5e9' }}>
+                  {t('section1.addNewFieldSubtitle')}
+                </div>
               </div>
               <div className="tf-rail-actions">
                 <div style={{ width: 44 }}></div>
