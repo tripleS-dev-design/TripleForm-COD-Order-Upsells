@@ -1,11 +1,7 @@
 // ===== File: app/sections/Section1FormsLayout.jsx =====
-import React, {  // Ajoutez React ici
-  createContext,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+// ============================== PART 1 / 2 ==============================
+
+import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import {
   Card,
   BlockStack,
@@ -18,246 +14,151 @@ import {
   Modal,
   Icon,
   Tabs,
-  Badge,
-  Banner,
-  Spinner,
-  Checkbox as PolarisCheckbox,
-  ChoiceList,
-  ColorPicker,
-  DatePicker,
-  DropZone,
-  EmailField,
-  MoneyField,
-  NumberField,
-  PasswordField,
-  SearchField,
-  Switch,
-  TextArea,
-  URLField,
-  Avatar,
-  Image,
-  Thumbnail,
-  Popover,
-  Tooltip,
-  Box,
-  Divider,
-  Grid,
-  OrderedList,
-  Page,
-  Section,
-  Stack,
-  Table,
-  UnorderedList,
-  Heading,
-  Paragraph,
-  Text,
-  Chip,
-  ClickableChip,
-  Link,
-  Menu,
-  Clickable,
 } from "@shopify/polaris";
 import * as PI from "@shopify/polaris-icons";
 import { useRouteLoaderData } from "@remix-run/react";
 import { useI18n } from "../i18n/react";
 
-/* ============================== Fonction utilitaire CORRIGÉE pour les icônes Polaris v9 ============================== */
-// Cache pour les performances
+import {
+  COUNTRY_DATA,
+  PHONE_PREFIX_BY_COUNTRY,
+  getCurrencyByCountry,
+  getShippingExample,
+} from "../data/countryData";
+
+/* ============================== Fonction utilitaire CORRIGÉE pour les icônes Polaris ============================== */
 const iconCache = new Map();
 
 function getIconSource(iconName, fallbackIcon = "AppsIcon") {
-  // Si vide ou non string, retourner fallback
   if (!iconName || typeof iconName !== "string") {
-    console.warn("Invalid icon name:", iconName);
     const fallback = PI[fallbackIcon] || PI.AppsIcon;
     return fallback;
   }
 
-  // Vérifier cache
-  if (iconCache.has(iconName)) {
-    return iconCache.get(iconName);
-  }
+  if (iconCache.has(iconName)) return iconCache.get(iconName);
 
-  // Si c'est déjà un composant React (icône importée)
-  if (typeof iconName === 'function' || React.isValidElement(iconName)) {
+  if (typeof iconName === "function" || React.isValidElement(iconName)) {
     iconCache.set(iconName, iconName);
     return iconName;
   }
 
-  // 1. Chercher le nom exact (dans Polaris v9, c'est principalement des noms comme "AppsIcon", "CartIcon")
   if (PI[iconName]) {
-    console.debug("Icon direct match:", iconName);
     iconCache.set(iconName, PI[iconName]);
     return PI[iconName];
   }
 
-  // 2. Si le nom se termine par "Major", "Minor", "Filled", "Outline" → remplacer par "Icon"
   const suffixPattern = /(Major|Minor|Filled|Outline)$/i;
   if (suffixPattern.test(iconName)) {
-    const baseName = iconName.replace(suffixPattern, '');
+    const baseName = iconName.replace(suffixPattern, "");
     const iconNameWithIcon = baseName + "Icon";
     if (PI[iconNameWithIcon]) {
-      console.debug("Icon suffix match:", iconName, "→", iconNameWithIcon);
       iconCache.set(iconName, PI[iconNameWithIcon]);
       return PI[iconNameWithIcon];
     }
   }
 
-  // 3. Si le nom ne se termine pas par "Icon", essayer d'ajouter "Icon"
   if (!iconName.endsWith("Icon")) {
     const withIcon = iconName + "Icon";
     if (PI[withIcon]) {
-      console.debug("Icon added suffix:", iconName, "→", withIcon);
       iconCache.set(iconName, PI[withIcon]);
       return PI[withIcon];
     }
   }
 
-  // 4. Capitaliser la première lettre et essayer
   const capitalized = iconName.charAt(0).toUpperCase() + iconName.slice(1);
   if (PI[capitalized]) {
-    console.debug("Icon capitalized:", iconName, "→", capitalized);
     iconCache.set(iconName, PI[capitalized]);
     return PI[capitalized];
   }
 
-  // 5. Mapping pour noms courants (convertir les anciens noms vers les nouveaux)
   const lowerIconName = iconName.toLowerCase();
   const commonMappings = {
-    'cart': 'CartIcon',
-    'cartmajor': 'CartIcon',
-    'bag': 'BagIcon',
-    'bagmajor': 'BagIcon',
-    'shoppingcart': 'CartIcon',
-    'profile': 'ProfileIcon',
-    'profilemajor': 'ProfileIcon',
-    'person': 'PersonIcon',
-    'personmajor': 'PersonIcon',
-    'user': 'PersonIcon',
-    'phone': 'PhoneIcon',
-    'phonemajor': 'PhoneIcon',
-    'mobile': 'MobileIcon',
-    'mobilemajor': 'MobileIcon',
-    'call': 'PhoneIcon',
-    'chat': 'ChatIcon',
-    'email': 'EmailIcon',
-    'emailmajor': 'EmailIcon',
-    'mail': 'EmailIcon',
-    'envelope': 'EmailIcon',
-    'location': 'LocationIcon',
-    'locationmajor': 'LocationIcon',
-    'pin': 'PinIcon',
-    'mappin': 'MapPinIcon',
-    'map': 'MapIcon',
-    'mapmajor': 'MapIcon',
-    'globe': 'GlobeIcon',
-    'globemajor': 'GlobeIcon',
-    'home': 'HomeIcon',
-    'homemajor': 'HomeIcon',
-    'house': 'HomeIcon',
-    'store': 'StoreIcon',
-    'storemajor': 'StoreIcon',
-    'shop': 'StoreIcon',
-    'building': 'BuildingIcon',
-    'company': 'StoreIcon',
-    'business': 'BusinessIcon',
-    'calendar': 'CalendarIcon',
-    'calendarmajor': 'CalendarIcon',
-    'date': 'CalendarIcon',
-    'time': 'ClockIcon',
-    'clock': 'ClockIcon',
-    'birthday': 'GiftIcon',
-    'gift': 'GiftIcon',
-    'present': 'GiftIcon',
-    'note': 'NoteIcon',
-    'notemajor': 'NoteIcon',
-    'document': 'DocumentIcon',
-    'file': 'DocumentIcon',
-    'clipboard': 'ClipboardIcon',
-    'text': 'TextIcon',
-    'hashtag': 'HashtagIcon',
-    'hashtagmajor': 'HashtagIcon',
-    'number': 'NumberIcon',
-    'quantity': 'HashtagIcon',
-    'count': 'HashtagIcon',
-    'add': 'AddIcon',
-    'plus': 'AddIcon',
-    'create': 'AddIcon',
-    'delete': 'DeleteIcon',
-    'removemajor': 'DeleteIcon',
-    'remove': 'DeleteIcon',
-    'trash': 'DeleteIcon',
-    'edit': 'EditIcon',
-    'settings': 'SettingsIcon',
-    'gearmajor': 'SettingsIcon',
-    'gear': 'SettingsIcon',
-    'config': 'SettingsIcon',
-    'view': 'ViewIcon',
-    'show': 'ViewIcon',
-    'eye': 'ViewIcon',
-    'hide': 'HideIcon',
-    'check': 'CheckCircleIcon',
-    'tick': 'CheckCircleIcon',
-    'success': 'CheckCircleIcon',
-    'arrowright': 'ArrowRightIcon',
-    'arrowleft': 'ArrowLeftIcon',
-    'arrowup': 'ArrowUpIcon',
-    'arrowdown': 'ArrowDownIcon',
-    'chevronup': 'ChevronUpIcon',
-    'chevrondown': 'ChevronDownIcon',
-    'chevronleft': 'ChevronLeftIcon',
-    'chevronright': 'ChevronRightIcon',
-    'truck': 'TruckIcon',
-    'truckmajor': 'TruckIcon',
-    'shipping': 'TruckIcon',
-    'delivery': 'TruckIcon',
-    'checkout': 'CheckoutIcon',
-    'checkoutmajor': 'CheckoutIcon',
-    'receipt': 'ReceiptIcon',
-    'receiptmajor': 'ReceiptIcon',
-    'order': 'ReceiptIcon',
-    'payment': 'CreditCardIcon',
-    'colors': 'ColorsIcon',
-    'colorsmajor': 'ColorsIcon',
-    'color': 'ColorsIcon',
-    'palette': 'ColorsIcon',
-    'city': 'CityIcon',
-    'citymajor': 'CityIcon',
-    'town': 'CityIcon',
-    'region': 'GlobeIcon',
-    'province': 'GlobeIcon',
-    'info': 'CircleInformationIcon',
-    'information': 'CircleInformationIcon',
-    'help': 'CircleInformationIcon',
-    'play': 'PlayIcon',
-    'start': 'PlayIcon',
+    cart: "CartIcon",
+    shoppingcart: "CartIcon",
+    bag: "BagIcon",
+    profile: "ProfileIcon",
+    person: "PersonIcon",
+    user: "PersonIcon",
+    phone: "PhoneIcon",
+    mobile: "MobileIcon",
+    call: "PhoneIcon",
+    chat: "ChatIcon",
+    email: "EmailIcon",
+    mail: "EmailIcon",
+    location: "LocationIcon",
+    pin: "PinIcon",
+    mappin: "MapPinIcon",
+    map: "MapIcon",
+    globe: "GlobeIcon",
+    home: "HomeIcon",
+    store: "StoreIcon",
+    building: "BuildingIcon",
+    business: "BusinessIcon",
+    calendar: "CalendarIcon",
+    clock: "ClockIcon",
+    gift: "GiftIcon",
+    note: "NoteIcon",
+    document: "DocumentIcon",
+    clipboard: "ClipboardIcon",
+    text: "TextIcon",
+    hashtag: "HashtagIcon",
+    number: "NumberIcon",
+    add: "AddIcon",
+    plus: "AddIcon",
+    delete: "DeleteIcon",
+    remove: "DeleteIcon",
+    trash: "DeleteIcon",
+    edit: "EditIcon",
+    settings: "SettingsIcon",
+    view: "ViewIcon",
+    show: "ViewIcon",
+    eye: "ViewIcon",
+    hide: "HideIcon",
+    check: "CheckCircleIcon",
+    tick: "CheckCircleIcon",
+    success: "CheckCircleIcon",
+    arrowright: "ArrowRightIcon",
+    arrowleft: "ArrowLeftIcon",
+    arrowup: "ArrowUpIcon",
+    arrowdown: "ArrowDownIcon",
+    chevronup: "ChevronUpIcon",
+    chevrondown: "ChevronDownIcon",
+    chevronleft: "ChevronLeftIcon",
+    chevronright: "ChevronRightIcon",
+    truck: "TruckIcon",
+    shipping: "TruckIcon",
+    delivery: "TruckIcon",
+    checkout: "CheckoutIcon",
+    receipt: "ReceiptIcon",
+    payment: "CreditCardIcon",
+    colors: "ColorsIcon",
+    palette: "ColorsIcon",
+    city: "CityIcon",
+    info: "CircleInformationIcon",
+    information: "CircleInformationIcon",
+    help: "CircleInformationIcon",
+    play: "PlayIcon",
   };
 
-  // Nettoyer le nom pour le mapping (enlever espaces, tirets, caractères spéciaux)
-  const cleanName = lowerIconName.replace(/[^a-z0-9]/g, '');
+  const cleanName = lowerIconName.replace(/[^a-z0-9]/g, "");
   if (commonMappings[cleanName] && PI[commonMappings[cleanName]]) {
-    const mappedIcon = commonMappings[cleanName];
-    console.debug("Icon mapped:", iconName, "→", mappedIcon);
-    iconCache.set(iconName, PI[mappedIcon]);
-    return PI[mappedIcon];
+    iconCache.set(iconName, PI[commonMappings[cleanName]]);
+    return PI[commonMappings[cleanName]];
   }
 
-  // 6. Dernier recours: chercher par similarité dans toutes les clés
   const iconKeys = Object.keys(PI);
-  // Nettoyer le nom pour la comparaison (enlever suffixes)
-  const cleanIconName = iconName.replace(/Major$|Minor$|Icon$|Filled$|Outline$/i, '').toLowerCase();
-  
+  const cleanIconName = iconName
+    .replace(/Major$|Minor$|Icon$|Filled$|Outline$/i, "")
+    .toLowerCase();
+
   for (const key of iconKeys) {
-    const cleanKey = key.replace(/Icon$|Filled$|Outline$/i, '').toLowerCase();
+    const cleanKey = key.replace(/Icon$|Filled$|Outline$/i, "").toLowerCase();
     if (cleanKey === cleanIconName) {
-      console.debug("Icon found by similarity:", iconName, "→", key);
       iconCache.set(iconName, PI[key]);
       return PI[key];
     }
   }
 
-  // 7. Fallback final avec avertissement
-  console.warn("Icon not found in @shopify/polaris-icons:", iconName, "-> using fallback", fallbackIcon);
   const fallback = PI[fallbackIcon] || PI.AppsIcon;
   iconCache.set(iconName, fallback);
   return fallback;
@@ -277,32 +178,23 @@ function decodeHost(h) {
     return "";
   }
 }
-function buildThemeEditorUrl({
-  hostB64,
-  apiKey,
-  blockHandle = "order-form",
-  template = "product",
-}) {
+function buildThemeEditorUrl({ hostB64, apiKey, blockHandle = "order-form", template = "product" }) {
   const decoded = decodeHost(hostB64);
   if (!decoded) return "";
+
   if (decoded.includes("admin.shopify.com")) {
     const m = decoded.match(/admin\.shopify\.com\/store\/([^/]+)/);
     const store = m?.[1] || "";
     if (!store) return "";
     return `https://admin.shopify.com/store/${store}/themes/current/editor?template=${encodeURIComponent(
       template
-    )}&addAppBlockId=${encodeURIComponent(
-      apiKey
-    )}/${encodeURIComponent(blockHandle)}&target=main`;
+    )}&addAppBlockId=${encodeURIComponent(apiKey)}/${encodeURIComponent(blockHandle)}&target=main`;
   }
-  const shop = decoded
-    .replace(/^https?:\/\//i, "")
-    .replace(/\/admin.*$/i, "");
+
+  const shop = decoded.replace(/^https?:\/\//i, "").replace(/\/admin.*$/i, "");
   return `https://${shop}/admin/themes/current/editor?template=${encodeURIComponent(
     template
-  )}&addAppBlockId=${encodeURIComponent(
-    apiKey
-  )}/${encodeURIComponent(blockHandle)}&target=main`;
+  )}&addAppBlockId=${encodeURIComponent(apiKey)}/${encodeURIComponent(blockHandle)}&target=main`;
 }
 
 /* ======================= CSS / layout ======================= */
@@ -314,7 +206,6 @@ const LAYOUT_CSS = `
   .tf-header { background:linear-gradient(90deg,#0B3B82,#7D0031); border-bottom:none; padding:12px 16px; position:sticky; top:0; z-index:40; box-shadow:0 10px 28px rgba(11,59,130,0.45); }
   .tf-shell { padding:16px; }
 
-  /* ✅ RAIL PLUS LARGE + colonnes plus stables */
   .tf-editor {
     display:grid;
     grid-template-columns: 420px minmax(0, 3fr) minmax(320px, 1.4fr);
@@ -327,7 +218,6 @@ const LAYOUT_CSS = `
   .tf-rail-head { padding:10px 12px; border-bottom:1px solid #E5E7EB; font-weight:700; }
   .tf-rail-list { padding:8px; display:grid; gap:8px; }
 
-  /* ✅ Rail item: label a min-width:0 + actions alignées */
   .tf-rail-item {
     display:grid;
     grid-template-columns: 28px minmax(0, 1fr) auto;
@@ -343,7 +233,6 @@ const LAYOUT_CSS = `
   .tf-rail-item:active { transform:scale(.998); }
   .tf-rail-item .tf-grip { opacity:.75; user-select:none; display:flex; align-items:center; justify-content:center; }
 
-  /* ✅ Label rail: plus lisible, pas compressé */
   .tf-rail-label{
     min-width:0;
     font-weight:600;
@@ -361,7 +250,6 @@ const LAYOUT_CSS = `
     flex:0 0 auto;
   }
 
-  /* ✅ Boutons icônes: taille fixe => pas de clipping */
   .tf-icon-btn{
     width:32px;
     height:32px;
@@ -385,7 +273,6 @@ const LAYOUT_CSS = `
   .tf-preview-col { position:sticky; top:68px; max-height:calc(100vh - 84px); overflow:auto; }
   .tf-preview-card { background:#fff; border:1px solid #E5E7EB; border-radius:10px; padding:12px; }
 
-  /* >>> GRAND TITRES — même style que Offres & Sheets <<< */
   .tf-group-title {
     padding:10px 12px;
     background:linear-gradient(90deg,#0B3B82,#7D0031);
@@ -403,7 +290,6 @@ const LAYOUT_CSS = `
   .tf-accordion__btn { width:100%; text-align:left; padding:10px 12px; background:#F8FAFC; color:#111827; border:none; cursor:pointer; font-weight:700; border-radius:10px; border-bottom:1px solid #E5E7EB; }
   .tf-accordion__body { padding:12px; background:#FFFFFF; }
 
-  /* Palettes de couleurs */
   .tf-color-palettes { display:grid; grid-template-columns:repeat(auto-fill, minmax(140px, 1fr)); gap:12px; margin-top:12px; }
   .tf-color-palette { border:1px solid #E5E7EB; border-radius:10px; overflow:hidden; cursor:pointer; transition:all 0.2s; }
   .tf-color-palette:hover { transform:translateY(-2px); box-shadow:0 6px 16px rgba(0,0,0,0.1); }
@@ -411,20 +297,17 @@ const LAYOUT_CSS = `
   .tf-palette-colors { display:flex; height:36px; }
   .tf-palette-info { padding:8px; background:#fff; font-size:11px; font-weight:600; }
 
-  /* Icônes - selector */
   .tf-icon-selector { display:grid; grid-template-columns:repeat(auto-fill, minmax(44px, 1fr)); gap:8px; margin-top:8px; max-height:200px; overflow-y:auto; padding:8px; border:1px solid #E5E7EB; border-radius:8px; }
   .tf-icon-option { width:44px; height:44px; display:flex; align-items:center; justify-content:center; border:2px solid #E5E7EB; border-radius:10px; cursor:pointer; background:#fff; transition:all 0.2s; color:#4B5563; line-height:0; }
   .tf-icon-option:hover { border-color:#00A7A3; background:#f8fafc; }
   .tf-icon-option.selected { border-color:#00A7A3; background:#ecfeff; }
 
-  /* Aperçu avec icônes */
   .tf-field-with-icon { display:grid; grid-template-columns:auto 1fr; gap:10px; align-items:center; }
   .tf-field-icon { width:18px; height:18px; display:flex; align-items:center; justify-content:center; color:#6B7280; line-height:0; }
   .tf-btn-icon { display:flex; align-items:center; line-height:0; }
   .tf-cart-icon { display:flex; align-items:center; justify-content:center; width:22px; height:22px; line-height:0; }
   .tf-rail-icon { width:18px; height:18px; display:flex; align-items:center; justify-content:center; line-height:0; }
 
-  /* ✅ FIX CLIPPING POLARIS ICON (SVG) */
   .tf-icon-btn .Polaris-Icon,
   .tf-icon-btn .Polaris-Icon svg,
   .tf-rail-icon .Polaris-Icon,
@@ -440,6 +323,11 @@ const LAYOUT_CSS = `
     width: 100% !important;
     height: 100% !important;
   }
+
+  /* ✅ manquants (cart + button align) */
+  .tf-cart-with-icon{ display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+  .tf-btn-with-icon{ display:flex; align-items:center; gap:8px; line-height:0; }
+  .tf-btn-with-icon span{ line-height:1.2; }
 
   @media (max-width: 1200px) {
     .tf-editor { grid-template-columns: 360px minmax(0, 2.2fr) minmax(320px, 1.4fr); }
@@ -680,7 +568,7 @@ const DESIGN_PRESETS = {
   },
 };
 
-/* ============================== Bibliothèque d'icônes Polaris mise à jour pour v9 ============================== */
+/* ============================== Bibliothèque d'icônes Polaris ============================== */
 const ICON_LIBRARY = {
   cartTitle: [
     { value: "CartIcon", label: "Panier" },
@@ -694,17 +582,17 @@ const ICON_LIBRARY = {
     { value: "ProfileIcon", label: "Profil" },
     { value: "PersonIcon", label: "Personne" },
     { value: "CustomersIcon", label: "Clients" },
-    { value: "UserIcon", label: "Utilisateur" },
+    { value: "PersonIcon", label: "Utilisateur" },
   ],
   phone: [
     { value: "PhoneIcon", label: "Téléphone" },
     { value: "MobileIcon", label: "Mobile" },
-    { value: "CallIcon", label: "Appel" },
+    { value: "PhoneIcon", label: "Appel" },
     { value: "ChatIcon", label: "Chat" },
   ],
   quantity: [
     { value: "HashtagIcon", label: "Hashtag" },
-    { value: "CirclePlusIcon", label: "Plus" },
+    { value: "AddIcon", label: "Plus" },
     { value: "CartIcon", label: "Panier" },
     { value: "NumberIcon", label: "Nombre" },
   ],
@@ -724,13 +612,13 @@ const ICON_LIBRARY = {
     { value: "HashtagIcon", label: "Hashtag" },
     { value: "NumberIcon", label: "Nombre" },
     { value: "CircleInformationIcon", label: "Information" },
-    { value: "MarkerIcon", label: "Marqueur" },
+    { value: "LocationIcon", label: "Marqueur" },
   ],
   email: [
     { value: "EmailIcon", label: "Email" },
-    { value: "EnvelopeIcon", label: "Enveloppe" },
+    { value: "EmailIcon", label: "Enveloppe" },
     { value: "SendIcon", label: "Envoyer" },
-    { value: "MailIcon", label: "Courrier" },
+    { value: "EmailIcon", label: "Courrier" },
   ],
   company: [
     { value: "StoreIcon", label: "Magasin" },
@@ -740,9 +628,9 @@ const ICON_LIBRARY = {
   ],
   birthday: [
     { value: "CalendarIcon", label: "Calendrier" },
-    { value: "DateIcon", label: "Date" },
+    { value: "CalendarIcon", label: "Date" },
     { value: "GiftIcon", label: "Cadeau" },
-    { value: "CelebrationIcon", label: "Célébration" },
+    { value: "GiftIcon", label: "Célébration" },
   ],
   address: [
     { value: "LocationIcon", label: "Localisation" },
@@ -760,7 +648,7 @@ const ICON_LIBRARY = {
     { value: "GlobeIcon", label: "Globe" },
     { value: "MapIcon", label: "Carte" },
     { value: "LocationIcon", label: "Localisation" },
-    { value: "RegionIcon", label: "Région" },
+    { value: "GlobeIcon", label: "Région" },
   ],
   notes: [
     { value: "NoteIcon", label: "Note" },
@@ -778,16 +666,51 @@ const ICON_LIBRARY = {
     { value: "SendIcon", label: "Envoyer" },
     { value: "PlayIcon", label: "Play" },
   ],
-  rail: {
-    cart: { value: "CartIcon" },
-    titles: { value: "TextIcon" },
-    buttons: { value: "CircleInformationIcon" },
-    colors: { value: "ColorsIcon" },
-    options: { value: "SettingsIcon" },
-  },
 };
 
-/* ============================== Composant Icon Polaris corrigé ============================== */
+const COLOR_PALETTES = [
+  { id: "blue-gradient", name: "Gradient Bleu", colors: ["#0B3B82", "#7D0031", "#00A7A3", "#F0F9FF", "#0C4A6E"], preset: "SkyBlueUI" },
+  { id: "clean-white", name: "Blanc Propre", colors: ["#FFFFFF", "#111827", "#E5E7EB", "#F9FAFB", "#374151"], preset: "CleanWhite" },
+  { id: "dark-modern", name: "Sombre Moderne", colors: ["#0B1220", "#2563EB", "#1F2A44", "#101828", "#E5F0FF"], preset: "BoldDark" },
+  { id: "green-nature", name: "Nature Verte", colors: ["#10B981", "#065F46", "#D1FAE5", "#ECFDF5", "#F0FDF4"], preset: "GreenNature" },
+  { id: "sunset-orange", name: "Orange Couchant", colors: ["#F97316", "#9A3412", "#FDBA74", "#FFEDD5", "#FFF7ED"], preset: "SunsetOrange" },
+  { id: "purple-elegant", name: "Violet Élégant", colors: ["#8B5CF6", "#5B21B6", "#E9D5FF", "#F5F3FF", "#FAF5FF"], preset: "PurpleElegant" },
+  { id: "luxury-gold", name: "Or Luxueux", colors: ["#D97706", "#854D0E", "#FDE68A", "#FEF3C7", "#FEFCE8"], preset: "LuxuryGold" },
+  { id: "ocean-deep", name: "Océan Profond", colors: ["#0891B2", "#0E7490", "#A5F3FC", "#CFFAFE", "#ECFEFF"], preset: "OceanDeep" },
+  { id: "minimal-gray", name: "Gris Minimal", colors: ["#4B5563", "#374151", "#D1D5DB", "#F9FAFB", "#FFFFFF"], preset: "MinimalGray" },
+];
+
+/* ============================== Sanitizer ============================== */
+const REPLACERS = [
+  [/â€™|'/g, "'"],
+  [/â€œ|â€\u009D|â€|"|"/g, '"'],
+  [/â€"|â€"|–|—/g, "-"],
+  [/\u00A0/g, " "],
+  [/Â/g, ""],
+  [/ØŸ/g, ""],
+];
+const sStr = (s) =>
+  typeof s === "string"
+    ? REPLACERS.reduce((x, [r, v]) => x.replace(r, v), s)
+    : s;
+
+function sanitizeDeep(o) {
+  if (o == null) return o;
+  if (typeof o === "string") return sStr(o);
+  if (Array.isArray(o)) return o.map(sanitizeDeep);
+  if (typeof o === "object") {
+    const n = {};
+    for (const k in o) n[k] = sanitizeDeep(o[k]);
+    return n;
+  }
+  return o;
+}
+
+/* ============================== Contexte ============================== */
+const FormsCtx = createContext(null);
+const useForms = () => useContext(FormsCtx);
+
+/* ============================== Composant Icon Polaris ============================== */
 function PolarisIcon({ iconName, size = 20, color = "currentColor", accessibilityLabel }) {
   const source = getIconSource(iconName);
 
@@ -821,536 +744,15 @@ function PolarisIcon({ iconName, size = 20, color = "currentColor", accessibilit
         display: "inline-flex",
         alignItems: "center",
         justifyContent: "center",
-        color,            // ✅ couleur via currentColor
+        color,
         flex: "0 0 auto",
-        lineHeight: 0,    // ✅ évite le clipping vertical
+        lineHeight: 0,
       }}
     >
       <Icon source={source} accessibilityLabel={accessibilityLabel || iconName} />
     </span>
   );
 }
-
-/* ============================== Palette de couleurs ============================== */
-const COLOR_PALETTES = [
-  {
-    id: "blue-gradient",
-    name: "Gradient Bleu",
-    colors: ["#0B3B82", "#7D0031", "#00A7A3", "#F0F9FF", "#0C4A6E"],
-    preset: "SkyBlueUI",
-  },
-  {
-    id: "clean-white",
-    name: "Blanc Propre",
-    colors: ["#FFFFFF", "#111827", "#E5E7EB", "#F9FAFB", "#374151"],
-    preset: "CleanWhite",
-  },
-  {
-    id: "dark-modern",
-    name: "Sombre Moderne",
-    colors: ["#0B1220", "#2563EB", "#1F2A44", "#101828", "#E5F0FF"],
-    preset: "BoldDark",
-  },
-  {
-    id: "green-nature",
-    name: "Nature Verte",
-    colors: ["#10B981", "#065F46", "#D1FAE5", "#ECFDF5", "#F0FDF4"],
-    preset: "GreenNature",
-  },
-  {
-    id: "sunset-orange",
-    name: "Orange Couchant",
-    colors: ["#F97316", "#9A3412", "#FDBA74", "#FFEDD5", "#FFF7ED"],
-    preset: "SunsetOrange",
-  },
-  {
-    id: "purple-elegant",
-    name: "Violet Élégant",
-    colors: ["#8B5CF6", "#5B21B6", "#E9D5FF", "#F5F3FF", "#FAF5FF"],
-    preset: "PurpleElegant",
-  },
-  {
-    id: "luxury-gold",
-    name: "Or Luxueux",
-    colors: ["#D97706", "#854D0E", "#FDE68A", "#FEF3C7", "#FEFCE8"],
-    preset: "LuxuryGold",
-  },
-  {
-    id: "ocean-deep",
-    name: "Océan Profond",
-    colors: ["#0891B2", "#0E7490", "#A5F3FC", "#CFFAFE", "#ECFEFF"],
-    preset: "OceanDeep",
-  },
-  {
-    id: "minimal-gray",
-    name: "Gris Minimal",
-    colors: ["#4B5563", "#374151", "#D1D5DB", "#F9FAFB", "#FFFFFF"],
-    preset: "MinimalGray",
-  },
-];
-
-/* ============================== Sanitizer ============================== */
-const REPLACERS = [
-  [/â€™|'/g, "'"],
-  [/â€œ|â€\u009D|â€|"|"/g, '"'],
-  [/â€"|â€"|–|—/g, "-"],
-  [/\u00A0/g, " "],
-  [/Â/g, ""],
-  [/ØŸ/g, ""],
-];
-const sStr = (s) =>
-  typeof s === "string"
-    ? REPLACERS.reduce((x, [r, v]) => x.replace(r, v), s)
-    : s;
-function sanitizeDeep(o) {
-  if (o == null) return o;
-  if (typeof o === "string") return sStr(o);
-  if (Array.isArray(o)) return o.map(sanitizeDeep);
-  if (typeof o === "object") {
-    const n = {};
-    for (const k in o) n[k] = sanitizeDeep(o[k]);
-    return n;
-  }
-  return o;
-}
-
-/* ============================== Helpers ============================== */
-function hexToRgba(hex, alpha) {
-  const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex || "");
-  if (!m) return `rgba(0,0,0,${alpha})`;
-  const r = parseInt(m[1], 16);
-  const g = parseInt(m[2], 16);
-  const b = parseInt(m[3], 16);
-  return `rgba(${r},${g},${b},${alpha})`;
-}
-
-/* ====== DATA Pays / Wilayas / Villes ====== */
-const COUNTRY_DATA = {
-  MA: {
-    label: "Maroc",
-    provinces: {
-      CASABLANCA: { 
-        label: "Casablanca-Settat", 
-        cities: ["Casablanca", "Mohammedia", "Settat", "Berrechid", "El Jadida", "Benslimane", "Nouaceur", "Médiouna", "Sidi Bennour", "Dar Bouazza", "Lahraouyine", "Had Soualem", "Sidi Rahal", "Oulad Abbou"] 
-      },
-      RABAT: { 
-        label: "Rabat-Salé-Kénitra", 
-        cities: ["Rabat", "Salé", "Kénitra", "Témara", "Skhirat", "Khémisset", "Sidi Slimane", "Sidi Kacem", "Tiflet", "Ain Aouda", "Harhoura", "Sidi Yahya Zaer", "Oulmès", "Sidi Allal El Bahraoui"] 
-      },
-      TANGER: { 
-        label: "Tanger-Tétouan-Al Hoceïma", 
-        cities: ["Tanger", "Tétouan", "Al Hoceïma", "Larache", "Chefchaouen", "Ouazzane", "Fnideq", "M'diq", "Martil", "Ksar El Kebir", "Asilah", "Bni Bouayach", "Imzouren", "Bni Hadifa"] 
-      },
-      MARRAKECH: { 
-        label: "Marrakech-Safi", 
-        cities: ["Marrakech", "Safi", "El Kelâa des Sraghna", "Essaouira", "Rehamna", "Youssoufia", "Chichaoua", "Al Haouz", "Rhamna", "Benguerir", "Sidi Bennour", "Smimou", "Tamanar", "Imintanoute"] 
-      },
-      FES: { 
-        label: "Fès-Meknès", 
-        cities: ["Fès", "Meknès", "Ifrane", "Taza", "Sefrou", "Boulemane", "Taounate", "Guercif", "Moulay Yacoub", "El Hajeb", "Moulay Idriss Zerhoun", "Ouazzane", "Bhalil", "Aïn Cheggag"] 
-      },
-      ORIENTAL: { 
-        label: "Région de l'Oriental", 
-        cities: ["Oujda", "Nador", "Berkane", "Taourirt", "Jerada", "Figuig", "Bouarfa", "Ahfir", "Driouch", "Beni Ensar", "Selouane", "Bouhdila", "Talsint", "Debdou"] 
-      },
-      SUSS: { 
-        label: "Souss-Massa", 
-        cities: ["Agadir", "Inezgane", "Taroudant", "Tiznit", "Oulad Teima", "Biougra", "Ait Melloul", "Dcheira", "Temsia", "Ait Baha", "Chtouka Ait Baha", "Tafraout", "Aoulouz", "El Guerdane"] 
-      },
-      DRAATAF: { 
-        label: "Drâa-Tafilalet", 
-        cities: ["Errachidia", "Ouarzazate", "Tinghir", "Midelt", "Zagora", "Rissani", "Alnif", "Boumalne Dades", "Kelaat M'Gouna", "Tinejdad", "Goulmima", "Jorf", "M'semrir", "Aït Benhaddou"] 
-      }
-    }
-  },
-  DZ: {
-    label: "Algérie",
-    provinces: {
-      ALGER: { 
-        label: "Alger", 
-        cities: ["Alger Centre", "Bab El Oued", "El Harrach", "Kouba", "Hussein Dey", "Bordj El Kiffan", "Dar El Beïda", "Bouzaréah", "Birkhadem", "Chéraga", "Dellys", "Zeralda", "Staoueli", "Birtouta", "Ouled Fayet", "Draria", "Les Eucalyptus"] 
-      },
-      ORAN: { 
-        label: "Oran", 
-        cities: ["Oran", "Es-Sénia", "Bir El Djir", "Gdyel", "Aïn El Turck", "Arzew", "Mers El Kébir", "Boutlelis", "Oued Tlelat", "Bethioua", "El Ançor", "Hassi Bounif", "Messerghin", "Boufatis", "Tafraoui"] 
-      },
-      CONSTANTINE: { 
-        label: "Constantine", 
-        cities: ["Constantine", "El Khroub", "Hamma Bouziane", "Aïn Smara", "Zighoud Youcef", "Didouche Mourad", "Ibn Ziad", "Messaoud Boudjeriou", "Beni Hamidane", "Aïn Abid", "Ouled Rahmoun", "Ben Badis", "El Haria"] 
-      },
-      BLIDA: { 
-        label: "Blida", 
-        cities: ["Blida", "Boufarik", "El Affroun", "Mouzaïa", "Ouled Yaïch", "Beni Mered", "Bouinan", "Soumaa", "Chebli", "Bougara", "Guerrouaou", "Hammam Melouane", "Beni Tamou", "Ben Khlil"] 
-      },
-      SETIF: { 
-        label: "Sétif", 
-        cities: ["Sétif", "El Eulma", "Aïn Oulmene", "Bougaa", "Aïn Azel", "Amoucha", "Béni Aziz", "Guellal", "Hammam Soukhna", "Bouandas", "Taya", "Tella", "Babor", "Maoklane"] 
-      },
-      ANNABA: { 
-        label: "Annaba", 
-        cities: ["Annaba", "El Bouni", "Sidi Amar", "Berrahal", "Treat", "Cheurfa", "Oued El Aneb", "Seraidi", "Ain Berda", "Chaiba", "El Hadjar", "Chetaibi"] 
-      },
-      BATNA: { 
-        label: "Batna", 
-        cities: ["Batna", "Barika", "Merouana", "Arris", "N'Gaous", "Tazoult", "Aïn Touta", "Ouled Si Slimane", "Fesdis", "Timgad", "Ras El Aioun", "Maafa", "Lazrou", "Ouled Ammar"] 
-      }
-    }
-  },
-  TN: {
-    label: "Tunisie",
-    provinces: {
-      TUNIS: { 
-        label: "Tunis", 
-        cities: ["Tunis", "La Marsa", "Carthage", "Le Bardo", "Le Kram", "Sidi Bou Said", "Menzah", "Ariana", "El Menzah", "Mornaguia", "Mégrine", "Radès", "Djedeida", "El Omrane", "Ettahrir", "El Kabaria"] 
-      },
-      ARIANA: { 
-        label: "Ariana", 
-        cities: ["Ariana", "Raoued", "La Soukra", "Kalaat El Andalous", "Sidi Thabet", "Ettadhamen", "Mnihla", "Borj El Amri", "Kalâat el-Andalous", "Sidi Amor", "El Battan", "Oued Ellil"] 
-      },
-      BEN_AROUS: { 
-        label: "Ben Arous", 
-        cities: ["Ben Arous", "Ezzahra", "Rades", "Mégrine", "Hammam Lif", "Mornag", "Fouchana", "Khalidia", "Mhamdia", "Hammam Chott", "Bou Mhel el-Bassatine", "El Mida", "Mornaguia"] 
-      },
-      SFAX: { 
-        label: "Sfax", 
-        cities: ["Sfax", "El Ain", "Agareb", "Mahres", "Sakiet Eddaïer", "Sakiet Ezzit", "Ghraiba", "Bir Ali Ben Khalifa", "Jebeniana", "Kerkennah", "Skhira", "Menzel Chaker", "Gremda", "Thyna"] 
-      },
-      SOUSSE: { 
-        label: "Sousse", 
-        cities: ["Sousse", "Hammam Sousse", "Kalaa Kebira", "Kalaa Sghira", "Akouda", "M'saken", "Enfidha", "Bouficha", "Hergla", "Kondar", "Zaouiet Sousse", "Hammam Jedidi", "Sidi Bou Ali", "Messaadine"] 
-      },
-      BIZERTE: { 
-        label: "Bizerte", 
-        cities: ["Bizerte", "Menzel Jemil", "Mateur", "Sejnane", "Ghar El Melh", "Ras Jebel", "Menzel Abderrahmane", "El Alia", "Tinja", "Utique", "Menzel Bourguiba", "Joumine", "Aousja", "Metline"] 
-      }
-    }
-  },
-  EG: {
-    label: "Égypte",
-    provinces: {
-      CAIRO: { 
-        label: "Le Caire", 
-        cities: ["Le Caire", "Nasr City", "Heliopolis", "Maadi", "Zamalek", "Dokki", "Giza", "Shubra", "Al Haram", "Al Mohandessin", "6 Octobre", "New Cairo", "Madinet Nasr", "Helwan", "Qalyub", "Shubra El Kheima", "Badr City"] 
-      },
-      ALEX: { 
-        label: "Alexandrie", 
-        cities: ["Alexandrie", "Borg El Arab", "Abu Qir", "Al Amriya", "Al Agamy", "Montaza", "Al Mansheya", "Al Labban", "Kafr Abdo", "Sidi Gaber", "Smouha", "Miami", "Stanley", "Laurent", "Gleem", "Camp Caesar"] 
-      },
-      GIZA: { 
-        label: "Gizeh", 
-        cities: ["Gizeh", "Sheikh Zayed City", "6th of October", "Al Haram", "Al Badrasheen", "Al Ayat", "Al Wahat Al Bahariya", "Al Saff", "Atfih", "Al Ayyat", "Awashim", "Kerdasa", "El Hawamdeya", "Osim"] 
-      },
-      SHARQIA: { 
-        label: "Sharqia", 
-        cities: ["Zagazig", "10th of Ramadan City", "Belbeis", "Minya Al Qamh", "Al Ibrahimiyah", "Diarb Negm", "Husseiniya", "Mashtool El Souk", "Abu Hammad", "Abu Kebir", "Faqous", "El Salheya El Gedida"] 
-      }
-    }
-  },
-  FR: {
-    label: "France",
-    provinces: {
-      IDF: { 
-        label: "Île-de-France", 
-        cities: ["Paris", "Boulogne-Billancourt", "Saint-Denis", "Versailles", "Nanterre", "Créteil", "Bobigny", "Montreuil", "Argenteuil", "Courbevoic", "Asnières-sur-Seine", "Colombes", "Aubervilliers", "Saint-Maur-des-Fossés", "Issy-les-Moulineaux", "Levallois-Perret"] 
-      },
-      PACA: { 
-        label: "Provence-Alpes-Côte d'Azur", 
-        cities: ["Marseille", "Nice", "Toulon", "Avignon", "Aix-en-Provence", "Antibes", "Cannes", "La Seyne-sur-Mer", "Hyères", "Arles", "Martigues", "Grasse", "Fréjus", "Antibes", "La Ciotat", "Cavaillon"] 
-      },
-      ARA: { 
-        label: "Auvergne-Rhône-Alpes", 
-        cities: ["Lyon", "Grenoble", "Saint-Étienne", "Annecy", "Clermont-Ferrand", "Villeurbanne", "Valence", "Chambéry", "Roanne", "Bourg-en-Bresse", "Vénissieux", "Saint-Priest", "Caluire-et-Cuire", "Vaulx-en-Velin", "Meyzieu"] 
-      },
-      OCCITANIE: { 
-        label: "Occitanie", 
-        cities: ["Toulouse", "Montpellier", "Nîmes", "Perpignan", "Béziers", "Montauban", "Narbonne", "Carcassonne", "Albi", "Sète", "Lunel", "Agde", "Castres", "Mende", "Millau", "Foix"] 
-      }
-    }
-  },
-  ES: {
-    label: "España",
-    provinces: {
-      MADRID: { 
-        label: "Comunidad de Madrid", 
-        cities: ["Madrid", "Alcalá de Henares", "Getafe", "Leganés", "Móstoles", "Fuenlabrada", "Alcorcón", "Parla", "Torrejón de Ardoz", "Coslada", "Las Rozas", "San Sebastián de los Reyes", "Alcobendas", "Pozuelo de Alarcón", "Rivas-Vaciamadrid"] 
-      },
-      CATALUNYA: { 
-        label: "Cataluña", 
-        cities: ["Barcelona", "L'Hospitalet de Llobregat", "Badalona", "Tarragona", "Sabadell", "Lleida", "Mataró", "Santa Coloma de Gramenet", "Reus", "Girona", "Sant Cugat", "Cornellà", "Sant Boi de Llobregat", "Rubí", "Manresa"] 
-      },
-      ANDALUCIA: { 
-        label: "Andalucía", 
-        cities: ["Sevilla", "Málaga", "Granada", "Córdoba", "Jerez de la Frontera", "Almería", "Huelva", "Marbella", "Dos Hermanas", "Algeciras", "Cádiz", "Jaén", "Almería", "Mijas", "Fuengirola", "Chiclana de la Frontera"] 
-      },
-      VALENCIA: { 
-        label: "Comunidad Valenciana", 
-        cities: ["Valencia", "Alicante", "Castellón de la Plana", "Elche", "Torrevieja", "Orihuela", "Gandia", "Benidorm", "Paterna", "Sagunto", "Alcoy", "Elda", "San Vicente del Raspeig", "Vila-real", "Burjassot"] 
-      }
-    }
-  },
-  SA: {
-    label: "Arabie Saoudite",
-    provinces: {
-      RIYADH: { 
-        label: "Riyadh", 
-        cities: ["Riyadh", "Al Kharj", "Al Majma'ah", "Dhurma", "Al Duwadimi", "Al Quway'iyah", "Al Muzahmiyah", "Wadi ad-Dawasir", "Al Hariq", "Al Sulayyil", "Al Aflaj", "Hotat Bani Tamim", "Al Diriyah", "Thadiq", "Huraymila"] 
-      },
-      MAKKAH: { 
-        label: "Makkah", 
-        cities: ["Makkah", "Jeddah", "Taif", "Al Qunfudhah", "Al Lith", "Al Jumum", "Khulais", "Rabigh", "Turubah", "Al Kamel", "Bahra", "Adham", "Al Jumum", "Al Khurma", "Al Muwayh"] 
-      },
-      MADINAH: { 
-        label: "Madinah", 
-        cities: ["Madinah", "Yanbu", "Al Ula", "Badr", "Mahd adh Dhahab", "Al Hinakiyah", "Wadi al-Fara'", "Al-Mahd", "Khaybar", "Al Henakiyah", "Al Suqiyah", "Al-Mahd", "Al-Ais", "Hegrah"] 
-      },
-      EASTERN: { 
-        label: "Eastern Province", 
-        cities: ["Dammam", "Khobar", "Dhahran", "Jubail", "Qatif", "Hafr al-Batin", "Al Khafji", "Ras Tanura", "Abqaiq", "Al-'Udayd", "Nu'ayriyah", "Udhailiyah", "Al Qaryah", "Al Mubarraz", "Al Awamiyah"] 
-      }
-    }
-  },
-  AE: {
-    label: "Émirats Arabes Unis",
-    provinces: {
-      DUBAI: { 
-        label: "Dubai", 
-        cities: ["Dubai", "Jebel Ali", "Hatta", "Al Awir", "Al Lusayli", "Margham", "Al Khawaneej", "Al Qusais", "Al Barsha", "Al Warqaa", "Mirdif", "Nad Al Sheba", "Al Quoz", "Jumeirah", "Business Bay", "Dubai Marina"] 
-      },
-      ABU_DHABI: { 
-        label: "Abu Dhabi", 
-        cities: ["Abu Dhabi", "Al Ain", "Madinat Zayed", "Gharbia", "Liwa Oasis", "Al Ruwais", "Al Mirfa", "Al Dhafra", "Al Samha", "Al Shawamekh", "Bani Yas", "Khalifa City", "Mohammed Bin Zayed City", "Shahama", "Al Wathba"] 
-      },
-      SHARJAH: { 
-        label: "Sharjah", 
-        cities: ["Sharjah", "Khor Fakkan", "Kalba", "Dhaid", "Al Dhaid", "Al Hamriyah", "Al Madam", "Al Batayeh", "Al Sajaa", "Al Ghail", "Wasit", "Mleiha", "Al Nahda", "Al Qasimia", "Al Majaz"] 
-      },
-      AJMAN: { 
-        label: "Ajman", 
-        cities: ["Ajman", "Masfout", "Manama", "Al Hamidiyah", "Al Zorah", "Al Mowaihat", "Al Jurf", "Al Hamidiya", "Al Rawda", "Al Nuaimiya"] 
-      }
-    }
-  },
-  US: {
-    label: "United States",
-    provinces: {
-      CALIFORNIA: { 
-        label: "California", 
-        cities: ["Los Angeles", "San Francisco", "San Diego", "San Jose", "Sacramento", "Fresno", "Long Beach", "Oakland", "Bakersfield", "Anaheim", "Santa Ana", "Riverside", "Stockton", "Chula Vista", "Irvine", "Modesto"] 
-      },
-      NEW_YORK: { 
-        label: "New York", 
-        cities: ["New York City", "Buffalo", "Rochester", "Yonkers", "Syracuse", "Albany", "New Rochelle", "Mount Vernon", "Schenectady", "Utica", "White Plains", "Troy", "Niagara Falls", "Binghamton"] 
-      },
-      TEXAS: { 
-        label: "Texas", 
-        cities: ["Houston", "Dallas", "Austin", "San Antonio", "Fort Worth", "El Paso", "Arlington", "Corpus Christi", "Plano", "Laredo", "Lubbock", "Garland", "Irving", "Amarillo", "Grand Prairie"] 
-      },
-      FLORIDA: { 
-        label: "Florida", 
-        cities: ["Miami", "Orlando", "Tampa", "Jacksonville", "Tallahassee", "St. Petersburg", "Hialeah", "Port St. Lucie", "Cape Coral", "Fort Lauderdale", "Pembroke Pines", "Hollywood", "Miramar", "Gainesville"] 
-      }
-    }
-  },
-  NG: {
-    label: "Nigeria",
-    provinces: {
-      LAGOS: { 
-        label: "Lagos", 
-        cities: ["Lagos", "Ikeja", "Surulere", "Apapa", "Lekki", "Victoria Island", "Ajah", "Badagry", "Epe", "Ikorodu", "Agege", "Alimosho", "Kosofe", "Mushin", "Oshodi", "Somolu"] 
-      },
-      ABUJA: { 
-        label: "Abuja", 
-        cities: ["Abuja", "Garki", "Wuse", "Maitama", "Asokoro", "Gwarinpa", "Kubwa", "Jahi", "Lugbe", "Karu", "Nyanya", "Bwari", "Kuje", "Gwagwalada", "Kwali"] 
-      },
-      KANO: { 
-        label: "Kano", 
-        cities: ["Kano", "Nassarawa", "Tarauni", "Dala", "Fagge", "Gwale", "Kumbotso", "Ungogo", "Dawakin Tofa", "Tofa", "Rimin Gado", "Bagwai", "Gezawa", "Gabasawa", "Minjibir"] 
-      },
-      RIVERS: { 
-        label: "Rivers", 
-        cities: ["Port Harcourt", "Obio-Akpor", "Ikwerre", "Eleme", "Oyigbo", "Etche", "Omuma", "Okrika", "Ogu–Bolo", "Bonny", "Degema", "Asari-Toru", "Akuku-Toru", "Abua–Odual", "Ahoada"] 
-      }
-    }
-  },
-  PK: {
-    label: "Pakistan",
-    provinces: {
-      PUNJAB: { 
-        label: "Punjab", 
-        cities: ["Lahore", "Faisalabad", "Rawalpindi", "Gujranwala", "Multan", "Sialkot", "Bahawalpur", "Sargodha", "Sheikhupura", "Jhelum", "Gujrat", "Sahiwal", "Wah Cantonment", "Kasur", "Okara", "Chiniot"] 
-      },
-      SINDH: { 
-        label: "Sindh", 
-        cities: ["Karachi", "Hyderabad", "Sukkur", "Larkana", "Nawabshah", "Mirpur Khas", "Jacobabad", "Shikarpur", "Khairpur", "Dadu", "Tando Allahyar", "Tando Adam", "Badin", "Thatta", "Kotri"] 
-      },
-      KHYBER: { 
-        label: "Khyber Pakhtunkhwa", 
-        cities: ["Peshawar", "Mardan", "Abbottabad", "Mingora", "Kohat", "Bannu", "Swabi", "Dera Ismail Khan", "Charsadda", "Nowshera", "Mansehra", "Haripur", "Timergara", "Tank", "Hangu"] 
-      },
-      BALOCHISTAN: { 
-        label: "Balochistan", 
-        cities: ["Quetta", "Turbat", "Khuzdar", "Chaman", "Gwadar", "Dera Murad Jamali", "Dera Allah Yar", "Usta Mohammad", "Sibi", "Loralai", "Zhob", "Pasni", "Qila Saifullah", "Khost", "Hub"] 
-      }
-    }
-  },
-  IN: {
-    label: "India",
-    provinces: {
-      DELHI: { 
-        label: "Delhi", 
-        cities: ["New Delhi", "Delhi", "Dwarka", "Karol Bagh", "Rohini", "Pitampura", "Janakpuri", "Laxmi Nagar", "Saket", "Hauz Khas", "Malviya Nagar", "Patel Nagar", "Rajouri Garden", "Kalkaji", "Sarita Vihar", "Vasant Kunj"] 
-      },
-      MAHARASHTRA: { 
-        label: "Maharashtra", 
-        cities: ["Mumbai", "Pune", "Nagpur", "Nashik", "Aurangabad", "Solapur", "Bhiwandi", "Amravati", "Nanded", "Kolhapur", "Ulhasnagar", "Sangli", "Malegaon", "Jalgaon", "Akola", "Latur"] 
-      },
-      KARNATAKA: { 
-        label: "Karnataka", 
-        cities: ["Bengaluru", "Mysuru", "Hubballi", "Mangaluru", "Belagavi", "Davanagere", "Ballari", "Tumakuru", "Shivamogga", "Raichur", "Bidar", "Hospet", "Udupi", "Gadag-Betageri", "Robertson Pet", "Hassan"] 
-      },
-      TAMIL_NADU: { 
-        label: "Tamil Nadu", 
-        cities: ["Chennai", "Coimbatore", "Madurai", "Tiruchirappalli", "Salem", "Tirunelveli", "Tiruppur", "Vellore", "Erode", "Thoothukudi", "Dindigul", "Thanjavur", "Hosur", "Nagercoil", "Kanchipuram", "Kumarapalayam"] 
-      }
-    }
-  },
-  ID: {
-    label: "Indonesia",
-    provinces: {
-      JAKARTA: { 
-        label: "Jakarta", 
-        cities: ["Jakarta", "Central Jakarta", "South Jakarta", "West Jakarta", "East Jakarta", "North Jakarta", "Thousand Islands", "Kebayoran Baru", "Tebet", "Cilandak", "Pasar Minggu", "Mampang", "Cengkareng", "Tanjung Priok", "Kelapa Gading"] 
-      },
-      WEST_JAVA: { 
-        label: "West Java", 
-        cities: ["Bandung", "Bekasi", "Depok", "Bogor", "Cimahi", "Sukabumi", "Cirebon", "Tasikmalaya", "Karawang", "Purwakarta", "Subang", "Sumedang", "Garut", "Majalengka", "Cianjur", "Banjar"] 
-      },
-      CENTRAL_JAVA: { 
-        label: "Central Java", 
-        cities: ["Semarang", "Surakarta", "Tegal", "Pekalongan", "Salatiga", "Magelang", "Kudus", "Jepara", "Rembang", "Blora", "Batang", "Pati", "Wonosobo", "Temanggung", "Boyolali", "Klaten"] 
-      },
-      EAST_JAVA: { 
-        label: "East Java", 
-        cities: ["Surabaya", "Malang", "Kediri", "Mojokerto", "Jember", "Banyuwangi", "Madiun", "Pasuruan", "Probolinggo", "Blitar", "Lumajang", "Bondowoso", "Situbondo", "Tulungagung", "Tuban", "Lamongan"] 
-      }
-    }
-  },
-  TR: {
-    label: "Türkiye",
-    provinces: {
-      ISTANBUL: { 
-        label: "Istanbul", 
-        cities: ["Istanbul", "Kadıköy", "Beşiktaş", "Şişli", "Fatih", "Üsküdar", "Bakırköy", "Esenler", "Küçükçekmece", "Beyoğlu", "Zeytinburnu", "Maltepe", "Sarıyer", "Pendik", "Kartal", "Beylikdüzü"] 
-      },
-      ANKARA: { 
-        label: "Ankara", 
-        cities: ["Ankara", "Çankaya", "Keçiören", "Yenimahalle", "Mamak", "Sincan", "Altındağ", "Etimesgut", "Polatlı", "Gölbaşı", "Pursaklar", "Akyurt", "Kahramankazan", "Elmadağ", "Bala", "Ayaş"] 
-      },
-      IZMIR: { 
-        label: "İzmir", 
-        cities: ["İzmir", "Bornova", "Karşıyaka", "Konak", "Buca", "Bayraklı", "Çiğli", "Balçova", "Narlıdere", "Gaziemir", "Güzelbahçe", "Urla", "Seferihisar", "Menderes", "Torbalı", "Bergama"] 
-      },
-      ANTALYA: { 
-        label: "Antalya", 
-        cities: ["Antalya", "Muratpaşa", "Kepez", "Konyaaltı", "Alanya", "Manavgat", "Serik", "Kumluca", "Kaş", "Korkuteli", "Finike", "Gazipaşa", "Demre", "Akseki", "Elmalı", "Gündoğmuş"] 
-      }
-    }
-  },
-  BR: {
-    label: "Brazil",
-    provinces: {
-      SAO_PAULO: { 
-        label: "São Paulo", 
-        cities: ["São Paulo", "Guarulhos", "Campinas", "São Bernardo do Campo", "Santo André", "Osasco", "Sorocaba", "Ribeirão Preto", "São José dos Campos", "Santos", "Mauá", "Diadema", "Jundiaí", "Barueri", "São Vicente", "Carapicuíba"] 
-      },
-      RIO_JANEIRO: { 
-        label: "Rio de Janeiro", 
-        cities: ["Rio de Janeiro", "São Gonçalo", "Duque de Caxias", "Nova Iguaçu", "Niterói", "Belford Roxo", "Campos dos Goytacazes", "São João de Meriti", "Petrópolis", "Volta Redonda", "Magé", "Itaboraí", "Macaé", "Mesquita", "Teresópolis", "Nilópolis"] 
-      },
-      MINAS_GERAIS: { 
-        label: "Minas Gerais", 
-        cities: ["Belo Horizonte", "Uberlândia", "Contagem", "Juiz de Fora", "Betim", "Montes Claros", "Ribeirão das Neves", "Uberaba", "Governador Valadares", "Ipatinga", "Sete Lagoas", "Divinópolis", "Santa Luzia", "Ibirité", "Poços de Caldas", "Patos de Minas"] 
-      },
-      BAHIA: { 
-        label: "Bahia", 
-        cities: ["Salvador", "Feira de Santana", "Vitória da Conquista", "Camaçari", "Itabuna", "Juazeiro", "Lauro de Freitas", "Ilhéus", "Jequié", "Alagoinhas", "Teixeira de Freitas", "Barreiras", "Porto Seguro", "Simões Filho", "Paulo Afonso", "Eunápolis"] 
-      }
-    }
-  }
-};
-const PHONE_PREFIX_BY_COUNTRY = {
-  MA: "+212", DZ: "+213", TN: "+216", EG: "+20", FR: "+33", ES: "+34",
-  SA: "+966", AE: "+971", US: "+1", NG: "+234", PK: "+92", IN: "+91",
-  ID: "+62", TR: "+90", BR: "+55"
-};
-
-// Fonction pour obtenir la devise en fonction du pays
-const getCurrencyByCountry = (countryCode) => {
-  const map = {
-    MA: "MAD",
-    DZ: "DZD",
-    TN: "TND",
-    EG: "EGP",
-    FR: "EUR",
-    ES: "EUR",
-    SA: "SAR",
-    AE: "AED",
-    US: "USD",
-    NG: "NGN",
-    PK: "PKR",
-    IN: "INR",
-    ID: "IDR",
-    TR: "TRY",
-    BR: "BRL",
-  };
-  return map[countryCode] || "MAD";
-};
-
-// Fonction pour obtenir des exemples de prix de livraison par ville
-const getShippingExample = (city, countryCode) => {
-  const shippingExamples = {
-    MA: {
-      Casablanca: { amount: 29, note: "Livraison standard" },
-      Rabat: { amount: 25, note: "Livraison standard" },
-      Marrakech: { amount: 35, note: "Livraison express" },
-      "Fès": { amount: 30, note: "Livraison standard" },
-      Tanger: { amount: 40, note: "Livraison express" },
-      Agadir: { amount: 45, note: "Livraison express" },
-      Oujda: { amount: 50, note: "Livraison express" },
-    },
-    DZ: {
-      Alger: { amount: 45, note: "Livraison standard" },
-      Oran: { amount: 40, note: "Livraison standard" },
-      Constantine: { amount: 50, note: "Livraison express" },
-      Annaba: { amount: 55, note: "Livraison express" },
-    },
-    FR: {
-      Paris: { amount: 8.5, note: "Livraison standard" },
-      Lyon: { amount: 7.5, note: "Livraison standard" },
-      Marseille: { amount: 8, note: "Livraison standard" },
-      Toulouse: { amount: 9, note: "Livraison standard" },
-    },
-    ES: {
-      Madrid: { amount: 6.5, note: "Livraison standard" },
-      Barcelona: { amount: 7, note: "Livraison standard" },
-      Valencia: { amount: 7.5, note: "Livraison standard" },
-    },
-  };
-
-  const countryData = shippingExamples[countryCode] || shippingExamples.MA;
-  const cityData = countryData[city];
-
-  if (cityData) return cityData;
-
-  return {
-    amount: countryCode === "MA" ? 30 : countryCode === "FR" ? 8 : 10,
-    note: "Livraison standard",
-  };
-};
-
-/* ============================== Contexte ============================== */
-const FormsCtx = createContext(null);
-const useForms = () => useContext(FormsCtx);
 
 /* ============================== Shell ============================== */
 function PageShell({ themeLink, onOpenPreview, onSave, saving, t }) {
@@ -1373,12 +775,7 @@ function PageShell({ themeLink, onOpenPreview, onSave, saving, t }) {
               <img
                 src="/tripleform-cod-icon.png"
                 alt="TripleForm COD"
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  display: "block",
-                  objectFit: "cover",
-                }}
+                style={{ width: "100%", height: "100%", display: "block", objectFit: "cover" }}
               />
             </div>
             <div>
@@ -1390,19 +787,19 @@ function PageShell({ themeLink, onOpenPreview, onSave, saving, t }) {
               </div>
             </div>
           </InlineStack>
+
           <InlineStack gap="200">
             <Button url={themeLink} external target="_blank">
               {t("section1.header.btnAddToTheme")}
             </Button>
-            <Button onClick={onOpenPreview}>
-              {t("section1.header.btnPreview")}
-            </Button>
+            <Button onClick={onOpenPreview}>{t("section1.header.btnPreview")}</Button>
             <Button variant="primary" onClick={onSave} loading={saving}>
               {t("section1.header.btnSave")}
             </Button>
           </InlineStack>
         </InlineStack>
       </div>
+
       <div className="tf-shell">
         <div className="tf-editor">
           <OutletEditor />
@@ -1421,11 +818,7 @@ function Section1FormsLayoutInner() {
   const apiKey = rootData?.apiKey;
   const hostB64 = rootData?.host;
 
-  const locale =
-    rootData?.locale ||
-    rootData?.language ||
-    rootData?.shopLocale ||
-    "en";
+  const locale = rootData?.locale || rootData?.language || rootData?.shopLocale || "en";
   const isRTL = /^ar\b/i.test(locale);
 
   const themeDeepLink = useMemo(
@@ -1443,7 +836,21 @@ function Section1FormsLayoutInner() {
     meta: {
       version: 2,
       preset: "CleanWhite",
-      fieldsOrder: ["name", "phone", "quantity", "pincode", "pincode2", "pincode3", "email", "company", "birthday", "province", "city", "address", "notes"],
+      fieldsOrder: [
+        "name",
+        "phone",
+        "quantity",
+        "pincode",
+        "pincode2",
+        "pincode3",
+        "email",
+        "company",
+        "birthday",
+        "province",
+        "city",
+        "address",
+        "notes",
+      ],
     },
     form: {
       style: "inline",
@@ -1451,7 +858,7 @@ function Section1FormsLayoutInner() {
       subtitle: "Please enter your contact information",
       buttonText: "Order now",
       successText: "Thanks! We'll contact you",
-      buttonIcon: "CartIcon", // Changé de CartMajor à CartIcon
+      buttonIcon: "CartIcon",
     },
     design: {
       ...DESIGN_PRESETS.CleanWhite,
@@ -1471,7 +878,7 @@ function Section1FormsLayoutInner() {
       glowPx: 18,
       stickyType: "none",
       stickyLabel: "Order now",
-      stickyIcon: "CartIcon", // Changé de CartMajor à CartIcon
+      stickyIcon: "CartIcon",
       drawerDirection: "right",
       drawerSize: "md",
       overlayColor: "#020617",
@@ -1481,26 +888,26 @@ function Section1FormsLayoutInner() {
       cityKey: "",
     },
     fields: {
-      name: { on: true, required: true, type: "text", label: "Full name", ph: "Your full name", icon: "ProfileIcon" }, // Changé de ProfileMajor
-      phone: { on: true, required: true, type: "tel", label: "Phone (WhatsApp)", ph: "Phone number", prefix: "+212", icon: "PhoneIcon" }, // Changé de PhoneMajor
-      quantity: { on: true, required: true, type: "number", label: "Quantity", ph: "1", min: 1, max: 10, icon: "HashtagIcon" }, // Changé de HashtagMajor
-      pincode: { on: true, required: true, type: "text", label: "Pincode", ph: "Enter pincode", icon: "LocationIcon" }, // Changé de LocationMajor
-      pincode2: { on: true, required: false, type: "text", label: "Pincode 2", ph: "Additional pincode", icon: "MapIcon" }, // Changé de MapMajor
-      pincode3: { on: true, required: false, type: "text", label: "Pincode 3", ph: "Extra pincode info", icon: "HashtagIcon" }, // Changé de HashtagMajor
-      email: { on: true, required: true, type: "text", label: "Email", ph: "your.email@example.com", icon: "EmailIcon" }, // Changé de EmailMajor
-      company: { on: true, required: false, type: "text", label: "Company", ph: "Your company name", icon: "StoreIcon" }, // Changé de StoreMajor
-      birthday: { on: true, required: false, type: "text", label: "Birthday", ph: "DD/MM/YYYY", icon: "CalendarIcon" }, // Changé de CalendarMajor
-      province: { on: true, required: false, type: "text", label: "Wilaya / Province", ph: "Select province", icon: "GlobeIcon" }, // Changé de GlobeMajor
-      city: { on: true, required: false, type: "text", label: "City", ph: "Select city", icon: "LocationIcon" }, // Changé de LocationMajor
-      address: { on: true, required: false, type: "text", label: "Address", ph: "Full address", icon: "HomeIcon" }, // Changé de HomeMajor
-      notes: { on: true, required: false, type: "textarea", label: "Notes", ph: "(optional)", icon: "NoteIcon" }, // Changé de NoteMajor
+      name: { on: true, required: true, type: "text", label: "Full name", ph: "Your full name", icon: "ProfileIcon" },
+      phone: { on: true, required: true, type: "tel", label: "Phone (WhatsApp)", ph: "Phone number", prefix: "+212", icon: "PhoneIcon" },
+      quantity: { on: true, required: true, type: "number", label: "Quantity", ph: "1", min: 1, max: 10, icon: "HashtagIcon" },
+      pincode: { on: true, required: true, type: "text", label: "Pincode", ph: "Enter pincode", icon: "LocationIcon" },
+      pincode2: { on: true, required: false, type: "text", label: "Pincode 2", ph: "Additional pincode", icon: "MapIcon" },
+      pincode3: { on: true, required: false, type: "text", label: "Pincode 3", ph: "Extra pincode info", icon: "HashtagIcon" },
+      email: { on: true, required: true, type: "text", label: "Email", ph: "your.email@example.com", icon: "EmailIcon" },
+      company: { on: true, required: false, type: "text", label: "Company", ph: "Your company name", icon: "StoreIcon" },
+      birthday: { on: true, required: false, type: "text", label: "Birthday", ph: "DD/MM/YYYY", icon: "CalendarIcon" },
+      province: { on: true, required: false, type: "text", label: "Wilaya / Province", ph: "Select province", icon: "GlobeIcon" },
+      city: { on: true, required: false, type: "text", label: "City", ph: "Select city", icon: "LocationIcon" },
+      address: { on: true, required: false, type: "text", label: "Address", ph: "Full address", icon: "HomeIcon" },
+      notes: { on: true, required: false, type: "textarea", label: "Notes", ph: "(optional)", icon: "NoteIcon" },
     },
     cartTitles: {
       top: "Order summary",
       price: "Product price",
       shipping: "Shipping price",
       total: "Total",
-      cartIcon: "CartIcon", // Changé de CartMajor à CartIcon
+      cartIcon: "CartIcon",
     },
     uiTitles: {
       applyCoupon: "Apply",
@@ -1527,18 +934,9 @@ function Section1FormsLayoutInner() {
               setConfig((prev) => ({
                 ...prev,
                 ...clean,
-                behavior: {
-                  ...prev.behavior,
-                  ...(clean.behavior || {}),
-                },
-                form: {
-                  ...prev.form,
-                  ...(clean.form || {}),
-                },
-                design: {
-                  ...prev.design,
-                  ...(clean.design || {}),
-                },
+                behavior: { ...prev.behavior, ...(clean.behavior || {}) },
+                form: { ...prev.form, ...(clean.form || {}) },
+                design: { ...prev.design, ...(clean.design || {}) },
               }));
               try {
                 localStorage.setItem("tripleform_cod_config", JSON.stringify(clean));
@@ -1553,27 +951,15 @@ function Section1FormsLayoutInner() {
       }
 
       try {
-        const s =
-          typeof window !== "undefined"
-            ? window.localStorage.getItem("tripleform_cod_config")
-            : null;
+        const s = typeof window !== "undefined" ? window.localStorage.getItem("tripleform_cod_config") : null;
         if (s && !cancelled) {
           const parsed = sanitizeDeep(JSON.parse(s));
           setConfig((prev) => ({
             ...prev,
             ...parsed,
-            behavior: {
-              ...prev.behavior,
-              ...(parsed.behavior || {}),
-            },
-            form: {
-              ...prev.form,
-              ...(parsed.form || {}),
-            },
-            design: {
-              ...prev.design,
-              ...(parsed.design || {}),
-            },
+            behavior: { ...prev.behavior, ...(parsed.behavior || {}) },
+            form: { ...prev.form, ...(parsed.form || {}) },
+            design: { ...prev.design, ...(parsed.design || {}) },
           }));
         }
       } catch (e) {
@@ -1595,41 +981,13 @@ function Section1FormsLayoutInner() {
     } catch {}
   };
 
-  const setDesign = (p) =>
-    setConfig((c) => ({
-      ...c,
-      design: { ...c.design, ...p },
-    }));
-  const setForm = (p) =>
-    setConfig((c) => ({
-      ...c,
-      form: { ...c.form, ...p },
-    }));
-  const setBehav = (p) =>
-    setConfig((c) => ({
-      ...c,
-      behavior: { ...c.behavior, ...p },
-    }));
-  const setField = (k, p) =>
-    setConfig((c) => ({
-      ...c,
-      fields: { ...c.fields, [k]: { ...c.fields[k], ...p } },
-    }));
-  const setCartT = (p) =>
-    setConfig((c) => ({
-      ...c,
-      cartTitles: { ...c.cartTitles, ...p },
-    }));
-  const setUiT = (p) =>
-    setConfig((c) => ({
-      ...c,
-      uiTitles: { ...c.uiTitles, ...p },
-    }));
-  const setFieldsOrder = (order) =>
-    setConfig((c) => ({
-      ...c,
-      meta: { ...(c.meta || {}), fieldsOrder: order },
-    }));
+  const setDesign = (p) => setConfig((c) => ({ ...c, design: { ...c.design, ...p } }));
+  const setForm = (p) => setConfig((c) => ({ ...c, form: { ...c.form, ...p } }));
+  const setBehav = (p) => setConfig((c) => ({ ...c, behavior: { ...c.behavior, ...p } }));
+  const setField = (k, p) => setConfig((c) => ({ ...c, fields: { ...c.fields, [k]: { ...(c.fields?.[k] || {}), ...p } } }));
+  const setCartT = (p) => setConfig((c) => ({ ...c, cartTitles: { ...c.cartTitles, ...p } }));
+  const setUiT = (p) => setConfig((c) => ({ ...c, uiTitles: { ...c.uiTitles, ...p } }));
+  const setFieldsOrder = (order) => setConfig((c) => ({ ...c, meta: { ...(c.meta || {}), fieldsOrder: order } }));
 
   function computeShadow(effect, glowPx, glowColor, hasShadow) {
     if (effect === "glow") return `0 0 ${glowPx}px ${glowColor}`;
@@ -1645,9 +1003,7 @@ function Section1FormsLayoutInner() {
   const baseFontSize = config.design?.fontSize || 14;
 
   const fieldAlignRaw = config.design?.fieldAlign || "left";
-  const fieldAlign = ["left", "center", "right"].includes(fieldAlignRaw)
-    ? fieldAlignRaw
-    : "left";
+  const fieldAlign = ["left", "center", "right"].includes(fieldAlignRaw) ? fieldAlignRaw : "left";
 
   const cardCSS = useMemo(
     () => ({
@@ -1725,12 +1081,7 @@ function Section1FormsLayoutInner() {
       borderRadius: 10,
       background: config.design.cartRowBg,
       color: config.design.cartTextColor,
-      boxShadow: computeShadow(
-        eff,
-        Math.max(8, Math.round(glowPx * 0.6)),
-        glowCol,
-        !!config.design.shadow
-      ),
+      boxShadow: computeShadow(eff, Math.max(8, Math.round(glowPx * 0.6)), glowCol, !!config.design.shadow),
       fontSize: baseFontSize,
     }),
     [config.design, eff, glowPx, glowCol, baseFontSize]
@@ -1749,11 +1100,9 @@ function Section1FormsLayoutInner() {
       try {
         j = await res.json();
       } catch {}
+
       if (!res.ok || !j.ok) {
-        const msg =
-          j?.errors?.[0]?.message ||
-          j?.error ||
-          t("section1.save.errorGeneric");
+        const msg = j?.errors?.[0]?.message || j?.error || t("section1.save.errorGeneric");
         throw new Error(msg);
       }
       alert(t("section1.save.success"));
@@ -1771,28 +1120,9 @@ function Section1FormsLayoutInner() {
       <div style={{ padding: 32 }}>
         <Card>
           <BlockStack gap="300">
-            <div
-              style={{
-                height: 16,
-                background: "#E5E7EB",
-                borderRadius: 999,
-              }}
-            />
-            <div
-              style={{
-                height: 16,
-                background: "#E5E7EB",
-                borderRadius: 999,
-                width: "60%",
-              }}
-            />
-            <div
-              style={{
-                height: 220,
-                background: "#E5E7EB",
-                borderRadius: 16,
-              }}
-            />
+            <div style={{ height: 16, background: "#E5E7EB", borderRadius: 999 }} />
+            <div style={{ height: 16, background: "#E5E7EB", borderRadius: 999, width: "60%" }} />
+            <div style={{ height: 220, background: "#E5E7EB", borderRadius: 16 }} />
           </BlockStack>
         </Card>
       </div>
@@ -1846,6 +1176,7 @@ function Section1FormsLayoutInner() {
     </FormsCtx.Provider>
   );
 }
+// ============================== PART 2 / 2 ==============================
 
 /* ============================== Composant pour les palettes de couleurs ============================== */
 function ColorPaletteSelector({ onSelect }) {
@@ -1855,10 +1186,7 @@ function ColorPaletteSelector({ onSelect }) {
     const palette = COLOR_PALETTES.find((p) => p.id === paletteId);
     if (palette && DESIGN_PRESETS[palette.preset]) {
       setDesign(DESIGN_PRESETS[palette.preset]);
-      setConfig((c) => ({
-        ...c,
-        meta: { ...(c.meta || {}), preset: palette.preset },
-      }));
+      setConfig((c) => ({ ...c, meta: { ...(c.meta || {}), preset: palette.preset } }));
     }
   };
 
@@ -1867,25 +1195,15 @@ function ColorPaletteSelector({ onSelect }) {
       {COLOR_PALETTES.map((palette) => (
         <div
           key={palette.id}
-          className={`tf-color-palette ${
-            config.meta?.preset === palette.preset ? "active" : ""
-          }`}
+          className={`tf-color-palette ${config.meta?.preset === palette.preset ? "active" : ""}`}
           onClick={() => {
             applyPalette(palette.id);
-            if (onSelect) onSelect(palette.id);
+            onSelect?.(palette.id);
           }}
         >
           <div className="tf-palette-colors">
             {palette.colors.map((color, idx) => (
-              <div
-                key={idx}
-                style={{
-                  flex: 1,
-                  background: color,
-                  height: "100%",
-                }}
-                title={color}
-              />
+              <div key={idx} style={{ flex: 1, background: color, height: "100%" }} title={color} />
             ))}
           </div>
           <div className="tf-palette-info">{palette.name}</div>
@@ -1915,9 +1233,7 @@ function IconSelector({ fieldKey, type = "field", onSelect, selectedIcon }) {
         {icons.map((icon) => (
           <div
             key={icon.value}
-            className={`tf-icon-option ${
-              selectedIcon === icon.value ? "selected" : ""
-            }`}
+            className={`tf-icon-option ${selectedIcon === icon.value ? "selected" : ""}`}
             onClick={() => onSelect(icon.value)}
             title={icon.label}
           >
@@ -1931,33 +1247,20 @@ function IconSelector({ fieldKey, type = "field", onSelect, selectedIcon }) {
 
 /* ============================== Éditeur (rail | réglages | preview) ============================== */
 function OutletEditor() {
-  const {
-    config,
-    setCartT,
-    setForm,
-    setUiT,
-    setField,
-    setDesign,
-    setBehav,
-    setFieldsOrder,
-    t,
-  } = useForms();
-
+  const { config, setCartT, setForm, setUiT, setField, setDesign, setBehav, setFieldsOrder, t } = useForms();
   const [sel, setSel] = useState("cart");
 
   const keys = Object.keys(config.fields || {});
   const order = useMemo(() => {
     const existing = config.meta?.fieldsOrder || [];
-    return [
-      ...existing.filter((k) => keys.includes(k)),
-      ...keys.filter((k) => !existing.includes(k)),
-    ];
+    return [...existing.filter((k) => keys.includes(k)), ...keys.filter((k) => !existing.includes(k))];
   }, [config.meta?.fieldsOrder, keys]);
 
   useEffect(() => {
     if (JSON.stringify(order) !== JSON.stringify(config.meta?.fieldsOrder || [])) {
       setFieldsOrder(order);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [order]);
 
   const tabKeys = ["cart", "titles", "buttons", "colors", "options"];
@@ -1981,27 +1284,21 @@ function OutletEditor() {
     return 0;
   }, [sel]);
 
-  // ITEMS DU RAIL GAUCHE - TOUS LES CHAMPS, MÊME CACHÉS
   const fieldItems = Object.keys(config.fields || {}).map((k) => {
     const field = config.fields[k];
     return {
       key: `field:${k}`,
       label: field?.label || k,
-      movable: true,
-      toggle: true,
-      on: field?.on !== false, // Par défaut true si non défini
-      iconName: field?.icon || "AppsIcon", // Changé de AppsMajor à AppsIcon
+      on: field?.on !== false,
+      iconName: field?.icon || "AppsIcon",
     };
   });
 
-  // Trier selon l'ordre défini dans meta.fieldsOrder
   const sortedFieldItems = [...fieldItems].sort((a, b) => {
-    const orderA = order.indexOf(a.key.replace('field:', ''));
-    const orderB = order.indexOf(b.key.replace('field:', ''));
+    const orderA = order.indexOf(a.key.replace("field:", ""));
+    const orderB = order.indexOf(b.key.replace("field:", ""));
     return (orderA === -1 ? 999 : orderA) - (orderB === -1 ? 999 : orderB);
   });
-
-  const items = sortedFieldItems;
 
   const moveField = (key, dir) => {
     const k = key.replace(/^field:/, "");
@@ -2030,18 +1327,17 @@ function OutletEditor() {
     setSel(`field:${a}`);
   };
 
+  // ✅ FIX toggle (default ON)
   const toggleField = (key) => {
     const k = key.replace(/^field:/, "");
     const st = config.fields[k] || {};
-    setField(k, { on: !st.on });
+    const currentOn = st.on !== false;
+    setField(k, { on: !currentOn });
   };
 
   const removeField = (key) => {
     const k = key.replace(/^field:/, "");
-    // NE PAS désactiver ou réinitialiser, juste sélectionner
     setSel(`field:${k}`);
-    
-    // Optionnel: ouvrir une modal de confirmation
     if (window.confirm(t("section1.confirmRemoveField"))) {
       setField(k, { on: false });
     }
@@ -2056,12 +1352,8 @@ function OutletEditor() {
         onClick?.();
       }}
       style={{
-        ...(active
-          ? { background: "rgba(16,185,129,0.12)", borderColor: "#10B981" }
-          : {}),
-        ...(danger
-          ? { background: "rgba(239,68,68,0.10)", borderColor: "#EF4444" }
-          : {}),
+        ...(active ? { background: "rgba(16,185,129,0.12)", borderColor: "#10B981" } : {}),
+        ...(danger ? { background: "rgba(239,68,68,0.10)", borderColor: "#EF4444" } : {}),
       }}
     >
       <PolarisIcon iconName={iconName} size={14} />
@@ -2070,12 +1362,12 @@ function OutletEditor() {
 
   return (
     <>
-      {/* RAIL GAUCHE - TOUS LES CHAMPS */}
+      {/* RAIL GAUCHE */}
       <div className="tf-rail">
         <div className="tf-rail-card">
           <div className="tf-rail-head">{t("section1.rail.fieldsTitle")}</div>
           <div className="tf-rail-list">
-            {items.map((it) => (
+            {sortedFieldItems.map((it) => (
               <div
                 key={it.key}
                 className="tf-rail-item"
@@ -2093,119 +1385,73 @@ function OutletEditor() {
                 <div className="tf-rail-label">{it.label}</div>
 
                 <div className="tf-rail-actions">
+                  <RailIconBtn iconName="SettingsIcon" title="Settings" onClick={() => setSel(it.key)} />
                   <RailIconBtn
-                    iconName="SettingsIcon" // Changé de SettingsMajor
-                    title="Settings"
-                    onClick={() => setSel(it.key)}
-                  />
-                  <RailIconBtn
-                    iconName={it.on ? "ViewIcon" : "HideIcon"} // Changé de ViewMajor/HideMajor
+                    iconName={it.on ? "ViewIcon" : "HideIcon"}
                     title={it.on ? "Hide" : "Show"}
                     active={!!it.on}
                     onClick={() => toggleField(it.key)}
                   />
-                  <RailIconBtn
-                    iconName="DeleteIcon" // Changé de DeleteMajor
-                    title="Remove"
-                    danger
-                    onClick={() => removeField(it.key)}
-                  />
-                  <RailIconBtn
-                    iconName="ChevronUpIcon" // Changé de ChevronUpMajor
-                    title="Move up"
-                    onClick={() => moveField(it.key, -1)}
-                  />
-                  <RailIconBtn
-                    iconName="ChevronDownIcon" // Changé de ChevronDownMajor
-                    title="Move down"
-                    onClick={() => moveField(it.key, 1)}
-                  />
+                  <RailIconBtn iconName="DeleteIcon" title="Remove" danger onClick={() => removeField(it.key)} />
+                  <RailIconBtn iconName="ChevronUpIcon" title="Move up" onClick={() => moveField(it.key, -1)} />
+                  <RailIconBtn iconName="ChevronDownIcon" title="Move down" onClick={() => moveField(it.key, 1)} />
                 </div>
               </div>
             ))}
-            
-            {/* Bouton pour ajouter un nouveau champ */}
-            <div 
+
+            {/* Ajouter un champ */}
+            <div
               className="tf-rail-item"
-              style={{ 
-                background: 'linear-gradient(135deg, #f0f9ff, #e0f2fe)',
-                border: '2px dashed #0ea5e9',
-                cursor: 'pointer',
+              style={{
+                background: "linear-gradient(135deg, #f0f9ff, #e0f2fe)",
+                border: "2px dashed #0ea5e9",
+                cursor: "pointer",
               }}
               onClick={() => {
-                // Ouvrir une modal ou un formulaire pour ajouter un nouveau champ
                 const newFieldKey = `custom_${Date.now()}`;
                 setField(newFieldKey, {
                   on: true,
                   required: false,
-                  type: 'text',
-                  label: t('section1.newFieldLabel'),
-                  ph: t('section1.newFieldPlaceholder'),
-                  icon: 'AddIcon', // Changé de AddMajor
+                  type: "text",
+                  label: t("section1.newFieldLabel"),
+                  ph: t("section1.newFieldPlaceholder"),
+                  icon: "AddIcon",
                 });
                 setFieldsOrder([...order, newFieldKey]);
                 setSel(`field:${newFieldKey}`);
               }}
             >
               <div className="tf-grip tf-rail-icon">
-                <PolarisIcon iconName="AddIcon" size={16} color="#0ea5e9" /> {/* Changé de AddMajor */}
+                <PolarisIcon iconName="AddIcon" size={16} color="#0ea5e9" />
               </div>
               <div className="tf-rail-label" style={{ color: "#0ea5e9" }}>
                 {t("section1.addNewField")}
               </div>
-
               <div className="tf-rail-actions">
-                <div style={{ width: 44 }}></div>
+                <div style={{ width: 44 }} />
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* COLONNE DU MILIEU - RÉGLAGES */}
+      {/* COLONNE MIDDLE */}
       <div className="tf-right-col">
         <div className="tf-panel">
           <div style={{ marginBottom: 12 }}>
-            <Tabs
-              tabs={tabs}
-              selected={selectedTab}
-              onSelect={(idx) => setSel(tabKeys[idx])}
-              fitted
-            />
+            <Tabs tabs={tabs} selected={selectedTab} onSelect={(idx) => setSel(tabKeys[idx])} fitted />
           </div>
 
           {sel === "cart" && (
             <GroupCard title={t("section1.group.cart.title")}>
               <Grid2>
-                <TextField
-                  label={t("section1.cart.labelTop")}
-                  value={config.cartTitles.top}
-                  onChange={(v) => setCartT({ top: v })}
-                />
-                <TextField
-                  label={t("section1.cart.labelPrice")}
-                  value={config.cartTitles.price}
-                  onChange={(v) => setCartT({ price: v })}
-                />
-                <TextField
-                  label={t("section1.cart.labelShipping")}
-                  value={config.cartTitles.shipping}
-                  onChange={(v) => setCartT({ shipping: v })}
-                />
-                <TextField
-                  label={t("section1.cart.labelTotal")}
-                  value={config.cartTitles.total}
-                  onChange={(v) => setCartT({ total: v })}
-                />
+                <TextField label={t("section1.cart.labelTop")} value={config.cartTitles.top} onChange={(v) => setCartT({ top: v })} />
+                <TextField label={t("section1.cart.labelPrice")} value={config.cartTitles.price} onChange={(v) => setCartT({ price: v })} />
+                <TextField label={t("section1.cart.labelShipping")} value={config.cartTitles.shipping} onChange={(v) => setCartT({ shipping: v })} />
+                <TextField label={t("section1.cart.labelTotal")} value={config.cartTitles.total} onChange={(v) => setCartT({ total: v })} />
                 <div style={{ display: "grid", gap: 8 }}>
-                  <div style={{ fontSize: 13, fontWeight: 600 }}>
-                    {t("section1.cart.cartIcon")}
-                  </div>
-                  <IconSelector
-                    type="cartTitle"
-                    selectedIcon={config.cartTitles.cartIcon}
-                    onSelect={(icon) => setCartT({ cartIcon: icon })}
-                  />
+                  <div style={{ fontSize: 13, fontWeight: 600 }}>{t("section1.cart.cartIcon")}</div>
+                  <IconSelector type="cartTitle" selectedIcon={config.cartTitles.cartIcon} onSelect={(icon) => setCartT({ cartIcon: icon })} />
                 </div>
               </Grid2>
             </GroupCard>
@@ -2214,16 +1460,8 @@ function OutletEditor() {
           {sel === "titles" && (
             <GroupCard title={t("section1.group.formTexts.title")}>
               <Grid2>
-                <TextField
-                  label={t("section1.form.titleLabel")}
-                  value={config.form.title}
-                  onChange={(v) => setForm({ title: v })}
-                />
-                <TextField
-                  label={t("section1.form.subtitleLabel")}
-                  value={config.form.subtitle}
-                  onChange={(v) => setForm({ subtitle: v })}
-                />
+                <TextField label={t("section1.form.titleLabel")} value={config.form.title} onChange={(v) => setForm({ title: v })} />
+                <TextField label={t("section1.form.subtitleLabel")} value={config.form.subtitle} onChange={(v) => setForm({ subtitle: v })} />
               </Grid2>
 
               <div style={{ marginTop: 16 }}>
@@ -2239,30 +1477,12 @@ function OutletEditor() {
           {sel === "buttons" && (
             <GroupCard title={t("section1.group.buttons.title")}>
               <Grid2>
-                <TextField
-                  label={t("section1.buttons.mainCtaLabel")}
-                  value={config.uiTitles.orderNow}
-                  onChange={(v) => setUiT({ orderNow: v })}
-                />
-                <TextField
-                  label={t("section1.buttons.totalSuffixLabel")}
-                  value={config.uiTitles.totalSuffix}
-                  onChange={(v) => setUiT({ totalSuffix: v })}
-                />
-                <TextField
-                  label={t("section1.buttons.successTextLabel")}
-                  value={config.form.successText}
-                  onChange={(v) => setForm({ successText: v })}
-                />
+                <TextField label={t("section1.buttons.mainCtaLabel")} value={config.uiTitles.orderNow} onChange={(v) => setUiT({ orderNow: v })} />
+                <TextField label={t("section1.buttons.totalSuffixLabel")} value={config.uiTitles.totalSuffix} onChange={(v) => setUiT({ totalSuffix: v })} />
+                <TextField label={t("section1.buttons.successTextLabel")} value={config.form.successText} onChange={(v) => setForm({ successText: v })} />
                 <div style={{ display: "grid", gap: 8 }}>
-                  <div style={{ fontSize: 13, fontWeight: 600 }}>
-                    {t("section1.buttons.buttonIcon")}
-                  </div>
-                  <IconSelector
-                    type="button"
-                    selectedIcon={config.form.buttonIcon}
-                    onSelect={(icon) => setForm({ buttonIcon: icon })}
-                  />
+                  <div style={{ fontSize: 13, fontWeight: 600 }}>{t("section1.buttons.buttonIcon")}</div>
+                  <IconSelector type="button" selectedIcon={config.form.buttonIcon} onSelect={(icon) => setForm({ buttonIcon: icon })} />
                 </div>
               </Grid2>
             </GroupCard>
@@ -2271,64 +1491,26 @@ function OutletEditor() {
           {sel === "colors" && (
             <GroupCard title={t("section1.group.colors.title")}>
               <BlueSection title={t("section1.colors.presets")} defaultOpen>
-                <p style={{ fontSize: 13, color: "#6B7280", marginBottom: 12 }}>
-                  {t("section1.presets.description")}
-                </p>
+                <p style={{ fontSize: 13, color: "#6B7280", marginBottom: 12 }}>{t("section1.presets.description")}</p>
                 <ColorPaletteSelector />
               </BlueSection>
 
               <BlueSection title={t("section1.colors.formSection")}>
                 <Grid3>
-                  <ColorField
-                    label={t("section1.colors.bg")}
-                    value={config.design.bg}
-                    onChange={(v) => setDesign({ bg: v })}
-                  />
-                  <ColorField
-                    label={t("section1.colors.text")}
-                    value={config.design.text}
-                    onChange={(v) => setDesign({ text: v })}
-                  />
-                  <ColorField
-                    label={t("section1.colors.border")}
-                    value={config.design.border}
-                    onChange={(v) => setDesign({ border: v })}
-                  />
-                  <ColorField
-                    label={t("section1.colors.inputBg")}
-                    value={config.design.inputBg}
-                    onChange={(v) => setDesign({ inputBg: v })}
-                  />
-                  <ColorField
-                    label={t("section1.colors.inputBorder")}
-                    value={config.design.inputBorder}
-                    onChange={(v) => setDesign({ inputBorder: v })}
-                  />
-                  <ColorField
-                    label={t("section1.colors.placeholder")}
-                    value={config.design.placeholder}
-                    onChange={(v) => setDesign({ placeholder: v })}
-                  />
+                  <ColorField label={t("section1.colors.bg")} value={config.design.bg} onChange={(v) => setDesign({ bg: v })} />
+                  <ColorField label={t("section1.colors.text")} value={config.design.text} onChange={(v) => setDesign({ text: v })} />
+                  <ColorField label={t("section1.colors.border")} value={config.design.border} onChange={(v) => setDesign({ border: v })} />
+                  <ColorField label={t("section1.colors.inputBg")} value={config.design.inputBg} onChange={(v) => setDesign({ inputBg: v })} />
+                  <ColorField label={t("section1.colors.inputBorder")} value={config.design.inputBorder} onChange={(v) => setDesign({ inputBorder: v })} />
+                  <ColorField label={t("section1.colors.placeholder")} value={config.design.placeholder} onChange={(v) => setDesign({ placeholder: v })} />
                 </Grid3>
               </BlueSection>
 
               <BlueSection title={t("section1.colors.buttonSection")}>
                 <Grid3>
-                  <ColorField
-                    label={t("section1.colors.btnBg")}
-                    value={config.design.btnBg}
-                    onChange={(v) => setDesign({ btnBg: v })}
-                  />
-                  <ColorField
-                    label={t("section1.colors.btnText")}
-                    value={config.design.btnText}
-                    onChange={(v) => setDesign({ btnText: v })}
-                  />
-                  <ColorField
-                    label={t("section1.colors.btnBorder")}
-                    value={config.design.btnBorder}
-                    onChange={(v) => setDesign({ btnBorder: v })}
-                  />
+                  <ColorField label={t("section1.colors.btnBg")} value={config.design.btnBg} onChange={(v) => setDesign({ btnBg: v })} />
+                  <ColorField label={t("section1.colors.btnText")} value={config.design.btnText} onChange={(v) => setDesign({ btnText: v })} />
+                  <ColorField label={t("section1.colors.btnBorder")} value={config.design.btnBorder} onChange={(v) => setDesign({ btnBorder: v })} />
                 </Grid3>
                 <div style={{ marginTop: 12 }}>
                   <RangeSlider
@@ -2344,73 +1526,26 @@ function OutletEditor() {
 
               <BlueSection title={t("section1.colors.cartSection")}>
                 <Grid3>
-                  <ColorField
-                    label={t("section1.colors.cartBg")}
-                    value={config.design.cartBg}
-                    onChange={(v) => setDesign({ cartBg: v })}
-                  />
-                  <ColorField
-                    label={t("section1.colors.cartBorder")}
-                    value={config.design.cartBorder}
-                    onChange={(v) => setDesign({ cartBorder: v })}
-                  />
-                  <ColorField
-                    label={t("section1.colors.cartRowBg")}
-                    value={config.design.cartRowBg}
-                    onChange={(v) => setDesign({ cartRowBg: v })}
-                  />
-                  <ColorField
-                    label={t("section1.colors.cartRowBorder")}
-                    value={config.design.cartRowBorder}
-                    onChange={(v) => setDesign({ cartRowBorder: v })}
-                  />
-                  <ColorField
-                    label={t("section1.colors.cartTitle")}
-                    value={config.design.cartTitleColor}
-                    onChange={(v) => setDesign({ cartTitleColor: v })}
-                  />
-                  <ColorField
-                    label={t("section1.colors.cartText")}
-                    value={config.design.cartTextColor}
-                    onChange={(v) => setDesign({ cartTextColor: v })}
-                  />
+                  <ColorField label={t("section1.colors.cartBg")} value={config.design.cartBg} onChange={(v) => setDesign({ cartBg: v })} />
+                  <ColorField label={t("section1.colors.cartBorder")} value={config.design.cartBorder} onChange={(v) => setDesign({ cartBorder: v })} />
+                  <ColorField label={t("section1.colors.cartRowBg")} value={config.design.cartRowBg} onChange={(v) => setDesign({ cartRowBg: v })} />
+                  <ColorField label={t("section1.colors.cartRowBorder")} value={config.design.cartRowBorder} onChange={(v) => setDesign({ cartRowBorder: v })} />
+                  <ColorField label={t("section1.colors.cartTitle")} value={config.design.cartTitleColor} onChange={(v) => setDesign({ cartTitleColor: v })} />
+                  <ColorField label={t("section1.colors.cartText")} value={config.design.cartTextColor} onChange={(v) => setDesign({ cartTextColor: v })} />
                 </Grid3>
               </BlueSection>
 
               <BlueSection title={t("section1.colors.layoutSection")}>
                 <Grid3>
-                  <RangeSlider
-                    label={t("section1.colors.radius")}
-                    value={config.design.radius || 12}
-                    min={0}
-                    max={24}
-                    step={1}
-                    onChange={(v) => setDesign({ radius: v })}
-                  />
-                  <RangeSlider
-                    label={t("section1.colors.padding")}
-                    value={config.design.padding || 16}
-                    min={8}
-                    max={32}
-                    step={1}
-                    onChange={(v) => setDesign({ padding: v })}
-                  />
-                  <RangeSlider
-                    label={t("section1.colors.fontSize")}
-                    value={config.design.fontSize || 14}
-                    min={12}
-                    max={18}
-                    step={1}
-                    onChange={(v) => setDesign({ fontSize: v })}
-                  />
+                  <RangeSlider label={t("section1.colors.radius")} value={config.design.radius || 12} min={0} max={24} step={1} onChange={(v) => setDesign({ radius: v })} />
+                  <RangeSlider label={t("section1.colors.padding")} value={config.design.padding || 16} min={8} max={32} step={1} onChange={(v) => setDesign({ padding: v })} />
+                  <RangeSlider label={t("section1.colors.fontSize")} value={config.design.fontSize || 14} min={12} max={18} step={1} onChange={(v) => setDesign({ fontSize: v })} />
                 </Grid3>
+
                 <div style={{ marginTop: 12, display: "grid", gap: 12 }}>
                   <Select
                     label={t("section1.colors.direction")}
-                    options={[
-                      { label: "LTR", value: "ltr" },
-                      { label: "RTL", value: "rtl" },
-                    ]}
+                    options={[{ label: "LTR", value: "ltr" }, { label: "RTL", value: "rtl" }]}
                     value={config.design.direction || "ltr"}
                     onChange={(v) => setDesign({ direction: v })}
                   />
@@ -2434,17 +1569,10 @@ function OutletEditor() {
                     value={config.design.fieldAlign || "left"}
                     onChange={(v) => setDesign({ fieldAlign: v })}
                   />
+
                   <InlineStack gap="200" blockAlign="center">
-                    <Checkbox
-                      label={t("section1.colors.shadow")}
-                      checked={!!config.design.shadow}
-                      onChange={(v) => setDesign({ shadow: v })}
-                    />
-                    <Checkbox
-                      label={t("section1.colors.glow")}
-                      checked={!!config.design.glow}
-                      onChange={(v) => setDesign({ glow: v })}
-                    />
+                    <Checkbox label={t("section1.colors.shadow")} checked={!!config.design.shadow} onChange={(v) => setDesign({ shadow: v })} />
+                    <Checkbox label={t("section1.colors.glow")} checked={!!config.design.glow} onChange={(v) => setDesign({ glow: v })} />
                     <RangeSlider
                       label={t("section1.colors.glowPx")}
                       value={config.design.glowPx ?? config.behavior.glowPx ?? 18}
@@ -2510,14 +1638,8 @@ function OutletEditor() {
                     onChange={(v) => setBehav({ stickyLabel: v })}
                   />
                   <div style={{ display: "grid", gap: 8 }}>
-                    <div style={{ fontSize: 13, fontWeight: 600 }}>
-                      {t("section1.options.stickyIcon")}
-                    </div>
-                    <IconSelector
-                      type="button"
-                      selectedIcon={config.behavior.stickyIcon}
-                      onSelect={(icon) => setBehav({ stickyIcon: icon })}
-                    />
+                    <div style={{ fontSize: 13, fontWeight: 600 }}>{t("section1.options.stickyIcon")}</div>
+                    <IconSelector type="button" selectedIcon={config.behavior.stickyIcon} onSelect={(icon) => setBehav({ stickyIcon: icon })} />
                   </div>
                 </Grid3>
               </BlueSection>
@@ -2587,13 +1709,11 @@ function OutletEditor() {
             </GroupCard>
           )}
 
-          {sel.startsWith("field:") && (
-            <FieldEditor fieldKey={sel.replace(/^field:/, "")} />
-          )}
+          {sel.startsWith("field:") && <FieldEditor fieldKey={sel.replace(/^field:/, "")} />}
         </div>
       </div>
 
-      {/* COLONNE DE DROITE - APERÇU */}
+      {/* PREVIEW RIGHT */}
       <div className="tf-preview-col">
         <div className="tf-preview-card">
           <PreviewPanel />
@@ -2634,7 +1754,7 @@ function FieldEditor({ fieldKey }) {
         <InlineStack gap="200" blockAlign="center">
           <Checkbox
             label={t("section1.fieldEditor.activeLabel")}
-            checked={!!st.on}
+            checked={st.on !== false}
             onChange={(v) => setField(fieldKey, { on: v })}
           />
           <Checkbox
@@ -2643,6 +1763,7 @@ function FieldEditor({ fieldKey }) {
             onChange={(v) => setField(fieldKey, { required: v })}
           />
         </InlineStack>
+
         <Select
           label={t("section1.fieldEditor.typeLabel")}
           options={[
@@ -2690,9 +1811,7 @@ function FieldEditor({ fieldKey }) {
               type="number"
               label={t("section1.fieldEditor.maxLabel")}
               value={st.max !== undefined && st.max !== null ? String(st.max) : ""}
-              onChange={(v) =>
-                setField(fieldKey, { max: v === "" ? null : Number(v) })
-              }
+              onChange={(v) => setField(fieldKey, { max: v === "" ? null : Number(v) })}
             />
           </>
         )}
@@ -2702,11 +1821,7 @@ function FieldEditor({ fieldKey }) {
         <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8 }}>
           {t("section1.fieldEditor.iconLabel")}
         </div>
-        <IconSelector
-          fieldKey={fieldKey}
-          selectedIcon={st.icon}
-          onSelect={(icon) => setField(fieldKey, { icon })}
-        />
+        <IconSelector fieldKey={fieldKey} selectedIcon={st.icon} onSelect={(icon) => setField(fieldKey, { icon })} />
       </div>
     </GroupCard>
   );
@@ -2721,6 +1836,7 @@ function GroupCard({ title, children }) {
     </Card>
   );
 }
+
 function BlueSection({ title, children, defaultOpen = true }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
@@ -2742,49 +1858,30 @@ function BlueSection({ title, children, defaultOpen = true }) {
     </div>
   );
 }
+
 const Grid2 = ({ children }) => (
-  <div
-    style={{
-      display: "grid",
-      gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-      gap: 12,
-      alignItems: "start",
-    }}
-  >
+  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 12, alignItems: "start" }}>
     {children}
   </div>
 );
+
 const Grid3 = ({ children }) => (
-  <div
-    style={{
-      display: "grid",
-      gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-      gap: 12,
-      alignItems: "start",
-    }}
-  >
+  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12, alignItems: "start" }}>
     {children}
   </div>
 );
+
 function ColorField({ label, value, onChange }) {
   const { t } = useForms();
   return (
     <div style={{ display: "grid", gap: 6 }}>
-      <span style={{ fontSize: 13, color: "#111827", fontWeight: 600 }}>
-        {label}
-      </span>
+      <span style={{ fontSize: 13, color: "#111827", fontWeight: 600 }}>{label}</span>
       <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
         <input
           type="color"
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          style={{
-            width: 44,
-            height: 32,
-            border: "1px solid #E5E7EB",
-            borderRadius: 8,
-            background: "#fff",
-          }}
+          style={{ width: 44, height: 32, border: "1px solid #E5E7EB", borderRadius: 8, background: "#fff" }}
         />
         <TextField label={t("section1.colors.hexLabel")} value={value} onChange={onChange} />
       </div>
@@ -2794,16 +1891,7 @@ function ColorField({ label, value, onChange }) {
 
 /* ============================== Preview ============================== */
 function PreviewPanel() {
-  const {
-    config,
-    cardCSS,
-    cartBoxCSS,
-    cartRowCSS,
-    inputBase,
-    btnCSS,
-    setBehav,
-    t,
-  } = useForms();
+  const { config, cardCSS, cartBoxCSS, cartRowCSS, inputBase, btnCSS, setBehav, t } = useForms();
 
   const [shippingPrice, setShippingPrice] = useState(null);
   const [shippingNote, setShippingNote] = useState("");
@@ -2813,8 +1901,7 @@ function PreviewPanel() {
   const provincesEntries = country ? Object.entries(country.provinces || {}) : [];
 
   const selectedProvinceKey = config.behavior.provinceKey || "";
-  const selectedProvince =
-    country && selectedProvinceKey ? country.provinces[selectedProvinceKey] : null;
+  const selectedProvince = country && selectedProvinceKey ? country.provinces[selectedProvinceKey] : null;
 
   const cities = selectedProvince?.cities || [];
   const titleAlign = config.design.titleAlign || "left";
@@ -2822,19 +1909,14 @@ function PreviewPanel() {
   const fieldKeys = Object.keys(config.fields || {});
   const orderedFields = useMemo(() => {
     const existing = config.meta?.fieldsOrder || [];
-    return [
-      ...existing.filter((k) => fieldKeys.includes(k)),
-      ...fieldKeys.filter((k) => !existing.includes(k)),
-    ];
+    return [...existing.filter((k) => fieldKeys.includes(k)), ...fieldKeys.filter((k) => !existing.includes(k))];
   }, [config.meta?.fieldsOrder, fieldKeys]);
 
   const productPrice = 99.99;
   const currency = getCurrencyByCountry(countryKey);
 
   const fieldAlignRaw = config.design?.fieldAlign || "left";
-  const fieldAlign = ["left", "center", "right"].includes(fieldAlignRaw)
-    ? fieldAlignRaw
-    : "left";
+  const fieldAlign = ["left", "center", "right"].includes(fieldAlignRaw) ? fieldAlignRaw : "left";
 
   useEffect(() => {
     setShippingPrice(null);
@@ -2868,25 +1950,11 @@ function PreviewPanel() {
           </span>
 
           {isTextarea ? (
-            <textarea
-              style={{ ...inputBase, padding: "10px 12px", minHeight: 80 }}
-              placeholder={sStr(f.ph)}
-              rows={3}
-            />
+            <textarea style={{ ...inputBase, padding: "10px 12px", minHeight: 80 }} placeholder={sStr(f.ph)} rows={3} />
           ) : f.type === "tel" ? (
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: f.prefix ? "minmax(88px,130px) 1fr" : "1fr",
-                gap: 8,
-              }}
-            >
+            <div style={{ display: "grid", gridTemplateColumns: f.prefix ? "minmax(88px,130px) 1fr" : "1fr", gap: 8 }}>
               {f.prefix && (
-                <input
-                  style={{ ...inputBase, textAlign: "center", padding: "10px 12px" }}
-                  value={f.prefix}
-                  readOnly
-                />
+                <input style={{ ...inputBase, textAlign: "center", padding: "10px 12px" }} value={f.prefix} readOnly />
               )}
               <input type="tel" style={inputBase} placeholder={sStr(f.ph)} />
             </div>
@@ -2920,36 +1988,26 @@ function PreviewPanel() {
           <div className="tf-cart-icon">
             <PolarisIcon iconName={config.cartTitles.cartIcon} size={18} />
           </div>
-          <div style={{ fontWeight: 700, color: config.design.cartTitleColor }}>
-            {sStr(config.cartTitles.top)}
-          </div>
+          <div style={{ fontWeight: 700, color: config.design.cartTitleColor }}>{sStr(config.cartTitles.top)}</div>
         </div>
 
         <div style={{ display: "grid", gap: 8 }}>
           <div style={cartRowCSS}>
             <div>{sStr(config.cartTitles.price)}</div>
-            <div style={{ fontWeight: 700 }}>
-              {productPrice.toFixed(2)} {currency}
-            </div>
+            <div style={{ fontWeight: 700 }}>{productPrice.toFixed(2)} {currency}</div>
           </div>
 
           <div style={cartRowCSS}>
             <div>
               <div>{sStr(config.cartTitles.shipping)}</div>
-              {shippingNote && (
-                <div style={{ fontSize: 10, opacity: 0.8, marginTop: 2 }}>
-                  {shippingNote}
-                </div>
-              )}
+              {shippingNote && <div style={{ fontSize: 10, opacity: 0.8, marginTop: 2 }}>{shippingNote}</div>}
             </div>
             <div style={{ fontWeight: 700 }}>{shippingDisplay}</div>
           </div>
 
           <div style={cartRowCSS}>
             <div>{sStr(config.cartTitles.total)}</div>
-            <div style={{ fontWeight: 700 }}>
-              {total.toFixed(2)} {currency}
-            </div>
+            <div style={{ fontWeight: 700 }}>{total.toFixed(2)} {currency}</div>
           </div>
         </div>
       </div>
@@ -2966,8 +2024,7 @@ function PreviewPanel() {
         </div>
         <label style={{ display: "grid", gap: 6, flex: 1 }}>
           <span style={{ fontSize: 13, color: "#475569", textAlign: fieldAlign }}>
-            {sStr(f.label)}
-            {f.required ? " *" : ""}
+            {sStr(f.label)}{f.required ? " *" : ""}
           </span>
           <select
             style={{ ...inputBase, padding: "10px 12px", background: config.design.inputBg }}
@@ -2976,9 +2033,7 @@ function PreviewPanel() {
           >
             <option value="">{f.ph || t("section1.preview.provincePlaceholder")}</option>
             {provincesEntries.map(([key, p]) => (
-              <option key={key} value={key}>
-                {p.label}
-              </option>
+              <option key={key} value={key}>{p.label}</option>
             ))}
           </select>
         </label>
@@ -2996,8 +2051,7 @@ function PreviewPanel() {
         </div>
         <label style={{ display: "grid", gap: 6, flex: 1 }}>
           <span style={{ fontSize: 13, color: "#475569", textAlign: fieldAlign }}>
-            {sStr(f.label)}
-            {f.required ? " *" : ""}
+            {sStr(f.label)}{f.required ? " *" : ""}
           </span>
           <select
             style={{
@@ -3014,14 +2068,10 @@ function PreviewPanel() {
             disabled={!selectedProvinceKey}
           >
             <option value="">
-              {!selectedProvinceKey
-                ? t("section1.preview.cityPlaceholderNoProvince")
-                : f.ph || t("section1.preview.cityPlaceholder")}
+              {!selectedProvinceKey ? t("section1.preview.cityPlaceholderNoProvince") : f.ph || t("section1.preview.cityPlaceholder")}
             </option>
             {cities.map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
+              <option key={c} value={c}>{c}</option>
             ))}
           </select>
         </label>
@@ -3076,106 +2126,17 @@ function PreviewPanel() {
     );
   };
 
-  const StickyPreview = () => {
-    const type = config.behavior?.stickyType || "none";
-    if (type === "none") return null;
-
-    const styleType = config.form?.style || "inline";
-    const styleText =
-      styleType === "inline"
-        ? t("section1.preview.style.inline")
-        : styleType === "popup"
-        ? t("section1.preview.style.popup")
-        : styleType === "drawer"
-        ? t("section1.preview.style.drawer")
-        : styleType;
-
-    const label = sStr(config.behavior?.stickyLabel || config.uiTitles?.orderNow || "Order now");
-
-    const miniBtnStyle = {
-      ...btnCSS,
-      width: "auto",
-      minWidth: 140,
-      height: 36,
-      fontSize: 13,
-      padding: "0 16px",
-    };
-
-    if (type === "bottom-bar") {
-      return (
-        <div
-          style={{
-            marginTop: 4,
-            position: "relative",
-            borderRadius: 999,
-            background: "#0F172A",
-            color: "#F9FAFB",
-            padding: "8px 14px",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            fontSize: 12,
-          }}
-        >
-          <span>
-            {t("section1.preview.stickyBarLabel")} · {styleText}
-          </span>
-          <button type="button" style={miniBtnStyle} className="tf-btn-with-icon">
-            <span className="tf-btn-icon">
-              <PolarisIcon iconName={config.behavior.stickyIcon} size={16} color={config.design.btnText} />
-            </span>
-            <span style={{ flex: 1, textAlign: "center" }}>{label}</span>
-          </button>
-        </div>
-      );
-    }
-
-    if (type === "bubble-right" || type === "bubble-left") {
-      const isLeft = type === "bubble-left";
-      return (
-        <div style={{ marginTop: 8, position: "relative", height: 72 }}>
-          <div style={{ position: "absolute", bottom: 4, [isLeft ? "left" : "right"]: 4 }}>
-            <button
-              type="button"
-              style={{ ...miniBtnStyle, borderRadius: 999, boxShadow: "0 8px 18px rgba(15,23,42,0.28)" }}
-              className="tf-btn-with-icon"
-            >
-              <span className="tf-btn-icon">
-                <PolarisIcon iconName={config.behavior.stickyIcon} size={16} color={config.design.btnText} />
-              </span>
-              <span style={{ flex: 1, textAlign: "center" }}>{label}</span>
-            </button>
-            <div style={{ marginTop: 4, fontSize: 11, color: "#6B7280", textAlign: isLeft ? "left" : "right" }}>
-              {t("section1.preview.stickyBubbleLabel")} · {styleText}
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-    return null;
-  };
-
   return (
     <Card>
       <BlockStack gap="250">
         <div style={{ width: "100%" }}>
-          <div
-            style={{
-              borderRadius: 16,
-              background: "#F9FAFB",
-              border: "1px solid #E5E7EB",
-              padding: 16,
-              boxSizing: "border-box",
-            }}
-          >
+          <div style={{ borderRadius: 16, background: "#F9FAFB", border: "1px solid #E5E7EB", padding: 16, boxSizing: "border-box" }}>
             <div style={{ display: "grid", gap: 12 }}>
               {renderCartBox()}
               {renderFormCard()}
             </div>
           </div>
         </div>
-        <StickyPreview />
       </BlockStack>
     </Card>
   );
