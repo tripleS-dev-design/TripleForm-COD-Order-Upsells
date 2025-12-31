@@ -1,5 +1,4 @@
 // ===== File: app/sections/Section1FormsLayout.jsx =====
-// ============================== PART 1 / 2 ==============================
 
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import {
@@ -180,7 +179,12 @@ function decodeHost(h) {
     return "";
   }
 }
-function buildThemeEditorUrl({ hostB64, apiKey, blockHandle = "order-form", template = "product" }) {
+function buildThemeEditorUrl({
+  hostB64,
+  apiKey,
+  blockHandle = "order-form",
+  template = "product",
+}) {
   const decoded = decodeHost(hostB64);
   if (!decoded) return "";
 
@@ -190,13 +194,17 @@ function buildThemeEditorUrl({ hostB64, apiKey, blockHandle = "order-form", temp
     if (!store) return "";
     return `https://admin.shopify.com/store/${store}/themes/current/editor?template=${encodeURIComponent(
       template
-    )}&addAppBlockId=${encodeURIComponent(apiKey)}/${encodeURIComponent(blockHandle)}&target=main`;
+    )}&addAppBlockId=${encodeURIComponent(apiKey)}/${encodeURIComponent(
+      blockHandle
+    )}&target=main`;
   }
 
   const shop = decoded.replace(/^https?:\/\//i, "").replace(/\/admin.*$/i, "");
   return `https://${shop}/admin/themes/current/editor?template=${encodeURIComponent(
     template
-  )}&addAppBlockId=${encodeURIComponent(apiKey)}/${encodeURIComponent(blockHandle)}&target=main`;
+  )}&addAppBlockId=${encodeURIComponent(apiKey)}/${encodeURIComponent(
+    blockHandle
+  )}&target=main`;
 }
 
 /* ======================= CSS / layout ======================= */
@@ -687,15 +695,60 @@ const ICON_LIBRARY = {
 };
 
 const COLOR_PALETTES = [
-  { id: "blue-gradient", name: "Gradient Bleu", colors: ["#0B3B82", "#7D0031", "#00A7A3", "#F0F9FF", "#0C4A6E"], preset: "SkyBlueUI" },
-  { id: "clean-white", name: "Blanc Propre", colors: ["#FFFFFF", "#111827", "#E5E7EB", "#F9FAFB", "#374151"], preset: "CleanWhite" },
-  { id: "dark-modern", name: "Sombre Moderne", colors: ["#0B1220", "#2563EB", "#1F2A44", "#101828", "#E5F0FF"], preset: "BoldDark" },
-  { id: "green-nature", name: "Nature Verte", colors: ["#10B981", "#065F46", "#D1FAE5", "#ECFDF5", "#F0FDF4"], preset: "GreenNature" },
-  { id: "sunset-orange", name: "Orange Couchant", colors: ["#F97316", "#9A3412", "#FDBA74", "#FFEDD5", "#FFF7ED"], preset: "SunsetOrange" },
-  { id: "purple-elegant", name: "Violet Élégant", colors: ["#8B5CF6", "#5B21B6", "#E9D5FF", "#F5F3FF", "#FAF5FF"], preset: "PurpleElegant" },
-  { id: "luxury-gold", name: "Or Luxueux", colors: ["#D97706", "#854D0E", "#FDE68A", "#FEF3C7", "#FEFCE8"], preset: "LuxuryGold" },
-  { id: "ocean-deep", name: "Océan Profond", colors: ["#0891B2", "#0E7490", "#A5F3FC", "#CFFAFE", "#ECFEFF"], preset: "OceanDeep" },
-  { id: "minimal-gray", name: "Gris Minimal", colors: ["#4B5563", "#374151", "#D1D5DB", "#F9FAFB", "#FFFFFF"], preset: "MinimalGray" },
+  {
+    id: "blue-gradient",
+    name: "Gradient Bleu",
+    colors: ["#0B3B82", "#7D0031", "#00A7A3", "#F0F9FF", "#0C4A6E"],
+    preset: "SkyBlueUI",
+  },
+  {
+    id: "clean-white",
+    name: "Blanc Propre",
+    colors: ["#FFFFFF", "#111827", "#E5E7EB", "#F9FAFB", "#374151"],
+    preset: "CleanWhite",
+  },
+  {
+    id: "dark-modern",
+    name: "Sombre Moderne",
+    colors: ["#0B1220", "#2563EB", "#1F2A44", "#101828", "#E5F0FF"],
+    preset: "BoldDark",
+  },
+  {
+    id: "green-nature",
+    name: "Nature Verte",
+    colors: ["#10B981", "#065F46", "#D1FAE5", "#ECFDF5", "#F0FDF4"],
+    preset: "GreenNature",
+  },
+  {
+    id: "sunset-orange",
+    name: "Orange Couchant",
+    colors: ["#F97316", "#9A3412", "#FDBA74", "#FFEDD5", "#FFF7ED"],
+    preset: "SunsetOrange",
+  },
+  {
+    id: "purple-elegant",
+    name: "Violet Élégant",
+    colors: ["#8B5CF6", "#5B21B6", "#E9D5FF", "#F5F3FF", "#FAF5FF"],
+    preset: "PurpleElegant",
+  },
+  {
+    id: "luxury-gold",
+    name: "Or Luxueux",
+    colors: ["#D97706", "#854D0E", "#FDE68A", "#FEF3C7", "#FEFCE8"],
+    preset: "LuxuryGold",
+  },
+  {
+    id: "ocean-deep",
+    name: "Océan Profond",
+    colors: ["#0891B2", "#0E7490", "#A5F3FC", "#CFFAFE", "#ECFEFF"],
+    preset: "OceanDeep",
+  },
+  {
+    id: "minimal-gray",
+    name: "Gris Minimal",
+    colors: ["#4B5563", "#374151", "#D1D5DB", "#F9FAFB", "#FFFFFF"],
+    preset: "MinimalGray",
+  },
 ];
 
 /* ============================== Sanitizer ============================== */
@@ -726,19 +779,100 @@ function sanitizeDeep(o) {
 
 /* ============================== Defaults (fields + merge) ============================== */
 const DEFAULT_FIELDS = {
-  name: { on: true, required: true, type: "text", label: "Full name", ph: "Your full name", icon: "ProfileIcon" },
-  phone: { on: true, required: true, type: "tel", label: "Phone (WhatsApp)", ph: "Phone number", prefix: "+212", icon: "PhoneIcon" },
-  quantity: { on: true, required: true, type: "number", label: "Quantity", ph: "1", min: 1, max: 10, icon: "HashtagIcon" },
+  name: {
+    on: true,
+    required: true,
+    type: "text",
+    label: "Full name",
+    ph: "Your full name",
+    icon: "ProfileIcon",
+  },
+  phone: {
+    on: true,
+    required: true,
+    type: "tel",
+    label: "Phone (WhatsApp)",
+    ph: "Phone number",
+    prefix: "+212",
+    icon: "PhoneIcon",
+  },
+  quantity: {
+    on: true,
+    required: true,
+    type: "number",
+    label: "Quantity",
+    ph: "1",
+    min: 1,
+    max: 10,
+    icon: "HashtagIcon",
+  },
 
-  email: { on: false, required: false, type: "text", label: "Email", ph: "your.email@example.com", icon: "EmailIcon" },
-  pincode: { on: false, required: false, type: "text", label: "Pincode", ph: "Enter pincode", icon: "LocationIcon" },
-  company: { on: false, required: false, type: "text", label: "Company", ph: "Your company name", icon: "StoreIcon" },
-  birthday: { on: false, required: false, type: "text", label: "Birthday", ph: "DD/MM/YYYY", icon: "CalendarIcon" },
+  // ✅ champs populaires
+  email: {
+    on: false,
+    required: false,
+    type: "text",
+    label: "Email",
+    ph: "your.email@example.com",
+    icon: "EmailIcon",
+  },
+  pincode: {
+    on: false,
+    required: false,
+    type: "text",
+    label: "Pincode",
+    ph: "Enter pincode",
+    icon: "LocationIcon",
+  },
+  company: {
+    on: false,
+    required: false,
+    type: "text",
+    label: "Company",
+    ph: "Your company name",
+    icon: "StoreIcon",
+  },
+  birthday: {
+    on: false,
+    required: false,
+    type: "text",
+    label: "Birthday",
+    ph: "DD/MM/YYYY",
+    icon: "CalendarIcon",
+  },
 
-  province: { on: true, required: false, type: "text", label: "Wilaya / Province", ph: "Select province", icon: "GlobeIcon" },
-  city: { on: true, required: false, type: "text", label: "City", ph: "Select city", icon: "LocationIcon" },
-  address: { on: true, required: false, type: "text", label: "Address", ph: "Full address", icon: "HomeIcon" },
-  notes: { on: true, required: false, type: "textarea", label: "Notes", ph: "(optional)", icon: "NoteIcon" },
+  province: {
+    on: true,
+    required: false,
+    type: "text",
+    label: "Wilaya / Province",
+    ph: "Select province",
+    icon: "GlobeIcon",
+  },
+  city: {
+    on: true,
+    required: false,
+    type: "text",
+    label: "City",
+    ph: "Select city",
+    icon: "LocationIcon",
+  },
+  address: {
+    on: true,
+    required: false,
+    type: "text",
+    label: "Address",
+    ph: "Full address",
+    icon: "HomeIcon",
+  },
+  notes: {
+    on: true,
+    required: false,
+    type: "textarea",
+    label: "Notes",
+    ph: "(optional)",
+    icon: "NoteIcon",
+  },
 };
 
 const DEFAULT_FIELDS_ORDER = Object.keys(DEFAULT_FIELDS);
@@ -758,7 +892,12 @@ const useForms = () => useContext(FormsCtx);
 
 /* ============================== Composant Icon Polaris (FIX: pas d'icône coupée) ============================== */
 function isPolarisIconObject(src) {
-  return !!src && typeof src === "object" && typeof src.body === "string" && typeof src.viewBox === "string";
+  return (
+    !!src &&
+    typeof src === "object" &&
+    typeof src.body === "string" &&
+    typeof src.viewBox === "string"
+  );
 }
 
 function PolarisIcon({ iconName, size = 20, color = "currentColor", accessibilityLabel }) {
@@ -786,6 +925,7 @@ function PolarisIcon({ iconName, size = 20, color = "currentColor", accessibilit
     );
   }
 
+  // ✅ Render SVG direct pour éviter “moitié / crop”
   if (isPolarisIconObject(source)) {
     return (
       <span
@@ -814,6 +954,7 @@ function PolarisIcon({ iconName, size = 20, color = "currentColor", accessibilit
     );
   }
 
+  // fallback
   return (
     <span
       style={{
@@ -853,7 +994,12 @@ function PageShell({ themeLink, onOpenPreview, onSave, saving, t }) {
               <img
                 src="/tripleform-cod-icon.png"
                 alt="TripleForm COD"
-                style={{ width: "100%", height: "100%", display: "block", objectFit: "cover" }}
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  display: "block",
+                  objectFit: "cover",
+                }}
               />
             </div>
             <div>
@@ -1015,7 +1161,10 @@ function Section1FormsLayoutInner() {
       }
 
       try {
-        const s = typeof window !== "undefined" ? window.localStorage.getItem("tripleform_cod_config") : null;
+        const s =
+          typeof window !== "undefined"
+            ? window.localStorage.getItem("tripleform_cod_config")
+            : null;
         if (s && !cancelled) {
           const parsed = JSON.parse(s);
           applyMerged(parsed);
@@ -1049,7 +1198,8 @@ function Section1FormsLayoutInner() {
     }));
   const setCartT = (p) => setConfig((c) => ({ ...c, cartTitles: { ...c.cartTitles, ...p } }));
   const setUiT = (p) => setConfig((c) => ({ ...c, uiTitles: { ...c.uiTitles, ...p } }));
-  const setFieldsOrder = (order) => setConfig((c) => ({ ...c, meta: { ...(c.meta || {}), fieldsOrder: order } }));
+  const setFieldsOrder = (order) =>
+    setConfig((c) => ({ ...c, meta: { ...(c.meta || {}), fieldsOrder: order } }));
 
   function computeShadow(effect, glowPx, glowColor, hasShadow) {
     if (effect === "glow") return `0 0 ${glowPx}px ${glowColor}`;
@@ -1143,7 +1293,12 @@ function Section1FormsLayoutInner() {
       borderRadius: 10,
       background: config.design.cartRowBg,
       color: config.design.cartTextColor,
-      boxShadow: computeShadow(eff, Math.max(8, Math.round(glowPx * 0.6)), glowCol, !!config.design.shadow),
+      boxShadow: computeShadow(
+        eff,
+        Math.max(8, Math.round(glowPx * 0.6)),
+        glowCol,
+        !!config.design.shadow
+      ),
       fontSize: baseFontSize,
     }),
     [config.design, eff, glowPx, glowCol, baseFontSize]
@@ -1238,7 +1393,6 @@ function Section1FormsLayoutInner() {
     </FormsCtx.Provider>
   );
 }
-// ============================== PART 2 / 2 ==============================
 
 /* ============================== Composant pour les palettes de couleurs ============================== */
 function ColorPaletteSelector({ onSelect }) {
@@ -1309,7 +1463,8 @@ function IconSelector({ fieldKey, type = "field", onSelect, selectedIcon }) {
 
 /* ============================== Éditeur (rail | réglages | preview) ============================== */
 function OutletEditor() {
-  const { config, setCartT, setForm, setUiT, setField, setDesign, setBehav, setFieldsOrder, t } = useForms();
+  const { config, setCartT, setForm, setUiT, setField, setDesign, setBehav, setFieldsOrder, t } =
+    useForms();
   const [sel, setSel] = useState("cart");
 
   const keys = Object.keys(config.fields || {});
@@ -1346,10 +1501,13 @@ function OutletEditor() {
     return 0;
   }, [sel]);
 
-  // ✅ Countries options from country-state-city
+  // ✅ Countries options (dynamic)
   const countryOptions = useMemo(() => {
     const base = [{ label: t("section1.options.countries.selectPlaceholder"), value: "" }];
-    const list = getCountries().map((c) => ({ label: c.label, value: c.code }));
+    const list = (getCountries?.() || []).map((c) => ({
+      label: c.label,
+      value: c.code,
+    }));
     return [...base, ...list];
   }, [t]);
 
@@ -1428,6 +1586,7 @@ function OutletEditor() {
     </button>
   );
 
+  // ✅ 5 champs populaires (rail gauche)
   const POPULAR_FIELDS = [
     { key: "email", label: "Email", icon: "EmailIcon", tpl: DEFAULT_FIELDS.email },
     { key: "pincode", label: "Pincode", icon: "LocationIcon", tpl: DEFAULT_FIELDS.pincode },
@@ -1563,8 +1722,357 @@ function OutletEditor() {
             <Tabs tabs={tabs} selected={selectedTab} onSelect={(idx) => setSel(tabKeys[idx])} fitted />
           </div>
 
+          {sel === "cart" && (
+            <GroupCard title={t("section1.group.cart.title")}>
+              <Grid2>
+                <TextField
+                  label={t("section1.cart.labelTop")}
+                  value={config.cartTitles.top}
+                  onChange={(v) => setCartT({ top: v })}
+                />
+                <TextField
+                  label={t("section1.cart.labelPrice")}
+                  value={config.cartTitles.price}
+                  onChange={(v) => setCartT({ price: v })}
+                />
+                <TextField
+                  label={t("section1.cart.labelShipping")}
+                  value={config.cartTitles.shipping}
+                  onChange={(v) => setCartT({ shipping: v })}
+                />
+                <TextField
+                  label={t("section1.cart.labelTotal")}
+                  value={config.cartTitles.total}
+                  onChange={(v) => setCartT({ total: v })}
+                />
+                <div style={{ display: "grid", gap: 8 }}>
+                  <div style={{ fontSize: 13, fontWeight: 600 }}>
+                    {t("section1.cart.cartIcon")}
+                  </div>
+                  <IconSelector
+                    type="cartTitle"
+                    selectedIcon={config.cartTitles.cartIcon}
+                    onSelect={(icon) => setCartT({ cartIcon: icon })}
+                  />
+                </div>
+              </Grid2>
+            </GroupCard>
+          )}
+
+          {sel === "titles" && (
+            <GroupCard title={t("section1.group.formTexts.title")}>
+              <Grid2>
+                <TextField
+                  label={t("section1.form.titleLabel")}
+                  value={config.form.title}
+                  onChange={(v) => setForm({ title: v })}
+                />
+                <TextField
+                  label={t("section1.form.subtitleLabel")}
+                  value={config.form.subtitle}
+                  onChange={(v) => setForm({ subtitle: v })}
+                />
+              </Grid2>
+
+              <div style={{ marginTop: 16 }}>
+                <BlueSection title={t("section1.group.fields.title")} defaultOpen>
+                  {order.map((k) => (
+                    <FieldEditor key={k} fieldKey={k} />
+                  ))}
+                </BlueSection>
+              </div>
+            </GroupCard>
+          )}
+
+          {sel === "buttons" && (
+            <GroupCard title={t("section1.group.buttons.title")}>
+              <Grid2>
+                <TextField
+                  label={t("section1.buttons.mainCtaLabel")}
+                  value={config.uiTitles.orderNow}
+                  onChange={(v) => setUiT({ orderNow: v })}
+                />
+                <TextField
+                  label={t("section1.buttons.totalSuffixLabel")}
+                  value={config.uiTitles.totalSuffix}
+                  onChange={(v) => setUiT({ totalSuffix: v })}
+                />
+                <TextField
+                  label={t("section1.buttons.successTextLabel")}
+                  value={config.form.successText}
+                  onChange={(v) => setForm({ successText: v })}
+                />
+                <div style={{ display: "grid", gap: 8 }}>
+                  <div style={{ fontSize: 13, fontWeight: 600 }}>
+                    {t("section1.buttons.buttonIcon")}
+                  </div>
+                  <IconSelector
+                    type="button"
+                    selectedIcon={config.form.buttonIcon}
+                    onSelect={(icon) => setForm({ buttonIcon: icon })}
+                  />
+                </div>
+              </Grid2>
+            </GroupCard>
+          )}
+
+          {sel === "colors" && (
+            <GroupCard title={t("section1.group.colors.title")}>
+              <BlueSection title={t("section1.colors.presets")} defaultOpen>
+                <p style={{ fontSize: 13, color: "#6B7280", marginBottom: 12 }}>
+                  {t("section1.presets.description")}
+                </p>
+                <ColorPaletteSelector />
+              </BlueSection>
+
+              <BlueSection title={t("section1.colors.formSection")}>
+                <Grid3>
+                  <ColorField
+                    label={t("section1.colors.bg")}
+                    value={config.design.bg}
+                    onChange={(v) => setDesign({ bg: v })}
+                  />
+                  <ColorField
+                    label={t("section1.colors.text")}
+                    value={config.design.text}
+                    onChange={(v) => setDesign({ text: v })}
+                  />
+                  <ColorField
+                    label={t("section1.colors.border")}
+                    value={config.design.border}
+                    onChange={(v) => setDesign({ border: v })}
+                  />
+                  <ColorField
+                    label={t("section1.colors.inputBg")}
+                    value={config.design.inputBg}
+                    onChange={(v) => setDesign({ inputBg: v })}
+                  />
+                  <ColorField
+                    label={t("section1.colors.inputBorder")}
+                    value={config.design.inputBorder}
+                    onChange={(v) => setDesign({ inputBorder: v })}
+                  />
+                  <ColorField
+                    label={t("section1.colors.placeholder")}
+                    value={config.design.placeholder}
+                    onChange={(v) => setDesign({ placeholder: v })}
+                  />
+                </Grid3>
+              </BlueSection>
+
+              <BlueSection title={t("section1.colors.buttonSection")}>
+                <Grid3>
+                  <ColorField
+                    label={t("section1.colors.btnBg")}
+                    value={config.design.btnBg}
+                    onChange={(v) => setDesign({ btnBg: v })}
+                  />
+                  <ColorField
+                    label={t("section1.colors.btnText")}
+                    value={config.design.btnText}
+                    onChange={(v) => setDesign({ btnText: v })}
+                  />
+                  <ColorField
+                    label={t("section1.colors.btnBorder")}
+                    value={config.design.btnBorder}
+                    onChange={(v) => setDesign({ btnBorder: v })}
+                  />
+                </Grid3>
+                <div style={{ marginTop: 12 }}>
+                  <RangeSlider
+                    label={t("section1.colors.btnHeight")}
+                    value={config.design.btnHeight || 46}
+                    min={32}
+                    max={72}
+                    step={2}
+                    onChange={(v) => setDesign({ btnHeight: v })}
+                  />
+                </div>
+              </BlueSection>
+
+              <BlueSection title={t("section1.colors.cartSection")}>
+                <Grid3>
+                  <ColorField
+                    label={t("section1.colors.cartBg")}
+                    value={config.design.cartBg}
+                    onChange={(v) => setDesign({ cartBg: v })}
+                  />
+                  <ColorField
+                    label={t("section1.colors.cartBorder")}
+                    value={config.design.cartBorder}
+                    onChange={(v) => setDesign({ cartBorder: v })}
+                  />
+                  <ColorField
+                    label={t("section1.colors.cartRowBg")}
+                    value={config.design.cartRowBg}
+                    onChange={(v) => setDesign({ cartRowBg: v })}
+                  />
+                  <ColorField
+                    label={t("section1.colors.cartRowBorder")}
+                    value={config.design.cartRowBorder}
+                    onChange={(v) => setDesign({ cartRowBorder: v })}
+                  />
+                  <ColorField
+                    label={t("section1.colors.cartTitle")}
+                    value={config.design.cartTitleColor}
+                    onChange={(v) => setDesign({ cartTitleColor: v })}
+                  />
+                  <ColorField
+                    label={t("section1.colors.cartText")}
+                    value={config.design.cartTextColor}
+                    onChange={(v) => setDesign({ cartTextColor: v })}
+                  />
+                </Grid3>
+              </BlueSection>
+
+              <BlueSection title={t("section1.colors.layoutSection")}>
+                <Grid3>
+                  <RangeSlider
+                    label={t("section1.colors.radius")}
+                    value={config.design.radius || 12}
+                    min={0}
+                    max={24}
+                    step={1}
+                    onChange={(v) => setDesign({ radius: v })}
+                  />
+                  <RangeSlider
+                    label={t("section1.colors.padding")}
+                    value={config.design.padding || 16}
+                    min={8}
+                    max={32}
+                    step={1}
+                    onChange={(v) => setDesign({ padding: v })}
+                  />
+                  <RangeSlider
+                    label={t("section1.colors.fontSize")}
+                    value={config.design.fontSize || 14}
+                    min={12}
+                    max={18}
+                    step={1}
+                    onChange={(v) => setDesign({ fontSize: v })}
+                  />
+                </Grid3>
+
+                <div style={{ marginTop: 12, display: "grid", gap: 12 }}>
+                  <Select
+                    label={t("section1.colors.direction")}
+                    options={[
+                      { label: "LTR", value: "ltr" },
+                      { label: "RTL", value: "rtl" },
+                    ]}
+                    value={config.design.direction || "ltr"}
+                    onChange={(v) => setDesign({ direction: v })}
+                  />
+                  <Select
+                    label={t("section1.colors.titleAlign")}
+                    options={[
+                      { label: t("section1.align.left"), value: "left" },
+                      { label: t("section1.align.center"), value: "center" },
+                      { label: t("section1.align.right"), value: "right" },
+                    ]}
+                    value={config.design.titleAlign || "left"}
+                    onChange={(v) => setDesign({ titleAlign: v })}
+                  />
+                  <Select
+                    label={t("section1.colors.fieldAlign")}
+                    options={[
+                      { label: t("section1.align.left"), value: "left" },
+                      { label: t("section1.align.center"), value: "center" },
+                      { label: t("section1.align.right"), value: "right" },
+                    ]}
+                    value={config.design.fieldAlign || "left"}
+                    onChange={(v) => setDesign({ fieldAlign: v })}
+                  />
+
+                  <InlineStack gap="200" blockAlign="center">
+                    <Checkbox
+                      label={t("section1.colors.shadow")}
+                      checked={!!config.design.shadow}
+                      onChange={(v) => setDesign({ shadow: v })}
+                    />
+                    <Checkbox
+                      label={t("section1.colors.glow")}
+                      checked={!!config.design.glow}
+                      onChange={(v) => setDesign({ glow: v })}
+                    />
+                    <RangeSlider
+                      label={t("section1.colors.glowPx")}
+                      value={config.design.glowPx ?? config.behavior.glowPx ?? 18}
+                      min={4}
+                      max={40}
+                      step={1}
+                      onChange={(v) => setDesign({ glowPx: v })}
+                    />
+                  </InlineStack>
+                </div>
+              </BlueSection>
+            </GroupCard>
+          )}
+
           {sel === "options" && (
             <GroupCard title={t("section1.group.options.title")}>
+              <BlueSection title={t("section1.options.behavior")} defaultOpen>
+                <Grid3>
+                  <Select
+                    label={t("section1.buttons.displayStyleLabel")}
+                    options={[
+                      { label: t("section1.buttons.style.inline"), value: "inline" },
+                      { label: t("section1.buttons.style.popup"), value: "popup" },
+                      { label: t("section1.buttons.style.drawer"), value: "drawer" },
+                    ]}
+                    value={config.form.style || "inline"}
+                    onChange={(v) => setForm({ style: v })}
+                  />
+                  <Select
+                    label={t("section1.options.effect")}
+                    options={[
+                      { label: t("section1.options.effect.none"), value: "none" },
+                      { label: t("section1.options.effect.light"), value: "light" },
+                      { label: t("section1.options.effect.glow"), value: "glow" },
+                    ]}
+                    value={config.behavior.effect || "none"}
+                    onChange={(v) => setBehav({ effect: v })}
+                  />
+                  <Checkbox
+                    label={t("section1.options.closeOnOutside")}
+                    checked={!!config.behavior.closeOnOutside}
+                    onChange={(v) => setBehav({ closeOnOutside: v })}
+                  />
+                </Grid3>
+              </BlueSection>
+
+              <BlueSection title={t("section1.options.stickyButton")}>
+                <Grid3>
+                  <Select
+                    label={t("section1.options.stickyType")}
+                    options={[
+                      { label: t("section1.options.sticky.none"), value: "none" },
+                      { label: t("section1.options.sticky.bottomBar"), value: "bottom-bar" },
+                      { label: t("section1.options.sticky.bubbleRight"), value: "bubble-right" },
+                      { label: t("section1.options.sticky.bubbleLeft"), value: "bubble-left" },
+                    ]}
+                    value={config.behavior.stickyType || "none"}
+                    onChange={(v) => setBehav({ stickyType: v })}
+                  />
+                  <TextField
+                    label={t("section1.options.stickyLabel")}
+                    value={config.behavior.stickyLabel || ""}
+                    onChange={(v) => setBehav({ stickyLabel: v })}
+                  />
+                  <div style={{ display: "grid", gap: 8 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600 }}>
+                      {t("section1.options.stickyIcon")}
+                    </div>
+                    <IconSelector
+                      type="button"
+                      selectedIcon={config.behavior.stickyIcon}
+                      onSelect={(icon) => setBehav({ stickyIcon: icon })}
+                    />
+                  </div>
+                </Grid3>
+              </BlueSection>
+
+              {/* ✅ Countries (dynamic) */}
               <BlueSection title={t("section1.options.countries")}>
                 <Select
                   label={t("section1.options.countries.storeCountryLabel")}
@@ -1572,8 +2080,6 @@ function OutletEditor() {
                   value={config.behavior.country || ""}
                   onChange={(v) => {
                     setBehav({ country: v, provinceKey: "", cityKey: "" });
-
-                    // ✅ prefix dynamique
                     const prefix = getPhonePrefixByCountry(v) || "";
                     if (prefix) setField("phone", { prefix });
                   }}
@@ -1582,13 +2088,40 @@ function OutletEditor() {
                   {t("section1.options.countries.note")}
                 </p>
               </BlueSection>
+
+              <BlueSection title={t("section1.options.consents")}>
+                <InlineStack gap="200" blockAlign="center">
+                  <Checkbox
+                    label={t("section1.options.requireGdpr")}
+                    checked={!!config.behavior.requireGDPR}
+                    onChange={(v) => setBehav({ requireGDPR: v })}
+                  />
+                  <TextField
+                    label={t("section1.options.gdprLabel")}
+                    value={config.behavior.gdprLabel || ""}
+                    onChange={(v) => setBehav({ gdprLabel: v })}
+                  />
+                </InlineStack>
+
+                <div style={{ height: 12 }} />
+
+                <InlineStack gap="200" blockAlign="center">
+                  <Checkbox
+                    label={t("section1.options.whatsappOptIn")}
+                    checked={!!config.behavior.whatsappOptIn}
+                    onChange={(v) => setBehav({ whatsappOptIn: v })}
+                  />
+                  <TextField
+                    label={t("section1.options.whatsappLabel")}
+                    value={config.behavior.whatsappLabel || ""}
+                    onChange={(v) => setBehav({ whatsappLabel: v })}
+                  />
+                </InlineStack>
+              </BlueSection>
             </GroupCard>
           )}
 
-          {/* ✅ le reste de ton code est inchangé */}
-          {/* IMPORTANT: tu gardes toutes tes sections: cart, titles, buttons, colors, fields... */}
-          {/* Pour garder la réponse lisible, je n’ai pas recollé ici 100% de tes sections déjà identiques */}
-          {/* MAIS: si tu veux je te recolle le fichier entier en 1 bloc sans coupure */}
+          {sel.startsWith("field:") && <FieldEditor fieldKey={sel.replace(/^field:/, "")} />}
         </div>
       </div>
 
@@ -1683,7 +2216,11 @@ function FieldEditor({ fieldKey }) {
         <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8 }}>
           {t("section1.fieldEditor.iconLabel")}
         </div>
-        <IconSelector fieldKey={fieldKey} selectedIcon={st.icon} onSelect={(icon) => setField(fieldKey, { icon })} />
+        <IconSelector
+          fieldKey={fieldKey}
+          selectedIcon={st.icon}
+          onSelect={(icon) => setField(fieldKey, { icon })}
+        />
       </div>
     </GroupCard>
   );
@@ -1722,11 +2259,56 @@ function BlueSection({ title, children, defaultOpen = true }) {
 }
 
 const Grid2 = ({ children }) => (
-  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 12, alignItems: "start" }}>
+  <div
+    style={{
+      display: "grid",
+      gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+      gap: 12,
+      alignItems: "start",
+    }}
+  >
     {children}
   </div>
 );
 
+const Grid3 = ({ children }) => (
+  <div
+    style={{
+      display: "grid",
+      gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+      gap: 12,
+      alignItems: "start",
+    }}
+  >
+    {children}
+  </div>
+);
+
+function ColorField({ label, value, onChange }) {
+  const { t } = useForms();
+  return (
+    <div style={{ display: "grid", gap: 6 }}>
+      <span style={{ fontSize: 13, color: "#111827", fontWeight: 600 }}>{label}</span>
+      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+        <input
+          type="color"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          style={{
+            width: 44,
+            height: 32,
+            border: "1px solid #E5E7EB",
+            borderRadius: 8,
+            background: "#fff",
+          }}
+        />
+        <TextField label={t("section1.colors.hexLabel")} value={value} onChange={onChange} />
+      </div>
+    </div>
+  );
+}
+
+/* ============================== Preview ============================== */
 function PreviewPanel() {
   const { config, cardCSS, cartBoxCSS, cartRowCSS, inputBase, btnCSS, setBehav, t } = useForms();
 
@@ -1736,9 +2318,12 @@ function PreviewPanel() {
   const countryKey = config.behavior.country || "";
   const selectedProvinceKey = config.behavior.provinceKey || "";
 
-  // ✅ Provinces + Cities from country-state-city
-  const provinces = useMemo(() => getProvinces(countryKey), [countryKey]);
-  const cities = useMemo(() => getCities(countryKey, selectedProvinceKey), [countryKey, selectedProvinceKey]);
+  // ✅ Provinces + Cities from dynamic dataset
+  const provinces = useMemo(() => getProvinces(countryKey) || [], [countryKey]);
+  const cities = useMemo(
+    () => getCities(countryKey, selectedProvinceKey) || [],
+    [countryKey, selectedProvinceKey]
+  );
 
   const titleAlign = config.design.titleAlign || "left";
 
@@ -1770,66 +2355,53 @@ function PreviewPanel() {
     setShippingNote(`${t("section1.preview.shippingTo")} ${city} - ${shippingData.note}`);
   };
 
-  const renderProvinceField = (f) => {
-    if (!f?.on) return null;
+  const renderFieldWithIcon = (f, key) => {
+    if (!f || f.on === false) return null;
+    const isTextarea = f.type === "textarea";
 
     return (
-      <div key="province" className="tf-field-with-icon">
+      <div key={key} className="tf-field-with-icon">
         <div className="tf-field-icon">
           <PolarisIcon iconName={f.icon} size={16} />
         </div>
         <label style={{ display: "grid", gap: 6, flex: 1 }}>
           <span style={{ fontSize: 13, color: "#475569", textAlign: fieldAlign }}>
-            {sStr(f.label)}{f.required ? " *" : ""}
+            {sStr(f.label)}
+            {f.required ? " *" : ""}
           </span>
-          <select
-            style={{ ...inputBase, padding: "10px 12px", background: config.design.inputBg }}
-            value={selectedProvinceKey}
-            onChange={(e) => setBehav({ provinceKey: e.target.value, cityKey: "" })}
-          >
-            <option value="">{f.ph || t("section1.preview.provincePlaceholder")}</option>
-            {provinces.map((p) => (
-              <option key={p.code} value={p.code}>{p.label}</option>
-            ))}
-          </select>
-        </label>
-      </div>
-    );
-  };
 
-  const renderCityField = (f) => {
-    if (!f?.on) return null;
-
-    return (
-      <div key="city" className="tf-field-with-icon">
-        <div className="tf-field-icon">
-          <PolarisIcon iconName={f.icon} size={16} />
-        </div>
-        <label style={{ display: "grid", gap: 6, flex: 1 }}>
-          <span style={{ fontSize: 13, color: "#475569", textAlign: fieldAlign }}>
-            {sStr(f.label)}{f.required ? " *" : ""}
-          </span>
-          <select
-            style={{
-              ...inputBase,
-              padding: "10px 12px",
-              backgroundColor: selectedProvinceKey ? inputBase.background : "#F3F4F6",
-            }}
-            value={config.behavior.cityKey || ""}
-            onChange={(e) => {
-              const city = e.target.value;
-              setBehav({ cityKey: city });
-              handleCityChange(city);
-            }}
-            disabled={!selectedProvinceKey}
-          >
-            <option value="">
-              {!selectedProvinceKey ? t("section1.preview.cityPlaceholderNoProvince") : f.ph || t("section1.preview.cityPlaceholder")}
-            </option>
-            {cities.map((c) => (
-              <option key={c} value={c}>{c}</option>
-            ))}
-          </select>
+          {isTextarea ? (
+            <textarea
+              style={{ ...inputBase, padding: "10px 12px", minHeight: 80 }}
+              placeholder={sStr(f.ph)}
+              rows={3}
+            />
+          ) : f.type === "tel" ? (
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: f.prefix ? "minmax(88px,130px) 1fr" : "1fr",
+                gap: 8,
+              }}
+            >
+              {f.prefix && (
+                <input
+                  style={{ ...inputBase, textAlign: "center", padding: "10px 12px" }}
+                  value={f.prefix}
+                  readOnly
+                />
+              )}
+              <input type="tel" style={inputBase} placeholder={sStr(f.ph)} />
+            </div>
+          ) : (
+            <input
+              type={f.type === "number" ? "number" : "text"}
+              style={inputBase}
+              placeholder={sStr(f.ph)}
+              min={f.type === "number" && f.min != null ? f.min : undefined}
+              max={f.type === "number" && f.max != null ? f.max : undefined}
+            />
+          )}
         </label>
       </div>
     );
@@ -1847,42 +2419,49 @@ function PreviewPanel() {
 
     return (
       <div style={cartBoxCSS} dir={config.design.direction || "ltr"}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-          <div style={{ width: 22, height: 22, display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div className="tf-cart-with-icon">
+          <div className="tf-cart-icon">
             <PolarisIcon iconName={config.cartTitles.cartIcon} size={18} />
           </div>
-          <div style={{ fontWeight: 700, color: config.design.cartTitleColor }}>{sStr(config.cartTitles.top)}</div>
+          <div style={{ fontWeight: 700, color: config.design.cartTitleColor }}>
+            {sStr(config.cartTitles.top)}
+          </div>
         </div>
 
         <div style={{ display: "grid", gap: 8 }}>
           <div style={cartRowCSS}>
             <div>{sStr(config.cartTitles.price)}</div>
-            <div style={{ fontWeight: 700 }}>{productPrice.toFixed(2)} {currency}</div>
+            <div style={{ fontWeight: 700 }}>
+              {productPrice.toFixed(2)} {currency}
+            </div>
           </div>
 
           <div style={cartRowCSS}>
             <div>
               <div>{sStr(config.cartTitles.shipping)}</div>
-              {shippingNote && <div style={{ fontSize: 10, opacity: 0.8, marginTop: 2 }}>{shippingNote}</div>}
+              {shippingNote && (
+                <div style={{ fontSize: 10, opacity: 0.8, marginTop: 2 }}>{shippingNote}</div>
+              )}
             </div>
             <div style={{ fontWeight: 700 }}>{shippingDisplay}</div>
           </div>
 
           <div style={cartRowCSS}>
             <div>{sStr(config.cartTitles.total)}</div>
-            <div style={{ fontWeight: 700 }}>{total.toFixed(2)} {currency}</div>
+            <div style={{ fontWeight: 700 }}>
+              {total.toFixed(2)} {currency}
+            </div>
           </div>
         </div>
       </div>
     );
   };
 
-  const renderFieldWithIcon = (f, key) => {
-    if (!f?.on) return null;
-    const isTextarea = f.type === "textarea";
+  const renderProvinceField = (f) => {
+    if (!f || f.on === false) return null;
 
     return (
-      <div key={key} className="tf-field-with-icon">
+      <div key="province" className="tf-field-with-icon">
         <div className="tf-field-icon">
           <PolarisIcon iconName={f.icon} size={16} />
         </div>
@@ -1891,25 +2470,61 @@ function PreviewPanel() {
             {sStr(f.label)}
             {f.required ? " *" : ""}
           </span>
+          <select
+            style={{ ...inputBase, padding: "10px 12px", background: config.design.inputBg }}
+            value={selectedProvinceKey}
+            onChange={(e) => setBehav({ provinceKey: e.target.value, cityKey: "" })}
+          >
+            <option value="">{f.ph || t("section1.preview.provincePlaceholder")}</option>
+            {(provinces || []).map((p) => (
+              <option key={p.key} value={p.key}>
+                {p.label}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+    );
+  };
 
-          {isTextarea ? (
-            <textarea style={{ ...inputBase, padding: "10px 12px", minHeight: 80 }} placeholder={sStr(f.ph)} rows={3} />
-          ) : f.type === "tel" ? (
-            <div style={{ display: "grid", gridTemplateColumns: f.prefix ? "minmax(88px,130px) 1fr" : "1fr", gap: 8 }}>
-              {f.prefix && (
-                <input style={{ ...inputBase, textAlign: "center", padding: "10px 12px" }} value={f.prefix} readOnly />
-              )}
-              <input type="tel" style={inputBase} placeholder={sStr(f.ph)} />
-            </div>
-          ) : (
-            <input
-              type={f.type === "number" ? "number" : "text"}
-              style={inputBase}
-              placeholder={sStr(f.ph)}
-              min={f.type === "number" && f.min != null ? f.min : undefined}
-              max={f.type === "number" && f.max != null ? f.max : undefined}
-            />
-          )}
+  const renderCityField = (f) => {
+    if (!f || f.on === false) return null;
+
+    return (
+      <div key="city" className="tf-field-with-icon">
+        <div className="tf-field-icon">
+          <PolarisIcon iconName={f.icon} size={16} />
+        </div>
+        <label style={{ display: "grid", gap: 6, flex: 1 }}>
+          <span style={{ fontSize: 13, color: "#475569", textAlign: fieldAlign }}>
+            {sStr(f.label)}
+            {f.required ? " *" : ""}
+          </span>
+          <select
+            style={{
+              ...inputBase,
+              padding: "10px 12px",
+              backgroundColor: selectedProvinceKey ? inputBase.background : "#F3F4F6",
+            }}
+            value={config.behavior.cityKey || ""}
+            onChange={(e) => {
+              const city = e.target.value;
+              setBehav({ cityKey: city });
+              handleCityChange(city);
+            }}
+            disabled={!selectedProvinceKey}
+          >
+            <option value="">
+              {!selectedProvinceKey
+                ? t("section1.preview.cityPlaceholderNoProvince")
+                : f.ph || t("section1.preview.cityPlaceholder")}
+            </option>
+            {(cities || []).map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
         </label>
       </div>
     );
@@ -1932,7 +2547,7 @@ function PreviewPanel() {
         <div style={{ display: "grid", gap: 10 }}>
           {orderedFields.map((key) => {
             const f = config.fields[key];
-            if (!f?.on) return null;
+            if (!f || f.on === false) return null;
             if (key === "province") return renderProvinceField(f);
             if (key === "city") return renderCityField(f);
             return renderFieldWithIcon(f, key);
@@ -1966,7 +2581,15 @@ function PreviewPanel() {
     <Card>
       <BlockStack gap="250">
         <div style={{ width: "100%" }}>
-          <div style={{ borderRadius: 16, background: "#F9FAFB", border: "1px solid #E5E7EB", padding: 16, boxSizing: "border-box" }}>
+          <div
+            style={{
+              borderRadius: 16,
+              background: "#F9FAFB",
+              border: "1px solid #E5E7EB",
+              padding: 16,
+              boxSizing: "border-box",
+            }}
+          >
             <div style={{ display: "grid", gap: 12 }}>
               {renderCartBox()}
               {renderFormCard()}
