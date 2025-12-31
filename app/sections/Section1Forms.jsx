@@ -2476,11 +2476,12 @@ function PreviewPanel() {
             onChange={(e) => setBehav({ provinceKey: e.target.value, cityKey: "" })}
           >
             <option value="">{f.ph || t("section1.preview.provincePlaceholder")}</option>
-            {(provinces || []).map((p) => (
-              <option key={p.key} value={p.key}>
+           {(provinces || []).map((p) => (
+              <option key={p.code} value={p.code}>
                 {p.label}
               </option>
             ))}
+
           </select>
         </label>
       </div>
