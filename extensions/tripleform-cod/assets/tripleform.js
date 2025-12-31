@@ -1,5 +1,5 @@
 /* =========================
-   Tripleform COD — JS FINAL
+   Tripleform COD — JS FINAL (v2.1 - Complete Sync)
    PART 1 / 2
    ========================= */
 
@@ -86,13 +86,9 @@ window.TripleformCOD = (function () {
   }
 
   /* ------------------------------------------------------------------ */
-  /* Polaris SVG Icons (NO EMOJIS)                                       */
+  /* Polaris SVG Icons (NO EMOJIS)                                      */
   /* ------------------------------------------------------------------ */
 
-  /**
-   * Tu peux aussi injecter tes icônes dynamiquement :
-   * window.TripleformCODIcons = { CartIcon: "<svg...>", ... }
-   */
   const DEFAULT_POLARIS_SVG = {
     CartIcon:
       '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path fill="currentColor" d="M3 3.5a.75.75 0 0 1 .75-.75h1.34c.64 0 1.2.42 1.38 1.04l.24.86h10.02c.95 0 1.68.86 1.5 1.79l-.86 4.45a1.75 1.75 0 0 1-1.72 1.42H8.05a1.75 1.75 0 0 1-1.68-1.25L5.1 4.25a.75.75 0 0 0-.72-.5H3.75A.75.75 0 0 1 3 3.5Zm5.1 12.25a1.25 1.25 0 1 0 0 2.5 1.25 1.25 0 0 0 0-2.5Zm8 0a1.25 1.25 0 1 0 0 2.5 1.25 1.25 0 0 0 0-2.5Z"/></svg>',
@@ -116,13 +112,24 @@ window.TripleformCOD = (function () {
       '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path fill="currentColor" d="M6.22 6.22a.75.75 0 0 1 1.06 0L10 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06L11.06 10l2.72 2.72a.75.75 0 1 1-1.06 1.06L10 11.06l-2.72 2.72a.75.75 0 1 1-1.06-1.06L8.94 10 6.22 7.28a.75.75 0 0 1 0-1.06Z"/></svg>',
     AppsIcon:
       '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path fill="currentColor" d="M6 2.75A3.25 3.25 0 1 0 6 9.25 3.25 3.25 0 0 0 6 2.75Zm8 0A3.25 3.25 0 1 0 14 9.25 3.25 3.25 0 0 0 14 2.75ZM6 10.75A3.25 3.25 0 1 0 6 17.25 3.25 3.25 0 0 0 6 10.75Zm8 0A3.25 3.25 0 1 0 14 17.25 3.25 3.25 0 0 0 14 10.75Z"/></svg>',
+    DiscountIcon:
+      '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path fill="currentColor" d="M5.5 4.25a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1V6h-9V4.25ZM4 7h12v6.5a2.5 2.5 0 0 1-2.5 2.5h-7A2.5 2.5 0 0 1 4 13.5V7Zm4.25 3.25a1.25 1.25 0 1 0 0-2.5 1.25 1.25 0 0 0 0 2.5Zm5-1.25a1.25 1.25 0 1 1-2.5 0 1.25 1.25 0 0 1 2.5 0Zm-6.47 4.03a.75.75 0 0 0 1.06-1.06L6.56 11.5l1.28-1.28a.75.75 0 0 0-1.06-1.06l-1.28 1.28-1.28-1.28a.75.75 0 0 0-1.06 1.06L4.44 11.5l-1.28 1.28a.75.75 0 0 0 1.06 1.06l1.28-1.28 1.28 1.28Z"/></svg>',
+    GiftIcon:
+      '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path fill="currentColor" d="M15 4.5V3.25A2.25 2.25 0 0 0 12.75 1h-5.5A2.25 2.25 0 0 0 5 3.25V4.5H3.25A1.75 1.75 0 0 0 1.5 6.25v2.5c0 .97.78 1.75 1.75 1.75H5v6.25A1.75 1.75 0 0 0 6.75 18h6.5a1.75 1.75 0 0 0 1.75-1.75V10.5h2.25c.97 0 1.75-.78 1.75-1.75v-2.5c0-.97-.78-1.75-1.75-1.75H15ZM6.5 3.25a.75.75 0 0 1 .75-.75h5.5a.75.75 0 0 1 .75.75V4.5h-7V3.25Zm0 14V10.5h7v6.75a.75.75 0 0 1-.75.75h-5.5a.75.75 0 0 1-.75-.75Zm10.25-9H3.25a.25.25 0 0 1-.25-.25v-2.5c0-.14.11-.25.25-.25h13.5c.14 0 .25.11.25.25v2.5c0 .14-.11.25-.25.25Z"/></svg>',
+    ClockIcon:
+      '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path fill="currentColor" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm.75-11.25a.75.75 0 0 0-1.5 0v4.5c0 .41.34.75.75.75h3.5a.75.75 0 0 0 0-1.5h-2.75V6.75Z"/></svg>',
+    AddIcon:
+      '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path fill="currentColor" d="M10.75 5.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z"/></svg>',
+    PlusIcon:
+      '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path fill="currentColor" d="M10.75 5.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z"/></svg>',
+    GlobeIcon:
+      '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path fill="currentColor" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm.75-13.25a.75.75 0 0 0-1.5 0v.75h-.75a.75.75 0 0 0 0 1.5h.75v.75a.75.75 0 0 0 1.5 0V7h.75a.75.75 0 0 0 0-1.5h-.75v-.75ZM7.5 10a2.5 2.5 0 1 1 5 0 2.5 2.5 0 0 1-5 0Z"/></svg>',
   };
 
   function getPolarisSvg(iconName) {
     const injected = window.TripleformCODIcons && window.TripleformCODIcons[iconName];
     if (injected && typeof injected === "string") return injected;
     if (DEFAULT_POLARIS_SVG[iconName]) return DEFAULT_POLARIS_SVG[iconName];
-    // fallback: try AppsIcon
     return DEFAULT_POLARIS_SVG.AppsIcon;
   }
 
@@ -140,28 +147,13 @@ window.TripleformCOD = (function () {
   }
 
   /* ------------------------------------------------------------------ */
-  /* CountryData Adapter (from separate countryData.js)                  */
+  /* CountryData Adapter (Synchronisé avec Section1FormsLayout)         */
   /* ------------------------------------------------------------------ */
-
-  /**
-   * Expected (recommended) in storefront:
-   * window.TripleformCODCountryData = {
-   *   countries: [
-   *     {
-   *       code:"MA", label:"Morocco", phonePrefix:"+212",
-   *       provinces:[ { code:"CAS", label:"Casablanca-Settat", cities:["Casablanca", ...] } ]
-   *     }
-   *   ]
-   * }
-   *
-   * I also accept old structure:
-   * window.TripleformCODCountryData = { MA: { label, phonePrefix, provinces:[{name, cities}] } }
-   */
 
   function normalizeCountryData(raw) {
     if (!raw || typeof raw !== "object") return null;
 
-    // New format: { countries:[...] }
+    // Support both formats from Section1FormsLayout
     if (Array.isArray(raw.countries)) {
       return {
         countries: raw.countries
@@ -182,7 +174,7 @@ window.TripleformCOD = (function () {
       };
     }
 
-    // Old format: { ma:{label, phonePrefix, provinces:[{name,cities}]} , dz:{...} }
+    // Support old format
     const keys = Object.keys(raw);
     if (!keys.length) return null;
 
@@ -208,10 +200,11 @@ window.TripleformCOD = (function () {
   }
 
   function getCountryDataStorefront() {
-    const raw = window.TripleformCODCountryData || null;
+    // Try multiple sources (synchronized with Section1FormsLayout)
+    const raw = window.TripleformCODCountryData || window.__TRIPLEFORM_COUNTRY_JSON__ || null;
     const normalized = normalizeCountryData(raw);
 
-    // fallback minimal MA
+    // Fallback minimal data (Morocco)
     if (!normalized || !normalized.countries || !normalized.countries.length) {
       return {
         countries: [
@@ -219,7 +212,28 @@ window.TripleformCOD = (function () {
             code: "MA",
             label: "Morocco",
             phonePrefix: "+212",
-            provinces: [],
+            provinces: [
+              {
+                code: "CAS",
+                label: "Casablanca-Settat",
+                cities: ["Casablanca", "Mohammedia", "Settat", "Benslimane", "Berrechid"]
+              },
+              {
+                code: "RBA",
+                label: "Rabat-Salé-Kénitra",
+                cities: ["Rabat", "Salé", "Kénitra", "Témara", "Skhirat"]
+              },
+              {
+                code: "MAR",
+                label: "Marrakech-Safi",
+                cities: ["Marrakech", "Safi", "Essaouira", "El Kelâa des Sraghna"]
+              },
+              {
+                code: "TNG",
+                label: "Tanger-Tétouan-Al Hoceïma",
+                cities: ["Tanger", "Tétouan", "Al Hoceïma", "Larache", "Chefchaouen"]
+              }
+            ],
           },
         ],
       };
@@ -235,6 +249,35 @@ window.TripleformCOD = (function () {
       db.countries.find((c) => c.code === "MA") ||
       db.countries[0]
     );
+  }
+
+  // Helper functions synchronized with Section1FormsLayout
+  function getCountries() {
+    const db = getCountryDataStorefront();
+    return (db.countries || []).map((c) => ({ code: c.code, label: c.label }));
+  }
+
+  function getProvinces(countryCode) {
+    const cc = String(countryCode || "").toUpperCase();
+    if (!cc) return [];
+    const c = (getCountryDataStorefront().countries || []).find((x) => x.code === cc);
+    return (c?.provinces || []).map((p) => ({ code: p.code, label: p.label }));
+  }
+
+  function getCities(countryCode, provinceCode) {
+    const cc = String(countryCode || "").toUpperCase();
+    const pc = String(provinceCode || "").toUpperCase();
+    if (!cc || !pc) return [];
+    const c = (getCountryDataStorefront().countries || []).find((x) => x.code === cc);
+    const p = (c?.provinces || []).find((x) => x.code === pc);
+    return (p?.cities || []).slice();
+  }
+
+  function getPhonePrefixByCountry(countryCode) {
+    const cc = String(countryCode || "").toUpperCase();
+    if (!cc) return "";
+    const c = (getCountryDataStorefront().countries || []).find((x) => x.code === cc);
+    return c?.phonePrefix || "";
   }
 
   /* ------------------------------------------------------------------ */
@@ -424,7 +467,7 @@ window.TripleformCOD = (function () {
   }
 
   /* ------------------------------------------------------------------ */
-  /* OFFERS CSS (shared)                                                */
+  /* OFFERS CSS (shared) - UPDATED FOR 4 STYLES + TIMERS               */
   /* ------------------------------------------------------------------ */
 
   function injectOffersCSS() {
@@ -434,29 +477,58 @@ window.TripleformCOD = (function () {
     style.id = "tf-offers-css";
     style.textContent = `
       .tf-offers-container{display:grid;gap:10px;margin-bottom:16px}
-      .tf-offer-card{border:1px solid #E5E7EB;border-radius:12px;background:#fff;box-shadow:0 6px 16px rgba(0,0,0,.05);overflow:hidden}
-      .tf-offer-row{display:grid;grid-template-columns:60px minmax(0,1fr);gap:12px;align-items:center;padding:12px}
-      .tf-offer-thumb{width:56px;height:56px;border-radius:12px;overflow:hidden;border:1px solid #E5E7EB;display:flex;align-items:center;justify-content:center;flex:none;background:#F9FAFB}
+      
+      /* Base card */
+      .tf-offer-card{border-radius:12px;border:1px solid #E5E7EB;background:#fff;box-shadow:0 6px 16px rgba(0,0,0,.05);overflow:hidden}
+      
+      /* Style 1: Image LEFT, text RIGHT (default) */
+      .tf-offer-card.style-1 { display:flex; gap:12px; align-items:center; padding:12px; }
+      .tf-offer-card.style-1 .tf-offer-thumb{width:64px;height:64px;border-radius:14px;overflow:hidden;border:1px solid #E5E7EB;flex:none}
+      .tf-offer-card.style-1 .tf-offer-main{min-width:0;flex:1}
+      
+      /* Style 2: Image RIGHT, text LEFT */
+      .tf-offer-card.style-2 { display:flex; gap:12px; align-items:center; padding:12px; }
+      .tf-offer-card.style-2 .tf-offer-thumb{width:64px;height:64px;border-radius:14px;overflow:hidden;border:1px solid #E5E7EB;flex:none;order:2}
+      .tf-offer-card.style-2 .tf-offer-main{min-width:0;flex:1;order:1}
+      
+      /* Style 3: Text TOP, image bottom big */
+      .tf-offer-card.style-3 { display:grid; gap:10px; padding:12px; }
+      .tf-offer-card.style-3 .tf-offer-thumb{width:100%;height:140px;border-radius:14px;overflow:hidden}
+      .tf-offer-card.style-3 .tf-offer-main{min-width:0}
+      
+      /* Style 4: Big image LEFT (tall) + text stack */
+      .tf-offer-card.style-4 { display:grid; grid-template-columns:120px 1fr; gap:12px; align-items:center; padding:12px; }
+      .tf-offer-card.style-4 .tf-offer-thumb{width:120px;height:120px;border-radius:16px;overflow:hidden}
+      .tf-offer-card.style-4 .tf-offer-main{min-width:0}
+      
       .tf-offer-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+      .tf-offer-thumb div{width:100%;height:100%;background:linear-gradient(135deg,#3B82F6,#8B5CF6)}
+      
+      /* Content */
       .tf-offer-title{font-size:14px;font-weight:700;color:#111827;margin-bottom:2px;line-height:1.25}
       .tf-offer-desc{font-size:12px;color:#6B7280;line-height:1.35}
       .tf-offer-meta{margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-
+      
+      /* Badge */
       .tf-offer-badge{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;padding:4px 8px;border-radius:999px;border:1px solid #E5E7EB;background:#F9FAFB;color:#111827}
       .tf-offer-badge strong{font-weight:800}
-
+      
+      /* Timer */
       .tf-offer-timer{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:700;padding:6px 10px;border-radius:10px;border:1px solid #E5E7EB;background:#F9FAFB;color:#111827}
       .tf-offer-timer .tf-timer-count{margin-left:auto;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;letter-spacing:.06em}
-
-      /* 4 styles */
-      .tf-style-strip .tf-offer-card{border-radius:10px}
-      .tf-style-compact .tf-offer-row{grid-template-columns:44px minmax(0,1fr)}
-      .tf-style-compact .tf-offer-thumb{width:40px;height:40px;border-radius:10px}
-      .tf-style-glow .tf-offer-card{border:1px solid rgba(59,130,246,.35);box-shadow:0 10px 24px rgba(59,130,246,.18)}
-      .tf-style-glow .tf-offer-thumb{border-color:rgba(59,130,246,.35)}
-      .tf-style-minimal .tf-offer-card{box-shadow:none}
-
-      /* activation button */
+      
+      /* Timer styles from Section2Offers */
+      .tf-timer-chrono { background:linear-gradient(90deg,#1e3a8a,#3b82f6); color:#fff; border-color:rgba(96,165,250,.9); box-shadow:0 4px 12px rgba(59,130,246,0.35); }
+      .tf-timer-elegant { background:linear-gradient(135deg,#8B5CF6,#EC4899); color:#fff; border-color:rgba(221,214,254,.9); box-shadow:0 4px 14px rgba(139,92,246,0.3); }
+      .tf-timer-flash { background:linear-gradient(90deg,#f97316,#fbbf24); color:#111827; border-color:rgba(245,158,11,.9); box-shadow:0 4px 14px rgba(249,115,22,0.35); }
+      .tf-timer-minimal { background:#F9FAFB; color:#374151; border-color:#E5E7EB; }
+      .tf-timer-hot { background:linear-gradient(90deg,#7c2d12,#ea580c); color:#fff; border-color:rgba(253,186,116,.9); animation:pulse 1.5s infinite; font-weight:800; }
+      .tf-timer-urgent { background:linear-gradient(90deg,#991B1B,#DC2626); color:#fff; border-color:rgba(252,165,165,.9); animation:blink 1s infinite; font-weight:800; box-shadow:0 4px 12px rgba(220,38,38,0.35); }
+      
+      @keyframes pulse { 0%{opacity:1} 50%{opacity:.82} 100%{opacity:1} }
+      @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.72} }
+      
+      /* Activation button */
       .tf-offer-btn{
         display:inline-flex;align-items:center;gap:8px;
         background:#111827;color:#fff;border:1px solid #111827;
@@ -467,26 +539,44 @@ window.TripleformCOD = (function () {
       .tf-offer-btn[disabled]{opacity:.55;cursor:not-allowed;transform:none}
       .tf-offer-btn.is-active{background:#10B981;border-color:#10B981}
       .tf-offer-btn .tf-offer-btn-icon{display:inline-flex;width:14px;height:14px}
-
+      
+      /* 4 layout styles (global) */
+      .tf-style-strip .tf-offer-card{border-radius:10px}
+      .tf-style-compact .tf-offer-card.style-1,
+      .tf-style-compact .tf-offer-card.style-2 { gap:8px; padding:10px; }
+      .tf-style-compact .tf-offer-card.style-1 .tf-offer-thumb,
+      .tf-style-compact .tf-offer-card.style-2 .tf-offer-thumb,
+      .tf-style-compact .tf-offer-card.style-4 .tf-offer-thumb { width:44px; height:44px; border-radius:10px; }
+      .tf-style-compact .tf-offer-card.style-4 { grid-template-columns:44px 1fr; }
+      .tf-style-glow .tf-offer-card{border:1px solid rgba(59,130,246,.35);box-shadow:0 10px 24px rgba(59,130,246,.18)}
+      .tf-style-glow .tf-offer-thumb{border-color:rgba(59,130,246,.35)}
+      .tf-style-minimal .tf-offer-card{box-shadow:none;border:1px solid #F3F4F6;}
+      
+      /* Discount row */
       .tf-discount-row{color:#10B981!important;font-weight:800}
     `;
     document.head.appendChild(style);
   }
 
   /* ------------------------------------------------------------------ */
-  /* Timer component (offers / upsells)                                 */
+  /* Timer component - COMPLETE SYNC with Section2Offers                */
   /* ------------------------------------------------------------------ */
 
-  function buildTimerNode({ minutes, message, timeFormat, tone }) {
+  function buildTimerNode({ minutes, message, timeFormat, timerCssClass, timerIconUrl, timerIconEmoji }) {
     const container = document.createElement("div");
-    container.className = "tf-offer-timer";
-
-    // tone: "hot" etc (optional)
-    if (tone === "hot") {
-      container.style.background = "linear-gradient(90deg,#991B1B,#DC2626)";
-      container.style.borderColor = "rgba(252,165,165,.8)";
-      container.style.color = "#fff";
-    }
+    
+    // Map timer types from Section2Offers
+    const timerClassMap = {
+      'chrono': 'tf-timer-chrono',
+      'elegant': 'tf-timer-elegant',
+      'flash': 'tf-timer-flash',
+      'minimal': 'tf-timer-minimal',
+      'hot': 'tf-timer-hot',
+      'urgent': 'tf-timer-urgent'
+    };
+    
+    const cssClass = timerClassMap[timerCssClass?.replace('timer-type-', '')] || 'tf-timer-chrono';
+    container.className = `tf-offer-timer ${cssClass}`;
 
     let timeLeft = Math.max(0, Number(minutes || 0) * 60);
 
@@ -509,9 +599,30 @@ window.TripleformCOD = (function () {
     }
 
     function draw() {
+      let iconHtml = "";
+      if (timerIconUrl) {
+        iconHtml = `<img src="${css(timerIconUrl)}" alt="timer" style="width:14px;height:14px;" />`;
+      } else if (timerIconEmoji) {
+        iconHtml = `<span>${css(timerIconEmoji)}</span>`;
+      } else {
+        // Default icons based on timer type
+        const defaultIcons = {
+          'chrono': getIconHtml("ClockIcon", "14px"),
+          'elegant': "💎",
+          'flash': "⚡",
+          'minimal': "⏳",
+          'hot': "🔥",
+          'urgent': "🚨"
+        };
+        const timerType = timerCssClass?.replace('timer-type-', '') || 'chrono';
+        iconHtml = defaultIcons[timerType] || getIconHtml("ClockIcon", "14px");
+      }
+      
       container.innerHTML = `
-        ${getIconHtml("ClockIcon", "14px")}
-        <span>${css(message || "Limited time offer")}</span>
+        ${iconHtml}
+        <span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+          ${css(message || "Limited time offer")}
+        </span>
         <span class="tf-timer-count">${formatTime(timeLeft, timeFormat || "mm:ss")}</span>
       `;
     }
@@ -593,20 +704,16 @@ window.TripleformCOD = (function () {
     const isActive = btn.classList.contains("is-active");
     const offer = offersList[offerIndex];
 
-    // One active at a time (global)
     clearAllOfferFlags(root);
 
     if (isActive) {
-      // just cleared above
       if (typeof updateMoney === "function") updateMoney();
       return;
     }
 
-    // activate this one
     applyOfferButtonState(btn, true);
     localStorage.setItem(storageKeyForOffer(offerType, offerIndex), "true");
 
-    // store full payload
     setActiveOfferPayload({
       index: offerIndex,
       type: offerType,
@@ -636,7 +743,6 @@ window.TripleformCOD = (function () {
       return { discountCents: Math.round((totalCents * pct) / 100), payload };
     }
 
-    // fixed: assume value is in "major" currency unit (ex: 20 => 20.00)
     if (dt === "fixed") {
       return { discountCents: Math.round(dv * 100), payload };
     }
@@ -645,11 +751,10 @@ window.TripleformCOD = (function () {
   }
 
   /* ------------------------------------------------------------------ */
-  /* OFFERS HTML builder (4 styles)                                     */
+  /* OFFERS HTML builder - COMPLETE SYNC with Section2Offers            */
   /* ------------------------------------------------------------------ */
 
   function resolveOfferStyle(offersCfg) {
-    // From admin: offersCfg.display.previewStyle / style / layout etc
     const display = offersCfg?.display || {};
     const style =
       display.previewStyle ||
@@ -661,6 +766,12 @@ window.TripleformCOD = (function () {
     const s = String(style || "strip").toLowerCase();
     if (["strip", "compact", "glow", "minimal"].includes(s)) return s;
     return "strip";
+  }
+
+  function getDisplayStyleClass(displayStyle) {
+    const style = String(displayStyle || "style-1").toLowerCase();
+    if (["style-1", "style-2", "style-3", "style-4"].includes(style)) return style;
+    return "style-1";
   }
 
   function buildOffersHtml(offersCfg, rootId) {
@@ -681,8 +792,9 @@ window.TripleformCOD = (function () {
     const style = resolveOfferStyle(offersCfg);
     let html = `<div class="tf-offers-container tf-style-${style}" data-tf-offers-root="${rootId}">`;
 
-    // OFFERS (discount) with activation
+    // OFFERS (discount)
     activeOffers.forEach((offer, idx) => {
+      const displayStyle = getDisplayStyleClass(offer.displayStyle);
       const title = offer.title || "Special discount";
       const description = offer.description || "";
       const img = offer.imageUrl || "";
@@ -690,84 +802,81 @@ window.TripleformCOD = (function () {
       const hasTimer = !!offer.enableTimer && display.showTimerInPreview !== false;
 
       html += `
-        <div class="tf-offer-card" data-tf-offer-card="offer" data-tf-offer-index="${idx}">
-          <div class="tf-offer-row">
-            <div class="tf-offer-thumb">
+        <div class="tf-offer-card ${displayStyle}" data-tf-offer-card="offer" data-tf-offer-index="${idx}">
+          <div class="tf-offer-thumb">
+            ${
+              img
+                ? `<img src="${css(img)}" alt="${css(title)}" loading="lazy" />`
+                : `<div></div>`
+            }
+          </div>
+
+          <div class="tf-offer-main">
+            <div class="tf-offer-title">${css(title)}</div>
+            <div class="tf-offer-desc">${css(description)}</div>
+
+            <div class="tf-offer-meta">
               ${
-                img
-                  ? `<img src="${css(img)}" alt="${css(title)}" loading="lazy" />`
-                  : `<div style="width:100%;height:100%;background:linear-gradient(135deg,#3B82F6,#8B5CF6);"></div>`
+                offer.discountType === "percentage"
+                  ? `<span class="tf-offer-badge">${getIconHtml("DiscountIcon", "14px")}<strong>-${css(offer.discountValue || 0)}%</strong></span>`
+                  : offer.discountType === "fixed"
+                  ? `<span class="tf-offer-badge">${getIconHtml("DiscountIcon", "14px")}<strong>-${css(offer.discountValue || 0)}</strong></span>`
+                  : ``
               }
-            </div>
 
-            <div style="min-width:0;">
-              <div class="tf-offer-title">${css(title)}</div>
-              <div class="tf-offer-desc">${css(description)}</div>
+              ${
+                hasTimer
+                  ? `<span data-tf-timer="offer" data-tf-timer-index="${idx}"></span>`
+                  : ``
+              }
 
-              <div class="tf-offer-meta">
-                ${
-                  offer.discountType === "percentage"
-                    ? `<span class="tf-offer-badge">${getIconHtml("DiscountIcon", "14px")}<strong>-${css(offer.discountValue || 0)}%</strong></span>`
-                    : offer.discountType === "fixed"
-                    ? `<span class="tf-offer-badge">${getIconHtml("DiscountIcon", "14px")}<strong>-${css(offer.discountValue || 0)}</strong></span>`
-                    : ``
-                }
-
-                ${
-                  hasTimer
-                    ? `<span data-tf-timer="offer" data-tf-timer-index="${idx}"></span>`
-                    : ``
-                }
-
-                <button
-                  type="button"
-                  class="tf-offer-btn"
-                  data-tf-offer-toggle="1"
-                  data-tf-offer-index="${idx}"
-                  data-tf-offer-type="offer"
-                  data-tf-root-id="${rootId}"
-                  data-tf-btn-label="${css(btnLabel)}"
-                  aria-pressed="false"
-                >
-                  ${getIconHtml("AddIcon", "14px")}<span>${css(btnLabel)}</span>
-                </button>
-              </div>
+              <button
+                type="button"
+                class="tf-offer-btn"
+                data-tf-offer-toggle="1"
+                data-tf-offer-index="${idx}"
+                data-tf-offer-type="offer"
+                data-tf-root-id="${rootId}"
+                data-tf-btn-label="${css(btnLabel)}"
+                aria-pressed="false"
+              >
+                ${getIconHtml("AddIcon", "14px")}<span>${css(btnLabel)}</span>
+              </button>
             </div>
           </div>
         </div>
       `;
     });
 
-    // UPSELLS (gift) no activation
+    // UPSELLS (gift)
     activeUpsells.forEach((upsell, idx) => {
+      const displayStyle = getDisplayStyleClass(upsell.displayStyle);
       const title = upsell.title || "Free gift";
       const description = upsell.description || "";
       const img = upsell.imageUrl || "";
       const hasTimer = !!upsell.enableTimer && display.showTimerInPreview !== false;
 
       html += `
-        <div class="tf-offer-card" data-tf-offer-card="upsell" data-tf-upsell-index="${idx}">
-          <div class="tf-offer-row">
-            <div class="tf-offer-thumb">
+        <div class="tf-offer-card ${displayStyle}" data-tf-offer-card="upsell" data-tf-upsell-index="${idx}">
+          <div class="tf-offer-thumb">
+            ${
+              img
+                ? `<img src="${css(img)}" alt="${css(title)}" loading="lazy" />`
+                : `<div></div>`
+            }
+          </div>
+
+          <div class="tf-offer-main">
+            <div class="tf-offer-title">${css(title)}</div>
+            <div class="tf-offer-desc">${css(description)}</div>
+
+            <div class="tf-offer-meta">
+              <span class="tf-offer-badge">${getIconHtml("GiftIcon", "14px")}<strong>${css(upsell.badgeText || "GIFT")}</strong></span>
               ${
-                img
-                  ? `<img src="${css(img)}" alt="${css(title)}" loading="lazy" />`
-                  : `<div style="width:100%;height:100%;background:linear-gradient(135deg,#EC4899,#F59E0B);"></div>`
+                hasTimer
+                  ? `<span data-tf-timer="upsell" data-tf-timer-index="${idx}"></span>`
+                  : ``
               }
-            </div>
-
-            <div style="min-width:0;">
-              <div class="tf-offer-title">${css(title)}</div>
-              <div class="tf-offer-desc">${css(description)}</div>
-
-              <div class="tf-offer-meta">
-                <span class="tf-offer-badge">${getIconHtml("GiftIcon", "14px")}<strong>${css(upsell.badgeText || "GIFT")}</strong></span>
-                ${
-                  hasTimer
-                    ? `<span data-tf-timer="upsell" data-tf-timer-index="${idx}"></span>`
-                    : ``
-                }
-              </div>
             </div>
           </div>
         </div>
@@ -796,18 +905,19 @@ window.TripleformCOD = (function () {
       if (!item.enableTimer) return;
       if (display.showTimerInPreview === false) return;
 
-      // clear and append node
       spot.innerHTML = "";
       const node = buildTimerNode({
-        minutes: item.timerMinutes || 60,
+        minutes: item.timerMinutes || 30,
         message: item.timerMessage || (kind === "offer" ? "Limited time offer" : "Limited time gift"),
         timeFormat: item.timerTimeFormat || "mm:ss",
-        tone: item.timerTone || "",
+        timerCssClass: item.timerCssClass || "timer-type-chrono",
+        timerIconUrl: item.timerIconUrl,
+        timerIconEmoji: item.timerIconEmoji,
       });
       spot.appendChild(node);
     });
 
-    // Restore active offer (if any)
+    // Restore active offer
     const payload = getActiveOfferPayload();
     if (payload && payload.type === "offer") {
       const btn = root.querySelector(
@@ -836,26 +946,26 @@ window.TripleformCOD = (function () {
     });
   }
 
-  /* ------------------------------------------------------------------ */
-  /* END PART 1 — continue in PART 2                                    */
-  /* ------------------------------------------------------------------ */
-  /* =========================
+   /* =========================
      PART 2 / 2
      ========================= */
 
   /* ------------------------------------------------------------------ */
-  /* Dropdown Country / Province / City                                 */
+  /* Dropdown Country / Province / City - SYNCED with Section1FormsLayout */
   /* ------------------------------------------------------------------ */
 
   function setupLocationDropdowns(root, cfg, beh) {
     const fields = cfg.fields || {};
+    const behavior = cfg.behavior || {};
 
+    // Get select elements
     const countrySelect = root.querySelector('select[data-tf-role="country"]');
     const provSelect = root.querySelector('select[data-tf-role="province"]');
     const citySelect = root.querySelector('select[data-tf-role="city"]');
 
     if (!countrySelect && !provSelect && !citySelect) return;
 
+    // Get country data (synchronized with Section1FormsLayout)
     const countryDb = getCountryDataStorefront();
 
     function resetSelect(el, placeholder) {
@@ -934,7 +1044,6 @@ window.TripleformCOD = (function () {
     }
 
     function tryAutoPhonePrefix(countryCode) {
-      // If phone prefix field exists (tel prefix)
       const phoneCfg = fields?.phone;
       if (!phoneCfg) return;
 
@@ -942,7 +1051,6 @@ window.TripleformCOD = (function () {
         root.querySelector('[data-tf-field="phonePrefix"]') ||
         root.querySelector('[data-tf-field="prefix"]');
 
-      // If phone field is "tel with prefix" in same group, we detect the readonly prefix input
       const telPrefixInput = root.querySelector('[data-tf-role="tel-prefix"]');
 
       const cdef = findCountryDef(countryCode);
@@ -955,25 +1063,31 @@ window.TripleformCOD = (function () {
       }
     }
 
-    // initial values from behavior or current selects
-    const initialCountry =
-      (beh && (beh.country || beh.codCountry)) ? String(beh.country || beh.codCountry).toUpperCase() : "MA";
+    // Get initial country from behavior (set in Section1FormsLayout)
+    const initialCountry = 
+      (behavior && (behavior.country || behavior.codCountry)) ? 
+      String(behavior.country || behavior.codCountry).toUpperCase() : "MA";
 
-    // Fill chain
+    // Fill initial dropdowns
     fillCountries(initialCountry);
 
     const currentCountry = countrySelect ? (countrySelect.value || initialCountry) : initialCountry;
     fillProvinces(currentCountry, provSelect ? provSelect.value : "");
     fillCities(currentCountry, provSelect ? provSelect.value : "", citySelect ? citySelect.value : "");
 
+    // Set phone prefix based on selected country
     tryAutoPhonePrefix(currentCountry);
 
+    // Event listeners for cascading dropdowns
     if (countrySelect) {
       countrySelect.addEventListener("change", () => {
         const cc = countrySelect.value || "MA";
         fillProvinces(cc, "");
         fillCities(cc, "", "");
         tryAutoPhonePrefix(cc);
+        
+        // Trigger geo recalculation if enabled
+        if (window._tfGeoRecalc) window._tfGeoRecalc();
       });
     }
 
@@ -981,12 +1095,22 @@ window.TripleformCOD = (function () {
       provSelect.addEventListener("change", () => {
         const cc = countrySelect ? (countrySelect.value || "MA") : initialCountry;
         fillCities(cc, provSelect.value || "", "");
+        
+        // Trigger geo recalculation if enabled
+        if (window._tfGeoRecalc) window._tfGeoRecalc();
+      });
+    }
+
+    if (citySelect) {
+      citySelect.addEventListener("change", () => {
+        // Trigger geo recalculation if enabled
+        if (window._tfGeoRecalc) window._tfGeoRecalc();
       });
     }
   }
 
   /* ------------------------------------------------------------------ */
-  /* Render principal                                                   */
+  /* Render principal - COMPLETE SYNC with both sections                */
   /* ------------------------------------------------------------------ */
 
   function render(root, cfg, offersCfg, product, getVariant, moneyFmt, recaptchaCfg) {
@@ -999,7 +1123,7 @@ window.TripleformCOD = (function () {
 
     const pageStart = Date.now();
 
-    // geo shipping (if enabled via data-* in liquid)
+    // Geo shipping (from Section1FormsLayout settings)
     const geoEndpointAttr = root.getAttribute("data-geo-endpoint") || "";
     const geoEnabledAttr = root.getAttribute("data-geo-enabled") || "";
     const geoCountryAttr = root.getAttribute("data-geo-country") || "";
@@ -1013,6 +1137,7 @@ window.TripleformCOD = (function () {
     let geoNote = "";
     let geoRequestId = 0;
 
+    // Design calculations (from Section1FormsLayout)
     const baseGlow = d.btnBg || "#2563EB";
     const cardShadow = shadowFromEffect(cfg, baseGlow);
     const cartShadow = shadowFromEffect(cfg, baseGlow);
@@ -1022,6 +1147,7 @@ window.TripleformCOD = (function () {
     const popupCfg = popupSizeConfig(beh);
     const drawerCfg = drawerSizeConfig(beh);
 
+    // Text direction and alignment (from Section1FormsLayout)
     const rawDirection =
       d.direction ||
       d.textDirection ||
@@ -1063,6 +1189,7 @@ window.TripleformCOD = (function () {
 
     const inputHeight = `${+d.btnHeight || 46}px`;
 
+    // Styles (from Section1FormsLayout)
     const cardStyle = `
       background:${css(d.bg)}; color:${css(d.text)};
       border:1px solid ${css(d.border)};
@@ -1161,8 +1288,10 @@ window.TripleformCOD = (function () {
       box-sizing:border-box;
     `;
 
+    // Build offers HTML (from Section2Offers)
     const offersHtml = buildOffersHtml(offersCfg || {}, root.id);
 
+    // Get field order (from Section1FormsLayout)
     function orderedFieldKeys() {
       const metaOrder = (cfg.meta && cfg.meta.fieldsOrder) || [];
       const allKeys = Object.keys(f || {});
@@ -1172,6 +1301,7 @@ window.TripleformCOD = (function () {
       return [...first, ...rest];
     }
 
+    // Field HTML generator (supports all field types from Section1FormsLayout)
     function fieldHTML(key) {
       const field = f[key];
       if (!field || field.on === false) return "";
@@ -1199,7 +1329,7 @@ window.TripleformCOD = (function () {
         font-weight:600;
       `;
 
-      // Country
+      // Country dropdown (synchronized with Section1FormsLayout)
       if (key === "country") {
         return `
           <div style="${fieldContainerStyle}">
@@ -1216,7 +1346,7 @@ window.TripleformCOD = (function () {
         `;
       }
 
-      // Province
+      // Province dropdown (synchronized with Section1FormsLayout)
       if (key === "province") {
         return `
           <div style="${fieldContainerStyle}">
@@ -1233,7 +1363,7 @@ window.TripleformCOD = (function () {
         `;
       }
 
-      // City
+      // City dropdown (synchronized with Section1FormsLayout)
       if (key === "city") {
         return `
           <div style="${fieldContainerStyle}">
@@ -1265,9 +1395,9 @@ window.TripleformCOD = (function () {
         `;
       }
 
-      // Tel with prefix auto sync
+      // Tel with prefix (synchronized with Section1FormsLayout phone prefix system)
       if (field.type === "tel") {
-        const prefixVal = field.prefix || ""; // admin may set default prefix
+        const prefixVal = field.prefix || "";
         const prefixInput = `
           <input
             data-tf-role="tel-prefix"
@@ -1294,6 +1424,25 @@ window.TripleformCOD = (function () {
         `;
       }
 
+      // Number field with min/max (from Section1FormsLayout)
+      if (field.type === "number") {
+        const minAttr = field.min !== undefined ? `min="${field.min}"` : "";
+        const maxAttr = field.max !== undefined ? `max="${field.max}"` : "";
+        
+        return `
+          <div style="${fieldContainerStyle}">
+            <div style="height:${inputHeight}; display:flex; align-items:center; justify-content:center;">
+              ${iconHtml}
+            </div>
+            <div style="flex:1;">
+              <label style="${labelStyle}">${css(label)}</label>
+              <input type="number" data-tf-field="${key}" style="${inputStyle}" placeholder="${css(ph)}" ${minAttr} ${maxAttr} ${requiredAttr} />
+            </div>
+          </div>
+        `;
+      }
+
+      // Default text field
       const typeAttr = field.type === "number" ? 'type="number"' : 'type="text"';
 
       return `
@@ -1373,7 +1522,6 @@ window.TripleformCOD = (function () {
           }
 
           <div style="position:relative;">
-            <!-- honeypot anti-bot -->
             <input
               type="text"
               data-tf-role="honeypot"
@@ -1389,7 +1537,7 @@ window.TripleformCOD = (function () {
               beh?.requireGDPR
                 ? `
               <label style="display:flex; gap:8px; align-items:center; font-size:${smallFontSize}; color:#374151; margin:12px 0;">
-                <input type="checkbox" /> ${css(beh.gdprLabel || "I accept the privacy policy")}
+                <input type="checkbox" data-tf-field="gdpr" /> ${css(beh.gdprLabel || "I accept the privacy policy")}
               </label>`
                 : ""
             }
@@ -1398,7 +1546,7 @@ window.TripleformCOD = (function () {
               beh?.whatsappOptIn
                 ? `
               <label style="display:flex; gap:8px; align-items:center; font-size:${smallFontSize}; color:#374151; margin:12px 0;">
-                <input type="checkbox" /> ${css(beh.whatsappLabel || "Receive confirmation on WhatsApp")}
+                <input type="checkbox" data-tf-field="whatsapp" /> ${css(beh.whatsappLabel || "Receive confirmation on WhatsApp")}
               </label>`
                 : ""
             }
@@ -1411,6 +1559,7 @@ window.TripleformCOD = (function () {
       `;
     }
 
+    // Main HTML structure
     const mainStart = `<div style="max-width:560px;margin:0 auto;display:grid;gap:16px;direction:${textDir};box-sizing:border-box;">`;
     const mainEnd = `</div>`;
 
@@ -1427,9 +1576,6 @@ window.TripleformCOD = (function () {
     } else if (styleType === "popup") {
       html =
         mainStart +
-        offersHtml +
-        cartSummaryHTML() +
-        `<div style="height:8px"></div>` +
         `
         <div style="text-align:${titleAlign};">
           <button type="button" style="${btnStyle}" data-tf-cta="1" data-tf="launcher">
@@ -1484,13 +1630,11 @@ window.TripleformCOD = (function () {
         </div>
       `;
     } else {
+      // Drawer layout
       const origin = beh.drawerOrigin || beh.drawerDirection || "right";
 
       html =
         mainStart +
-        offersHtml +
-        cartSummaryHTML() +
-        `<div style="height:8px"></div>` +
         `
         <div style="text-align:${titleAlign};">
           <button type="button" style="${btnStyle}" data-tf-cta="1" data-tf="launcher">
@@ -1549,23 +1693,12 @@ window.TripleformCOD = (function () {
 
     root.innerHTML = html;
 
-    // Setup country/province/city
+    // Setup location dropdowns (synchronized with Section1FormsLayout)
     setupLocationDropdowns(root, cfg, beh);
 
-    /* ===================== Helpers fields =========================== */
-
-    function findLabelByText(sub) {
-      sub = String(sub || "").toLowerCase();
-      const labels = Array.from(root.querySelectorAll("label"));
-      return labels.find((lab) => (lab.textContent || "").toLowerCase().includes(sub)) || null;
-    }
-
-    function getFieldValueByLabel(sub) {
-      const lab = findLabelByText(sub);
-      if (!lab) return "";
-      const el =
-        lab.querySelector("input:not([readonly]), textarea, select") ||
-        lab.querySelector("input, textarea, select");
+    // Helper functions
+    function getFieldValueByKey(key) {
+      const el = root.querySelector(`[data-tf-field="${key}"]`);
       if (!el) return "";
       return (el.value || "").trim();
     }
@@ -1580,8 +1713,6 @@ window.TripleformCOD = (function () {
       const fullPhone = prefix && number ? `${prefix}${number}` : number || prefix || "";
       return { prefix, number, fullPhone };
     }
-
-    /* ===================== Geo calc (shipping) ======================= */
 
     function computeProductTotals() {
       const vId = getVariant();
@@ -1604,6 +1735,7 @@ window.TripleformCOD = (function () {
       return { priceCents, totalCents: baseTotalCents, baseTotalCents, qty, variantId: vId };
     }
 
+    // Geo calculation (synchronized with Section1FormsLayout geo system)
     async function recalcGeo() {
       if (!geoEnabled || !geoEndpoint) {
         geoShippingCents = null;
@@ -1616,8 +1748,8 @@ window.TripleformCOD = (function () {
       const totals = computeProductTotals();
       const baseTotalCents = totals.totalCents;
 
-      const province = getFieldValueByLabel("wilaya") || getFieldValueByLabel("province");
-      const city = getFieldValueByLabel("city");
+      const province = getFieldValueByKey("province");
+      const city = getFieldValueByKey("city");
 
       if (!province || !city) {
         if (reqId !== geoRequestId) return;
@@ -1630,7 +1762,6 @@ window.TripleformCOD = (function () {
       try {
         const url = new URL(geoEndpoint, window.location.origin);
 
-        // country: prefer selected country from dropdown, else from attr
         const countrySel = root.querySelector('select[data-tf-role="country"]');
         const selectedCountry = countrySel ? (countrySel.value || "") : "";
 
@@ -1675,7 +1806,8 @@ window.TripleformCOD = (function () {
       updateMoney();
     }
 
-    /* ===================== Validation required ====================== */
+    // Store geo recalc function globally for dropdowns to call
+    window._tfGeoRecalc = recalcGeo;
 
     function validateRequiredFields() {
       const requiredFields = Object.keys(f || {}).filter((key) => f[key]?.on && f[key]?.required);
@@ -1701,16 +1833,23 @@ window.TripleformCOD = (function () {
         }
       });
 
+      // Check GDPR if required
+      if (beh?.requireGDPR) {
+        const gdprCheck = root.querySelector('[data-tf-field="gdpr"]');
+        if (gdprCheck && !gdprCheck.checked) {
+          missingLabels.push(beh.gdprLabel || "Privacy policy");
+          if (!firstInvalid) firstInvalid = gdprCheck;
+        }
+      }
+
       if (missingLabels.length) {
-        alert("Merci de remplir les champs obligatoires :\n- " + missingLabels.join("\n- "));
+        alert("Please fill in the required fields:\n- " + missingLabels.join("\n- "));
         if (firstInvalid && typeof firstInvalid.focus === "function") firstInvalid.focus();
         return false;
       }
 
       return true;
     }
-
-    /* ===================== Anti-bot simple ==================== */
 
     function checkAntibotFront() {
       const timeOnPageMs = Date.now() - pageStart;
@@ -1719,25 +1858,22 @@ window.TripleformCOD = (function () {
       const hpValue = hpInput ? (hpInput.value || "").trim() : "";
 
       if (hpInput && hpValue) {
-        alert("Votre commande n'a pas pu être envoyée. (anti-bot)");
+        alert("Your order could not be sent. (anti-bot)");
         return { ok: false, reason: "honeypot", timeOnPageMs, hpValue };
       }
 
       if (timeOnPageMs < 1500) {
-        alert("Merci de prendre quelques secondes avant d'envoyer le formulaire.");
+        alert("Please take a moment before submitting the form.");
         return { ok: false, reason: "too_fast", timeOnPageMs };
       }
 
       return { ok: true, timeOnPageMs, hpValue };
     }
 
-    /* ===================== Money + offers sync =================== */
-
     function updateMoney() {
       const { priceCents, totalCents } = computeProductTotals();
 
-      // discount from active offer
-      const { discountCents, payload } = computeActiveDiscountCents({
+      const { discountCents } = computeActiveDiscountCents({
         offersList: offersCfg?.offers || [],
         totalCents,
       });
@@ -1781,14 +1917,11 @@ window.TripleformCOD = (function () {
         el.innerHTML = `${buttonIconHtml}<span>${label}</span><span style="opacity:.9;">·</span><span>${suffix}</span><span>${moneyFmt(grandTotalCents)}</span>`;
       });
 
-      // also main launcher
       const mainCta = root.querySelector('[data-tf="launcher"]');
       if (mainCta) {
         mainCta.innerHTML = `${buttonIconHtml}<span>${label}</span><span style="opacity:.9;">·</span><span>${suffix}</span><span>${moneyFmt(grandTotalCents)}</span>`;
       }
     }
-
-    /* ============== Submit + reCAPTCHA ==================== */
 
     async function onSubmitClick() {
       const ab = checkAntibotFront();
@@ -1826,17 +1959,23 @@ window.TripleformCOD = (function () {
       const countrySel = root.querySelector('select[data-tf-role="country"]');
       const selectedCountry = countrySel ? (countrySel.value || null) : null;
 
+      // Get GDPR and WhatsApp consent
+      const gdprCheck = root.querySelector('[data-tf-field="gdpr"]');
+      const whatsappCheck = root.querySelector('[data-tf-field="whatsapp"]');
+
       const payload = {
         fields: {
-          name: getFieldValueByLabel("name"),
+          name: getFieldValueByKey("name"),
           phone: phone.number || phone.fullPhone,
           phonePrefix: phone.prefix,
           fullPhone: phone.fullPhone,
-          address: getFieldValueByLabel("address"),
-          city: getFieldValueByLabel("city"),
-          province: getFieldValueByLabel("wilaya") || getFieldValueByLabel("province"),
-          country: selectedCountry || getFieldValueByLabel("country") || null,
-          notes: getFieldValueByLabel("notes"),
+          address: getFieldValueByKey("address"),
+          city: getFieldValueByKey("city"),
+          province: getFieldValueByKey("province"),
+          country: selectedCountry || getFieldValueByKey("country") || null,
+          notes: getFieldValueByKey("notes"),
+          gdprConsent: beh?.requireGDPR ? (gdprCheck?.checked || false) : null,
+          whatsappConsent: beh?.whatsappOptIn ? (whatsappCheck?.checked || false) : null,
         },
         productId: root.getAttribute("data-product-id") || null,
         variantId,
@@ -1863,8 +2002,8 @@ window.TripleformCOD = (function () {
         geo: {
           enabled: geoEnabled,
           country: selectedCountry || geoCountryAttr || null,
-          province: getFieldValueByLabel("wilaya") || getFieldValueByLabel("province"),
-          city: getFieldValueByLabel("city"),
+          province: getFieldValueByKey("province"),
+          city: getFieldValueByKey("city"),
           note: geoNote,
         },
 
@@ -1881,7 +2020,7 @@ window.TripleformCOD = (function () {
       try {
         if (btn) {
           btn.disabled = true;
-          btn.innerHTML = `${getIconHtml("SpinnerIcon", "18px")}<span>Sending...</span>`;
+          btn.innerHTML = `${getIconHtml("ClockIcon", "18px")}<span>Sending...</span>`;
         }
 
         const res = await fetch("/apps/tripleform-cod/submit", {
@@ -1894,24 +2033,27 @@ window.TripleformCOD = (function () {
         const json = await res.json().catch(() => ({}));
         if (res.ok && json?.ok) {
           if (btn) btn.innerHTML = css(cfg.form?.successText || "Thanks! We'll contact you");
+          
+          // Clear active offer after successful submission
+          clearAllOfferFlags(root);
+          setActiveOfferPayload(null);
         } else {
           if (btn) {
             btn.disabled = false;
             btn.innerHTML = original;
           }
-          alert("Erreur: " + (json?.error || res.statusText || "Submit failed"));
+          alert("Error: " + (json?.error || res.statusText || "Submit failed"));
         }
       } catch {
         if (btn) {
           btn.disabled = false;
           btn.innerHTML = original;
         }
-        alert("Erreur réseau. Réessaie.");
+        alert("Network error. Please try again.");
       }
     }
 
-    /* ============== behaviors inline / popup / drawer ============ */
-
+    // Setup event handlers based on form style
     let openHandler = null;
 
     function handleTotalsChange() {
@@ -2046,32 +2188,21 @@ window.TripleformCOD = (function () {
       if (drawerCta) drawerCta.addEventListener("click", onSubmitClick);
     }
 
-    // Sticky
+    // Sticky button
     setupSticky(root, cfg, styleType, openHandler);
 
-    // Hook geo recalculation when location changes
-    const provSelect = root.querySelector('select[data-tf-role="province"]');
-    const citySelect = root.querySelector('select[data-tf-role="city"]');
-    const countrySelect = root.querySelector('select[data-tf-role="country"]');
-
-    if (geoEnabled) {
-      if (countrySelect) countrySelect.addEventListener("change", () => recalcGeo());
-      if (provSelect) provSelect.addEventListener("change", () => recalcGeo());
-      if (citySelect) citySelect.addEventListener("change", () => recalcGeo());
-    }
-
-    // Offers init (timers + activation)
+    // Initialize offers UI
     setTimeout(() => {
       initializeOffersUI(root, offersCfg, updateMoney);
     }, 60);
 
-    // Auto-open
+    // Auto-open delay
     const delay = Number(beh.openDelayMs || 0);
     if (delay > 0 && styleType !== "inline" && typeof openHandler === "function") {
       setTimeout(() => openHandler(), delay);
     }
 
-    // first update
+    // Initial calculations
     updateMoney();
     if (geoEnabled) recalcGeo();
 
@@ -2135,5 +2266,14 @@ window.TripleformCOD = (function () {
     watchVariantAndQty(() => doUpdate());
   }
 
-  return { boot };
+  // Export public API
+  return { 
+    boot,
+    getCountries,
+    getProvinces,
+    getCities,
+    getPhonePrefixByCountry,
+    clearAllOfferFlags,
+    getActiveOfferPayload
+  };
 })();
