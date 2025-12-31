@@ -314,21 +314,68 @@ const LAYOUT_CSS = `
   .tf-header { background:linear-gradient(90deg,#0B3B82,#7D0031); border-bottom:none; padding:12px 16px; position:sticky; top:0; z-index:40; box-shadow:0 10px 28px rgba(11,59,130,0.45); }
   .tf-shell { padding:16px; }
 
-  .tf-editor { display:grid; grid-template-columns: 340px 3fr 1.4fr; gap:16px; align-items:start; }
+  /* ✅ RAIL PLUS LARGE + colonnes plus stables */
+  .tf-editor {
+    display:grid;
+    grid-template-columns: 420px minmax(0, 3fr) minmax(320px, 1.4fr);
+    gap:16px;
+    align-items:start;
+  }
 
   .tf-rail { position:sticky; top:68px; max-height:calc(100vh - 84px); overflow:auto; }
   .tf-rail-card { background:#fff; border:1px solid #E5E7EB; border-radius:10px; }
   .tf-rail-head { padding:10px 12px; border-bottom:1px solid #E5E7EB; font-weight:700; }
   .tf-rail-list { padding:8px; display:grid; gap:8px; }
 
-  /* Rail item style "liste + actions" */
-  .tf-rail-item { display:grid; grid-template-columns:26px 1fr auto; align-items:center; gap:10px; background:#fff; border:1px solid #E5E7EB; border-radius:12px; padding:10px 10px; cursor:pointer; }
+  /* ✅ Rail item: label a min-width:0 + actions alignées */
+  .tf-rail-item {
+    display:grid;
+    grid-template-columns: 28px minmax(0, 1fr) auto;
+    align-items:center;
+    gap:10px;
+    background:#fff;
+    border:1px solid #E5E7EB;
+    border-radius:12px;
+    padding:10px 12px;
+    cursor:pointer;
+  }
   .tf-rail-item[data-sel="1"] { outline:2px solid #00A7A3; background:rgba(0,167,163,0.07); }
   .tf-rail-item:active { transform:scale(.998); }
   .tf-rail-item .tf-grip { opacity:.75; user-select:none; display:flex; align-items:center; justify-content:center; }
 
-  .tf-rail-actions { display:flex; gap:6px; align-items:center; }
-  .tf-icon-btn { border:1px solid #E5E7EB; background:#fff; border-radius:10px; padding:6px; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; }
+  /* ✅ Label rail: plus lisible, pas compressé */
+  .tf-rail-label{
+    min-width:0;
+    font-weight:600;
+    font-size:13px;
+    line-height:1.15;
+    color:#111827;
+    word-break:break-word;
+  }
+
+  .tf-rail-actions {
+    display:flex;
+    gap:6px;
+    align-items:center;
+    justify-content:flex-end;
+    flex:0 0 auto;
+  }
+
+  /* ✅ Boutons icônes: taille fixe => pas de clipping */
+  .tf-icon-btn{
+    width:32px;
+    height:32px;
+    border:1px solid #E5E7EB;
+    background:#fff;
+    border-radius:10px;
+    padding:0;
+    cursor:pointer;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    line-height:0;
+    flex:0 0 auto;
+  }
   .tf-icon-btn:hover { border-color:#CBD5E1; background:#F8FAFC; }
   .tf-icon-btn:active { transform:scale(.98); }
 
@@ -364,41 +411,45 @@ const LAYOUT_CSS = `
   .tf-palette-colors { display:flex; height:36px; }
   .tf-palette-info { padding:8px; background:#fff; font-size:11px; font-weight:600; }
 
-  /* Icônes - adapté à Polaris <Icon/> */
+  /* Icônes - selector */
   .tf-icon-selector { display:grid; grid-template-columns:repeat(auto-fill, minmax(44px, 1fr)); gap:8px; margin-top:8px; max-height:200px; overflow-y:auto; padding:8px; border:1px solid #E5E7EB; border-radius:8px; }
-  .tf-icon-option { width:44px; height:44px; display:flex; align-items:center; justify-content:center; border:2px solid #E5E7EB; border-radius:10px; cursor:pointer; background:#fff; transition:all 0.2s; color:#4B5563; }
+  .tf-icon-option { width:44px; height:44px; display:flex; align-items:center; justify-content:center; border:2px solid #E5E7EB; border-radius:10px; cursor:pointer; background:#fff; transition:all 0.2s; color:#4B5563; line-height:0; }
   .tf-icon-option:hover { border-color:#00A7A3; background:#f8fafc; }
   .tf-icon-option.selected { border-color:#00A7A3; background:#ecfeff; }
-  .tf-icon-option .Polaris-Icon { width:20px; height:20px; }
 
   /* Aperçu avec icônes */
   .tf-field-with-icon { display:grid; grid-template-columns:auto 1fr; gap:10px; align-items:center; }
-  .tf-field-icon { width:20px; height:20px; display:flex; align-items:center; justify-content:center; color:#6B7280; }
-  .tf-field-icon .Polaris-Icon { width:16px; height:16px; }
+  .tf-field-icon { width:18px; height:18px; display:flex; align-items:center; justify-content:center; color:#6B7280; line-height:0; }
+  .tf-btn-icon { display:flex; align-items:center; line-height:0; }
+  .tf-cart-icon { display:flex; align-items:center; justify-content:center; width:22px; height:22px; line-height:0; }
+  .tf-rail-icon { width:18px; height:18px; display:flex; align-items:center; justify-content:center; line-height:0; }
 
-  .tf-btn-with-icon { display:flex; align-items:center; justify-content:center; gap:8px; width:100%; text-align:center; }
-  .tf-btn-icon { display:flex; align-items:center; }
-  .tf-btn-icon .Polaris-Icon { width:18px; height:18px; }
-
-  /* Cart avec icône */
-  .tf-cart-with-icon { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
-  .tf-cart-icon { display:flex; align-items:center; justify-content:center; width:24px; height:24px; }
-  .tf-cart-icon .Polaris-Icon { width:18px; height:18px; }
-
-  /* Icônes dans le rail */
-  .tf-rail-icon { width:16px; height:16px; display:flex; align-items:center; justify-content:center; }
-  .tf-rail-icon .Polaris-Icon { width:16px; height:16px; }
-
-  .tf-icon-btn .Polaris-Icon { width:14px; height:14px; }
+  /* ✅ FIX CLIPPING POLARIS ICON (SVG) */
+  .tf-icon-btn .Polaris-Icon,
+  .tf-icon-btn .Polaris-Icon svg,
+  .tf-rail-icon .Polaris-Icon,
+  .tf-rail-icon .Polaris-Icon svg,
+  .tf-field-icon .Polaris-Icon,
+  .tf-field-icon .Polaris-Icon svg,
+  .tf-cart-icon .Polaris-Icon,
+  .tf-cart-icon .Polaris-Icon svg,
+  .tf-btn-icon .Polaris-Icon,
+  .tf-btn-icon .Polaris-Icon svg,
+  .tf-icon-option .Polaris-Icon,
+  .tf-icon-option .Polaris-Icon svg {
+    width: 100% !important;
+    height: 100% !important;
+  }
 
   @media (max-width: 1200px) {
-    .tf-editor { grid-template-columns: 300px 2.2fr 1.4fr; }
+    .tf-editor { grid-template-columns: 360px minmax(0, 2.2fr) minmax(320px, 1.4fr); }
   }
   @media (max-width: 980px) {
     .tf-editor { grid-template-columns: 1fr; }
     .tf-rail, .tf-preview-col { position:static; max-height:none; }
   }
 `;
+
 function useInjectCss() {
   useEffect(() => {
     const t = document.createElement("style");
@@ -736,31 +787,29 @@ const ICON_LIBRARY = {
   },
 };
 
-/* ============================== Composant Icon Polaris amélioré ============================== */
-function PolarisIcon({ iconName, size = 20, color = "currentColor", accessibilityLabel, tone = "base", variant = "base" }) {
+/* ============================== Composant Icon Polaris corrigé ============================== */
+function PolarisIcon({ iconName, size = 20, color = "currentColor", accessibilityLabel }) {
   const source = getIconSource(iconName);
-  
-  // Vérifier si source est valide
+
   if (!source) {
-    console.error("Icon source is null for:", iconName);
     return (
-      <div 
+      <span
         style={{
           width: size,
           height: size,
-          backgroundColor: '#f5f5f5',
-          border: '1px solid #ddd',
-          borderRadius: '4px',
-          display: 'inline-flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: Math.max(size * 0.5, 10),
-          color: '#999',
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "center",
+          border: "1px solid #E5E7EB",
+          borderRadius: 6,
+          color: "#9CA3AF",
+          fontSize: Math.max(10, Math.round(size * 0.55)),
+          lineHeight: 0,
         }}
         title={`Icon: ${iconName}`}
       >
         ?
-      </div>
+      </span>
     );
   }
 
@@ -772,16 +821,12 @@ function PolarisIcon({ iconName, size = 20, color = "currentColor", accessibilit
         display: "inline-flex",
         alignItems: "center",
         justifyContent: "center",
-        color,
+        color,            // ✅ couleur via currentColor
         flex: "0 0 auto",
+        lineHeight: 0,    // ✅ évite le clipping vertical
       }}
     >
-      <Icon 
-        source={source} 
-        accessibilityLabel={accessibilityLabel || iconName}
-        color={color}
-        tone={tone}
-      />
+      <Icon source={source} accessibilityLabel={accessibilityLabel || iconName} />
     </span>
   );
 }
@@ -2045,7 +2090,7 @@ function OutletEditor() {
                   <PolarisIcon iconName={it.iconName} size={16} />
                 </div>
 
-                <div style={{ fontWeight: 600, fontSize: 13 }}>{it.label}</div>
+                <div className="tf-rail-label">{it.label}</div>
 
                 <div className="tf-rail-actions">
                   <RailIconBtn
@@ -2105,9 +2150,10 @@ function OutletEditor() {
               <div className="tf-grip tf-rail-icon">
                 <PolarisIcon iconName="AddIcon" size={16} color="#0ea5e9" /> {/* Changé de AddMajor */}
               </div>
-              <div style={{ fontWeight: 600, fontSize: 13, color: '#0ea5e9' }}>
-                {t('section1.addNewField')}
+              <div className="tf-rail-label" style={{ color: "#0ea5e9" }}>
+                {t("section1.addNewField")}
               </div>
+
               <div className="tf-rail-actions">
                 <div style={{ width: 44 }}></div>
               </div>
