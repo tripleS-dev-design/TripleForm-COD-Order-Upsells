@@ -1,5 +1,5 @@
 // ===== File: app/sections/Section2Offers.jsx =====
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   Card,
   BlockStack,
@@ -8,11 +8,12 @@ import {
   TextField,
   Select,
   Checkbox,
-  RangeSlider,
   Button,
   Icon,
   Badge,
   Tabs,
+  Modal,
+  Divider,
 } from "@shopify/polaris";
 import * as PI from "@shopify/polaris-icons";
 import { useI18n } from "../i18n/react";
@@ -24,7 +25,7 @@ function SafeIcon({ name, fallback = "AppsIcon", tone }) {
   return <Icon source={src} tone={tone} />;
 }
 
-/* ======================= CSS / layout (UPDATED) ======================= */
+/* ======================= CSS / layout (PRO) ======================= */
 const LAYOUT_CSS = `
   html, body { margin:0; background:#F6F7F9; }
   .Polaris-Page, .Polaris-Page__Content {
@@ -34,20 +35,16 @@ const LAYOUT_CSS = `
   }
   .Polaris-TextField, .Polaris-Select, .Polaris-Labelled__LabelWrapper { min-width:0; }
 
-  /* HEADER */
   .tf-header {
     background:linear-gradient(90deg,#0B3B82,#7D0031);
-    border-bottom:none;
     padding:12px 16px;
     position:sticky;
     top:0;
     z-index:40;
     box-shadow:0 10px 28px rgba(11,59,130,0.45);
   }
-
   .tf-shell { padding:16px; }
 
-  /* Menu horizontal en haut (comme autres sections) */
   .tf-topnav{
     margin: 14px 0 16px;
     background:#fff;
@@ -57,13 +54,19 @@ const LAYOUT_CSS = `
     box-shadow:0 8px 24px rgba(15,23,42,0.04);
   }
 
-  /* Hero card */
+  .tf-editor {
+    display:grid;
+    grid-template-columns: minmax(0,1fr) 340px;
+    gap:16px;
+    align-items:start;
+  }
+
+  .tf-main-col{ display:grid; gap:16px; min-width:0; }
+
   .tf-hero {
     background:#FFFFFF;
     border-radius:12px;
     padding:12px 16px;
-    color:#0F172A;
-    margin-bottom:16px;
     border:1px solid #E5E7EB;
     box-shadow:0 10px 24px rgba(15,23,42,0.06);
   }
@@ -77,20 +80,6 @@ const LAYOUT_CSS = `
     background:#EEF2FF;
     border:1px solid #C7D2FE;
     color:#1E3A8A;
-  }
-
-  /* NEW: 2 columns only (no left rail) */
-  .tf-editor {
-    display:grid;
-    grid-template-columns: minmax(0,1fr) 320px; /* preview narrower */
-    gap:16px;
-    align-items:start;
-  }
-
-  .tf-main-col{
-    display:grid;
-    gap:16px;
-    min-width:0;
   }
 
   .tf-panel {
@@ -109,44 +98,42 @@ const LAYOUT_CSS = `
     overflow:auto;
   }
   .tf-preview-card {
-    background:#FFFFFF;
+    background:#fff;
     border-radius:12px;
     padding:14px;
-    box-shadow:0 12px 32px rgba(15,23,42,0.08);
     border:1px solid #E5E7EB;
+    box-shadow:0 12px 32px rgba(15,23,42,0.08);
   }
 
-  /* group title */
   .tf-group-title {
     padding:10px 14px;
     background:linear-gradient(90deg,#1E40AF,#7C2D12);
     color:#F9FAFB;
     border-radius:10px;
-    font-weight:700;
+    font-weight:800;
     letter-spacing:.02em;
-    margin-bottom:16px;
+    margin-bottom:12px;
     font-size:13px;
     box-shadow:0 6px 16px rgba(30,64,175,0.15);
   }
 
-  /* offer/upsell editor card */
-  .offer-item-card {
+  .item-card {
     background:#FFFFFF;
     border:1px solid #E5E7EB;
     border-radius:12px;
-    padding:16px;
-    margin-bottom:16px;
+    padding:14px;
+    margin-bottom:14px;
     position:relative;
   }
-  .offer-item-header {
+  .item-header {
     display:flex;
     justify-content:space-between;
     align-items:center;
-    margin-bottom:14px;
-    padding-bottom:12px;
+    margin-bottom:12px;
+    padding-bottom:10px;
     border-bottom:1px solid #F3F4F6;
   }
-  .offer-item-number {
+  .item-number {
     display:inline-flex;
     align-items:center;
     justify-content:center;
@@ -155,183 +142,91 @@ const LAYOUT_CSS = `
     border-radius:50%;
     background:#4F46E5;
     color:white;
-    font-weight:700;
+    font-weight:800;
     font-size:12px;
     margin-right:10px;
   }
-  .remove-offer-btn {
+  .remove-btn {
     position:absolute;
-    top:12px;
-    right:12px;
+    top:10px;
+    right:10px;
     background:#FEF2F2;
     border:1px solid #FECACA;
     color:#DC2626;
-    width:26px;
-    height:26px;
-    border-radius:8px;
+    width:28px;
+    height:28px;
+    border-radius:10px;
     display:flex;
     align-items:center;
     justify-content:center;
     cursor:pointer;
-    font-size:14px;
-    transition:all 0.2s;
+    font-size:16px;
+    transition:all .15s;
   }
-  .remove-offer-btn:hover { background:#FEE2E2; transform:scale(1.05); }
+  .remove-btn:hover { background:#FEE2E2; transform:scale(1.04); }
 
-  /* ===== 4 styles preview card ===== */
-  .offer-card {
-    border-radius:12px;
+  .preview-offer {
+    border-radius:14px;
     border:1px solid #E5E7EB;
     padding:12px;
+    box-shadow:0 10px 22px rgba(15,23,42,0.06);
     background:#fff;
-    box-shadow:0 6px 16px rgba(0,0,0,0.05);
-    margin-bottom:10px;
     overflow:hidden;
   }
-
-  /* Shared content */
-  .offer-title { font-size:14px; font-weight:700; margin-bottom:2px; }
-  .offer-desc { font-size:12px; color:#6B7280; line-height:1.35; }
-  .offer-thumb {
-    width:64px; height:64px; border-radius:14px; overflow:hidden;
-    border:1px solid #E5E7EB; background:#F9FAFB;
+  .preview-row {
+    display:flex;
+    gap:12px;
+    align-items:center;
+  }
+  .preview-img {
+    width:64px;
+    height:64px;
+    border-radius:14px;
+    overflow:hidden;
+    border:1px solid rgba(0,0,0,.08);
+    background:#F3F4F6;
     flex:none;
   }
-  .offer-thumb img { width:100%; height:100%; object-fit:cover; display:block; }
+  .preview-img img { width:100%; height:100%; object-fit:cover; display:block; }
+  .preview-main { min-width:0; flex:1; }
+  .preview-title { font-weight:900; font-size:14px; margin-bottom:2px; }
+  .preview-desc { font-size:12px; color:#6B7280; line-height:1.35; }
+  .preview-sub { font-size:11px; color:#94A3B8; margin-top:6px; }
 
-  /* Style 1: Image LEFT, text RIGHT (default) */
-  .offer-style-1 { display:flex; gap:12px; align-items:center; }
-  .offer-style-1 .offer-main { min-width:0; flex:1; }
-
-  /* Style 2: Image RIGHT, text LEFT */
-  .offer-style-2 { display:flex; gap:12px; align-items:center; }
-  .offer-style-2 .offer-thumb { order:2; }
-  .offer-style-2 .offer-main { order:1; min-width:0; flex:1; }
-
-  /* Style 3: Text TOP, image bottom big */
-  .offer-style-3 { display:grid; gap:10px; }
-  .offer-style-3 .offer-thumb {
-    width:100%; height:140px; border-radius:14px;
+  .preview-icon {
+    width:34px;
+    height:34px;
+    border-radius:12px;
+    display:grid;
+    place-items:center;
+    border:1px solid rgba(0,0,0,.10);
+    flex:none;
   }
 
-  /* Style 4: Big image LEFT (tall) + text stack */
-  .offer-style-4 { display:grid; grid-template-columns: 120px 1fr; gap:12px; align-items:center; }
-  .offer-style-4 .offer-thumb { width:120px; height:120px; border-radius:16px; }
-
-  /* timer */
-  .offer-timer {
-    display:flex;
-    align-items:center;
-    gap:6px;
-    font-size:11px;
-    font-weight:700;
-    margin-top:8px;
-    padding:6px 10px;
-    border-radius:10px;
-    border:1px solid transparent;
-  }
-  .timer-countdown {
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-    font-weight:800;
-    letter-spacing:1px;
-    margin-left:auto;
-  }
-
-  /* activation btn */
-  .offer-activate-btn {
-    background:#111827;
-    color:#fff;
-    border:1px solid #111827;
-    border-radius:10px;
-    padding:6px 10px;
-    font-size:11px;
-    font-weight:700;
-    cursor:pointer;
+  .offer-btn {
     margin-top:10px;
-    transition:all 0.15s ease;
+    border-radius:12px;
+    padding:8px 10px;
+    font-size:12px;
+    font-weight:900;
+    cursor:pointer;
+    border:1px solid transparent;
     display:inline-flex;
     align-items:center;
-    gap:6px;
-  }
-  .offer-activate-btn:hover { background:#374151; border-color:#374151; }
-
-  /* timer styles */
-  .timer-type-chrono {
-    background: linear-gradient(90deg, #1e3a8a, #3b82f6);
-    color: #fff;
-    border: 1px solid rgba(96,165,250,.9);
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.35);
-  }
-  .timer-type-elegant {
-    background: linear-gradient(135deg, #8B5CF6, #EC4899);
-    color: #fff;
-    border: 1px solid rgba(221,214,254,.9);
-    box-shadow: 0 4px 14px rgba(139, 92, 246, 0.3);
-  }
-  .timer-type-flash {
-    background: linear-gradient(90deg, #f97316, #fbbf24);
-    color: #111827;
-    border: 1px solid rgba(245,158,11,.9);
-    box-shadow: 0 4px 14px rgba(249, 115, 22, 0.35);
-  }
-  .timer-type-minimal {
-    background: #F9FAFB;
-    color: #374151;
-    border: 1px solid #E5E7EB;
-  }
-  .timer-type-hot {
-    background: linear-gradient(90deg, #7c2d12, #ea580c);
-    color: #fff;
-    border: 1px solid rgba(253,186,116,.9);
-    animation: pulse 1.5s infinite;
-    font-weight: 800;
-  }
-  .timer-type-urgent {
-    background: linear-gradient(90deg, #991B1B, #DC2626);
-    color: #fff;
-    border: 1px solid rgba(252,165,165,.9);
-    font-weight: 800;
-    animation: blink 1s infinite;
-    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.35);
-  }
-  @keyframes pulse { 0%{opacity:1} 50%{opacity:.82} 100%{opacity:1} }
-  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.72} }
-
-  /* add button */
-  .add-button-container { display:flex; justify-content:center; margin-top:16px; }
-  .add-button {
-    padding:12px 18px;
-    background:#F9FAFB;
-    border:2px dashed #D1D5DB;
-    border-radius:12px;
-    color:#6B7280;
-    font-size:13px;
-    font-weight:700;
-    display:flex;
-    align-items:center;
-    justify-content:center;
     gap:8px;
-    cursor:pointer;
-    transition:all 0.15s;
-    min-width:220px;
+    transition:all .15s ease;
   }
-  .add-button:hover { background:#F3F4F6; border-color:#9CA3AF; color:#4B5563; }
+  .offer-btn:hover { transform: translateY(-1px); opacity:0.95; }
 
-  /* order summary */
-  .order-summary-preview {
+  .add-wrap { display:flex; justify-content:center; margin-top:12px; }
+  .add-btn {
+    width:100%;
+    max-width:520px;
+    border-radius:14px;
+    padding:12px;
+    border:2px dashed #D1D5DB;
     background:#F9FAFB;
-    border-radius:12px;
-    padding:14px;
-    margin-top:14px;
-    border:1px solid #E5E7EB;
   }
-  .order-summary-title { font-size:13px; font-weight:800; color:#111827; margin-bottom:12px; }
-  .order-row {
-    display:flex; justify-content:space-between; align-items:center;
-    padding:8px 0; border-bottom:1px solid #E5E7EB; font-size:13px;
-  }
-  .order-row:last-child { border-bottom:none; font-weight:800; color:#111827; }
-  .order-label { color:#6B7280; }
 
   @media (max-width: 980px) {
     .tf-editor { grid-template-columns:1fr; }
@@ -355,345 +250,203 @@ function useInjectCss() {
   }, []);
 }
 
-/* ============================== Palettes ============================== */
-const COLOR_PALETTES = [
-  {
-    id: "blue-gradient",
-    name: "Gradient Bleu",
-    colors: ["#0B3B82", "#7D0031", "#00A7A3", "#F0F9FF", "#0C4A6E"],
-    theme: {
-      bg: "#F0F9FF",
-      text: "#0C4A6E",
-      border: "#E2E8F0",
-      offerBg: "#FFFFFF",
-      offerBorder: "#CBD5E1",
-      offerTitle: "#0C4A6E",
-      offerText: "#0C4A6E",
-      timerBg: "#FEF2F2",
-      timerText: "#DC2626",
-      timerBorder: "#FECACA",
-    },
-  },
-  {
-    id: "clean-white",
-    name: "Blanc Propre",
-    colors: ["#FFFFFF", "#111827", "#E5E7EB", "#F9FAFB", "#374151"],
-    theme: {
-      bg: "#FFFFFF",
-      text: "#111827",
-      border: "#E5E7EB",
-      offerBg: "#F9FAFB",
-      offerBorder: "#E5E7EB",
-      offerTitle: "#111827",
-      offerText: "#374151",
-      timerBg: "#FEF2F2",
-      timerText: "#DC2626",
-      timerBorder: "#FECACA",
-    },
-  },
-  {
-    id: "dark-modern",
-    name: "Sombre Moderne",
-    colors: ["#0B1220", "#2563EB", "#1F2A44", "#101828", "#E5F0FF"],
-    theme: {
-      bg: "#0B1220",
-      text: "#E5F0FF",
-      border: "#1F2A44",
-      offerBg: "#101828",
-      offerBorder: "#1F2A44",
-      offerTitle: "#E5F0FF",
-      offerText: "#E5F0FF",
-      timerBg: "#450A0A",
-      timerText: "#FCA5A5",
-      timerBorder: "#991B1B",
-    },
-  },
-  {
-    id: "green-nature",
-    name: "Nature Verte",
-    colors: ["#10B981", "#065F46", "#D1FAE5", "#ECFDF5", "#F0FDF4"],
-    theme: {
-      bg: "#F0FDF4",
-      text: "#065F46",
-      border: "#D1FAE5",
-      offerBg: "#ECFDF5",
-      offerBorder: "#A7F3D0",
-      offerTitle: "#065F46",
-      offerText: "#047857",
-      timerBg: "#FEF2F2",
-      timerText: "#DC2626",
-      timerBorder: "#FECACA",
-    },
-  },
-];
-
-/* ============================== TIMER TYPES ============================== */
-const TIMER_TYPES = [
-  {
-    id: "chrono",
-    name: "Chrono Professionnel",
-    iconUrl: "https://cdn-icons-png.flaticon.com/512/3114/3114883.png",
-    cssClass: "timer-type-chrono",
-    iconEmoji: "⏱️",
-    timeFormat: "mm:ss",
-    defaultMessage: "⏱️ DERNIÈRE CHANCE ! Expire dans :",
-  },
-  {
-    id: "elegant",
-    name: "Élégant Violet",
-    iconUrl: "https://cdn-icons-png.flaticon.com/512/7794/7794971.png",
-    cssClass: "timer-type-elegant",
-    iconEmoji: "💎",
-    timeFormat: "mm[m] ss[s]",
-    defaultMessage: "💎 OFFRE EXCLUSIVE ! Termine dans :",
-  },
-  {
-    id: "flash",
-    name: "Flash Sale Orange",
-    iconUrl: "https://cdn-icons-png.flaticon.com/512/4392/4392452.png",
-    cssClass: "timer-type-flash",
-    iconEmoji: "⚡",
-    timeFormat: "mm:ss",
-    defaultMessage: "⚡ VENTE ÉCLAIR ! Derniers :",
-  },
-  {
-    id: "minimal",
-    name: "Minimaliste Propre",
-    iconUrl: "https://cdn-icons-png.flaticon.com/512/992/992700.png",
-    cssClass: "timer-type-minimal",
-    iconEmoji: "⏳",
-    timeFormat: "mm:ss",
-    defaultMessage: "⏳ Dernière chance :",
-  },
-  {
-    id: "hot",
-    name: "Hot Urgent",
-    iconUrl: "https://cdn-icons-png.flaticon.com/512/1828/1828665.png",
-    cssClass: "timer-type-hot",
-    iconEmoji: "🔥",
-    timeFormat: "mm:ss",
-    defaultMessage: "🔥 LIQUIDATION ! Fini dans :",
-  },
-  {
-    id: "urgent",
-    name: "Urgent Rouge",
-    iconUrl: "https://cdn-icons-png.flaticon.com/512/1828/1828649.png",
-    cssClass: "timer-type-urgent",
-    iconEmoji: "🚨",
-    timeFormat: "mm:ss",
-    defaultMessage: "🚨 URGENT ! Presque fini :",
-  },
-];
-
-/* ============================== Countdown examples ============================== */
-const COUNTDOWN_EXAMPLES = [
-  { id: "chrono-urgent", name: "Chrono Urgence (1h)", minutes: 60, timerType: "chrono", message: "⏱️ DERNIÈRE CHANCE ! L'offre expire dans :", timerIconUrl: TIMER_TYPES[0].iconUrl, timeFormat: "mm:ss" },
-  { id: "elegant-purple", name: "Élégant Violet (45min)", minutes: 45, timerType: "elegant", message: "💎 OFFRE EXCLUSIVE ! Termine dans :", timerIconUrl: TIMER_TYPES[1].iconUrl, timeFormat: "mm[m] ss[s]" },
-  { id: "flash-sale", name: "Flash Sale (30min)", minutes: 30, timerType: "flash", message: "⚡ VENTE ÉCLAIR ! Derniers :", timerIconUrl: TIMER_TYPES[2].iconUrl, timeFormat: "mm:ss" },
-  { id: "minimal-clean", name: "Minimaliste Propre (30min)", minutes: 30, timerType: "minimal", message: "⏳ Dernière chance :", timerIconUrl: TIMER_TYPES[3].iconUrl, timeFormat: "mm:ss" },
-  { id: "urgent-red", name: "Urgent Rouge (10min)", minutes: 10, timerType: "urgent", message: "🚨 URGENT ! Presque fini :", timerIconUrl: TIMER_TYPES[5].iconUrl, timeFormat: "mm:ss" },
-  { id: "hot-sale", name: "Hot Sale (15min)", minutes: 15, timerType: "hot", message: "🔥 LIQUIDATION ! Fini dans :", timerIconUrl: TIMER_TYPES[4].iconUrl, timeFormat: "mm:ss" },
-];
-
 /* ============================== UI helpers ============================== */
 function GroupCard({ title, children }) {
   return (
     <Card>
       <div className="tf-group-title">{title}</div>
-      <BlockStack gap="200">{children}</BlockStack>
+      <BlockStack gap="300">{children}</BlockStack>
     </Card>
   );
 }
 
 const Grid2 = ({ children }) => (
-  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12, alignItems: "start" }}>
+  <div
+    style={{
+      display: "grid",
+      gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+      gap: 12,
+      alignItems: "start",
+    }}
+  >
     {children}
   </div>
 );
 
-const Grid3 = ({ children }) => (
-  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12, alignItems: "start" }}>
-    {children}
-  </div>
-);
-
-/* ============================== Palette selector ============================== */
-function ColorPaletteSelector({ selectedPalette, onSelect, customTheme, onCustomColorChange }) {
-  const [showCustom, setShowCustom] = useState(false);
-
+/* ============================== Color Field ============================== */
+function ColorField({ label, value, onChange, placeholder = "#FFFFFF" }) {
   return (
-    <div>
-      <Text as="p" variant="bodyMd">
-        Choisissez une palette prédéfinie ou personnalisez les couleurs manuellement
+    <div style={{ display: "grid", gap: 8 }}>
+      <Text as="p" variant="bodySm" fontWeight="bold">
+        {label}
       </Text>
-
-      <div style={{ height: 12 }} />
-
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: 12 }}>
-        {COLOR_PALETTES.map((palette) => (
-          <div
-            key={palette.id}
-            onClick={() => {
-              onSelect(palette.id);
-              setShowCustom(false);
-            }}
-            style={{
-              borderRadius: 12,
-              overflow: "hidden",
-              border: selectedPalette === palette.id ? "2px solid #4F46E5" : "1px solid #E5E7EB",
-              cursor: "pointer",
-              boxShadow: selectedPalette === palette.id ? "0 10px 26px rgba(79,70,229,.16)" : "none",
-              background: "#fff",
-            }}
-          >
-            <div style={{ display: "flex", height: 34 }}>
-              {palette.colors.map((c, idx) => (
-                <div key={idx} style={{ flex: 1, background: c }} title={c} />
-              ))}
-            </div>
-            <div style={{ padding: 10, fontSize: 12, fontWeight: 700 }}>{palette.name}</div>
-          </div>
-        ))}
-
-        <div
-          onClick={() => setShowCustom(true)}
+      <InlineStack gap="200" blockAlign="center">
+        <input
+          type="color"
+          value={value || placeholder}
+          onChange={(e) => onChange(e.target.value)}
           style={{
+            width: 42,
+            height: 38,
             borderRadius: 12,
-            overflow: "hidden",
-            border: showCustom ? "2px solid #4F46E5" : "2px dashed #D1D5DB",
-            cursor: "pointer",
-            background: "#fff",
+            border: "1px solid #E5E7EB",
+            background: "transparent",
+            padding: 0,
           }}
-        >
-          <div style={{ height: 34, display: "grid", placeItems: "center", background: "#F9FAFB" }}>
-            <SafeIcon name="PaintBrushIcon" fallback="ColorNoneIcon" />
-          </div>
-          <div style={{ padding: 10, fontSize: 12, fontWeight: 700 }}>Personnaliser</div>
+          aria-label={label}
+        />
+        <div style={{ flex: 1 }}>
+          <TextField
+            label={label}
+            labelHidden
+            value={value || ""}
+            placeholder={placeholder}
+            onChange={(v) => onChange(v)}
+            autoComplete="off"
+          />
         </div>
-      </div>
-
-      {showCustom && (
-        <div style={{ marginTop: 14, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
-          {[
-            { k: "offerBg", label: "Fond des offres", def: "#FFFFFF" },
-            { k: "offerTitle", label: "Titre des offres", def: "#111827" },
-            { k: "offerText", label: "Texte des offres", def: "#374151" },
-          ].map((x) => (
-            <div key={x.k} style={{ border: "1px solid #E5E7EB", borderRadius: 12, padding: 12, background: "#fff" }}>
-              <Text as="p" fontWeight="bold">{x.label}</Text>
-              <div style={{ height: 8 }} />
-              <InlineStack gap="200" blockAlign="center">
-                <div
-                  style={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: 10,
-                    border: "1px solid #E5E7EB",
-                    background: customTheme?.[x.k] || x.def,
-                    cursor: "pointer",
-                  }}
-                  onClick={() => {
-                    const color = prompt("Entrez une couleur hex (#FFFFFF):", customTheme?.[x.k] || x.def);
-                    if (color) onCustomColorChange(x.k, color);
-                  }}
-                  title="Cliquer pour changer"
-                />
-                <div style={{ flex: 1 }}>
-                  <TextField
-                    label={x.label}
-                    labelHidden
-                    value={customTheme?.[x.k] || ""}
-                    onChange={(v) => onCustomColorChange(x.k, v)}
-                    placeholder={x.def}
-                  />
-                </div>
-              </InlineStack>
-            </div>
-          ))}
-        </div>
-      )}
+      </InlineStack>
     </div>
   );
 }
 
-/* ============================== Timer display ============================== */
-function TimerDisplay({ minutes, message, theme, cssClass, timeFormat, timerIconUrl, timerIconEmoji }) {
-  const [timeLeft, setTimeLeft] = useState(minutes * 60);
+/* ============================== Icon Picker (Shopify-like) ============================== */
+const ICON_OPTIONS = [
+  { label: "Aucun", value: "" },
+  { label: "Discount", value: "DiscountIcon" },
+  { label: "Gift", value: "GiftCardIcon" },
+  { label: "Star", value: "StarFilledIcon" },
+  { label: "Lightning", value: "LightningBoltIcon" },
+  { label: "Cart", value: "CartIcon" },
+  { label: "Check", value: "CheckCircleIcon" },
+  { label: "Info", value: "InfoIcon" },
+  { label: "Megaphone", value: "MegaphoneIcon" },
+  { label: "Target", value: "TargetIcon" },
+];
 
-  useEffect(() => {
-    setTimeLeft(minutes * 60);
-  }, [minutes]);
+/* ============================== Product helpers ============================== */
+function getProductById(products, id) {
+  return products?.find((p) => String(p.id) === String(id));
+}
 
-  useEffect(() => {
-    if (timeLeft <= 0) return;
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => (prev <= 1 ? 0 : prev - 1));
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [timeLeft]);
-
-  const formatTime = (seconds) => {
-    const h = Math.floor(seconds / 3600);
-    const m = Math.floor((seconds % 3600) / 60);
-    const s = seconds % 60;
-    if (timeFormat === "hh[h] mm[m]") return `${h.toString().padStart(2, "0")}h ${m.toString().padStart(2, "0")}m`;
-    if (timeFormat === "mm[m] ss[s]") return `${m.toString().padStart(2, "0")}m ${s.toString().padStart(2, "0")}s`;
-    if (timeFormat === "hh[h]") return `${h.toString().padStart(2, "0")}h`;
-    return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+function getProductImages(product) {
+  // Support multiple shapes:
+  // - product.images = [{src,url,originalSrc}, ...]
+  // - product.image = {src}
+  // - product.featuredImage
+  const imgs = [];
+  const push = (x) => {
+    if (!x) return;
+    const src =
+      x.src || x.url || x.originalSrc || x.transformedSrc || x.preview?.image?.url || x.previewImage?.url;
+    if (src && !imgs.includes(src)) imgs.push(src);
   };
 
-  const timerType = TIMER_TYPES.find((t) => t.cssClass === cssClass) || TIMER_TYPES[0];
+  if (product?.image) push(product.image);
+  if (product?.featuredImage) push(product.featuredImage);
+  if (Array.isArray(product?.images)) product.images.forEach((im) => push(im));
+  if (Array.isArray(product?.media)) product.media.forEach((m) => push(m?.preview?.image || m?.image));
 
-  return (
-    <div
-      className={`offer-timer ${cssClass || "timer-type-chrono"}`}
-      style={{
-        background: theme?.timerBg,
-        color: theme?.timerText,
-        borderColor: theme?.timerBorder,
-      }}
-    >
-      {timerIconUrl ? (
-        <img src={timerIconUrl} alt="timer" style={{ width: 14, height: 14 }} />
-      ) : timerIconEmoji ? (
-        <span>{timerIconEmoji}</span>
-      ) : (
-        <span>{timerType.iconEmoji}</span>
-      )}
-      <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-        {message || timerType.defaultMessage}
-      </span>
-      <span className="timer-countdown">{formatTime(timeLeft)}</span>
-    </div>
-  );
+  return imgs;
 }
 
-/* ============================== 4 styles preview renderer ============================== */
-function OfferCardPreview({ item, theme, showTimer, showButton, t, kind = "offer" }) {
-  const title = item.title || (kind === "offer" ? "Offre spéciale" : "Upsell");
-  const desc = item.description || (kind === "offer" ? "Profitez de cette offre" : "Proposition complémentaire");
-  const img = item.imageUrl || "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=200&h=200&fit=crop";
+/* ============================== Defaults ============================== */
+const DEFAULT_OFFER = {
+  enabled: true,
+  showInPreview: true,
 
-  const styleId = item.displayStyle || "style-1";
-  const cls = styleId === "style-1" ? "offer-style-1"
-    : styleId === "style-2" ? "offer-style-2"
-    : styleId === "style-3" ? "offer-style-3"
-    : "offer-style-4";
+  title: "Offre spéciale",
+  description: "Ajoutez cette offre pour augmenter vos conversions",
+
+  productId: "",
+
+  iconName: "DiscountIcon",
+  iconBg: "#EEF2FF",
+  iconColorTone: "base", // Polaris tone (optional)
+
+  cardBg: "#FFFFFF",
+  borderColor: "#E5E7EB",
+
+  imageMode: "product", // product | custom
+  imageUrl: "", // if custom
+
+  buttonText: "Activer",
+  buttonBg: "#111827",
+  buttonTextColor: "#FFFFFF",
+  buttonBorder: "#111827",
+};
+
+const DEFAULT_UPSELL = {
+  enabled: true,
+  showInPreview: true,
+
+  title: "Upsell",
+  description: "Proposition complémentaire au produit",
+
+  productId: "",
+
+  iconName: "GiftCardIcon",
+  iconBg: "#ECFDF5",
+  iconColorTone: "base",
+
+  cardBg: "#FFFFFF",
+  borderColor: "#E5E7EB",
+
+  imageMode: "product",
+  imageUrl: "",
+};
+
+const DEFAULT_CFG = {
+  meta: { version: 20 },
+  global: {
+    enabled: true,
+    currency: "MAD",
+  },
+  offers: [JSON.parse(JSON.stringify(DEFAULT_OFFER))],
+  upsells: [JSON.parse(JSON.stringify(DEFAULT_UPSELL))],
+};
+
+function withDefaults(raw = {}) {
+  const d = DEFAULT_CFG;
+  const x = { ...d, ...raw };
+  x.global = { ...d.global, ...(raw.global || {}) };
+
+  x.offers = Array.isArray(raw.offers) ? raw.offers : d.offers;
+  x.upsells = Array.isArray(raw.upsells) ? raw.upsells : d.upsells;
+
+  x.offers = x.offers.slice(0, 3).map((o) => ({ ...DEFAULT_OFFER, ...o }));
+  x.upsells = x.upsells.slice(0, 3).map((u) => ({ ...DEFAULT_UPSELL, ...u }));
+
+  return x;
+}
+
+/* ============================== Preview renderer ============================== */
+function PreviewCard({ item, products, isOffer }) {
+  const product = item.productId ? getProductById(products, item.productId) : null;
+  const images = product ? getProductImages(product) : [];
+  const img =
+    item.imageMode === "custom"
+      ? item.imageUrl
+      : images?.[0] ||
+        "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' fill='%23EEF2FF'/%3E%3Cpath d='M70 85l30-30 50 50v55H50V85z' fill='%234F46E5'/%3E%3C/svg%3E";
 
   return (
     <div
-      className="offer-card"
+      className="preview-offer"
       style={{
-        background: theme.offerBg,
-        border: `1px solid ${theme.offerBorder}`,
-        color: theme.offerText,
+        background: item.cardBg || "#fff",
+        borderColor: item.borderColor || "#E5E7EB",
       }}
     >
-      <div className={cls}>
-        <div className="offer-thumb">
+      <div className="preview-row">
+        <div className="preview-icon" style={{ background: item.iconBg || "#EEF2FF" }}>
+          {item.iconName ? <SafeIcon name={item.iconName} fallback="AppsIcon" /> : <SafeIcon name="AppsIcon" />}
+        </div>
+
+        <div className="preview-img">
           <img
             src={img}
-            alt={title}
+            alt=""
             onError={(e) => {
               e.currentTarget.onerror = null;
               e.currentTarget.src =
@@ -702,31 +455,28 @@ function OfferCardPreview({ item, theme, showTimer, showButton, t, kind = "offer
           />
         </div>
 
-        <div className="offer-main" style={{ minWidth: 0 }}>
-          <div className="offer-title" style={{ color: theme.offerTitle }}>
-            {title}
+        <div className="preview-main">
+          <div className="preview-title">{item.title || (isOffer ? "Offre" : "Upsell")}</div>
+          <div className="preview-desc">{item.description || ""}</div>
+
+          <div className="preview-sub">
+            Produit:{" "}
+            <b>{product?.title ? product.title : item.productId ? "Produit sélectionné" : "Aucun"}</b>
           </div>
-          <div className="offer-desc">{desc}</div>
 
-          {showTimer && item.enableTimer && (
-            <TimerDisplay
-              minutes={item.timerMinutes || 30}
-              message={item.timerMessage || t("section2.preview.timerDefaultMessage")}
-              theme={theme}
-              cssClass={item.timerCssClass}
-              timeFormat={item.timerTimeFormat}
-              timerIconUrl={item.timerIconUrl}
-              timerIconEmoji={item.timerIconEmoji}
-            />
-          )}
-
-          {showButton && kind === "offer" && (
+          {isOffer && (
             <button
-              className="offer-activate-btn"
-              onClick={() => alert(`Offre "${title}" activée!`)}
+              className="offer-btn"
+              style={{
+                background: item.buttonBg || "#111827",
+                color: item.buttonTextColor || "#fff",
+                borderColor: item.buttonBorder || item.buttonBg || "#111827",
+              }}
+              type="button"
+              onClick={() => {}}
             >
-              <SafeIcon name="PlusIcon" fallback="CirclePlusIcon" />
-              <span>{item.buttonText || "Activer"}</span>
+              <SafeIcon name="CirclePlusIcon" fallback="PlusIcon" />
+              {item.buttonText || "Activer"}
             </button>
           )}
         </div>
@@ -735,462 +485,164 @@ function OfferCardPreview({ item, theme, showTimer, showButton, t, kind = "offer
   );
 }
 
-/* ============================== Defaults ============================== */
-const DEFAULT_OFFER = {
-  enabled: true,
-  title: "Remise spéciale -10%",
-  description: "Profitez de -10% sur votre première commande",
-  showInPreview: true,
-  displayStyle: "style-1", // NEW
-  enableTimer: true,
-  timerMinutes: 30,
-  timerMessage: "⏱️ Offre limitée!",
-  timerCssClass: "timer-type-chrono",
-  timerTimeFormat: "mm:ss",
-  timerIconUrl: "https://cdn-icons-png.flaticon.com/512/3114/3114883.png",
-  timerIconEmoji: "⏱️",
-  discountType: "percentage",
-  discountValue: 10,
-  conditions: { minAmount: 0, maxUses: 100, applicableTo: "all" },
-  buttonText: "Activer",
-  imageUrl: "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=200&h=200&fit=crop",
-  currency: "MAD",
-};
+/* ============================== Editors ============================== */
+function OfferEditor({ offer, index, products, onChange, onRemove, canRemove, t }) {
+  const productOptions = useMemo(() => {
+    const opts = (products || []).map((p) => ({
+      label: p.title || "Produit",
+      value: String(p.id),
+    }));
+    return [{ label: "— Choisir un produit —", value: "" }, ...opts];
+  }, [products]);
 
-const DEFAULT_UPSELL = {
-  enabled: true,
-  title: "Cadeau gratuit inclus!",
-  description: "Recevez un accessoire en cadeau avec votre commande",
-  showInPreview: true,
-  displayStyle: "style-2", // NEW
-  enableTimer: true,
-  timerMinutes: 45,
-  timerMessage: "🎁 Cadeau limité!",
-  timerCssClass: "timer-type-elegant",
-  timerTimeFormat: "hh[h] mm[m]",
-  timerIconUrl: "https://cdn-icons-png.flaticon.com/512/7794/7794971.png",
-  timerIconEmoji: "💎",
-  giftProductId: "",
-  giftVariantId: "",
-  giftTitle: "Accessoire gratuit",
-  imageUrl: "https://images.unsplash.com/photo-1491553895911-0055eca6402d?w=200&h=200&fit=crop",
-};
+  const product = offer.productId ? getProductById(products, offer.productId) : null;
+  const productImages = useMemo(() => (product ? getProductImages(product) : []), [product]);
 
-const DEFAULT_CFG = {
-  meta: { version: 11 }, // bumped
-  global: {
-    enabled: true,
-    currency: "MAD",
-    rounding: "none",
-    colorPalette: "blue-gradient",
-    customTheme: COLOR_PALETTES[0].theme,
-  },
-  offers: [JSON.parse(JSON.stringify(DEFAULT_OFFER))],
-  upsells: [JSON.parse(JSON.stringify(DEFAULT_UPSELL))],
-  display: {
-    showOrderSummary: true,
-    showOffersSection: true,
-    showTimerInPreview: true,
-    showActivationButtons: true,
-  },
-};
-
-function withDefaults(raw = {}) {
-  const d = DEFAULT_CFG;
-  const x = { ...d, ...raw };
-
-  x.global = { ...d.global, ...(raw.global || {}) };
-  x.display = { ...d.display, ...(raw.display || {}) };
-
-  x.offers = Array.isArray(raw.offers) ? raw.offers : d.offers;
-  x.upsells = Array.isArray(raw.upsells) ? raw.upsells : d.upsells;
-
-  x.offers = x.offers.slice(0, 3).map((o) => ({ ...DEFAULT_OFFER, ...o }));
-  x.upsells = x.upsells.slice(0, 3).map((u) => ({ ...DEFAULT_UPSELL, ...u }));
-
-  // ensure new field exists
-  x.offers = x.offers.map((o) => ({ displayStyle: o.displayStyle || "style-1", ...o }));
-  x.upsells = x.upsells.map((u) => ({ displayStyle: u.displayStyle || "style-2", ...u }));
-
-  return x;
-}
-
-/* ============================== Preview components ============================== */
-function OffersPreview({ cfg, t }) {
-  const activeOffers = cfg.offers.filter((o) => o.enabled && o.showInPreview);
-  if (!activeOffers.length) return null;
-
-  const selectedPalette = COLOR_PALETTES.find((p) => p.id === cfg.global.colorPalette) || COLOR_PALETTES[0];
-  const theme = cfg.global.customTheme || selectedPalette.theme;
+  const imageSelectOptions = useMemo(() => {
+    const base = [{ label: "Image du produit (auto)", value: "product" }, { label: "Image personnalisée (URL)", value: "custom" }];
+    return base;
+  }, []);
 
   return (
-    <BlockStack gap="200">
-      {activeOffers.map((offer, idx) => (
-        <OfferCardPreview
-          key={idx}
-          item={offer}
-          theme={theme}
-          showTimer={cfg.display.showTimerInPreview}
-          showButton={cfg.display.showActivationButtons}
-          t={t}
-          kind="offer"
-        />
-      ))}
-    </BlockStack>
-  );
-}
+    <div className="item-card">
+      {canRemove && (
+        <div className="remove-btn" onClick={onRemove} title="Supprimer">
+          ×
+        </div>
+      )}
 
-function UpsellsPreview({ cfg, t }) {
-  const activeUpsells = cfg.upsells.filter((u) => u.enabled && u.showInPreview);
-  if (!activeUpsells.length) return null;
-
-  const selectedPalette = COLOR_PALETTES.find((p) => p.id === cfg.global.colorPalette) || COLOR_PALETTES[0];
-  const theme = cfg.global.customTheme || selectedPalette.theme;
-
-  return (
-    <BlockStack gap="200">
-      {activeUpsells.map((upsell, idx) => (
-        <OfferCardPreview
-          key={idx}
-          item={upsell}
-          theme={theme}
-          showTimer={cfg.display.showTimerInPreview}
-          showButton={false}
-          t={t}
-          kind="upsell"
-        />
-      ))}
-    </BlockStack>
-  );
-}
-
-function OrderSummaryPreview({ cfg, t }) {
-  if (!cfg.display.showOrderSummary) return null;
-
-  const selectedPalette = COLOR_PALETTES.find((p) => p.id === cfg.global.colorPalette) || COLOR_PALETTES[0];
-  const theme = cfg.global.customTheme || selectedPalette.theme;
-
-  return (
-    <div
-      className="order-summary-preview"
-      style={{ background: theme.bg, border: `1px solid ${theme.border}`, color: theme.text }}
-    >
-      <div className="order-summary-title">{t("section2.preview.orderSummary.title")}</div>
-      <div className="order-row">
-        <span className="order-label">{t("section2.preview.orderSummary.subtotal")}</span>
-        <span>129.99 {cfg.global.currency}</span>
-      </div>
-      <div className="order-row" style={{ color: "#10B981" }}>
-        <span className="order-label">Remise</span>
-        <span>-13.00 {cfg.global.currency}</span>
-      </div>
-      <div className="order-row">
-        <span className="order-label">{t("section2.preview.orderSummary.shipping")}</span>
-        <span>{t("section1.preview.freeShipping")}</span>
-      </div>
-      <div className="order-row">
-        <span className="order-label">{t("section2.preview.orderSummary.total")}</span>
-        <span style={{ fontWeight: 800 }}>116.99 {cfg.global.currency}</span>
-      </div>
-    </div>
-  );
-}
-
-/* ============================== Timer types preview (kept) ============================== */
-function TimerTypesPreview({ selectedType, onSelect }) {
-  return (
-    <div style={{ marginTop: 8 }}>
-      <InlineStack gap="200" blockAlign="center">
-        <SafeIcon name="ClockIcon" fallback="ClockFilledIcon" />
-        <Text as="p" fontWeight="bold">
-          Prévisualisation (styles timer)
-        </Text>
-      </InlineStack>
-
-      <div style={{ height: 10 }} />
-
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12 }}>
-        {TIMER_TYPES.slice(0, 4).map((type) => (
-          <div
-            key={type.id}
-            onClick={() => onSelect(type)}
-            style={{
-              borderRadius: 12,
-              border: selectedType === type.id ? "2px solid #4F46E5" : "1px solid #E5E7EB",
-              background: selectedType === type.id ? "#EEF2FF" : "#fff",
-              padding: 12,
-              cursor: "pointer",
-              boxShadow: selectedType === type.id ? "0 10px 24px rgba(79,70,229,.12)" : "none",
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, fontWeight: 800, marginBottom: 10 }}>
-              <span>{type.iconEmoji}</span>
-              <span>{type.name}</span>
-            </div>
-
-            <div className={`offer-timer ${type.cssClass}`} style={{ marginTop: 0 }}>
-              {type.iconUrl ? <img src={type.iconUrl} alt={type.name} style={{ width: 14, height: 14 }} /> : null}
-              <span style={{ fontWeight: 800 }}>{type.defaultMessage.split("!")[0]}!</span>
-              <span className="timer-countdown">15:00</span>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div style={{ marginTop: 8, fontSize: 12, color: "#6B7280" }}>
-        Cliquez sur un style pour l’appliquer au timer
-      </div>
-    </div>
-  );
-}
-
-/* ============================== Editor components (UPDATED: displayStyle select) ============================== */
-function OfferItemEditor({ offer, index, onChange, onRemove, t, canRemove }) {
-  const handleChange = (field, value) => {
-    const newOffer = { ...offer };
-    if (field.includes(".")) {
-      const [parent, child] = field.split(".");
-      if (!newOffer[parent]) newOffer[parent] = {};
-      newOffer[parent][child] = value;
-    } else {
-      newOffer[field] = value;
-    }
-    onChange(newOffer);
-  };
-
-  const handleTimerTypeSelect = (timerType) => {
-    onChange({
-      ...offer,
-      timerCssClass: timerType.cssClass,
-      timerIconUrl: timerType.iconUrl,
-      timerIconEmoji: timerType.iconEmoji,
-      timerMessage: timerType.defaultMessage,
-    });
-  };
-
-  const handleCountdownExample = (example) => {
-    onChange({
-      ...offer,
-      enableTimer: true,
-      timerMinutes: example.minutes,
-      timerMessage: example.message,
-      timerCssClass: TIMER_TYPES.find((t) => t.id === example.timerType)?.cssClass || "timer-type-chrono",
-      timerTimeFormat: example.timeFormat,
-      timerIconUrl: example.timerIconUrl,
-    });
-  };
-
-  return (
-    <div className="offer-item-card">
-      {canRemove && <div className="remove-offer-btn" onClick={onRemove}>×</div>}
-
-      <div className="offer-item-header">
+      <div className="item-header">
         <InlineStack align="start" blockAlign="center">
-          <span className="offer-item-number">{index + 1}</span>
-          <Text as="h3" variant="headingSm">{t("section2.offer.title", { number: index + 1 })}</Text>
+          <span className="item-number">{index + 1}</span>
+          <Text as="h3" variant="headingSm">
+            Offre {index + 1}
+          </Text>
         </InlineStack>
-        <Checkbox
-          label={t("section2.offer.enable")}
-          checked={offer.enabled}
-          onChange={(v) => handleChange("enabled", v)}
-        />
+        <Checkbox label="Activer" checked={!!offer.enabled} onChange={(v) => onChange({ ...offer, enabled: v })} />
       </div>
 
-      <BlockStack gap="300">
-        <Grid2>
-          <TextField
-            label={t("section2.offer.titleField")}
-            value={offer.title}
-            onChange={(v) => handleChange("title", v)}
-            helpText={t("section2.helpText.offerTitle")}
-          />
-          <TextField
-            label={t("section2.offer.description")}
-            value={offer.description}
-            onChange={(v) => handleChange("description", v)}
-            helpText={t("section2.helpText.offerDesc")}
-          />
-        </Grid2>
-
-        <GroupCard title="Style d’affichage (Preview)">
-          <Select
-            label="Choisir un style"
-            value={offer.displayStyle || "style-1"}
-            onChange={(v) => handleChange("displayStyle", v)}
-            options={[
-              { label: "Style 1 — Image à gauche, texte à droite", value: "style-1" },
-              { label: "Style 2 — Texte à gauche, image à droite", value: "style-2" },
-              { label: "Style 3 — Texte en haut, grande image en bas", value: "style-3" },
-              { label: "Style 4 — Grande image à gauche + texte", value: "style-4" },
-            ]}
-          />
-          <Text variant="bodySm" tone="subdued">
-            Chaque offre peut avoir son propre style.
-          </Text>
-        </GroupCard>
-
-        <Grid3>
-          <Select
-            label={t("section2.offer.discountType")}
-            value={offer.discountType}
-            onChange={(v) => handleChange("discountType", v)}
-            options={[
-              { label: t("section2.offer.discountType.percentage"), value: "percentage" },
-              { label: t("section2.offer.discountType.fixed"), value: "fixed" },
-            ]}
-          />
-
-          {offer.discountType === "percentage" ? (
-            <RangeSlider
-              label={`${t("section2.offer.percent")}: ${offer.discountValue}%`}
-              min={1}
-              max={90}
-              output
-              value={offer.discountValue}
-              onChange={(v) => handleChange("discountValue", v)}
-            />
-          ) : (
+      <BlockStack gap="400">
+        <GroupCard title="Contenu">
+          <Grid2>
             <TextField
-              type="number"
-              label={t("section2.offer.fixedAmount")}
-              value={String(offer.discountValue)}
-              onChange={(v) => handleChange("discountValue", parseFloat(v) || 0)}
+              label="Titre"
+              value={offer.title || ""}
+              onChange={(v) => onChange({ ...offer, title: v })}
+              autoComplete="off"
+            />
+            <TextField
+              label="Texte"
+              value={offer.description || ""}
+              onChange={(v) => onChange({ ...offer, description: v })}
+              autoComplete="off"
+            />
+          </Grid2>
+
+          <Grid2>
+            <Select
+              label="Produit Shopify"
+              value={offer.productId ? String(offer.productId) : ""}
+              options={productOptions}
+              onChange={(v) => onChange({ ...offer, productId: v })}
+            />
+
+            <Select
+              label="Image"
+              value={offer.imageMode || "product"}
+              options={imageSelectOptions}
+              onChange={(v) => onChange({ ...offer, imageMode: v })}
+            />
+          </Grid2>
+
+          {offer.imageMode === "custom" && (
+            <TextField
+              label="URL image"
+              value={offer.imageUrl || ""}
+              onChange={(v) => onChange({ ...offer, imageUrl: v })}
+              placeholder="https://example.com/image.jpg"
+              autoComplete="off"
             />
           )}
 
-          <TextField
-            label={t("section2.offer.buttonText")}
-            value={offer.buttonText}
-            onChange={(v) => handleChange("buttonText", v)}
-            helpText={t("section2.helpText.buttonText")}
-          />
-        </Grid3>
-
-        <GroupCard title={t("section2.group.conditions.title")}>
-          <Grid3>
-            <TextField
-              type="number"
-              label={t("section2.offer.minAmount")}
-              value={String(offer.conditions?.minAmount || 0)}
-              onChange={(v) => handleChange("conditions.minAmount", parseInt(v) || 0)}
-              helpText={t("section2.helpText.minAmount")}
-            />
-            <TextField
-              type="number"
-              label={t("section2.offer.maxUses")}
-              value={String(offer.conditions?.maxUses || 100)}
-              onChange={(v) => handleChange("conditions.maxUses", parseInt(v) || 100)}
-              helpText={t("section2.helpText.maxUses")}
-            />
-            <Select
-              label={t("section2.offer.applicableTo")}
-              value={offer.conditions?.applicableTo || "all"}
-              onChange={(v) => handleChange("conditions.applicableTo", v)}
-              options={[
-                { label: t("section2.offer.applicableTo.all"), value: "all" },
-                { label: t("section2.offer.applicableTo.specific"), value: "specific" },
-              ]}
-            />
-          </Grid3>
+          {offer.imageMode !== "custom" && offer.productId && productImages.length === 0 && (
+            <Text variant="bodySm" tone="subdued">
+              Ce produit n’a pas d’images détectées (selon le format retourné).
+            </Text>
+          )}
         </GroupCard>
 
-        <GroupCard title={t("section2.group.images.title")}>
-          <TextField
-            label={t("section2.offer.imageUrl")}
-            value={offer.imageUrl}
-            onChange={(v) => handleChange("imageUrl", v)}
-            helpText={t("section2.helpText.offerImage")}
-            placeholder="https://example.com/image.jpg"
-          />
-        </GroupCard>
-
-        <GroupCard title={t("section2.group.timer.title")}>
-          <TimerTypesPreview
-            selectedType={TIMER_TYPES.find((x) => x.cssClass === offer.timerCssClass)?.id}
-            onSelect={handleTimerTypeSelect}
-          />
-
-          <div style={{ height: 10 }} />
-
+        <GroupCard title="Icon & Design">
           <Grid2>
-            <Checkbox
-              label={t("section2.offer.enableTimer")}
-              checked={!!offer.enableTimer}
-              onChange={(v) => handleChange("enableTimer", v)}
-              helpText={t("section2.helpText.timer")}
+            <Select
+              label="Icône"
+              value={offer.iconName || ""}
+              options={ICON_OPTIONS}
+              onChange={(v) => onChange({ ...offer, iconName: v })}
             />
 
-            {offer.enableTimer && (
-              <>
-                <TextField
-                  type="number"
-                  label={t("section2.offer.timerMinutes")}
-                  value={String(offer.timerMinutes || 60)}
-                  onChange={(v) => handleChange("timerMinutes", parseInt(v) || 60)}
-                  helpText={t("section2.helpText.timerMinutes")}
-                />
-                <TextField
-                  label={t("section2.offer.timerMessage")}
-                  value={offer.timerMessage || ""}
-                  onChange={(v) => handleChange("timerMessage", v)}
-                  helpText={t("section2.helpText.timerMessage")}
-                />
-                <Select
-                  label={t("section2.offer.timerTimeFormat")}
-                  value={offer.timerTimeFormat || "mm:ss"}
-                  onChange={(v) => handleChange("timerTimeFormat", v)}
-                  options={[
-                    { label: "mm:ss", value: "mm:ss" },
-                    { label: "hh[h] mm[m]", value: "hh[h] mm[m]" },
-                    { label: "mm[m] ss[s]", value: "mm[m] ss[s]" },
-                    { label: "hh[h]", value: "hh[h]" },
-                  ]}
-                />
-                <TextField
-                  label={t("section2.offer.timerIconUrl")}
-                  value={offer.timerIconUrl || ""}
-                  onChange={(v) => handleChange("timerIconUrl", v)}
-                  helpText={t("section2.helpText.timerIconUrl")}
-                  placeholder="https://cdn-icons-png.flaticon.com/512/..."
-                />
-              </>
-            )}
+            <ColorField
+              label="Fond de l’icône"
+              value={offer.iconBg || ""}
+              onChange={(v) => onChange({ ...offer, iconBg: v })}
+              placeholder="#EEF2FF"
+            />
           </Grid2>
 
-          <div style={{ marginTop: 12 }}>
-            <Text as="p" variant="bodyMd" fontWeight="bold">
-              Modèles de timer prédéfinis
-            </Text>
+          <Divider />
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 8, marginTop: 8 }}>
-              {COUNTDOWN_EXAMPLES.map((ex) => (
-                <div
-                  key={ex.id}
-                  onClick={() => handleCountdownExample(ex)}
-                  style={{
-                    padding: "10px 12px",
-                    border: "1px solid #E5E7EB",
-                    borderRadius: 10,
-                    cursor: "pointer",
-                    background: "#F9FAFB",
-                    transition: "all .15s",
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = "#F3F4F6")}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = "#F9FAFB")}
-                >
-                  <div style={{ fontSize: 12, fontWeight: 800 }}>{ex.name}</div>
-                  <div style={{ fontSize: 11, color: "#6B7280", marginTop: 2 }}>{ex.message}</div>
-                </div>
-              ))}
-            </div>
-          </div>
+          <Grid2>
+            <ColorField
+              label="Background"
+              value={offer.cardBg || ""}
+              onChange={(v) => onChange({ ...offer, cardBg: v })}
+              placeholder="#FFFFFF"
+            />
+            <ColorField
+              label="Border"
+              value={offer.borderColor || ""}
+              onChange={(v) => onChange({ ...offer, borderColor: v })}
+              placeholder="#E5E7EB"
+            />
+          </Grid2>
         </GroupCard>
 
-        <GroupCard title={t("section2.group.display.title")}>
+        <GroupCard title="Bouton (Offre)">
+          <Grid2>
+            <TextField
+              label="Texte du bouton"
+              value={offer.buttonText || ""}
+              onChange={(v) => onChange({ ...offer, buttonText: v })}
+              autoComplete="off"
+            />
+            <ColorField
+              label="Bouton background"
+              value={offer.buttonBg || ""}
+              onChange={(v) => onChange({ ...offer, buttonBg: v })}
+              placeholder="#111827"
+            />
+          </Grid2>
+
+          <Grid2>
+            <ColorField
+              label="Bouton texte"
+              value={offer.buttonTextColor || ""}
+              onChange={(v) => onChange({ ...offer, buttonTextColor: v })}
+              placeholder="#FFFFFF"
+            />
+            <ColorField
+              label="Bouton border"
+              value={offer.buttonBorder || ""}
+              onChange={(v) => onChange({ ...offer, buttonBorder: v })}
+              placeholder="#111827"
+            />
+          </Grid2>
+        </GroupCard>
+
+        <GroupCard title="Prévisualisation">
           <Checkbox
-            label={t("section2.offer.showInPreview")}
-            checked={offer.showInPreview}
-            onChange={(v) => handleChange("showInPreview", v)}
+            label="Afficher dans preview"
+            checked={!!offer.showInPreview}
+            onChange={(v) => onChange({ ...offer, showInPreview: v })}
           />
         </GroupCard>
       </BlockStack>
@@ -1198,198 +650,123 @@ function OfferItemEditor({ offer, index, onChange, onRemove, t, canRemove }) {
   );
 }
 
-function UpsellItemEditor({ upsell, index, onChange, onRemove, t, canRemove }) {
-  const handleChange = (field, value) => onChange({ ...upsell, [field]: value });
+function UpsellEditor({ upsell, index, products, onChange, onRemove, canRemove }) {
+  const productOptions = useMemo(() => {
+    const opts = (products || []).map((p) => ({
+      label: p.title || "Produit",
+      value: String(p.id),
+    }));
+    return [{ label: "— Choisir un produit —", value: "" }, ...opts];
+  }, [products]);
 
-  const handleTimerTypeSelect = (timerType) => {
-    onChange({
-      ...upsell,
-      timerCssClass: timerType.cssClass,
-      timerIconUrl: timerType.iconUrl,
-      timerIconEmoji: timerType.iconEmoji,
-      timerMessage: timerType.defaultMessage,
-    });
-  };
-
-  const handleCountdownExample = (example) => {
-    onChange({
-      ...upsell,
-      enableTimer: true,
-      timerMinutes: example.minutes,
-      timerMessage: example.message,
-      timerCssClass: TIMER_TYPES.find((t) => t.id === example.timerType)?.cssClass || "timer-type-chrono",
-      timerTimeFormat: example.timeFormat,
-      timerIconUrl: example.timerIconUrl,
-    });
-  };
+  const imageSelectOptions = useMemo(() => {
+    return [
+      { label: "Image du produit (auto)", value: "product" },
+      { label: "Image personnalisée (URL)", value: "custom" },
+    ];
+  }, []);
 
   return (
-    <div className="offer-item-card">
-      {canRemove && <div className="remove-offer-btn" onClick={onRemove}>×</div>}
+    <div className="item-card">
+      {canRemove && (
+        <div className="remove-btn" onClick={onRemove} title="Supprimer">
+          ×
+        </div>
+      )}
 
-      <div className="offer-item-header">
+      <div className="item-header">
         <InlineStack align="start" blockAlign="center">
-          <span className="offer-item-number">{index + 1}</span>
-          <Text as="h3" variant="headingSm">{t("section2.upsell.title", { number: index + 1 })}</Text>
+          <span className="item-number">{index + 1}</span>
+          <Text as="h3" variant="headingSm">
+            Upsell {index + 1}
+          </Text>
         </InlineStack>
-        <Checkbox
-          label={t("section2.upsell.enable")}
-          checked={upsell.enabled}
-          onChange={(v) => handleChange("enabled", v)}
-        />
+        <Checkbox label="Activer" checked={!!upsell.enabled} onChange={(v) => onChange({ ...upsell, enabled: v })} />
       </div>
 
-      <BlockStack gap="300">
-        <Grid2>
-          <TextField
-            label={t("section2.upsell.titleField")}
-            value={upsell.title}
-            onChange={(v) => handleChange("title", v)}
-            helpText={t("section2.helpText.upsellTitle")}
-          />
-          <TextField
-            label={t("section2.upsell.description")}
-            value={upsell.description}
-            onChange={(v) => handleChange("description", v)}
-            helpText={t("section2.helpText.giftDesc")}
-          />
-        </Grid2>
-
-        <GroupCard title="Style d’affichage (Preview)">
-          <Select
-            label="Choisir un style"
-            value={upsell.displayStyle || "style-2"}
-            onChange={(v) => handleChange("displayStyle", v)}
-            options={[
-              { label: "Style 1 — Image à gauche, texte à droite", value: "style-1" },
-              { label: "Style 2 — Texte à gauche, image à droite", value: "style-2" },
-              { label: "Style 3 — Texte en haut, grande image en bas", value: "style-3" },
-              { label: "Style 4 — Grande image à gauche + texte", value: "style-4" },
-            ]}
-          />
-          <Text variant="bodySm" tone="subdued">
-            Chaque upsell peut avoir son propre style.
-          </Text>
-        </GroupCard>
-
-        <Grid3>
-          <TextField
-            label={t("section2.upsell.giftTitle")}
-            value={upsell.giftTitle}
-            onChange={(v) => handleChange("giftTitle", v)}
-            helpText={t("section2.helpText.giftTitle")}
-          />
-          <TextField
-            label={t("section2.upsell.giftProductId")}
-            value={upsell.giftProductId}
-            onChange={(v) => handleChange("giftProductId", v)}
-            helpText={t("section2.helpText.giftProductId")}
-          />
-          <TextField
-            label={t("section2.upsell.giftVariantId")}
-            value={upsell.giftVariantId}
-            onChange={(v) => handleChange("giftVariantId", v)}
-            helpText={t("section2.helpText.giftVariantId")}
-          />
-        </Grid3>
-
-        <GroupCard title={t("section2.group.images.title")}>
-          <TextField
-            label={t("section2.upsell.imageUrl")}
-            value={upsell.imageUrl}
-            onChange={(v) => handleChange("imageUrl", v)}
-            helpText={t("section2.helpText.offerImage")}
-            placeholder="https://example.com/image.jpg"
-          />
-        </GroupCard>
-
-        <GroupCard title={t("section2.group.timer.title")}>
-          <TimerTypesPreview
-            selectedType={TIMER_TYPES.find((x) => x.cssClass === upsell.timerCssClass)?.id}
-            onSelect={handleTimerTypeSelect}
-          />
-
-          <div style={{ height: 10 }} />
-
+      <BlockStack gap="400">
+        <GroupCard title="Contenu">
           <Grid2>
-            <Checkbox
-              label={t("section2.upsell.enableTimer")}
-              checked={!!upsell.enableTimer}
-              onChange={(v) => handleChange("enableTimer", v)}
-              helpText={t("section2.helpText.timer")}
+            <TextField
+              label="Titre"
+              value={upsell.title || ""}
+              onChange={(v) => onChange({ ...upsell, title: v })}
+              autoComplete="off"
             />
-
-            {upsell.enableTimer && (
-              <>
-                <TextField
-                  type="number"
-                  label={t("section2.upsell.timerMinutes")}
-                  value={String(upsell.timerMinutes || 60)}
-                  onChange={(v) => handleChange("timerMinutes", parseInt(v) || 60)}
-                  helpText={t("section2.helpText.timerMinutes")}
-                />
-                <TextField
-                  label={t("section2.upsell.timerMessage")}
-                  value={upsell.timerMessage || ""}
-                  onChange={(v) => handleChange("timerMessage", v)}
-                  helpText={t("section2.helpText.timerMessage")}
-                />
-                <Select
-                  label={t("section2.upsell.timerTimeFormat")}
-                  value={upsell.timerTimeFormat || "hh[h] mm[m]"}
-                  onChange={(v) => handleChange("timerTimeFormat", v)}
-                  options={[
-                    { label: "mm:ss", value: "mm:ss" },
-                    { label: "hh[h] mm[m]", value: "hh[h] mm[m]" },
-                    { label: "mm[m] ss[s]", value: "mm[m] ss[s]" },
-                    { label: "hh[h]", value: "hh[h]" },
-                  ]}
-                />
-                <TextField
-                  label={t("section2.upsell.timerIconUrl")}
-                  value={upsell.timerIconUrl || ""}
-                  onChange={(v) => handleChange("timerIconUrl", v)}
-                  helpText={t("section2.helpText.timerIconUrl")}
-                  placeholder="https://cdn-icons-png.flaticon.com/512/..."
-                />
-              </>
-            )}
+            <TextField
+              label="Texte"
+              value={upsell.description || ""}
+              onChange={(v) => onChange({ ...upsell, description: v })}
+              autoComplete="off"
+            />
           </Grid2>
 
-          <div style={{ marginTop: 12 }}>
-            <Text as="p" variant="bodyMd" fontWeight="bold">
-              Modèles de timer prédéfinis
-            </Text>
+          <Grid2>
+            <Select
+              label="Produit Shopify"
+              value={upsell.productId ? String(upsell.productId) : ""}
+              options={productOptions}
+              onChange={(v) => onChange({ ...upsell, productId: v })}
+            />
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 8, marginTop: 8 }}>
-              {COUNTDOWN_EXAMPLES.map((ex) => (
-                <div
-                  key={ex.id}
-                  onClick={() => handleCountdownExample(ex)}
-                  style={{
-                    padding: "10px 12px",
-                    border: "1px solid #E5E7EB",
-                    borderRadius: 10,
-                    cursor: "pointer",
-                    background: "#F9FAFB",
-                    transition: "all .15s",
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = "#F3F4F6")}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = "#F9FAFB")}
-                >
-                  <div style={{ fontSize: 12, fontWeight: 800 }}>{ex.name}</div>
-                  <div style={{ fontSize: 11, color: "#6B7280", marginTop: 2 }}>{ex.message}</div>
-                </div>
-              ))}
-            </div>
-          </div>
+            <Select
+              label="Image"
+              value={upsell.imageMode || "product"}
+              options={imageSelectOptions}
+              onChange={(v) => onChange({ ...upsell, imageMode: v })}
+            />
+          </Grid2>
+
+          {upsell.imageMode === "custom" && (
+            <TextField
+              label="URL image"
+              value={upsell.imageUrl || ""}
+              onChange={(v) => onChange({ ...upsell, imageUrl: v })}
+              placeholder="https://example.com/image.jpg"
+              autoComplete="off"
+            />
+          )}
         </GroupCard>
 
-        <GroupCard title={t("section2.group.display.title")}>
+        <GroupCard title="Icon & Design">
+          <Grid2>
+            <Select
+              label="Icône"
+              value={upsell.iconName || ""}
+              options={ICON_OPTIONS}
+              onChange={(v) => onChange({ ...upsell, iconName: v })}
+            />
+            <ColorField
+              label="Fond de l’icône"
+              value={upsell.iconBg || ""}
+              onChange={(v) => onChange({ ...upsell, iconBg: v })}
+              placeholder="#ECFDF5"
+            />
+          </Grid2>
+
+          <Divider />
+
+          <Grid2>
+            <ColorField
+              label="Background"
+              value={upsell.cardBg || ""}
+              onChange={(v) => onChange({ ...upsell, cardBg: v })}
+              placeholder="#FFFFFF"
+            />
+            <ColorField
+              label="Border"
+              value={upsell.borderColor || ""}
+              onChange={(v) => onChange({ ...upsell, borderColor: v })}
+              placeholder="#E5E7EB"
+            />
+          </Grid2>
+        </GroupCard>
+
+        <GroupCard title="Prévisualisation">
           <Checkbox
-            label={t("section2.upsell.showInPreview")}
-            checked={upsell.showInPreview}
-            onChange={(v) => handleChange("showInPreview", v)}
+            label="Afficher dans preview"
+            checked={!!upsell.showInPreview}
+            onChange={(v) => onChange({ ...upsell, showInPreview: v })}
           />
         </GroupCard>
       </BlockStack>
@@ -1398,7 +775,7 @@ function UpsellItemEditor({ upsell, index, onChange, onRemove, t, canRemove }) {
 }
 
 /* ============================== HEADER / SHELL ============================== */
-function PageShell({ children, t, loading, onSave, saving }) {
+function PageShell({ children, t, loading, onSave, saving, dirty }) {
   return (
     <>
       <div className="tf-header">
@@ -1421,17 +798,24 @@ function PageShell({ children, t, loading, onSave, saving }) {
                 style={{ width: "100%", height: "100%", display: "block", objectFit: "cover" }}
               />
             </div>
+
             <div>
-              <div style={{ fontWeight: 800, color: "#F9FAFB" }}>{t("section2.header.appTitle")}</div>
-              <div style={{ fontSize: 12, color: "rgba(249,250,251,0.8)" }}>
-                {t("section2.header.appSubtitle")}
+              <div style={{ fontWeight: 900, color: "#F9FAFB" }}>{t("section2.header.appTitle")}</div>
+              <div style={{ fontSize: 12, color: "rgba(249,250,251,0.85)" }}>
+                Offres & Upsells — Settings pro
               </div>
             </div>
+
+            {dirty ? (
+              <Badge tone="warning">Modifications non enregistrées</Badge>
+            ) : (
+              <Badge tone="success">Enregistré</Badge>
+            )}
           </InlineStack>
 
           <InlineStack gap="200" blockAlign="center">
             <div style={{ fontSize: 12, color: "rgba(249,250,251,0.9)" }}>
-              {t("section2.preview.subtitle")} {loading ? t("section0.usage.loading") : ""}
+              {loading ? "Chargement..." : ""}
             </div>
             <Button variant="primary" size="slim" onClick={onSave} loading={saving}>
               {t("section2.button.save")}
@@ -1456,22 +840,46 @@ function Section2OffersInner({ products = [] }) {
 
   const [tab, setTab] = useState("global");
 
+  // Unsaved changes logic
+  const lastSavedKeyRef = useRef("");
+  const currentKey = useMemo(() => {
+    try {
+      return JSON.stringify(cfg);
+    } catch {
+      return String(Date.now());
+    }
+  }, [cfg]);
+
+  const dirty = useMemo(() => currentKey !== lastSavedKeyRef.current, [currentKey]);
+
+  // beforeunload warning
+  useEffect(() => {
+    const handler = (e) => {
+      if (!dirty) return;
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [dirty]);
+
+  // Modal when changing tab with unsaved changes
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const pendingTabRef = useRef(null);
+
   const tabs = useMemo(
     () => [
-      { id: "global", content: t("section2.rail.global"), panelID: "tab-global", icon: "SettingsIcon" },
-      { id: "colors", content: t("section2.rail.colors"), panelID: "tab-colors", icon: "PaintBrushIcon" },
-      { id: "offers", content: t("section2.rail.offers"), panelID: "tab-offers", icon: "DiscountIcon" },
-      { id: "upsells", content: t("section2.rail.upsells"), panelID: "tab-upsells", icon: "GiftCardIcon" },
+      { id: "global", content: "Global", panelID: "tab-global", icon: "SettingsIcon" },
+      { id: "offers", content: "Offres", panelID: "tab-offers", icon: "DiscountIcon" },
+      { id: "upsells", content: "Upsells", panelID: "tab-upsells", icon: "GiftCardIcon" },
     ],
-    [t]
+    []
   );
-
   const selectedTabIndex = Math.max(0, tabs.findIndex((x) => x.id === tab));
 
   const persistLocal = (next) => {
-    if (typeof window === "undefined") return;
     try {
-      window.localStorage.setItem("tripleform_cod_offers_v11", JSON.stringify(withDefaults(next)));
+      window.localStorage.setItem("tripleform_cod_offers_v20", JSON.stringify(withDefaults(next)));
     } catch {}
   };
 
@@ -1489,6 +897,7 @@ function Section2OffersInner({ products = [] }) {
             const merged = withDefaults(j.offers);
             setCfg(merged);
             persistLocal(merged);
+            lastSavedKeyRef.current = JSON.stringify(merged);
             setLoading(false);
             return;
           }
@@ -1497,11 +906,19 @@ function Section2OffersInner({ products = [] }) {
         console.warn("[Section2Offers] load failed, fallback localStorage", e);
       }
 
-      if (!cancelled && typeof window !== "undefined") {
+      if (!cancelled) {
         try {
-          const s = window.localStorage.getItem("tripleform_cod_offers_v11");
-          if (s) setCfg(withDefaults(JSON.parse(s)));
-        } catch {}
+          const s = window.localStorage.getItem("tripleform_cod_offers_v20");
+          if (s) {
+            const parsed = withDefaults(JSON.parse(s));
+            setCfg(parsed);
+            lastSavedKeyRef.current = JSON.stringify(parsed);
+          } else {
+            lastSavedKeyRef.current = JSON.stringify(DEFAULT_CFG);
+          }
+        } catch {
+          lastSavedKeyRef.current = JSON.stringify(DEFAULT_CFG);
+        }
       }
 
       if (!cancelled) setLoading(false);
@@ -1528,7 +945,7 @@ function Section2OffersInner({ products = [] }) {
       const j = await res.json().catch(() => ({ ok: true }));
       if (!res.ok || j?.ok === false) throw new Error(j?.error || "Save failed");
 
-      alert("Offres enregistrées ✔️");
+      lastSavedKeyRef.current = JSON.stringify(toSave);
     } catch (e) {
       console.error(e);
       alert("Échec de l'enregistrement : " + (e?.message || "Erreur inconnue"));
@@ -1537,15 +954,30 @@ function Section2OffersInner({ products = [] }) {
     }
   };
 
-  const setGlobal = (p) => setCfg((c) => ({ ...c, global: { ...c.global, ...p } }));
-  const setDisplay = (p) => setCfg((c) => ({ ...c, display: { ...c.display, ...p } }));
-  const setCustomTheme = (field, value) =>
-    setCfg((c) => ({ ...c, global: { ...c.global, customTheme: { ...c.global.customTheme, [field]: value } } }));
+  const requestTabChange = (nextTab) => {
+    if (nextTab === tab) return;
+    if (!dirty) {
+      setTab(nextTab);
+      return;
+    }
+    pendingTabRef.current = nextTab;
+    setConfirmOpen(true);
+  };
 
-  const applyPalette = (paletteId) => {
-    const palette = COLOR_PALETTES.find((p) => p.id === paletteId);
-    if (!palette) return;
-    setCfg((c) => ({ ...c, global: { ...c.global, colorPalette: paletteId, customTheme: palette.theme } }));
+  const applyPendingTab = () => {
+    const nextTab = pendingTabRef.current;
+    pendingTabRef.current = null;
+    if (nextTab) setTab(nextTab);
+  };
+
+  const discardChanges = () => {
+    try {
+      const saved = JSON.parse(lastSavedKeyRef.current || "{}");
+      const restored = withDefaults(saved);
+      setCfg(restored);
+    } catch {}
+    setConfirmOpen(false);
+    applyPendingTab();
   };
 
   const addOffer = () => {
@@ -1572,17 +1004,43 @@ function Section2OffersInner({ products = [] }) {
     setCfg((prev) => ({ ...prev, upsells: prev.upsells.filter((_, i) => i !== index) }));
   };
 
-  const selectedPalette = COLOR_PALETTES.find((p) => p.id === cfg.global.colorPalette) || COLOR_PALETTES[0];
-  const theme = cfg.global.customTheme || selectedPalette.theme;
+  const activeOffers = cfg.offers.filter((o) => o.enabled && o.showInPreview);
+  const activeUpsells = cfg.upsells.filter((u) => u.enabled && u.showInPreview);
 
   return (
-    <PageShell t={t} loading={loading} onSave={saveOffers} saving={saving}>
+    <PageShell t={t} loading={loading} onSave={saveOffers} saving={saving} dirty={dirty}>
+      {/* Confirm modal for unsaved changes */}
+      <Modal
+        open={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        title="Modifications non enregistrées"
+        primaryAction={{
+          content: saving ? "Enregistrement..." : "Sauvegarder & continuer",
+          onAction: async () => {
+            await saveOffers();
+            setConfirmOpen(false);
+            applyPendingTab();
+          },
+          loading: saving,
+        }}
+        secondaryActions={[
+          { content: "Annuler", onAction: () => setConfirmOpen(false) },
+          { content: "Ignorer", onAction: discardChanges, destructive: true },
+        ]}
+      >
+        <Modal.Section>
+          <Text as="p">
+            Tu as des modifications non enregistrées. Tu veux <b>save</b> ou <b>ignorer</b> avant de changer de section ?
+          </Text>
+        </Modal.Section>
+      </Modal>
+
       {/* Top Tabs menu */}
       <div className="tf-topnav">
         <Tabs
           tabs={tabs.map((x) => ({ id: x.id, content: x.content, panelID: x.panelID }))}
           selected={selectedTabIndex}
-          onSelect={(i) => setTab(tabs[i]?.id || "global")}
+          onSelect={(i) => requestTabChange(tabs[i]?.id || "global")}
         />
       </div>
 
@@ -1593,19 +1051,17 @@ function Section2OffersInner({ products = [] }) {
             <InlineStack align="space-between" blockAlign="center">
               <InlineStack gap="200" blockAlign="center">
                 <span className="tf-hero-badge">
-                  {cfg.offers.filter((o) => o.enabled).length} {t("section2.rail.offers")} •{" "}
-                  {cfg.upsells.filter((u) => u.enabled).length} {t("section2.rail.upsells")}
+                  {cfg.offers.filter((o) => o.enabled).length} Offres • {cfg.upsells.filter((u) => u.enabled).length} Upsells
                 </span>
                 <div>
-                  <div style={{ fontWeight: 800, fontSize: 14 }}>{t("section2.header.appTitle")}</div>
-                  <div style={{ fontSize: 12, opacity: 0.9 }}>{t("section2.helpText.display")}</div>
+                  <div style={{ fontWeight: 900, fontSize: 14 }}>Offres & Upsells</div>
+                  <div style={{ fontSize: 12, opacity: 0.9 }}>
+                    Settings clairs (pas au hasard) + preview propre
+                  </div>
                 </div>
               </InlineStack>
               <InlineStack gap="200" blockAlign="center">
-                <SafeIcon
-                  name={tabs[selectedTabIndex]?.icon || "AppsIcon"}
-                  fallback="AppsIcon"
-                />
+                <SafeIcon name={tabs[selectedTabIndex]?.icon || "AppsIcon"} fallback="AppsIcon" />
                 <div style={{ fontSize: 12, opacity: 0.9 }}>{tabs[selectedTabIndex]?.content}</div>
               </InlineStack>
             </InlineStack>
@@ -1613,18 +1069,18 @@ function Section2OffersInner({ products = [] }) {
 
           <div className="tf-panel">
             {tab === "global" && (
-              <BlockStack gap="300">
-                <GroupCard title={t("section2.group.global.title")}>
-                  <Grid3>
+              <BlockStack gap="400">
+                <GroupCard title="Global">
+                  <Grid2>
                     <Checkbox
-                      label={t("section2.global.enable")}
+                      label="Activer Offres & Upsells"
                       checked={!!cfg.global.enabled}
-                      onChange={(v) => setGlobal({ enabled: v })}
+                      onChange={(v) => setCfg((c) => ({ ...c, global: { ...c.global, enabled: v } }))}
                     />
                     <Select
-                      label={t("section2.global.currency")}
+                      label="Devise"
                       value={cfg.global.currency}
-                      onChange={(v) => setGlobal({ currency: v })}
+                      onChange={(v) => setCfg((c) => ({ ...c, global: { ...c.global, currency: v } }))}
                       options={[
                         { label: "MAD (DH)", value: "MAD" },
                         { label: "EUR (€)", value: "EUR" },
@@ -1632,154 +1088,139 @@ function Section2OffersInner({ products = [] }) {
                         { label: "GBP (£)", value: "GBP" },
                       ]}
                     />
-                    <Select
-                      label={t("section2.global.rounding")}
-                      value={cfg.global.rounding}
-                      onChange={(v) => setGlobal({ rounding: v })}
-                      options={[
-                        { label: t("section2.global.rounding.none"), value: "none" },
-                        { label: t("section2.global.rounding.unit"), value: "unit" },
-                        { label: t("section2.global.rounding.99"), value: ".99" },
-                      ]}
-                    />
-                  </Grid3>
-                </GroupCard>
-
-                <GroupCard title={t("section2.group.display.title")}>
-                  <Grid3>
-                    <Checkbox
-                      label={t("section2.display.showOrderSummary")}
-                      checked={cfg.display.showOrderSummary}
-                      onChange={(v) => setDisplay({ showOrderSummary: v })}
-                    />
-                    <Checkbox
-                      label={t("section2.display.showOffersSection")}
-                      checked={cfg.display.showOffersSection}
-                      onChange={(v) => setDisplay({ showOffersSection: v })}
-                    />
-                    <Checkbox
-                      label={t("section2.display.showTimerInPreview")}
-                      checked={cfg.display.showTimerInPreview}
-                      onChange={(v) => setDisplay({ showTimerInPreview: v })}
-                    />
-                    <Checkbox
-                      label={t("section2.display.showActivationButtons")}
-                      checked={cfg.display.showActivationButtons}
-                      onChange={(v) => setDisplay({ showActivationButtons: v })}
-                    />
-                  </Grid3>
+                  </Grid2>
                   <Text variant="bodySm" tone="subdued">
-                    {t("section2.helpText.display")}
+                    Ici seulement l’essentiel. Les styles se font dans chaque Offre / Upsell.
                   </Text>
                 </GroupCard>
               </BlockStack>
             )}
 
-            {tab === "colors" && (
-              <GroupCard title={t("section2.group.colors.title")}>
-                <ColorPaletteSelector
-                  selectedPalette={cfg.global.colorPalette}
-                  onSelect={applyPalette}
-                  customTheme={cfg.global.customTheme}
-                  onCustomColorChange={setCustomTheme}
-                />
-              </GroupCard>
-            )}
-
             {tab === "offers" && (
-              <BlockStack gap="300">
+              <BlockStack gap="400">
                 <InlineStack align="space-between" blockAlign="center">
                   <Text as="h2" variant="headingMd">
-                    {t("section2.rail.offers")} ({cfg.offers.length}/3)
+                    Offres ({cfg.offers.length}/3)
                   </Text>
-                  <Badge tone="subdued">Preview: 4 styles</Badge>
+                  <Badge tone="subdued">Pro settings</Badge>
                 </InlineStack>
 
                 {cfg.offers.map((offer, index) => (
-                  <OfferItemEditor
+                  <OfferEditor
                     key={index}
                     offer={offer}
                     index={index}
+                    products={products}
                     onChange={(updated) => updateOffer(index, updated)}
                     onRemove={() => removeOffer(index)}
-                    t={t}
                     canRemove={cfg.offers.length > 1}
+                    t={t}
                   />
                 ))}
 
-                {cfg.offers.length < 3 && (
-                  <div className="add-button-container">
-                    <div className="add-button" onClick={addOffer}>
-                      <SafeIcon name="PlusIcon" fallback="CirclePlusIcon" />
-                      {t("section2.button.addOffer")}
-                    </div>
+                <div className="add-wrap">
+                  <div className="add-btn">
+                    <Button
+                      fullWidth
+                      onClick={addOffer}
+                      disabled={cfg.offers.length >= 3}
+                      icon={PI.CirclePlusIcon}
+                    >
+                      Ajouter une offre
+                    </Button>
                   </div>
-                )}
+                </div>
               </BlockStack>
             )}
 
             {tab === "upsells" && (
-              <BlockStack gap="300">
+              <BlockStack gap="400">
                 <InlineStack align="space-between" blockAlign="center">
                   <Text as="h2" variant="headingMd">
-                    {t("section2.rail.upsells")} ({cfg.upsells.length}/3)
+                    Upsells ({cfg.upsells.length}/3)
                   </Text>
-                  <Badge tone="subdued">Preview: 4 styles</Badge>
+                  <Badge tone="subdued">Sans bouton</Badge>
                 </InlineStack>
 
                 {cfg.upsells.map((upsell, index) => (
-                  <UpsellItemEditor
+                  <UpsellEditor
                     key={index}
                     upsell={upsell}
                     index={index}
+                    products={products}
                     onChange={(updated) => updateUpsell(index, updated)}
                     onRemove={() => removeUpsell(index)}
-                    t={t}
                     canRemove={cfg.upsells.length > 1}
                   />
                 ))}
 
-                {cfg.upsells.length < 3 && (
-                  <div className="add-button-container">
-                    <div className="add-button" onClick={addUpsell}>
-                      <SafeIcon name="PlusIcon" fallback="CirclePlusIcon" />
-                      {t("section2.button.addUpsell")}
-                    </div>
+                <div className="add-wrap">
+                  <div className="add-btn">
+                    <Button
+                      fullWidth
+                      onClick={addUpsell}
+                      disabled={cfg.upsells.length >= 3}
+                      icon={PI.CirclePlusIcon}
+                    >
+                      Ajouter un upsell
+                    </Button>
                   </div>
-                )}
+                </div>
               </BlockStack>
             )}
           </div>
         </div>
 
-        {/* PREVIEW (narrow + organized) */}
+        {/* PREVIEW */}
         <div className="tf-preview-col">
-          <div
-            className="tf-preview-card"
-            style={{ background: theme.bg, border: `1px solid ${theme.border}`, color: theme.text }}
-          >
+          <div className="tf-preview-card">
             <BlockStack gap="300">
               <InlineStack align="space-between" blockAlign="center">
-                <Text as="h3" variant="headingSm" style={{ color: theme.text }}>
-                  {t("section2.preview.title")}
+                <Text as="h3" variant="headingSm">
+                  Preview
                 </Text>
                 <Badge tone={cfg.global.enabled ? "success" : "critical"}>
-                  {cfg.global.enabled ? t("section2.preview.active") : t("section2.preview.inactive")}
+                  {cfg.global.enabled ? "Actif" : "Inactif"}
                 </Badge>
               </InlineStack>
 
               <Text as="p" variant="bodySm" tone="subdued">
-                {t("section2.preview.subtitle")}
+                Preview rapide (ce que le client va voir).
               </Text>
 
-              {cfg.display.showOffersSection && (
-                <>
-                  <OffersPreview cfg={cfg} t={t} />
-                  <UpsellsPreview cfg={cfg} t={t} />
-                </>
+              <Divider />
+
+              <Text as="p" variant="bodySm" fontWeight="bold">
+                Offres
+              </Text>
+              {activeOffers.length ? (
+                <BlockStack gap="200">
+                  {activeOffers.map((o, idx) => (
+                    <PreviewCard key={`o-${idx}`} item={o} products={products} isOffer />
+                  ))}
+                </BlockStack>
+              ) : (
+                <Text variant="bodySm" tone="subdued">
+                  Aucune offre active dans la preview.
+                </Text>
               )}
 
-              <OrderSummaryPreview cfg={cfg} t={t} />
+              <Divider />
+
+              <Text as="p" variant="bodySm" fontWeight="bold">
+                Upsells
+              </Text>
+              {activeUpsells.length ? (
+                <BlockStack gap="200">
+                  {activeUpsells.map((u, idx) => (
+                    <PreviewCard key={`u-${idx}`} item={u} products={products} isOffer={false} />
+                  ))}
+                </BlockStack>
+              ) : (
+                <Text variant="bodySm" tone="subdued">
+                  Aucun upsell actif dans la preview.
+                </Text>
+              )}
             </BlockStack>
           </div>
         </div>
