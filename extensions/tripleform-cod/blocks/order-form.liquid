@@ -19,79 +19,115 @@ Lit la config OFFRES / UPSELL depuis:
 {%- else -%}
   {%- comment -%}Déterminer le pays et les valeurs par défaut basées sur la boutique{%- endcomment -%}
   {%- assign shop_country_code = shop.country_code | default: 'MA' -%}
-  
+
   {%- comment -%}Déterminer le préfixe téléphonique et les labels basés sur le pays{%- endcomment -%}
   {%- assign phone_prefix = '+212' -%}
+
   {%- assign province_label = 'Province' -%}
   {%- assign province_placeholder = 'Select province' -%}
-  
+
+  {%- assign city_label = 'City' -%}
+  {%- assign city_placeholder = 'Select city' -%}
+
   {%- case shop_country_code -%}
     {%- when 'MA' -%}
       {%- assign phone_prefix = '+212' -%}
       {%- assign province_label = 'Province' -%}
       {%- assign province_placeholder = 'Select province' -%}
+      {%- assign city_label = 'Ville' -%}
+      {%- assign city_placeholder = 'Choisir une ville' -%}
     {%- when 'DZ' -%}
       {%- assign phone_prefix = '+213' -%}
       {%- assign province_label = 'Wilaya' -%}
       {%- assign province_placeholder = 'Select wilaya' -%}
+      {%- assign city_label = 'Commune' -%}
+      {%- assign city_placeholder = 'Choisir une commune' -%}
     {%- when 'TN' -%}
       {%- assign phone_prefix = '+216' -%}
       {%- assign province_label = 'Gouvernorat' -%}
       {%- assign province_placeholder = 'Select gouvernorat' -%}
+      {%- assign city_label = 'Ville' -%}
+      {%- assign city_placeholder = 'Choisir une ville' -%}
     {%- when 'EG' -%}
       {%- assign phone_prefix = '+20' -%}
       {%- assign province_label = 'Governorate' -%}
       {%- assign province_placeholder = 'Select governorate' -%}
+      {%- assign city_label = 'City' -%}
+      {%- assign city_placeholder = 'Select city' -%}
     {%- when 'FR' -%}
       {%- assign phone_prefix = '+33' -%}
       {%- assign province_label = 'Région' -%}
       {%- assign province_placeholder = 'Select region' -%}
+      {%- assign city_label = 'Ville' -%}
+      {%- assign city_placeholder = 'Choisir une ville' -%}
     {%- when 'ES' -%}
       {%- assign phone_prefix = '+34' -%}
       {%- assign province_label = 'Provincia' -%}
       {%- assign province_placeholder = 'Select provincia' -%}
+      {%- assign city_label = 'Ciudad' -%}
+      {%- assign city_placeholder = 'Select city' -%}
     {%- when 'SA' -%}
       {%- assign phone_prefix = '+966' -%}
       {%- assign province_label = 'Province' -%}
       {%- assign province_placeholder = 'Select province' -%}
+      {%- assign city_label = 'City' -%}
+      {%- assign city_placeholder = 'Select city' -%}
     {%- when 'AE' -%}
       {%- assign phone_prefix = '+971' -%}
       {%- assign province_label = 'Emirate' -%}
       {%- assign province_placeholder = 'Select emirate' -%}
+      {%- assign city_label = 'City' -%}
+      {%- assign city_placeholder = 'Select city' -%}
     {%- when 'US' -%}
       {%- assign phone_prefix = '+1' -%}
       {%- assign province_label = 'State' -%}
       {%- assign province_placeholder = 'Select state' -%}
+      {%- assign city_label = 'City' -%}
+      {%- assign city_placeholder = 'Select city' -%}
     {%- when 'NG' -%}
       {%- assign phone_prefix = '+234' -%}
       {%- assign province_label = 'State' -%}
       {%- assign province_placeholder = 'Select state' -%}
+      {%- assign city_label = 'City' -%}
+      {%- assign city_placeholder = 'Select city' -%}
     {%- when 'PK' -%}
       {%- assign phone_prefix = '+92' -%}
       {%- assign province_label = 'Province' -%}
       {%- assign province_placeholder = 'Select province' -%}
+      {%- assign city_label = 'City' -%}
+      {%- assign city_placeholder = 'Select city' -%}
     {%- when 'IN' -%}
       {%- assign phone_prefix = '+91' -%}
       {%- assign province_label = 'State' -%}
       {%- assign province_placeholder = 'Select state' -%}
+      {%- assign city_label = 'City' -%}
+      {%- assign city_placeholder = 'Select city' -%}
     {%- when 'ID' -%}
       {%- assign phone_prefix = '+62' -%}
       {%- assign province_label = 'Province' -%}
       {%- assign province_placeholder = 'Select province' -%}
+      {%- assign city_label = 'City' -%}
+      {%- assign city_placeholder = 'Select city' -%}
     {%- when 'TR' -%}
       {%- assign phone_prefix = '+90' -%}
       {%- assign province_label = 'Province' -%}
       {%- assign province_placeholder = 'Select province' -%}
+      {%- assign city_label = 'City' -%}
+      {%- assign city_placeholder = 'Select city' -%}
     {%- when 'BR' -%}
       {%- assign phone_prefix = '+55' -%}
       {%- assign province_label = 'State' -%}
       {%- assign province_placeholder = 'Select state' -%}
+      {%- assign city_label = 'City' -%}
+      {%- assign city_placeholder = 'Select city' -%}
     {%- else -%}
       {%- assign phone_prefix = '+212' -%}
       {%- assign province_label = 'Province' -%}
       {%- assign province_placeholder = 'Select province' -%}
+      {%- assign city_label = 'City' -%}
+      {%- assign city_placeholder = 'Select city' -%}
   {%- endcase -%}
-  
+
   {%- capture tf_json -%}
   {
     "meta": {
@@ -144,7 +180,9 @@ Lit la config OFFRES / UPSELL depuis:
       "openDelayMs": 0,
       "closeOnOutside": true,
       "effect": "none",
-      "glowPx": 18,
+
+      "buttonMotion": "none",
+
       "stickyType": "none",
       "stickyLabel": "Order now",
       "stickyIcon": "CartIcon",
@@ -189,7 +227,7 @@ Lit la config OFFRES / UPSELL depuis:
       "province": {
         "on": true,
         "required": false,
-        "type": "text",
+        "type": "select",
         "label": "{{ province_label }}",
         "ph": "{{ province_placeholder }}",
         "icon": "RegionIcon"
@@ -197,9 +235,9 @@ Lit la config OFFRES / UPSELL depuis:
       "city": {
         "on": true,
         "required": false,
-        "type": "text",
-        "label": "City",
-        "ph": "Select city",
+        "type": "select",
+        "label": "{{ city_label }}",
+        "ph": "{{ city_placeholder }}",
         "icon": "CityIcon"
       },
       "address": {
@@ -254,8 +292,8 @@ Ces données sont écrites par /api/save-offers dans:
   {%- capture tf_offers_json -%}
   {
     "meta": { "version": 10 },
-    "global": { 
-      "enabled": true, 
+    "global": {
+      "enabled": true,
       "currency": "{{ shop.currency | default: 'MAD' }}",
       "rounding": "none",
       "colorPalette": "blue-gradient"
