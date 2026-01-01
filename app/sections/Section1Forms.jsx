@@ -1,4 +1,5 @@
 // ===== File: app/sections/Section1FormsLayout.jsx =====
+// ============================== PART 1 / 2 ==============================
 
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import {
@@ -19,10 +20,8 @@ import { useRouteLoaderData } from "@remix-run/react";
 import { useI18n } from "../i18n/react";
 
 import {
-  getCountries,
-  getProvinces,
-  getCities,
-  getPhonePrefixByCountry,
+  COUNTRY_DATA,
+  PHONE_PREFIX_BY_COUNTRY,
   getCurrencyByCountry,
   getShippingExample,
 } from "../data/countryData";
@@ -179,12 +178,7 @@ function decodeHost(h) {
     return "";
   }
 }
-function buildThemeEditorUrl({
-  hostB64,
-  apiKey,
-  blockHandle = "order-form",
-  template = "product",
-}) {
+function buildThemeEditorUrl({ hostB64, apiKey, blockHandle = "order-form", template = "product" }) {
   const decoded = decodeHost(hostB64);
   if (!decoded) return "";
 
@@ -194,17 +188,13 @@ function buildThemeEditorUrl({
     if (!store) return "";
     return `https://admin.shopify.com/store/${store}/themes/current/editor?template=${encodeURIComponent(
       template
-    )}&addAppBlockId=${encodeURIComponent(apiKey)}/${encodeURIComponent(
-      blockHandle
-    )}&target=main`;
+    )}&addAppBlockId=${encodeURIComponent(apiKey)}/${encodeURIComponent(blockHandle)}&target=main`;
   }
 
   const shop = decoded.replace(/^https?:\/\//i, "").replace(/\/admin.*$/i, "");
   return `https://${shop}/admin/themes/current/editor?template=${encodeURIComponent(
     template
-  )}&addAppBlockId=${encodeURIComponent(apiKey)}/${encodeURIComponent(
-    blockHandle
-  )}&target=main`;
+  )}&addAppBlockId=${encodeURIComponent(apiKey)}/${encodeURIComponent(blockHandle)}&target=main`;
 }
 
 /* ======================= CSS / layout ======================= */
@@ -273,7 +263,6 @@ const LAYOUT_CSS = `
     justify-content:center;
     line-height:0;
     flex:0 0 auto;
-    overflow:visible;
   }
   .tf-icon-btn:hover { border-color:#CBD5E1; background:#F8FAFC; }
   .tf-icon-btn:active { transform:scale(.98); }
@@ -309,63 +298,36 @@ const LAYOUT_CSS = `
   .tf-palette-info { padding:8px; background:#fff; font-size:11px; font-weight:600; }
 
   .tf-icon-selector { display:grid; grid-template-columns:repeat(auto-fill, minmax(44px, 1fr)); gap:8px; margin-top:8px; max-height:200px; overflow-y:auto; padding:8px; border:1px solid #E5E7EB; border-radius:8px; }
-  .tf-icon-option { width:44px; height:44px; display:flex; align-items:center; justify-content:center; border:2px solid #E5E7EB; border-radius:10px; cursor:pointer; background:#fff; transition:all 0.2s; color:#4B5563; line-height:0; overflow:visible; }
+  .tf-icon-option { width:44px; height:44px; display:flex; align-items:center; justify-content:center; border:2px solid #E5E7EB; border-radius:10px; cursor:pointer; background:#fff; transition:all 0.2s; color:#4B5563; line-height:0; }
   .tf-icon-option:hover { border-color:#00A7A3; background:#f8fafc; }
   .tf-icon-option.selected { border-color:#00A7A3; background:#ecfeff; }
 
   .tf-field-with-icon { display:grid; grid-template-columns:auto 1fr; gap:10px; align-items:center; }
-  .tf-field-icon { width:18px; height:18px; display:flex; align-items:center; justify-content:center; color:#6B7280; line-height:0; overflow:visible; }
-  .tf-btn-icon { display:flex; align-items:center; line-height:0; overflow:visible; }
-  .tf-cart-icon { display:flex; align-items:center; justify-content:center; width:22px; height:22px; line-height:0; overflow:visible; }
-  .tf-rail-icon { width:18px; height:18px; display:flex; align-items:center; justify-content:center; line-height:0; overflow:visible; }
+  .tf-field-icon { width:18px; height:18px; display:flex; align-items:center; justify-content:center; color:#6B7280; line-height:0; }
+  .tf-btn-icon { display:flex; align-items:center; line-height:0; }
+  .tf-cart-icon { display:flex; align-items:center; justify-content:center; width:22px; height:22px; line-height:0; }
+  .tf-rail-icon { width:18px; height:18px; display:flex; align-items:center; justify-content:center; line-height:0; }
 
-  /* ✅ Fix clipping icons Polaris */
-  .Polaris-Icon { display:inline-flex !important; align-items:center !important; justify-content:center !important; overflow:visible !important; }
-  .Polaris-Icon svg { display:block !important; overflow:visible !important; }
+  .tf-icon-btn .Polaris-Icon,
+  .tf-icon-btn .Polaris-Icon svg,
+  .tf-rail-icon .Polaris-Icon,
+  .tf-rail-icon .Polaris-Icon svg,
+  .tf-field-icon .Polaris-Icon,
+  .tf-field-icon .Polaris-Icon svg,
+  .tf-cart-icon .Polaris-Icon,
+  .tf-cart-icon .Polaris-Icon svg,
+  .tf-btn-icon .Polaris-Icon,
+  .tf-btn-icon .Polaris-Icon svg,
+  .tf-icon-option .Polaris-Icon,
+  .tf-icon-option .Polaris-Icon svg {
+    width: 100% !important;
+    height: 100% !important;
+  }
 
   /* ✅ manquants (cart + button align) */
   .tf-cart-with-icon{ display:flex; align-items:center; gap:10px; margin-bottom:10px; }
   .tf-btn-with-icon{ display:flex; align-items:center; gap:8px; line-height:0; }
   .tf-btn-with-icon span{ line-height:1.2; }
-
-  /* ✅ Popular fields block */
-  .tf-rail-subhead{
-    margin-top:10px;
-    padding:8px 10px 4px;
-    font-size:12px;
-    font-weight:800;
-    color:#475569;
-    text-transform:uppercase;
-    letter-spacing:.06em;
-  }
-  .tf-rail-popular{
-    padding:0 8px 10px;
-    display:grid;
-    gap:8px;
-  }
-  .tf-rail-popular-item{
-    display:grid;
-    grid-template-columns: 28px 1fr auto;
-    align-items:center;
-    gap:10px;
-    padding:10px 12px;
-    border:1px solid #E5E7EB;
-    border-radius:12px;
-    background:linear-gradient(180deg,#fff,#fbfdff);
-    cursor:pointer;
-  }
-  .tf-rail-popular-item:hover { border-color:#CBD5E1; background:#F8FAFC; }
-  .tf-rail-popular-btn{
-    height:30px;
-    border-radius:10px;
-    border:1px solid #E5E7EB;
-    background:#fff;
-    padding:0 10px;
-    font-weight:700;
-    font-size:12px;
-    cursor:pointer;
-  }
-  .tf-rail-popular-btn:hover{ background:#F8FAFC; border-color:#CBD5E1; }
 
   @media (max-width: 1200px) {
     .tf-editor { grid-template-columns: 360px minmax(0, 2.2fr) minmax(320px, 1.4fr); }
@@ -640,11 +602,23 @@ const ICON_LIBRARY = {
     { value: "MapPinIcon", label: "Épingle de carte" },
     { value: "HomeIcon", label: "Maison" },
   ],
+  pincode2: [
+    { value: "LocationIcon", label: "Localisation" },
+    { value: "MapIcon", label: "Carte" },
+    { value: "GlobeIcon", label: "Globe" },
+    { value: "PinIcon", label: "Épingle" },
+  ],
+  pincode3: [
+    { value: "HashtagIcon", label: "Hashtag" },
+    { value: "NumberIcon", label: "Nombre" },
+    { value: "CircleInformationIcon", label: "Information" },
+    { value: "LocationIcon", label: "Marqueur" },
+  ],
   email: [
     { value: "EmailIcon", label: "Email" },
+    { value: "EmailIcon", label: "Enveloppe" },
     { value: "SendIcon", label: "Envoyer" },
     { value: "EmailIcon", label: "Courrier" },
-    { value: "EmailIcon", label: "Enveloppe" },
   ],
   company: [
     { value: "StoreIcon", label: "Magasin" },
@@ -654,8 +628,8 @@ const ICON_LIBRARY = {
   ],
   birthday: [
     { value: "CalendarIcon", label: "Calendrier" },
-    { value: "GiftIcon", label: "Cadeau" },
     { value: "CalendarIcon", label: "Date" },
+    { value: "GiftIcon", label: "Cadeau" },
     { value: "GiftIcon", label: "Célébration" },
   ],
   address: [
@@ -695,60 +669,15 @@ const ICON_LIBRARY = {
 };
 
 const COLOR_PALETTES = [
-  {
-    id: "blue-gradient",
-    name: "Gradient Bleu",
-    colors: ["#0B3B82", "#7D0031", "#00A7A3", "#F0F9FF", "#0C4A6E"],
-    preset: "SkyBlueUI",
-  },
-  {
-    id: "clean-white",
-    name: "Blanc Propre",
-    colors: ["#FFFFFF", "#111827", "#E5E7EB", "#F9FAFB", "#374151"],
-    preset: "CleanWhite",
-  },
-  {
-    id: "dark-modern",
-    name: "Sombre Moderne",
-    colors: ["#0B1220", "#2563EB", "#1F2A44", "#101828", "#E5F0FF"],
-    preset: "BoldDark",
-  },
-  {
-    id: "green-nature",
-    name: "Nature Verte",
-    colors: ["#10B981", "#065F46", "#D1FAE5", "#ECFDF5", "#F0FDF4"],
-    preset: "GreenNature",
-  },
-  {
-    id: "sunset-orange",
-    name: "Orange Couchant",
-    colors: ["#F97316", "#9A3412", "#FDBA74", "#FFEDD5", "#FFF7ED"],
-    preset: "SunsetOrange",
-  },
-  {
-    id: "purple-elegant",
-    name: "Violet Élégant",
-    colors: ["#8B5CF6", "#5B21B6", "#E9D5FF", "#F5F3FF", "#FAF5FF"],
-    preset: "PurpleElegant",
-  },
-  {
-    id: "luxury-gold",
-    name: "Or Luxueux",
-    colors: ["#D97706", "#854D0E", "#FDE68A", "#FEF3C7", "#FEFCE8"],
-    preset: "LuxuryGold",
-  },
-  {
-    id: "ocean-deep",
-    name: "Océan Profond",
-    colors: ["#0891B2", "#0E7490", "#A5F3FC", "#CFFAFE", "#ECFEFF"],
-    preset: "OceanDeep",
-  },
-  {
-    id: "minimal-gray",
-    name: "Gris Minimal",
-    colors: ["#4B5563", "#374151", "#D1D5DB", "#F9FAFB", "#FFFFFF"],
-    preset: "MinimalGray",
-  },
+  { id: "blue-gradient", name: "Gradient Bleu", colors: ["#0B3B82", "#7D0031", "#00A7A3", "#F0F9FF", "#0C4A6E"], preset: "SkyBlueUI" },
+  { id: "clean-white", name: "Blanc Propre", colors: ["#FFFFFF", "#111827", "#E5E7EB", "#F9FAFB", "#374151"], preset: "CleanWhite" },
+  { id: "dark-modern", name: "Sombre Moderne", colors: ["#0B1220", "#2563EB", "#1F2A44", "#101828", "#E5F0FF"], preset: "BoldDark" },
+  { id: "green-nature", name: "Nature Verte", colors: ["#10B981", "#065F46", "#D1FAE5", "#ECFDF5", "#F0FDF4"], preset: "GreenNature" },
+  { id: "sunset-orange", name: "Orange Couchant", colors: ["#F97316", "#9A3412", "#FDBA74", "#FFEDD5", "#FFF7ED"], preset: "SunsetOrange" },
+  { id: "purple-elegant", name: "Violet Élégant", colors: ["#8B5CF6", "#5B21B6", "#E9D5FF", "#F5F3FF", "#FAF5FF"], preset: "PurpleElegant" },
+  { id: "luxury-gold", name: "Or Luxueux", colors: ["#D97706", "#854D0E", "#FDE68A", "#FEF3C7", "#FEFCE8"], preset: "LuxuryGold" },
+  { id: "ocean-deep", name: "Océan Profond", colors: ["#0891B2", "#0E7490", "#A5F3FC", "#CFFAFE", "#ECFEFF"], preset: "OceanDeep" },
+  { id: "minimal-gray", name: "Gris Minimal", colors: ["#4B5563", "#374151", "#D1D5DB", "#F9FAFB", "#FFFFFF"], preset: "MinimalGray" },
 ];
 
 /* ============================== Sanitizer ============================== */
@@ -777,126 +706,11 @@ function sanitizeDeep(o) {
   return o;
 }
 
-/* ============================== Defaults (fields + merge) ============================== */
-const DEFAULT_FIELDS = {
-  name: {
-    on: true,
-    required: true,
-    type: "text",
-    label: "Full name",
-    ph: "Your full name",
-    icon: "ProfileIcon",
-  },
-  phone: {
-    on: true,
-    required: true,
-    type: "tel",
-    label: "Phone (WhatsApp)",
-    ph: "Phone number",
-    prefix: "+212",
-    icon: "PhoneIcon",
-  },
-  quantity: {
-    on: true,
-    required: true,
-    type: "number",
-    label: "Quantity",
-    ph: "1",
-    min: 1,
-    max: 10,
-    icon: "HashtagIcon",
-  },
-
-  // ✅ champs populaires
-  email: {
-    on: false,
-    required: false,
-    type: "text",
-    label: "Email",
-    ph: "your.email@example.com",
-    icon: "EmailIcon",
-  },
-  pincode: {
-    on: false,
-    required: false,
-    type: "text",
-    label: "Pincode",
-    ph: "Enter pincode",
-    icon: "LocationIcon",
-  },
-  company: {
-    on: false,
-    required: false,
-    type: "text",
-    label: "Company",
-    ph: "Your company name",
-    icon: "StoreIcon",
-  },
-  birthday: {
-    on: false,
-    required: false,
-    type: "text",
-    label: "Birthday",
-    ph: "DD/MM/YYYY",
-    icon: "CalendarIcon",
-  },
-
-  province: {
-    on: true,
-    required: false,
-    type: "text",
-    label: "Wilaya / Province",
-    ph: "Select province",
-    icon: "GlobeIcon",
-  },
-  city: {
-    on: true,
-    required: false,
-    type: "text",
-    label: "City",
-    ph: "Select city",
-    icon: "LocationIcon",
-  },
-  address: {
-    on: true,
-    required: false,
-    type: "text",
-    label: "Address",
-    ph: "Full address",
-    icon: "HomeIcon",
-  },
-  notes: {
-    on: true,
-    required: false,
-    type: "textarea",
-    label: "Notes",
-    ph: "(optional)",
-    icon: "NoteIcon",
-  },
-};
-
-const DEFAULT_FIELDS_ORDER = Object.keys(DEFAULT_FIELDS);
-
-function mergeFieldsOrder(savedOrder, fieldsObj) {
-  const keys = Object.keys(fieldsObj || {});
-  const base = Array.isArray(savedOrder) ? savedOrder : [];
-  return [...base.filter((k) => keys.includes(k)), ...keys.filter((k) => !base.includes(k))];
-}
-
 /* ============================== Contexte ============================== */
 const FormsCtx = createContext(null);
 const useForms = () => useContext(FormsCtx);
 
-/* ============================== Composant Icon Polaris (FIX: pas d'icône coupée) ============================== */
-function isPolarisIconObject(src) {
-  return (
-    !!src &&
-    typeof src === "object" &&
-    typeof src.body === "string" &&
-    typeof src.viewBox === "string"
-  );
-}
-
+/* ============================== Composant Icon Polaris ============================== */
 function PolarisIcon({ iconName, size = 20, color = "currentColor", accessibilityLabel }) {
   const source = getIconSource(iconName);
 
@@ -922,36 +736,6 @@ function PolarisIcon({ iconName, size = 20, color = "currentColor", accessibilit
     );
   }
 
-  // ✅ Render SVG direct pour éviter “moitié / crop”
-  if (isPolarisIconObject(source)) {
-    return (
-      <span
-        style={{
-          width: size,
-          height: size,
-          display: "inline-flex",
-          alignItems: "center",
-          justifyContent: "center",
-          color,
-          flex: "0 0 auto",
-          lineHeight: 0,
-        }}
-        aria-label={accessibilityLabel || iconName}
-        title={accessibilityLabel || iconName}
-      >
-        <svg
-          width={size}
-          height={size}
-          viewBox={source.viewBox}
-          style={{ display: "block", width: "100%", height: "100%" }}
-          fill="currentColor"
-          dangerouslySetInnerHTML={{ __html: source.body }}
-        />
-      </span>
-    );
-  }
-
-  // fallback
   return (
     <span
       style={{
@@ -991,12 +775,7 @@ function PageShell({ themeLink, onOpenPreview, onSave, saving, t }) {
               <img
                 src="/tripleform-cod-icon.png"
                 alt="TripleForm COD"
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  display: "block",
-                  objectFit: "cover",
-                }}
+                style={{ width: "100%", height: "100%", display: "block", objectFit: "cover" }}
               />
             </div>
             <div>
@@ -1057,7 +836,21 @@ function Section1FormsLayoutInner() {
     meta: {
       version: 2,
       preset: "CleanWhite",
-      fieldsOrder: DEFAULT_FIELDS_ORDER,
+      fieldsOrder: [
+        "name",
+        "phone",
+        "quantity",
+        "pincode",
+        "pincode2",
+        "pincode3",
+        "email",
+        "company",
+        "birthday",
+        "province",
+        "city",
+        "address",
+        "notes",
+      ],
     },
     form: {
       style: "inline",
@@ -1094,7 +887,21 @@ function Section1FormsLayoutInner() {
       provinceKey: "",
       cityKey: "",
     },
-    fields: { ...DEFAULT_FIELDS },
+    fields: {
+      name: { on: true, required: true, type: "text", label: "Full name", ph: "Your full name", icon: "ProfileIcon" },
+      phone: { on: true, required: true, type: "tel", label: "Phone (WhatsApp)", ph: "Phone number", prefix: "+212", icon: "PhoneIcon" },
+      quantity: { on: true, required: true, type: "number", label: "Quantity", ph: "1", min: 1, max: 10, icon: "HashtagIcon" },
+      pincode: { on: true, required: true, type: "text", label: "Pincode", ph: "Enter pincode", icon: "LocationIcon" },
+      pincode2: { on: true, required: false, type: "text", label: "Pincode 2", ph: "Additional pincode", icon: "MapIcon" },
+      pincode3: { on: true, required: false, type: "text", label: "Pincode 3", ph: "Extra pincode info", icon: "HashtagIcon" },
+      email: { on: true, required: true, type: "text", label: "Email", ph: "your.email@example.com", icon: "EmailIcon" },
+      company: { on: true, required: false, type: "text", label: "Company", ph: "Your company name", icon: "StoreIcon" },
+      birthday: { on: true, required: false, type: "text", label: "Birthday", ph: "DD/MM/YYYY", icon: "CalendarIcon" },
+      province: { on: true, required: false, type: "text", label: "Wilaya / Province", ph: "Select province", icon: "GlobeIcon" },
+      city: { on: true, required: false, type: "text", label: "City", ph: "Select city", icon: "LocationIcon" },
+      address: { on: true, required: false, type: "text", label: "Address", ph: "Full address", icon: "HomeIcon" },
+      notes: { on: true, required: false, type: "textarea", label: "Notes", ph: "(optional)", icon: "NoteIcon" },
+    },
     cartTitles: {
       top: "Order summary",
       price: "Product price",
@@ -1117,38 +924,24 @@ function Section1FormsLayoutInner() {
     let cancelled = false;
 
     async function loadConfig() {
-      const applyMerged = (cleanSettings) => {
-        const clean = sanitizeDeep(cleanSettings || {});
-        const mergedFields = { ...DEFAULT_FIELDS, ...(clean.fields || {}) };
-        const mergedOrder = mergeFieldsOrder(clean?.meta?.fieldsOrder, mergedFields);
-
-        setConfig((prev) => ({
-          ...prev,
-          ...clean,
-          meta: {
-            ...(prev.meta || {}),
-            ...(clean.meta || {}),
-            fieldsOrder: mergedOrder,
-          },
-          fields: mergedFields,
-          behavior: { ...prev.behavior, ...(clean.behavior || {}) },
-          form: { ...prev.form, ...(clean.form || {}) },
-          design: { ...prev.design, ...(clean.design || {}) },
-          cartTitles: { ...prev.cartTitles, ...(clean.cartTitles || {}) },
-          uiTitles: { ...prev.uiTitles, ...(clean.uiTitles || {}) },
-        }));
-
-        try {
-          localStorage.setItem("tripleform_cod_config", JSON.stringify(clean));
-        } catch {}
-      };
-
       try {
         const res = await fetch("/api/load-settings");
         if (res.ok) {
           const j = await res.json();
           if (j?.ok && j.settings) {
-            if (!cancelled) applyMerged(j.settings);
+            const clean = sanitizeDeep(j.settings);
+            if (!cancelled) {
+              setConfig((prev) => ({
+                ...prev,
+                ...clean,
+                behavior: { ...prev.behavior, ...(clean.behavior || {}) },
+                form: { ...prev.form, ...(clean.form || {}) },
+                design: { ...prev.design, ...(clean.design || {}) },
+              }));
+              try {
+                localStorage.setItem("tripleform_cod_config", JSON.stringify(clean));
+              } catch {}
+            }
             setLoadingInitial(false);
             return;
           }
@@ -1158,13 +951,16 @@ function Section1FormsLayoutInner() {
       }
 
       try {
-        const s =
-          typeof window !== "undefined"
-            ? window.localStorage.getItem("tripleform_cod_config")
-            : null;
+        const s = typeof window !== "undefined" ? window.localStorage.getItem("tripleform_cod_config") : null;
         if (s && !cancelled) {
-          const parsed = JSON.parse(s);
-          applyMerged(parsed);
+          const parsed = sanitizeDeep(JSON.parse(s));
+          setConfig((prev) => ({
+            ...prev,
+            ...parsed,
+            behavior: { ...prev.behavior, ...(parsed.behavior || {}) },
+            form: { ...prev.form, ...(parsed.form || {}) },
+            design: { ...prev.design, ...(parsed.design || {}) },
+          }));
         }
       } catch (e) {
         console.error("Failed to load settings from localStorage", e);
@@ -1188,15 +984,10 @@ function Section1FormsLayoutInner() {
   const setDesign = (p) => setConfig((c) => ({ ...c, design: { ...c.design, ...p } }));
   const setForm = (p) => setConfig((c) => ({ ...c, form: { ...c.form, ...p } }));
   const setBehav = (p) => setConfig((c) => ({ ...c, behavior: { ...c.behavior, ...p } }));
-  const setField = (k, p) =>
-    setConfig((c) => ({
-      ...c,
-      fields: { ...c.fields, [k]: { ...(c.fields?.[k] || {}), ...p } },
-    }));
+  const setField = (k, p) => setConfig((c) => ({ ...c, fields: { ...c.fields, [k]: { ...(c.fields?.[k] || {}), ...p } } }));
   const setCartT = (p) => setConfig((c) => ({ ...c, cartTitles: { ...c.cartTitles, ...p } }));
   const setUiT = (p) => setConfig((c) => ({ ...c, uiTitles: { ...c.uiTitles, ...p } }));
-  const setFieldsOrder = (order) =>
-    setConfig((c) => ({ ...c, meta: { ...(c.meta || {}), fieldsOrder: order } }));
+  const setFieldsOrder = (order) => setConfig((c) => ({ ...c, meta: { ...(c.meta || {}), fieldsOrder: order } }));
 
   function computeShadow(effect, glowPx, glowColor, hasShadow) {
     if (effect === "glow") return `0 0 ${glowPx}px ${glowColor}`;
@@ -1290,12 +1081,7 @@ function Section1FormsLayoutInner() {
       borderRadius: 10,
       background: config.design.cartRowBg,
       color: config.design.cartTextColor,
-      boxShadow: computeShadow(
-        eff,
-        Math.max(8, Math.round(glowPx * 0.6)),
-        glowCol,
-        !!config.design.shadow
-      ),
+      boxShadow: computeShadow(eff, Math.max(8, Math.round(glowPx * 0.6)), glowCol, !!config.design.shadow),
       fontSize: baseFontSize,
     }),
     [config.design, eff, glowPx, glowCol, baseFontSize]
@@ -1390,6 +1176,7 @@ function Section1FormsLayoutInner() {
     </FormsCtx.Provider>
   );
 }
+// ============================== PART 2 / 2 ==============================
 
 /* ============================== Composant pour les palettes de couleurs ============================== */
 function ColorPaletteSelector({ onSelect }) {
@@ -1460,8 +1247,7 @@ function IconSelector({ fieldKey, type = "field", onSelect, selectedIcon }) {
 
 /* ============================== Éditeur (rail | réglages | preview) ============================== */
 function OutletEditor() {
-  const { config, setCartT, setForm, setUiT, setField, setDesign, setBehav, setFieldsOrder, t } =
-    useForms();
+  const { config, setCartT, setForm, setUiT, setField, setDesign, setBehav, setFieldsOrder, t } = useForms();
   const [sel, setSel] = useState("cart");
 
   const keys = Object.keys(config.fields || {});
@@ -1497,16 +1283,6 @@ function OutletEditor() {
     if (sel === "options") return 4;
     return 0;
   }, [sel]);
-
-  // ✅ Countries options (dynamic)
-  const countryOptions = useMemo(() => {
-    const base = [{ label: t("section1.options.countries.selectPlaceholder"), value: "" }];
-    const list = (getCountries?.() || []).map((c) => ({
-      label: c.label,
-      value: c.code,
-    }));
-    return [...base, ...list];
-  }, [t]);
 
   const fieldItems = Object.keys(config.fields || {}).map((k) => {
     const field = config.fields[k];
@@ -1551,11 +1327,20 @@ function OutletEditor() {
     setSel(`field:${a}`);
   };
 
+  // ✅ FIX toggle (default ON)
   const toggleField = (key) => {
     const k = key.replace(/^field:/, "");
     const st = config.fields[k] || {};
     const currentOn = st.on !== false;
     setField(k, { on: !currentOn });
+  };
+
+  const removeField = (key) => {
+    const k = key.replace(/^field:/, "");
+    setSel(`field:${k}`);
+    if (window.confirm(t("section1.confirmRemoveField"))) {
+      setField(k, { on: false });
+    }
   };
 
   const RailIconBtn = ({ iconName, title, onClick, active, danger }) => (
@@ -1574,28 +1359,6 @@ function OutletEditor() {
       <PolarisIcon iconName={iconName} size={14} />
     </button>
   );
-
-  // ✅ 5 champs populaires (rail gauche)
-  const POPULAR_FIELDS = [
-    { key: "email", label: "Email", icon: "EmailIcon", tpl: DEFAULT_FIELDS.email },
-    { key: "pincode", label: "Pincode", icon: "LocationIcon", tpl: DEFAULT_FIELDS.pincode },
-    { key: "company", label: "Company", icon: "StoreIcon", tpl: DEFAULT_FIELDS.company },
-    { key: "birthday", label: "Birthday", icon: "CalendarIcon", tpl: DEFAULT_FIELDS.birthday },
-    { key: "notes", label: "Notes", icon: "NoteIcon", tpl: DEFAULT_FIELDS.notes },
-  ];
-
-  const ensurePopularField = (k, tpl) => {
-    const exists = !!config.fields?.[k];
-    if (!exists) {
-      setField(k, { ...tpl, on: true });
-      setFieldsOrder([...order, k]);
-      setSel(`field:${k}`);
-      return;
-    }
-    setField(k, { on: true });
-    if (!order.includes(k)) setFieldsOrder([...order, k]);
-    setSel(`field:${k}`);
-  };
 
   return (
     <>
@@ -1622,33 +1385,21 @@ function OutletEditor() {
                 <div className="tf-rail-label">{it.label}</div>
 
                 <div className="tf-rail-actions">
-                  <RailIconBtn
-                    iconName="SettingsIcon"
-                    title="Settings"
-                    onClick={() => setSel(it.key)}
-                  />
-                  {/* ✅ on garde seulement l'oeil (show/hide), et on supprime l'icône delete */}
+                  <RailIconBtn iconName="SettingsIcon" title="Settings" onClick={() => setSel(it.key)} />
                   <RailIconBtn
                     iconName={it.on ? "ViewIcon" : "HideIcon"}
                     title={it.on ? "Hide" : "Show"}
                     active={!!it.on}
                     onClick={() => toggleField(it.key)}
                   />
-                  <RailIconBtn
-                    iconName="ChevronUpIcon"
-                    title="Move up"
-                    onClick={() => moveField(it.key, -1)}
-                  />
-                  <RailIconBtn
-                    iconName="ChevronDownIcon"
-                    title="Move down"
-                    onClick={() => moveField(it.key, 1)}
-                  />
+                  <RailIconBtn iconName="DeleteIcon" title="Remove" danger onClick={() => removeField(it.key)} />
+                  <RailIconBtn iconName="ChevronUpIcon" title="Move up" onClick={() => moveField(it.key, -1)} />
+                  <RailIconBtn iconName="ChevronDownIcon" title="Move down" onClick={() => moveField(it.key, 1)} />
                 </div>
               </div>
             ))}
 
-            {/* Ajouter un champ custom */}
+            {/* Ajouter un champ */}
             <div
               className="tf-rail-item"
               style={{
@@ -1680,38 +1431,6 @@ function OutletEditor() {
                 <div style={{ width: 44 }} />
               </div>
             </div>
-
-            {/* ✅ Champs populaires */}
-            <div className="tf-rail-subhead">Champs populaires</div>
-            <div className="tf-rail-popular">
-              {POPULAR_FIELDS.map((f) => {
-                const exists = !!config.fields?.[f.key];
-                const isOn = exists ? config.fields[f.key]?.on !== false : false;
-
-                return (
-                  <div
-                    key={f.key}
-                    className="tf-rail-popular-item"
-                    onClick={() => ensurePopularField(f.key, f.tpl)}
-                    title="Cliquer pour ajouter/activer"
-                  >
-                    <div className="tf-rail-icon">
-                      <PolarisIcon iconName={f.icon} size={16} />
-                    </div>
-                    <div className="tf-rail-label">{f.label}</div>
-                    <button
-                      className="tf-rail-popular-btn"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        ensurePopularField(f.key, f.tpl);
-                      }}
-                    >
-                      {isOn ? "Réglages" : exists ? "Activer" : "Ajouter"}
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
           </div>
         </div>
       </div>
@@ -1726,33 +1445,13 @@ function OutletEditor() {
           {sel === "cart" && (
             <GroupCard title={t("section1.group.cart.title")}>
               <Grid2>
-                <TextField
-                  label={t("section1.cart.labelTop")}
-                  value={config.cartTitles.top}
-                  onChange={(v) => setCartT({ top: v })}
-                />
-                <TextField
-                  label={t("section1.cart.labelPrice")}
-                  value={config.cartTitles.price}
-                  onChange={(v) => setCartT({ price: v })}
-                />
-                <TextField
-                  label={t("section1.cart.labelShipping")}
-                  value={config.cartTitles.shipping}
-                  onChange={(v) => setCartT({ shipping: v })}
-                />
-                <TextField
-                  label={t("section1.cart.labelTotal")}
-                  value={config.cartTitles.total}
-                  onChange={(v) => setCartT({ total: v })}
-                />
+                <TextField label={t("section1.cart.labelTop")} value={config.cartTitles.top} onChange={(v) => setCartT({ top: v })} />
+                <TextField label={t("section1.cart.labelPrice")} value={config.cartTitles.price} onChange={(v) => setCartT({ price: v })} />
+                <TextField label={t("section1.cart.labelShipping")} value={config.cartTitles.shipping} onChange={(v) => setCartT({ shipping: v })} />
+                <TextField label={t("section1.cart.labelTotal")} value={config.cartTitles.total} onChange={(v) => setCartT({ total: v })} />
                 <div style={{ display: "grid", gap: 8 }}>
                   <div style={{ fontSize: 13, fontWeight: 600 }}>{t("section1.cart.cartIcon")}</div>
-                  <IconSelector
-                    type="cartTitle"
-                    selectedIcon={config.cartTitles.cartIcon}
-                    onSelect={(icon) => setCartT({ cartIcon: icon })}
-                  />
+                  <IconSelector type="cartTitle" selectedIcon={config.cartTitles.cartIcon} onSelect={(icon) => setCartT({ cartIcon: icon })} />
                 </div>
               </Grid2>
             </GroupCard>
@@ -1761,16 +1460,8 @@ function OutletEditor() {
           {sel === "titles" && (
             <GroupCard title={t("section1.group.formTexts.title")}>
               <Grid2>
-                <TextField
-                  label={t("section1.form.titleLabel")}
-                  value={config.form.title}
-                  onChange={(v) => setForm({ title: v })}
-                />
-                <TextField
-                  label={t("section1.form.subtitleLabel")}
-                  value={config.form.subtitle}
-                  onChange={(v) => setForm({ subtitle: v })}
-                />
+                <TextField label={t("section1.form.titleLabel")} value={config.form.title} onChange={(v) => setForm({ title: v })} />
+                <TextField label={t("section1.form.subtitleLabel")} value={config.form.subtitle} onChange={(v) => setForm({ subtitle: v })} />
               </Grid2>
 
               <div style={{ marginTop: 16 }}>
@@ -1786,28 +1477,12 @@ function OutletEditor() {
           {sel === "buttons" && (
             <GroupCard title={t("section1.group.buttons.title")}>
               <Grid2>
-                <TextField
-                  label={t("section1.buttons.mainCtaLabel")}
-                  value={config.uiTitles.orderNow}
-                  onChange={(v) => setUiT({ orderNow: v })}
-                />
-                <TextField
-                  label={t("section1.buttons.totalSuffixLabel")}
-                  value={config.uiTitles.totalSuffix}
-                  onChange={(v) => setUiT({ totalSuffix: v })}
-                />
-                <TextField
-                  label={t("section1.buttons.successTextLabel")}
-                  value={config.form.successText}
-                  onChange={(v) => setForm({ successText: v })}
-                />
+                <TextField label={t("section1.buttons.mainCtaLabel")} value={config.uiTitles.orderNow} onChange={(v) => setUiT({ orderNow: v })} />
+                <TextField label={t("section1.buttons.totalSuffixLabel")} value={config.uiTitles.totalSuffix} onChange={(v) => setUiT({ totalSuffix: v })} />
+                <TextField label={t("section1.buttons.successTextLabel")} value={config.form.successText} onChange={(v) => setForm({ successText: v })} />
                 <div style={{ display: "grid", gap: 8 }}>
                   <div style={{ fontSize: 13, fontWeight: 600 }}>{t("section1.buttons.buttonIcon")}</div>
-                  <IconSelector
-                    type="button"
-                    selectedIcon={config.form.buttonIcon}
-                    onSelect={(icon) => setForm({ buttonIcon: icon })}
-                  />
+                  <IconSelector type="button" selectedIcon={config.form.buttonIcon} onSelect={(icon) => setForm({ buttonIcon: icon })} />
                 </div>
               </Grid2>
             </GroupCard>
@@ -1816,9 +1491,7 @@ function OutletEditor() {
           {sel === "colors" && (
             <GroupCard title={t("section1.group.colors.title")}>
               <BlueSection title={t("section1.colors.presets")} defaultOpen>
-                <p style={{ fontSize: 13, color: "#6B7280", marginBottom: 12 }}>
-                  {t("section1.presets.description")}
-                </p>
+                <p style={{ fontSize: 13, color: "#6B7280", marginBottom: 12 }}>{t("section1.presets.description")}</p>
                 <ColorPaletteSelector />
               </BlueSection>
 
@@ -1872,10 +1545,7 @@ function OutletEditor() {
                 <div style={{ marginTop: 12, display: "grid", gap: 12 }}>
                   <Select
                     label={t("section1.colors.direction")}
-                    options={[
-                      { label: "LTR", value: "ltr" },
-                      { label: "RTL", value: "rtl" },
-                    ]}
+                    options={[{ label: "LTR", value: "ltr" }, { label: "RTL", value: "rtl" }]}
                     value={config.design.direction || "ltr"}
                     onChange={(v) => setDesign({ direction: v })}
                   />
@@ -1969,24 +1639,36 @@ function OutletEditor() {
                   />
                   <div style={{ display: "grid", gap: 8 }}>
                     <div style={{ fontSize: 13, fontWeight: 600 }}>{t("section1.options.stickyIcon")}</div>
-                    <IconSelector
-                      type="button"
-                      selectedIcon={config.behavior.stickyIcon}
-                      onSelect={(icon) => setBehav({ stickyIcon: icon })}
-                    />
+                    <IconSelector type="button" selectedIcon={config.behavior.stickyIcon} onSelect={(icon) => setBehav({ stickyIcon: icon })} />
                   </div>
                 </Grid3>
               </BlueSection>
 
-              {/* ✅ Countries (dynamic) */}
               <BlueSection title={t("section1.options.countries")}>
                 <Select
                   label={t("section1.options.countries.storeCountryLabel")}
-                  options={countryOptions}
+                  options={[
+                    { label: t("section1.options.countries.selectPlaceholder"), value: "" },
+                    { label: "Maroc", value: "MA" },
+                    { label: "Algérie", value: "DZ" },
+                    { label: "Tunisie", value: "TN" },
+                    { label: "Égypte", value: "EG" },
+                    { label: "France", value: "FR" },
+                    { label: "Espagne", value: "ES" },
+                    { label: "Arabie Saoudite", value: "SA" },
+                    { label: "Émirats Arabes Unis", value: "AE" },
+                    { label: "États-Unis", value: "US" },
+                    { label: "Nigeria", value: "NG" },
+                    { label: "Pakistan", value: "PK" },
+                    { label: "Inde", value: "IN" },
+                    { label: "Indonésie", value: "ID" },
+                    { label: "Turquie", value: "TR" },
+                    { label: "Brésil", value: "BR" },
+                  ]}
                   value={config.behavior.country || ""}
                   onChange={(v) => {
                     setBehav({ country: v, provinceKey: "", cityKey: "" });
-                    const prefix = getPhonePrefixByCountry(v) || "";
+                    const prefix = PHONE_PREFIX_BY_COUNTRY[v] || "";
                     if (prefix) setField("phone", { prefix });
                   }}
                 />
@@ -2047,7 +1729,24 @@ function FieldEditor({ fieldKey }) {
   const st = config.fields[fieldKey] || {};
   const type = st.type || "text";
 
-  const titleText = st.label || fieldKey;
+  const titleKeyMap = {
+    name: "section1.fieldEditor.titlePrefix.fullName",
+    phone: "section1.fieldEditor.titlePrefix.phone",
+    quantity: "section1.fieldEditor.titlePrefix.quantity",
+    pincode: "section1.fieldEditor.titlePrefix.pincode",
+    pincode2: "section1.fieldEditor.titlePrefix.pincode2",
+    pincode3: "section1.fieldEditor.titlePrefix.pincode3",
+    email: "section1.fieldEditor.titlePrefix.email",
+    company: "section1.fieldEditor.titlePrefix.company",
+    birthday: "section1.fieldEditor.titlePrefix.birthday",
+    province: "section1.fieldEditor.titlePrefix.province",
+    city: "section1.fieldEditor.titlePrefix.city",
+    address: "section1.fieldEditor.titlePrefix.address",
+    notes: "section1.fieldEditor.titlePrefix.notes",
+  };
+
+  const titleKey = titleKeyMap[fieldKey];
+  const titleText = titleKey ? t(titleKey) : st.label || fieldKey;
 
   return (
     <GroupCard title={titleText}>
@@ -2161,27 +1860,13 @@ function BlueSection({ title, children, defaultOpen = true }) {
 }
 
 const Grid2 = ({ children }) => (
-  <div
-    style={{
-      display: "grid",
-      gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-      gap: 12,
-      alignItems: "start",
-    }}
-  >
+  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 12, alignItems: "start" }}>
     {children}
   </div>
 );
 
 const Grid3 = ({ children }) => (
-  <div
-    style={{
-      display: "grid",
-      gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-      gap: 12,
-      alignItems: "start",
-    }}
-  >
+  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12, alignItems: "start" }}>
     {children}
   </div>
 );
@@ -2196,13 +1881,7 @@ function ColorField({ label, value, onChange }) {
           type="color"
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          style={{
-            width: 44,
-            height: 32,
-            border: "1px solid #E5E7EB",
-            borderRadius: 8,
-            background: "#fff",
-          }}
+          style={{ width: 44, height: 32, border: "1px solid #E5E7EB", borderRadius: 8, background: "#fff" }}
         />
         <TextField label={t("section1.colors.hexLabel")} value={value} onChange={onChange} />
       </div>
@@ -2218,12 +1897,13 @@ function PreviewPanel() {
   const [shippingNote, setShippingNote] = useState("");
 
   const countryKey = config.behavior.country || "";
+  const country = COUNTRY_DATA[countryKey];
+  const provincesEntries = country ? Object.entries(country.provinces || {}) : [];
+
   const selectedProvinceKey = config.behavior.provinceKey || "";
+  const selectedProvince = country && selectedProvinceKey ? country.provinces[selectedProvinceKey] : null;
 
-  // ✅ Provinces + Cities from dynamic dataset
-  const provinces = useMemo(() => getProvinces(countryKey) || [], [countryKey]);
-  const cities = useMemo(() => getCities(countryKey, selectedProvinceKey) || [], [countryKey, selectedProvinceKey]);
-
+  const cities = selectedProvince?.cities || [];
   const titleAlign = config.design.titleAlign || "left";
 
   const fieldKeys = Object.keys(config.fields || {});
@@ -2255,7 +1935,7 @@ function PreviewPanel() {
   };
 
   const renderFieldWithIcon = (f, key) => {
-    if (!f || f.on === false) return null;
+    if (!f?.on) return null;
     const isTextarea = f.type === "textarea";
 
     return (
@@ -2314,9 +1994,7 @@ function PreviewPanel() {
         <div style={{ display: "grid", gap: 8 }}>
           <div style={cartRowCSS}>
             <div>{sStr(config.cartTitles.price)}</div>
-            <div style={{ fontWeight: 700 }}>
-              {productPrice.toFixed(2)} {currency}
-            </div>
+            <div style={{ fontWeight: 700 }}>{productPrice.toFixed(2)} {currency}</div>
           </div>
 
           <div style={cartRowCSS}>
@@ -2329,9 +2007,7 @@ function PreviewPanel() {
 
           <div style={cartRowCSS}>
             <div>{sStr(config.cartTitles.total)}</div>
-            <div style={{ fontWeight: 700 }}>
-              {total.toFixed(2)} {currency}
-            </div>
+            <div style={{ fontWeight: 700 }}>{total.toFixed(2)} {currency}</div>
           </div>
         </div>
       </div>
@@ -2339,7 +2015,7 @@ function PreviewPanel() {
   };
 
   const renderProvinceField = (f) => {
-    if (!f || f.on === false) return null;
+    if (!f?.on) return null;
 
     return (
       <div key="province" className="tf-field-with-icon">
@@ -2348,8 +2024,7 @@ function PreviewPanel() {
         </div>
         <label style={{ display: "grid", gap: 6, flex: 1 }}>
           <span style={{ fontSize: 13, color: "#475569", textAlign: fieldAlign }}>
-            {sStr(f.label)}
-            {f.required ? " *" : ""}
+            {sStr(f.label)}{f.required ? " *" : ""}
           </span>
           <select
             style={{ ...inputBase, padding: "10px 12px", background: config.design.inputBg }}
@@ -2357,10 +2032,8 @@ function PreviewPanel() {
             onChange={(e) => setBehav({ provinceKey: e.target.value, cityKey: "" })}
           >
             <option value="">{f.ph || t("section1.preview.provincePlaceholder")}</option>
-            {(provinces || []).map((p) => (
-              <option key={p.code} value={p.code}>
-                {p.label}
-              </option>
+            {provincesEntries.map(([key, p]) => (
+              <option key={key} value={key}>{p.label}</option>
             ))}
           </select>
         </label>
@@ -2369,7 +2042,7 @@ function PreviewPanel() {
   };
 
   const renderCityField = (f) => {
-    if (!f || f.on === false) return null;
+    if (!f?.on) return null;
 
     return (
       <div key="city" className="tf-field-with-icon">
@@ -2378,8 +2051,7 @@ function PreviewPanel() {
         </div>
         <label style={{ display: "grid", gap: 6, flex: 1 }}>
           <span style={{ fontSize: 13, color: "#475569", textAlign: fieldAlign }}>
-            {sStr(f.label)}
-            {f.required ? " *" : ""}
+            {sStr(f.label)}{f.required ? " *" : ""}
           </span>
           <select
             style={{
@@ -2396,14 +2068,10 @@ function PreviewPanel() {
             disabled={!selectedProvinceKey}
           >
             <option value="">
-              {!selectedProvinceKey
-                ? t("section1.preview.cityPlaceholderNoProvince")
-                : f.ph || t("section1.preview.cityPlaceholder")}
+              {!selectedProvinceKey ? t("section1.preview.cityPlaceholderNoProvince") : f.ph || t("section1.preview.cityPlaceholder")}
             </option>
-            {(cities || []).map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
+            {cities.map((c) => (
+              <option key={c} value={c}>{c}</option>
             ))}
           </select>
         </label>
@@ -2428,7 +2096,7 @@ function PreviewPanel() {
         <div style={{ display: "grid", gap: 10 }}>
           {orderedFields.map((key) => {
             const f = config.fields[key];
-            if (!f || f.on === false) return null;
+            if (!f?.on) return null;
             if (key === "province") return renderProvinceField(f);
             if (key === "city") return renderCityField(f);
             return renderFieldWithIcon(f, key);
@@ -2462,15 +2130,7 @@ function PreviewPanel() {
     <Card>
       <BlockStack gap="250">
         <div style={{ width: "100%" }}>
-          <div
-            style={{
-              borderRadius: 16,
-              background: "#F9FAFB",
-              border: "1px solid #E5E7EB",
-              padding: 16,
-              boxSizing: "border-box",
-            }}
-          >
+          <div style={{ borderRadius: 16, background: "#F9FAFB", border: "1px solid #E5E7EB", padding: 16, boxSizing: "border-box" }}>
             <div style={{ display: "grid", gap: 12 }}>
               {renderCartBox()}
               {renderFormCard()}

@@ -1,177 +1,199 @@
-// ===== File: app/data/countryData.js =====
+/* =========================================================
+   TripleForm COD - Country Data (Admin/React)
+   Uses country-state-city library directly
+   ========================================================= */
 
 import { Country, State, City } from "country-state-city";
 
-/**
- * ✅ Choix:
- * - false => uniquement les pays populaires (recommandé pour UI rapide)
- * - true  => tous les pays disponibles
- */
-export const USE_ALL_COUNTRIES = false;
-
-/**
- * ✅ Liste de pays populaires (tu peux en ajouter / enlever)
- * Codes ISO2
- */
-export const POPULAR_COUNTRY_CODES = [
-  // North Africa / MENA
-  "MA", "DZ", "TN", "EG", "SA", "AE", "QA", "KW", "BH", "OM", "JO", "LB", "IQ",
-  // Europe
-  "FR", "ES", "IT", "DE", "GB", "NL", "BE", "CH", "AT", "SE", "NO", "DK", "FI", "IE", "PT", "GR",
-  "PL", "CZ", "HU", "RO", "BG", "UA",
-  // Americas
-  "US", "CA", "MX", "BR", "AR", "CL", "CO", "PE",
-  // Africa
-  "NG", "ZA", "KE", "GH", "SN", "CI", "CM", "ET", "TZ", "UG",
-  // Asia
-  "TR", "PK", "IN", "BD", "LK",
-  "ID", "MY", "SG", "TH", "VN", "PH",
-  "JP", "KR", "CN", "TW", "HK",
-  // Oceania
-  "AU", "NZ",
-];
-
-/* ============================== Helpers ============================== */
 const safeUpper = (s) => (typeof s === "string" ? s.toUpperCase() : "");
-const uniq = (arr) => Array.from(new Set(arr));
 
 /**
- * ✅ Countries list for Select
- * return [{ code, label }]
+ * Get all countries
  */
 export function getCountries() {
-  const all = Country.getAllCountries() || [];
-  const filtered = USE_ALL_COUNTRIES
-    ? all
-    : all.filter((c) => POPULAR_COUNTRY_CODES.includes(safeUpper(c.isoCode)));
-
-  return filtered
-    .map((c) => ({
+  try {
+    const countries = Country.getAllCountries() || [];
+    return countries.map(c => ({
       code: c.isoCode,
-      label: c.name,
-    }))
-    .sort((a, b) => a.label.localeCompare(b.label, "fr"));
+      label: c.name
+    })).sort((a, b) => a.label.localeCompare(b.label, "en"));
+  } catch (error) {
+    console.error("Error getting countries:", error);
+    return [];
+  }
 }
 
 /**
- * ✅ Provinces / States list for Select
- * return [{ code, label }]
+ * Get provinces/states for a country
  */
 export function getProvinces(countryCode) {
   const cc = safeUpper(countryCode);
   if (!cc) return [];
-
-  const states = State.getStatesOfCountry(cc) || [];
-  return states
-    .map((s) => ({
-      code: s.isoCode, // ex: "CAS"...
-      label: s.name,
-    }))
-    .sort((a, b) => a.label.localeCompare(b.label, "fr"));
+  
+  try {
+    const states = State.getStatesOfCountry(cc) || [];
+    return states.map(s => ({
+      code: s.isoCode || s.name?.replace(/\s+/g, "_").toUpperCase(),
+      label: s.name
+    })).filter(s => s.code && s.label)
+      .sort((a, b) => a.label.localeCompare(b.label, "en"));
+  } catch (error) {
+    console.error(`Error getting provinces for ${cc}:`, error);
+    return [];
+  }
 }
 
 /**
- * ✅ Cities list (string[])
+ * Get cities for a country and province
  */
 export function getCities(countryCode, provinceCode) {
   const cc = safeUpper(countryCode);
   const pc = safeUpper(provinceCode);
   if (!cc || !pc) return [];
-
-  const cities = City.getCitiesOfState(cc, pc) || [];
-  return uniq(
-    cities
-      .map((c) => c.name)
-      .filter(Boolean)
-      .sort((a, b) => a.localeCompare(b, "fr"))
-  );
+  
+  try {
+    // First, get the actual province code from the state
+    const states = State.getStatesOfCountry(cc) || [];
+    const state = states.find(s => 
+      s.isoCode === pc || 
+      s.name?.toUpperCase() === pc ||
+      s.isoCode?.toUpperCase() === pc
+    );
+    
+    if (!state) return [];
+    
+    const cities = City.getCitiesOfState(cc, state.isoCode) || [];
+    const cityNames = cities.map(c => c.name).filter(Boolean);
+    
+    // Remove duplicates and sort
+    return Array.from(new Set(cityNames)).sort((a, b) => 
+      a.localeCompare(b, "en")
+    );
+  } catch (error) {
+    console.error(`Error getting cities for ${cc}/${pc}:`, error);
+    return [];
+  }
 }
 
 /**
- * ✅ Phone prefix like "+212"
+ * Get phone prefix for a country
  */
 export function getPhonePrefixByCountry(countryCode) {
   const cc = safeUpper(countryCode);
   if (!cc) return "";
-
-  const c = Country.getCountryByCode(cc);
-  const phone = c?.phonecode; // "212"
-  if (!phone) return "";
-  return phone.startsWith("+") ? phone : `+${phone}`;
+  
+  try {
+    const country = Country.getCountryByCode(cc);
+    if (!country || !country.phonecode) return "";
+    
+    const phonecode = String(country.phonecode);
+    return phonecode.startsWith("+") ? phonecode : `+${phonecode}`;
+  } catch (error) {
+    console.error(`Error getting phone prefix for ${cc}:`, error);
+    return "";
+  }
 }
 
 /**
- * ✅ Currency by country (from library)
- * fallback => "USD"
+ * Get currency for a country
  */
 export function getCurrencyByCountry(countryCode) {
   const cc = safeUpper(countryCode);
   if (!cc) return "USD";
-
-  const c = Country.getCountryByCode(cc);
-  const cur = c?.currency; // "MAD", "EUR", ...
-  return cur || "USD";
+  
+  try {
+    const country = Country.getCountryByCode(cc);
+    return country?.currency || "USD";
+  } catch (error) {
+    console.error(`Error getting currency for ${cc}:`, error);
+    return "USD";
+  }
 }
 
 /**
- * ✅ Exemple shipping (preview only)
- * Tu peux enrichir plus tard.
+ * Mock shipping calculation for preview
  */
-export const getShippingExample = (city, countryCode) => {
-  const shippingExamples = {
-    MA: {
-      Casablanca: { amount: 29, note: "Livraison standard" },
-      Rabat: { amount: 25, note: "Livraison standard" },
-      Marrakech: { amount: 35, note: "Livraison express" },
-      "Fès": { amount: 30, note: "Livraison standard" },
-      Tanger: { amount: 40, note: "Livraison express" },
-      Agadir: { amount: 45, note: "Livraison express" },
-      Oujda: { amount: 50, note: "Livraison express" },
-    },
-    DZ: {
-      Alger: { amount: 45, note: "Livraison standard" },
-      Oran: { amount: 40, note: "Livraison standard" },
-      Constantine: { amount: 50, note: "Livraison express" },
-      Annaba: { amount: 55, note: "Livraison express" },
-    },
-    FR: {
-      Paris: { amount: 8.5, note: "Livraison standard" },
-      Lyon: { amount: 7.5, note: "Livraison standard" },
-      Marseille: { amount: 8, note: "Livraison standard" },
-      Toulouse: { amount: 9, note: "Livraison standard" },
-    },
-    ES: {
-      Madrid: { amount: 6.5, note: "Livraison standard" },
-      Barcelona: { amount: 7, note: "Livraison standard" },
-      Valencia: { amount: 7.5, note: "Livraison standard" },
-    },
-    US: {
-      "New York City": { amount: 9.9, note: "Standard shipping" },
-      "Los Angeles": { amount: 12.5, note: "Standard shipping" },
-    },
-    AE: {
-      Dubai: { amount: 15, note: "Standard delivery" },
-      "Abu Dhabi": { amount: 18, note: "Express delivery" },
-    },
-    SA: {
-      Riyadh: { amount: 18, note: "Standard delivery" },
-      Jeddah: { amount: 20, note: "Express delivery" },
-    },
+export function getShippingExample(city, countryCode) {
+  // This is just for preview purposes
+  // In a real app, this would call your shipping API
+  if (!city) {
+    return {
+      amount: 0,
+      note: "Select city to calculate shipping"
+    };
+  }
+  
+  const baseAmount = 45.00;
+  const country = safeUpper(countryCode);
+  
+  // Adjust shipping based on country
+  let amount = baseAmount;
+  let note = `Standard shipping to ${city}: 3-5 business days`;
+  
+  if (country === "MA") {
+    amount = 25.00;
+    note = `Local shipping to ${city}: 1-2 business days`;
+  } else if (country === "FR" || country === "ES") {
+    amount = 35.00;
+    note = `European shipping to ${city}: 2-4 business days`;
+  } else if (country === "US" || country === "CA") {
+    amount = 55.00;
+    note = `International shipping to ${city}: 5-10 business days`;
+  }
+  
+  return {
+    amount: amount,
+    note: note
   };
+}
 
-  const cc = safeUpper(countryCode) || "MA";
-  const cityName = typeof city === "string" ? city : "";
+/**
+ * Get full country data for export
+ */
+export function getAllCountryData() {
+  try {
+    const countries = Country.getAllCountries() || [];
+    
+    return countries.map(c => {
+      const cc = c.isoCode;
+      const states = State.getStatesOfCountry(cc) || [];
+      
+      const provinces = states.map(s => {
+        const cities = City.getCitiesOfState(cc, s.isoCode) || [];
+        const cityNames = cities.map(city => city.name).filter(Boolean);
+        
+        return {
+          code: s.isoCode || s.name?.replace(/\s+/g, "_").toUpperCase(),
+          label: s.name,
+          cities: Array.from(new Set(cityNames)).sort((a, b) => 
+            a.localeCompare(b, "en")
+          )
+        };
+      }).filter(p => p.code && p.label)
+        .sort((a, b) => a.label.localeCompare(b.label, "en"));
+      
+      return {
+        code: cc,
+        label: c.name,
+        phonePrefix: c.phonecode ? 
+          (String(c.phonecode).startsWith("+") ? String(c.phonecode) : `+${c.phonecode}`) : "",
+        currency: c.currency || "USD",
+        provinces
+      };
+    }).filter(c => c.code)
+      .sort((a, b) => a.label.localeCompare(b.label, "en"));
+  } catch (error) {
+    console.error("Error getting all country data:", error);
+    return [];
+  }
+}
 
-  const countryData = shippingExamples[cc] || shippingExamples.MA;
-  const cityData = countryData[cityName];
-
-  if (cityData) return cityData;
-
-  // fallback simple
-  if (cc === "MA") return { amount: 30, note: "Livraison standard" };
-  if (cc === "FR") return { amount: 8, note: "Livraison standard" };
-  if (cc === "ES") return { amount: 7, note: "Livraison standard" };
-  if (cc === "US") return { amount: 10, note: "Standard shipping" };
-
-  return { amount: 10, note: "Standard delivery" };
+export default {
+  getCountries,
+  getProvinces,
+  getCities,
+  getPhonePrefixByCountry,
+  getCurrencyByCountry,
+  getShippingExample,
+  getAllCountryData
 };
