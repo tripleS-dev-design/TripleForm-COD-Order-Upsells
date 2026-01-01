@@ -1,14 +1,6 @@
 // ===== File: app/sections/Section1FormsLayout.jsx =====
-// ✅ FULL FILE — Corrections demandées (icônes, palettes, nav-guard Save/Cancel)
 
-import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import {
   Card,
   BlockStack,
@@ -23,11 +15,7 @@ import {
   Tabs,
 } from "@shopify/polaris";
 import * as PI from "@shopify/polaris-icons";
-import {
-  useRouteLoaderData,
-  useBeforeUnload,
-  unstable_useBlocker as useBlocker,
-} from "@remix-run/react";
+import { useNavigate, useRouteLoaderData } from "@remix-run/react";
 import { useI18n } from "../i18n/react";
 
 import {
@@ -41,7 +29,10 @@ import {
 const iconCache = new Map();
 
 function getIconSource(iconName, fallbackIcon = "AppsIcon") {
-  if (!iconName || typeof iconName !== "string") {
+  // ✅ support "Aucun"
+  if (!iconName) return null;
+
+  if (typeof iconName !== "string") {
     const fallback = PI[fallbackIcon] || PI.AppsIcon;
     return fallback;
   }
@@ -87,12 +78,10 @@ function getIconSource(iconName, fallbackIcon = "AppsIcon") {
     cart: "CartIcon",
     shoppingcart: "CartIcon",
     bag: "BagIcon",
-    profile: "ProfileIcon",
     person: "PersonIcon",
     user: "PersonIcon",
     phone: "PhoneIcon",
     mobile: "MobileIcon",
-    call: "PhoneIcon",
     chat: "ChatIcon",
     email: "EmailIcon",
     mail: "EmailIcon",
@@ -102,27 +91,18 @@ function getIconSource(iconName, fallbackIcon = "AppsIcon") {
     globe: "GlobeIcon",
     home: "HomeIcon",
     store: "StoreIcon",
-    building: "BuildingIcon",
-    business: "BusinessIcon",
     calendar: "CalendarIcon",
     clock: "ClockIcon",
+    gift: "GiftIcon",
     note: "NoteIcon",
     clipboard: "ClipboardIcon",
     text: "TextIcon",
     hashtag: "HashtagIcon",
     add: "AddIcon",
-    plus: "AddIcon",
-    delete: "DeleteIcon",
-    trash: "DeleteIcon",
-    edit: "EditIcon",
     settings: "SettingsIcon",
     view: "ViewIcon",
-    show: "ViewIcon",
-    eye: "ViewIcon",
     hide: "HideIcon",
     check: "CheckCircleIcon",
-    tick: "CheckCircleIcon",
-    success: "CheckCircleIcon",
     arrowright: "ArrowRightIcon",
     arrowleft: "ArrowLeftIcon",
     arrowup: "ArrowUpIcon",
@@ -132,15 +112,7 @@ function getIconSource(iconName, fallbackIcon = "AppsIcon") {
     chevronleft: "ChevronLeftIcon",
     chevronright: "ChevronRightIcon",
     truck: "TruckIcon",
-    shipping: "TruckIcon",
-    delivery: "TruckIcon",
-    receipt: "ReceiptIcon",
-    payment: "CreditCardIcon",
-    colors: "ColorsIcon",
-    palette: "ColorsIcon",
-    info: "CircleInformationIcon",
-    information: "CircleInformationIcon",
-    help: "CircleInformationIcon",
+    checkout: "CheckoutIcon",
   };
 
   const cleanName = lowerIconName.replace(/[^a-z0-9]/g, "");
@@ -181,12 +153,7 @@ function decodeHost(h) {
     return "";
   }
 }
-function buildThemeEditorUrl({
-  hostB64,
-  apiKey,
-  blockHandle = "order-form",
-  template = "product",
-}) {
+function buildThemeEditorUrl({ hostB64, apiKey, blockHandle = "order-form", template = "product" }) {
   const decoded = decodeHost(hostB64);
   if (!decoded) return "";
 
@@ -196,19 +163,13 @@ function buildThemeEditorUrl({
     if (!store) return "";
     return `https://admin.shopify.com/store/${store}/themes/current/editor?template=${encodeURIComponent(
       template
-    )}&addAppBlockId=${encodeURIComponent(apiKey)}/${encodeURIComponent(
-      blockHandle
-    )}&target=main`;
+    )}&addAppBlockId=${encodeURIComponent(apiKey)}/${encodeURIComponent(blockHandle)}&target=main`;
   }
 
-  const shop = decoded
-    .replace(/^https?:\/\//i, "")
-    .replace(/\/admin.*$/i, "");
+  const shop = decoded.replace(/^https?:\/\//i, "").replace(/\/admin.*$/i, "");
   return `https://${shop}/admin/themes/current/editor?template=${encodeURIComponent(
     template
-  )}&addAppBlockId=${encodeURIComponent(apiKey)}/${encodeURIComponent(
-    blockHandle
-  )}&target=main`;
+  )}&addAppBlockId=${encodeURIComponent(apiKey)}/${encodeURIComponent(blockHandle)}&target=main`;
 }
 
 /* ======================= CSS / layout ======================= */
@@ -306,17 +267,19 @@ const LAYOUT_CSS = `
 
   .tf-color-palettes { display:grid; grid-template-columns:repeat(auto-fill, minmax(160px, 1fr)); gap:12px; margin-top:12px; }
   .tf-color-palette { border:1px solid #E5E7EB; border-radius:12px; overflow:hidden; cursor:pointer; transition:all 0.2s; background:#fff; }
-  .tf-color-palette:hover { transform:translateY(-2px); box-shadow:0 6px 16px rgba(0,0,0,0.10); }
+  .tf-color-palette:hover { transform:translateY(-2px); box-shadow:0 8px 18px rgba(0,0,0,0.10); }
   .tf-color-palette.active { outline:2px solid #00A7A3; }
-  .tf-palette-colors { display:flex; height:44px; }
-  .tf-palette-info { padding:8px 10px; background:#fff; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:space-between; gap:10px; }
-  .tf-palette-chip{ width:10px; height:10px; border-radius:999px; border:1px solid rgba(0,0,0,.08); }
+
+  /* ✅ palette pro: 2 gradients + accent */
+  .tf-palette-colors { height:44px; display:grid; grid-template-columns:1fr 1fr; }
+  .tf-palette-info { padding:8px; background:#fff; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .tf-palette-accent{ width:14px; height:14px; border-radius:999px; border:1px solid rgba(0,0,0,.12); }
 
   .tf-icon-selector { display:grid; grid-template-columns:repeat(auto-fill, minmax(44px, 1fr)); gap:8px; margin-top:8px; max-height:200px; overflow-y:auto; padding:8px; border:1px solid #E5E7EB; border-radius:8px; }
   .tf-icon-option { width:44px; height:44px; display:flex; align-items:center; justify-content:center; border:2px solid #E5E7EB; border-radius:10px; cursor:pointer; background:#fff; transition:all 0.2s; color:#4B5563; line-height:0; }
   .tf-icon-option:hover { border-color:#00A7A3; background:#f8fafc; }
   .tf-icon-option.selected { border-color:#00A7A3; background:#ecfeff; }
-  .tf-icon-option.none { color:#9CA3AF; font-weight:800; font-size:16px; }
+  .tf-icon-option.none { font-size:11px; font-weight:800; color:#64748B; }
 
   .tf-field-with-icon { display:grid; grid-template-columns:auto 1fr; gap:10px; align-items:center; }
   .tf-field-icon { width:18px; height:18px; display:flex; align-items:center; justify-content:center; color:#6B7280; line-height:0; }
@@ -340,7 +303,6 @@ const LAYOUT_CSS = `
     height: 100% !important;
   }
 
-  /* ✅ manquants (cart + button align) */
   .tf-cart-with-icon{ display:flex; align-items:center; gap:10px; margin-bottom:10px; }
   .tf-btn-with-icon{ display:flex; align-items:center; gap:8px; line-height:0; }
   .tf-btn-with-icon span{ line-height:1.2; }
@@ -584,164 +546,112 @@ const DESIGN_PRESETS = {
   },
 };
 
-/* ============================== Bibliothèque d'icônes Polaris ============================== */
-/**
- * ✅ Nettoyage AUTOMATIQUE:
- * - On garde seulement les icônes qui existent vraiment dans ta version de @shopify/polaris-icons
- * - Et on ajoute une option "Aucun" (vide) pour TOUS les sélecteurs
- */
-const onlyExisting = (arr) =>
-  (arr || []).filter((x) => !x?.value || !!PI[x.value]);
+/* ============================== Bibliothèque d'icônes Polaris (NETTOYÉE) ============================== */
+/* ✅ + option "Aucun" partout */
+const NONE_ICON = { value: "", label: "Aucun" };
 
 const ICON_LIBRARY = {
-  cartTitle: onlyExisting([
-    { value: "", label: "Aucun" },
+  cartTitle: [
+    NONE_ICON,
     { value: "CartIcon", label: "Panier" },
+    { value: "BagIcon", label: "Sac" },
+    { value: "ProductsIcon", label: "Produits" },
     { value: "ReceiptIcon", label: "Reçu" },
     { value: "NoteIcon", label: "Note" },
-    { value: "BagIcon", label: "Sac" },
-  ]),
-  name: onlyExisting([
-    { value: "", label: "Aucun" },
-    { value: "ProfileIcon", label: "Profil" },
+  ],
+  name: [
+    NONE_ICON,
     { value: "PersonIcon", label: "Personne" },
-  ]),
-  phone: onlyExisting([
-    { value: "", label: "Aucun" },
+    { value: "ProfileIcon", label: "Profil" },
+  ],
+  phone: [
+    NONE_ICON,
     { value: "PhoneIcon", label: "Téléphone" },
     { value: "MobileIcon", label: "Mobile" },
-    { value: "ChatIcon", label: "Chat" },
-  ]),
-  quantity: onlyExisting([
-    { value: "", label: "Aucun" },
+    { value: "ChatIcon", label: "WhatsApp" },
+  ],
+  quantity: [
+    NONE_ICON,
     { value: "HashtagIcon", label: "Hashtag" },
-    { value: "AddIcon", label: "Plus" },
     { value: "CartIcon", label: "Panier" },
-  ]),
-  pincode: onlyExisting([
-    { value: "", label: "Aucun" },
+  ],
+  pincode: [
+    NONE_ICON,
     { value: "LocationIcon", label: "Localisation" },
     { value: "PinIcon", label: "Épingle" },
     { value: "HomeIcon", label: "Maison" },
-    { value: "MapIcon", label: "Carte" },
-  ]),
-  pincode2: onlyExisting([
-    { value: "", label: "Aucun" },
+  ],
+  pincode2: [
+    NONE_ICON,
     { value: "MapIcon", label: "Carte" },
     { value: "LocationIcon", label: "Localisation" },
     { value: "GlobeIcon", label: "Globe" },
-    { value: "PinIcon", label: "Épingle" },
-  ]),
-  pincode3: onlyExisting([
-    { value: "", label: "Aucun" },
+  ],
+  pincode3: [
+    NONE_ICON,
     { value: "HashtagIcon", label: "Hashtag" },
     { value: "CircleInformationIcon", label: "Information" },
     { value: "LocationIcon", label: "Marqueur" },
-  ]),
-  email: onlyExisting([
-    { value: "", label: "Aucun" },
+  ],
+  email: [
+    NONE_ICON,
     { value: "EmailIcon", label: "Email" },
-  ]),
-  company: onlyExisting([
-    { value: "", label: "Aucun" },
+  ],
+  company: [
+    NONE_ICON,
     { value: "StoreIcon", label: "Magasin" },
-    { value: "BuildingIcon", label: "Bâtiment" },
-    { value: "BusinessIcon", label: "Business" },
-  ]),
-  birthday: onlyExisting([
-    { value: "", label: "Aucun" },
+    { value: "BagIcon", label: "Sac" },
+  ],
+  birthday: [
+    NONE_ICON,
     { value: "CalendarIcon", label: "Calendrier" },
     { value: "GiftIcon", label: "Cadeau" },
-  ]),
-  address: onlyExisting([
-    { value: "", label: "Aucun" },
-    { value: "LocationIcon", label: "Localisation" },
+  ],
+  address: [
+    NONE_ICON,
     { value: "HomeIcon", label: "Maison" },
-    { value: "StoreIcon", label: "Magasin" },
-  ]),
-  city: onlyExisting([
-    { value: "", label: "Aucun" },
     { value: "LocationIcon", label: "Localisation" },
+    { value: "PinIcon", label: "Épingle" },
+  ],
+  city: [
+    NONE_ICON,
+    { value: "LocationIcon", label: "Localisation" },
+    { value: "MapIcon", label: "Carte" },
+    { value: "GlobeIcon", label: "Globe" },
+  ],
+  province: [
+    NONE_ICON,
     { value: "GlobeIcon", label: "Globe" },
     { value: "MapIcon", label: "Carte" },
-  ]),
-  province: onlyExisting([
-    { value: "", label: "Aucun" },
-    { value: "GlobeIcon", label: "Globe" },
-    { value: "MapIcon", label: "Carte" },
     { value: "LocationIcon", label: "Localisation" },
-  ]),
-  notes: onlyExisting([
-    { value: "", label: "Aucun" },
+  ],
+  notes: [
+    NONE_ICON,
     { value: "NoteIcon", label: "Note" },
     { value: "ClipboardIcon", label: "Presse-papier" },
     { value: "TextIcon", label: "Texte" },
-  ]),
-  button: onlyExisting([
-    { value: "", label: "Aucun" },
+  ],
+  button: [
+    NONE_ICON,
     { value: "CartIcon", label: "Panier" },
-    { value: "TruckIcon", label: "Camion" },
-    { value: "CheckCircleIcon", label: "Coche" },
+    { value: "TruckIcon", label: "Livraison" },
+    { value: "CheckCircleIcon", label: "Valider" },
     { value: "ArrowRightIcon", label: "Flèche droite" },
-  ]),
+    { value: "PlayIcon", label: "Play" },
+  ],
 };
 
-/* ============================== Palettes pro (dégradés 2 couleurs + accents) ============================== */
+/* ✅ palettes couleurs (on garde 5 couleurs mais UI gradient pro) */
 const COLOR_PALETTES = [
-  {
-    id: "triple-gradient",
-    name: "Triple Gradient Pro",
-    colors: ["#0B3B82", "#7D0031", "#00A7A3", "#F6F7F9", "#0F172A"],
-    preset: "SkyBlueUI",
-  },
-  {
-    id: "clean-white",
-    name: "Clean White Pro",
-    colors: ["#111827", "#FFFFFF", "#E5E7EB", "#F9FAFB", "#0F172A"],
-    preset: "CleanWhite",
-  },
-  {
-    id: "dark-modern",
-    name: "Dark Modern",
-    colors: ["#0B1220", "#2563EB", "#1F2A44", "#101828", "#E5F0FF"],
-    preset: "BoldDark",
-  },
-  {
-    id: "green-nature",
-    name: "Green Nature",
-    colors: ["#065F46", "#10B981", "#D1FAE5", "#ECFDF5", "#052E2B"],
-    preset: "GreenNature",
-  },
-  {
-    id: "sunset-orange",
-    name: "Sunset Orange",
-    colors: ["#9A3412", "#F97316", "#FDBA74", "#FFF7ED", "#7C2D12"],
-    preset: "SunsetOrange",
-  },
-  {
-    id: "purple-elegant",
-    name: "Purple Elegant",
-    colors: ["#5B21B6", "#8B5CF6", "#E9D5FF", "#FAF5FF", "#2E1065"],
-    preset: "PurpleElegant",
-  },
-  {
-    id: "luxury-gold",
-    name: "Luxury Gold",
-    colors: ["#854D0E", "#D97706", "#FDE68A", "#FEFCE8", "#451A03"],
-    preset: "LuxuryGold",
-  },
-  {
-    id: "ocean-deep",
-    name: "Ocean Deep",
-    colors: ["#0E7490", "#0891B2", "#A5F3FC", "#ECFEFF", "#083344"],
-    preset: "OceanDeep",
-  },
-  {
-    id: "minimal-gray",
-    name: "Minimal Gray",
-    colors: ["#111827", "#4B5563", "#D1D5DB", "#F9FAFB", "#FFFFFF"],
-    preset: "MinimalGray",
-  },
+  { id: "blue-gradient", name: "Gradient Bleu", colors: ["#0B3B82", "#7D0031", "#00A7A3", "#F0F9FF", "#0C4A6E"], preset: "SkyBlueUI" },
+  { id: "clean-white", name: "Blanc Pro", colors: ["#111827", "#FFFFFF", "#E5E7EB", "#F9FAFB", "#00A7A3"], preset: "CleanWhite" },
+  { id: "dark-modern", name: "Dark Modern", colors: ["#0B1220", "#2563EB", "#1F2A44", "#101828", "#E5F0FF"], preset: "BoldDark" },
+  { id: "green-nature", name: "Green Nature", colors: ["#10B981", "#065F46", "#D1FAE5", "#ECFDF5", "#F0FDF4"], preset: "GreenNature" },
+  { id: "sunset-orange", name: "Sunset", colors: ["#F97316", "#9A3412", "#FDBA74", "#FFEDD5", "#FFF7ED"], preset: "SunsetOrange" },
+  { id: "purple-elegant", name: "Purple Elegant", colors: ["#8B5CF6", "#5B21B6", "#E9D5FF", "#F5F3FF", "#FAF5FF"], preset: "PurpleElegant" },
+  { id: "luxury-gold", name: "Luxury Gold", colors: ["#D97706", "#854D0E", "#FDE68A", "#FEF3C7", "#FEFCE8"], preset: "LuxuryGold" },
+  { id: "ocean-deep", name: "Ocean", colors: ["#0891B2", "#0E7490", "#A5F3FC", "#CFFAFE", "#ECFEFF"], preset: "OceanDeep" },
+  { id: "minimal-gray", name: "Minimal Gray", colors: ["#4B5563", "#374151", "#D1D5DB", "#F9FAFB", "#FFFFFF"], preset: "MinimalGray" },
 ];
 
 /* ============================== Sanitizer ============================== */
@@ -754,7 +664,9 @@ const REPLACERS = [
   [/ØŸ/g, ""],
 ];
 const sStr = (s) =>
-  typeof s === "string" ? REPLACERS.reduce((x, [r, v]) => x.replace(r, v), s) : s;
+  typeof s === "string"
+    ? REPLACERS.reduce((x, [r, v]) => x.replace(r, v), s)
+    : s;
 
 function sanitizeDeep(o) {
   if (o == null) return o;
@@ -774,31 +686,14 @@ const useForms = () => useContext(FormsCtx);
 
 /* ============================== Composant Icon Polaris ============================== */
 function PolarisIcon({ iconName, size = 20, color = "currentColor", accessibilityLabel }) {
-  // ✅ "Aucun" => pas d'icône
-  if (!iconName) return null;
+  // ✅ Aucun icon: on n'affiche rien
+  if (!iconName) {
+    return <span style={{ width: size, height: size, display: "inline-flex" }} />;
+  }
 
   const source = getIconSource(iconName);
-
   if (!source) {
-    return (
-      <span
-        style={{
-          width: size,
-          height: size,
-          display: "inline-flex",
-          alignItems: "center",
-          justifyContent: "center",
-          border: "1px solid #E5E7EB",
-          borderRadius: 6,
-          color: "#9CA3AF",
-          fontSize: Math.max(10, Math.round(size * 0.55)),
-          lineHeight: 0,
-        }}
-        title={`Icon: ${iconName}`}
-      >
-        ?
-      </span>
-    );
+    return <span style={{ width: size, height: size, display: "inline-flex" }} />;
   }
 
   return (
@@ -840,12 +735,7 @@ function PageShell({ themeLink, onOpenPreview, onSave, saving, t }) {
               <img
                 src="/tripleform-cod-icon.png"
                 alt="TripleForm COD"
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  display: "block",
-                  objectFit: "cover",
-                }}
+                style={{ width: "100%", height: "100%", display: "block", objectFit: "cover" }}
               />
             </div>
             <div>
@@ -862,9 +752,7 @@ function PageShell({ themeLink, onOpenPreview, onSave, saving, t }) {
             <Button url={themeLink} external target="_blank">
               {t("section1.header.btnAddToTheme")}
             </Button>
-            <Button onClick={onOpenPreview}>
-              {t("section1.header.btnPreview")}
-            </Button>
+            <Button onClick={onOpenPreview}>{t("section1.header.btnPreview")}</Button>
             <Button variant="primary" onClick={onSave} loading={saving}>
               {t("section1.header.btnSave")}
             </Button>
@@ -885,6 +773,7 @@ function PageShell({ themeLink, onOpenPreview, onSave, saving, t }) {
 function Section1FormsLayoutInner() {
   useInjectCss();
 
+  const navigate = useNavigate();
   const { t } = useI18n();
   const rootData = useRouteLoaderData("root");
   const apiKey = rootData?.apiKey;
@@ -960,12 +849,12 @@ function Section1FormsLayoutInner() {
       cityKey: "",
     },
     fields: {
-      name: { on: true, required: true, type: "text", label: "Full name", ph: "Your full name", icon: "ProfileIcon" },
+      name: { on: true, required: true, type: "text", label: "Full name", ph: "Your full name", icon: "PersonIcon" },
       phone: { on: true, required: true, type: "tel", label: "Phone (WhatsApp)", ph: "Phone number", prefix: "+212", icon: "PhoneIcon" },
       quantity: { on: true, required: true, type: "number", label: "Quantity", ph: "1", min: 1, max: 10, icon: "HashtagIcon" },
       pincode: { on: true, required: true, type: "text", label: "Pincode", ph: "Enter pincode", icon: "LocationIcon" },
       pincode2: { on: true, required: false, type: "text", label: "Pincode 2", ph: "Additional pincode", icon: "MapIcon" },
-      pincode3: { on: true, required: false, type: "text", label: "Pincode 3", ph: "Extra pincode info", icon: "HashtagIcon" },
+      pincode3: { on: true, required: false, type: "text", label: "Pincode 3", ph: "Extra pincode info", icon: "CircleInformationIcon" },
       email: { on: true, required: true, type: "text", label: "Email", ph: "your.email@example.com", icon: "EmailIcon" },
       company: { on: true, required: false, type: "text", label: "Company", ph: "Your company name", icon: "StoreIcon" },
       birthday: { on: true, required: false, type: "text", label: "Birthday", ph: "DD/MM/YYYY", icon: "CalendarIcon" },
@@ -992,29 +881,11 @@ function Section1FormsLayoutInner() {
   const [showPreview, setShowPreview] = useState(false);
   const [loadingInitial, setLoadingInitial] = useState(true);
 
-  // ✅ Dirty tracking (pro)
-  const lastSavedJsonRef = useRef("");
+  // ✅ Dirty guard
+  const [dirty, setDirty] = useState(false);
+  const lastSavedRef = useRef("");
   const [navGuardOpen, setNavGuardOpen] = useState(false);
-  const pendingActionRef = useRef(null);
-
-  const persistLocal = () => {
-    try {
-      localStorage.setItem("tripleform_cod_config", JSON.stringify(config));
-    } catch {}
-  };
-
-  const setDesign = (p) => setConfig((c) => ({ ...c, design: { ...c.design, ...p } }));
-  const setForm = (p) => setConfig((c) => ({ ...c, form: { ...c.form, ...p } }));
-  const setBehav = (p) => setConfig((c) => ({ ...c, behavior: { ...c.behavior, ...p } }));
-  const setField = (k, p) =>
-    setConfig((c) => ({
-      ...c,
-      fields: { ...c.fields, [k]: { ...(c.fields?.[k] || {}), ...p } },
-    }));
-  const setCartT = (p) => setConfig((c) => ({ ...c, cartTitles: { ...c.cartTitles, ...p } }));
-  const setUiT = (p) => setConfig((c) => ({ ...c, uiTitles: { ...c.uiTitles, ...p } }));
-  const setFieldsOrder = (order) =>
-    setConfig((c) => ({ ...c, meta: { ...(c.meta || {}), fieldsOrder: order } }));
+  const pendingHrefRef = useRef(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -1037,9 +908,9 @@ function Section1FormsLayoutInner() {
               try {
                 localStorage.setItem("tripleform_cod_config", JSON.stringify(clean));
               } catch {}
-
               // ✅ baseline saved
-              lastSavedJsonRef.current = JSON.stringify(clean);
+              lastSavedRef.current = JSON.stringify(clean);
+              setDirty(false);
             }
             setLoadingInitial(false);
             return;
@@ -1050,10 +921,7 @@ function Section1FormsLayoutInner() {
       }
 
       try {
-        const s =
-          typeof window !== "undefined"
-            ? window.localStorage.getItem("tripleform_cod_config")
-            : null;
+        const s = typeof window !== "undefined" ? window.localStorage.getItem("tripleform_cod_config") : null;
         if (s && !cancelled) {
           const parsed = sanitizeDeep(JSON.parse(s));
           setConfig((prev) => ({
@@ -1063,27 +931,77 @@ function Section1FormsLayoutInner() {
             form: { ...prev.form, ...(parsed.form || {}) },
             design: { ...prev.design, ...(parsed.design || {}) },
           }));
-
-          // ✅ baseline saved
-          lastSavedJsonRef.current = JSON.stringify(parsed);
+          lastSavedRef.current = JSON.stringify(parsed);
+          setDirty(false);
         }
       } catch (e) {
         console.error("Failed to load settings from localStorage", e);
       }
 
-      if (!cancelled) {
-        // If nothing loaded, baseline is current initial config
-        lastSavedJsonRef.current = JSON.stringify(config);
-        setLoadingInitial(false);
-      }
+      if (!cancelled) setLoadingInitial(false);
     }
 
     loadConfig();
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // ✅ compute dirty
+  useEffect(() => {
+    if (loadingInitial) return;
+    const cur = JSON.stringify(config);
+    const base = lastSavedRef.current || "";
+    setDirty(cur !== base);
+  }, [config, loadingInitial]);
+
+  // ✅ browser unload guard
+  useEffect(() => {
+    const handler = (e) => {
+      if (!dirty) return;
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [dirty]);
+
+  // ✅ internal link guard (capture clicks)
+  useEffect(() => {
+    const onClick = (e) => {
+      if (!dirty) return;
+      const a = e.target?.closest?.("a");
+      if (!a) return;
+      const href = a.getAttribute("href") || "";
+      const target = a.getAttribute("target");
+      if (!href || href.startsWith("#") || target === "_blank") return;
+
+      // ✅ internal navigation only
+      const isHttp = /^https?:\/\//i.test(href);
+      if (isHttp) return;
+
+      e.preventDefault();
+      pendingHrefRef.current = href;
+      setNavGuardOpen(true);
+    };
+
+    document.addEventListener("click", onClick, true);
+    return () => document.removeEventListener("click", onClick, true);
+  }, [dirty]);
+
+  const persistLocal = () => {
+    try {
+      localStorage.setItem("tripleform_cod_config", JSON.stringify(config));
+    } catch {}
+  };
+
+  const setDesign = (p) => setConfig((c) => ({ ...c, design: { ...c.design, ...p } }));
+  const setForm = (p) => setConfig((c) => ({ ...c, form: { ...c.form, ...p } }));
+  const setBehav = (p) => setConfig((c) => ({ ...c, behavior: { ...c.behavior, ...p } }));
+  const setField = (k, p) => setConfig((c) => ({ ...c, fields: { ...c.fields, [k]: { ...(c.fields?.[k] || {}), ...p } } }));
+  const setCartT = (p) => setConfig((c) => ({ ...c, cartTitles: { ...c.cartTitles, ...p } }));
+  const setUiT = (p) => setConfig((c) => ({ ...c, uiTitles: { ...c.uiTitles, ...p } }));
+  const setFieldsOrder = (order) => setConfig((c) => ({ ...c, meta: { ...(c.meta || {}), fieldsOrder: order } }));
 
   function computeShadow(effect, glowPx, glowColor, hasShadow) {
     if (effect === "glow") return `0 0 ${glowPx}px ${glowColor}`;
@@ -1177,42 +1095,11 @@ function Section1FormsLayoutInner() {
       borderRadius: 10,
       background: config.design.cartRowBg,
       color: config.design.cartTextColor,
-      boxShadow: computeShadow(
-        eff,
-        Math.max(8, Math.round(glowPx * 0.6)),
-        glowCol,
-        !!config.design.shadow
-      ),
+      boxShadow: computeShadow(eff, Math.max(8, Math.round(glowPx * 0.6)), glowCol, !!config.design.shadow),
       fontSize: baseFontSize,
     }),
     [config.design, eff, glowPx, glowCol, baseFontSize]
   );
-
-  // ✅ isDirty
-  const isDirty = useMemo(() => {
-    try {
-      const now = JSON.stringify(config);
-      return !!lastSavedJsonRef.current && now !== lastSavedJsonRef.current;
-    } catch {
-      return false;
-    }
-  }, [config]);
-
-  // ✅ Browser unload guard (refresh/close tab)
-  useBeforeUnload(
-    isDirty,
-    "You have unsaved changes. Please Save or Cancel before leaving."
-  );
-
-  // ✅ In-app navigation guard
-  const blocker = useBlocker(isDirty);
-
-  useEffect(() => {
-    if (blocker?.state === "blocked") {
-      setNavGuardOpen(true);
-      pendingActionRef.current = blocker;
-    }
-  }, [blocker?.state]);
 
   const saveToShop = async () => {
     setSaving(true);
@@ -1229,13 +1116,13 @@ function Section1FormsLayoutInner() {
       } catch {}
 
       if (!res.ok || !j.ok) {
-        const msg =
-          j?.errors?.[0]?.message || j?.error || t("section1.save.errorGeneric");
+        const msg = j?.errors?.[0]?.message || j?.error || t("section1.save.errorGeneric");
         throw new Error(msg);
       }
 
-      // ✅ update baseline saved
-      lastSavedJsonRef.current = JSON.stringify(config);
+      // ✅ mark saved
+      lastSavedRef.current = JSON.stringify(config);
+      setDirty(false);
 
       alert(t("section1.save.success"));
       return true;
@@ -1249,25 +1136,11 @@ function Section1FormsLayoutInner() {
     }
   };
 
-  const handleNavSaveAndLeave = async () => {
-    const ok = await saveToShop();
-    if (!ok) return;
+  const proceedPendingNav = () => {
+    const href = pendingHrefRef.current;
+    pendingHrefRef.current = null;
     setNavGuardOpen(false);
-    const b = pendingActionRef.current;
-    pendingActionRef.current = null;
-    try {
-      b?.proceed?.();
-    } catch {}
-  };
-
-  const handleNavCancelStay = () => {
-    // “Cancel” = rester sur la page (donc on reset le blocker)
-    setNavGuardOpen(false);
-    const b = pendingActionRef.current;
-    pendingActionRef.current = null;
-    try {
-      b?.reset?.();
-    } catch {}
+    if (href) navigate(href);
   };
 
   if (loadingInitial) {
@@ -1314,7 +1187,7 @@ function Section1FormsLayoutInner() {
         t={t}
       />
 
-      {/* ✅ Preview modal */}
+      {/* ✅ modal preview */}
       <Modal
         open={showPreview}
         onClose={() => setShowPreview(false)}
@@ -1330,26 +1203,40 @@ function Section1FormsLayoutInner() {
         </Modal.Section>
       </Modal>
 
-      {/* ✅ Navigation guard modal (Save/Cancel obligatoire) */}
+      {/* ✅ modal guard unsaved */}
       <Modal
         open={navGuardOpen}
-        onClose={handleNavCancelStay}
+        onClose={() => {
+          pendingHrefRef.current = null;
+          setNavGuardOpen(false);
+        }}
         title="Unsaved changes"
         primaryAction={{
-          content: "Save & leave",
-          onAction: handleNavSaveAndLeave,
+          content: "Save & continue",
           loading: saving,
+          onAction: async () => {
+            const ok = await saveToShop();
+            if (ok) proceedPendingNav();
+          },
         }}
         secondaryActions={[
           {
-            content: "Cancel (stay here)",
-            onAction: handleNavCancelStay,
+            content: "Leave without saving",
+            destructive: true,
+            onAction: () => proceedPendingNav(),
+          },
+          {
+            content: "Cancel",
+            onAction: () => {
+              pendingHrefRef.current = null;
+              setNavGuardOpen(false);
+            },
           },
         ]}
       >
         <Modal.Section>
-          <p style={{ margin: 0, color: "#111827" }}>
-            You changed settings. Please <b>Save</b> or <b>Cancel</b> before leaving this section.
+          <p style={{ margin: 0 }}>
+            You have unsaved settings. Please save before leaving this page.
           </p>
         </Modal.Section>
       </Modal>
@@ -1372,7 +1259,11 @@ function ColorPaletteSelector({ onSelect }) {
   return (
     <div className="tf-color-palettes">
       {COLOR_PALETTES.map((palette) => {
-        const [c1, c2, c3, c4, c5] = palette.colors;
+        const c = palette.colors || [];
+        const g1 = `linear-gradient(135deg, ${c[0]} 0%, ${c[1]} 100%)`;
+        const g2 = `linear-gradient(135deg, ${c[2]} 0%, ${c[3]} 100%)`;
+        const accent = c[4] || c[0];
+
         return (
           <div
             key={palette.id}
@@ -1382,21 +1273,14 @@ function ColorPaletteSelector({ onSelect }) {
               onSelect?.(palette.id);
             }}
           >
-            {/* ✅ Pro preview: grand dégradé (c1->c2) + 3 accents */}
             <div className="tf-palette-colors">
-              <div style={{ flex: 2.2, background: `linear-gradient(135deg, ${c1}, ${c2})` }} title={`${c1} → ${c2}`} />
-              <div style={{ flex: 1, background: c3 }} title={c3} />
-              <div style={{ flex: 1, background: c4 }} title={c4} />
-              <div style={{ flex: 1, background: c5 }} title={c5} />
+              <div style={{ background: g1 }} />
+              <div style={{ background: g2 }} />
             </div>
 
             <div className="tf-palette-info">
               <span>{palette.name}</span>
-              <span style={{ display: "inline-flex", gap: 6, alignItems: "center" }}>
-                <span className="tf-palette-chip" style={{ background: c1 }} />
-                <span className="tf-palette-chip" style={{ background: c2 }} />
-                <span className="tf-palette-chip" style={{ background: c3 }} />
-              </span>
+              <span className="tf-palette-accent" style={{ background: accent }} title={accent} />
             </div>
           </div>
         );
@@ -1424,12 +1308,12 @@ function IconSelector({ fieldKey, type = "field", onSelect, selectedIcon }) {
       <div className="tf-icon-selector">
         {icons.map((icon) => (
           <div
-            key={icon.value || "none"}
-            className={`tf-icon-option ${!icon.value ? "none" : ""} ${selectedIcon === icon.value ? "selected" : ""}`}
+            key={icon.value || "__none__"}
+            className={`tf-icon-option ${selectedIcon === icon.value ? "selected" : ""} ${icon.value === "" ? "none" : ""}`}
             onClick={() => onSelect(icon.value)}
             title={icon.label}
           >
-            {!icon.value ? "—" : <PolarisIcon iconName={icon.value} size={20} />}
+            {icon.value === "" ? "NONE" : <PolarisIcon iconName={icon.value} size={20} />}
           </div>
         ))}
       </div>
@@ -1562,22 +1446,20 @@ function OutletEditor() {
                 onDrop={() => onDrop(it.key)}
               >
                 <div className="tf-grip tf-rail-icon">
-                  {/* ✅ si aucun icon -> on laisse vide (pro) */}
-                  {it.iconName ? <PolarisIcon iconName={it.iconName} size={16} /> : <span style={{ width: 16, height: 16 }} />}
+                  <PolarisIcon iconName={it.iconName} size={16} />
                 </div>
 
                 <div className="tf-rail-label">{it.label}</div>
 
                 <div className="tf-rail-actions">
                   <RailIconBtn iconName="SettingsIcon" title="Settings" onClick={() => setSel(it.key)} />
-                  {/* ✅ Eye only (tu as dit pas besoin de supprimer) */}
                   <RailIconBtn
                     iconName={it.on ? "ViewIcon" : "HideIcon"}
                     title={it.on ? "Hide" : "Show"}
                     active={!!it.on}
                     onClick={() => toggleField(it.key)}
                   />
-                  {/* ✅ Delete button removed */}
+                  {/* ✅ Delete icon removed كما طلبتي */}
                   <RailIconBtn iconName="ChevronUpIcon" title="Move up" onClick={() => moveField(it.key, -1)} />
                   <RailIconBtn iconName="ChevronDownIcon" title="Move down" onClick={() => moveField(it.key, 1)} />
                 </div>
@@ -1600,7 +1482,7 @@ function OutletEditor() {
                   type: "text",
                   label: t("section1.newFieldLabel"),
                   ph: t("section1.newFieldPlaceholder"),
-                  icon: "", // ✅ par défaut: aucun icon
+                  icon: "",
                 });
                 setFieldsOrder([...order, newFieldKey]);
                 setSel(`field:${newFieldKey}`);
@@ -1624,12 +1506,7 @@ function OutletEditor() {
       <div className="tf-right-col">
         <div className="tf-panel">
           <div style={{ marginBottom: 12 }}>
-            <Tabs
-              tabs={tabs}
-              selected={selectedTab}
-              onSelect={(idx) => setSel(tabKeys[idx])}
-              fitted
-            />
+            <Tabs tabs={tabs} selected={selectedTab} onSelect={(idx) => setSel(tabKeys[idx])} fitted />
           </div>
 
           {sel === "cart" && (
@@ -1641,7 +1518,7 @@ function OutletEditor() {
                 <TextField label={t("section1.cart.labelTotal")} value={config.cartTitles.total} onChange={(v) => setCartT({ total: v })} />
                 <div style={{ display: "grid", gap: 8 }}>
                   <div style={{ fontSize: 13, fontWeight: 600 }}>{t("section1.cart.cartIcon")}</div>
-                  <IconSelector type="cartTitle" selectedIcon={config.cartTitles.cartIcon || ""} onSelect={(icon) => setCartT({ cartIcon: icon })} />
+                  <IconSelector type="cartTitle" selectedIcon={config.cartTitles.cartIcon} onSelect={(icon) => setCartT({ cartIcon: icon })} />
                 </div>
               </Grid2>
             </GroupCard>
@@ -1672,7 +1549,7 @@ function OutletEditor() {
                 <TextField label={t("section1.buttons.successTextLabel")} value={config.form.successText} onChange={(v) => setForm({ successText: v })} />
                 <div style={{ display: "grid", gap: 8 }}>
                   <div style={{ fontSize: 13, fontWeight: 600 }}>{t("section1.buttons.buttonIcon")}</div>
-                  <IconSelector type="button" selectedIcon={config.form.buttonIcon || ""} onSelect={(icon) => setForm({ buttonIcon: icon })} />
+                  <IconSelector type="button" selectedIcon={config.form.buttonIcon} onSelect={(icon) => setForm({ buttonIcon: icon })} />
                 </div>
               </Grid2>
             </GroupCard>
@@ -1829,11 +1706,7 @@ function OutletEditor() {
                   />
                   <div style={{ display: "grid", gap: 8 }}>
                     <div style={{ fontSize: 13, fontWeight: 600 }}>{t("section1.options.stickyIcon")}</div>
-                    <IconSelector
-                      type="button"
-                      selectedIcon={config.behavior.stickyIcon || ""}
-                      onSelect={(icon) => setBehav({ stickyIcon: icon })}
-                    />
+                    <IconSelector type="button" selectedIcon={config.behavior.stickyIcon} onSelect={(icon) => setBehav({ stickyIcon: icon })} />
                   </div>
                 </Grid3>
               </BlueSection>
@@ -2015,11 +1888,7 @@ function FieldEditor({ fieldKey }) {
         <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8 }}>
           {t("section1.fieldEditor.iconLabel")}
         </div>
-        <IconSelector
-          fieldKey={fieldKey}
-          selectedIcon={st.icon || ""}
-          onSelect={(icon) => setField(fieldKey, { icon })}
-        />
+        <IconSelector fieldKey={fieldKey} selectedIcon={st.icon || ""} onSelect={(icon) => setField(fieldKey, { icon })} />
       </div>
     </GroupCard>
   );
@@ -2135,22 +2004,12 @@ function PreviewPanel() {
   const renderFieldWithIcon = (f, key) => {
     if (!f?.on) return null;
     const isTextarea = f.type === "textarea";
-    const hasIcon = !!f.icon;
 
     return (
-      <div
-        key={key}
-        className="tf-field-with-icon"
-        style={{
-          gridTemplateColumns: hasIcon ? "auto 1fr" : "1fr",
-        }}
-      >
-        {hasIcon && (
-          <div className="tf-field-icon">
-            <PolarisIcon iconName={f.icon} size={16} />
-          </div>
-        )}
-
+      <div key={key} className="tf-field-with-icon">
+        <div className="tf-field-icon">
+          <PolarisIcon iconName={f.icon || ""} size={16} />
+        </div>
         <label style={{ display: "grid", gap: 6, flex: 1 }}>
           <span style={{ fontSize: 13, color: "#475569", textAlign: fieldAlign }}>
             {sStr(f.label)}
@@ -2193,12 +2052,9 @@ function PreviewPanel() {
     return (
       <div style={cartBoxCSS} dir={config.design.direction || "ltr"}>
         <div className="tf-cart-with-icon">
-          {config.cartTitles.cartIcon ? (
-            <div className="tf-cart-icon">
-              <PolarisIcon iconName={config.cartTitles.cartIcon} size={18} />
-            </div>
-          ) : null}
-
+          <div className="tf-cart-icon">
+            <PolarisIcon iconName={config.cartTitles.cartIcon || ""} size={18} />
+          </div>
           <div style={{ fontWeight: 700, color: config.design.cartTitleColor }}>{sStr(config.cartTitles.top)}</div>
         </div>
 
@@ -2227,20 +2083,12 @@ function PreviewPanel() {
 
   const renderProvinceField = (f) => {
     if (!f?.on) return null;
-    const hasIcon = !!f.icon;
 
     return (
-      <div
-        key="province"
-        className="tf-field-with-icon"
-        style={{ gridTemplateColumns: hasIcon ? "auto 1fr" : "1fr" }}
-      >
-        {hasIcon && (
-          <div className="tf-field-icon">
-            <PolarisIcon iconName={f.icon} size={16} />
-          </div>
-        )}
-
+      <div key="province" className="tf-field-with-icon">
+        <div className="tf-field-icon">
+          <PolarisIcon iconName={f.icon || ""} size={16} />
+        </div>
         <label style={{ display: "grid", gap: 6, flex: 1 }}>
           <span style={{ fontSize: 13, color: "#475569", textAlign: fieldAlign }}>
             {sStr(f.label)}{f.required ? " *" : ""}
@@ -2262,20 +2110,12 @@ function PreviewPanel() {
 
   const renderCityField = (f) => {
     if (!f?.on) return null;
-    const hasIcon = !!f.icon;
 
     return (
-      <div
-        key="city"
-        className="tf-field-with-icon"
-        style={{ gridTemplateColumns: hasIcon ? "auto 1fr" : "1fr" }}
-      >
-        {hasIcon && (
-          <div className="tf-field-icon">
-            <PolarisIcon iconName={f.icon} size={16} />
-          </div>
-        )}
-
+      <div key="city" className="tf-field-with-icon">
+        <div className="tf-field-icon">
+          <PolarisIcon iconName={f.icon || ""} size={16} />
+        </div>
         <label style={{ display: "grid", gap: 6, flex: 1 }}>
           <span style={{ fontSize: 13, color: "#475569", textAlign: fieldAlign }}>
             {sStr(f.label)}{f.required ? " *" : ""}
@@ -2341,12 +2181,9 @@ function PreviewPanel() {
           )}
 
           <button type="button" style={btnCSS} className="tf-btn-with-icon">
-            {config.form.buttonIcon ? (
-              <span className="tf-btn-icon">
-                <PolarisIcon iconName={config.form.buttonIcon} size={18} color={config.design.btnText} />
-              </span>
-            ) : null}
-
+            <span className="tf-btn-icon">
+              <PolarisIcon iconName={config.form.buttonIcon || ""} size={18} color={config.design.btnText} />
+            </span>
             <span style={{ flex: 1, textAlign: "center" }}>
               {orderLabel} · {suffix} {total.toFixed(2)} {currency}
             </span>
