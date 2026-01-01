@@ -296,6 +296,91 @@ const LAYOUT_CSS = `
     background:#F9FAFB;
   }
 
+  /* ===================== THANK YOU (admin preview) ===================== */
+  .tf-ty-preview-wrap{
+    position:relative;
+    border-radius:14px;
+    border:1px solid #E5E7EB;
+    background:#fff;
+    overflow:hidden;
+  }
+  .tf-ty-simple{
+    padding:14px;
+    display:grid;
+    gap:10px;
+  }
+  .tf-ty-simple-top{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+  }
+  .tf-ty-chip{
+    font-size:11px;
+    font-weight:900;
+    padding:3px 8px;
+    border-radius:999px;
+    border:1px solid rgba(0,0,0,.10);
+    background:#F8FAFC;
+    color:#111827;
+  }
+  .tf-ty-banner{
+    border-radius:12px;
+    border:1px solid rgba(0,0,0,.08);
+    overflow:hidden;
+    background:#F3F4F6;
+    height:160px;
+  }
+  .tf-ty-banner img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .tf-ty-title{ font-size:14px; font-weight:950; }
+  .tf-ty-text{ font-size:12px; color:#6B7280; line-height:1.4; }
+  .tf-ty-actions{ display:flex; gap:10px; flex-wrap:wrap; }
+  .tf-ty-btn{
+    border-radius:12px;
+    padding:10px 12px;
+    font-size:12px;
+    font-weight:950;
+    border:1px solid transparent;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    cursor:pointer;
+    transition:all .15s ease;
+  }
+  .tf-ty-btn:hover{ transform:translateY(-1px); opacity:.97; }
+  .tf-ty-link{
+    font-size:12px;
+    font-weight:900;
+    color:#2563EB;
+    text-decoration:none;
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+  }
+
+  .tf-ty-modal-overlay{
+    position:absolute;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:14px;
+    background:rgba(2,6,23,.55);
+  }
+  .tf-ty-modal{
+    width:100%;
+    max-width:380px;
+    border-radius:16px;
+    border:1px solid rgba(255,255,255,.12);
+    overflow:hidden;
+    box-shadow:0 18px 40px rgba(0,0,0,.35);
+  }
+  .tf-ty-modal-inner{
+    padding:14px;
+    display:grid;
+    gap:10px;
+  }
+
   @media (max-width: 980px) {
     .tf-editor { grid-template-columns:1fr; }
     .tf-preview-col { position:static; max-height:none; }
@@ -364,7 +449,14 @@ function ColorField({ label, value, onChange, placeholder = "#FFFFFF" }) {
           aria-label={label}
         />
         <div style={{ flex: 1 }}>
-          <TextField label={label} labelHidden value={value || ""} placeholder={placeholder} onChange={(v) => onChange(v)} autoComplete="off" />
+          <TextField
+            label={label}
+            labelHidden
+            value={value || ""}
+            placeholder={placeholder}
+            onChange={(v) => onChange(v)}
+            autoComplete="off"
+          />
         </div>
       </InlineStack>
     </div>
@@ -390,6 +482,24 @@ const OFFER_QTY_OPTIONS = [
   { label: "x1 (1 product)", value: "1" },
   { label: "x2 (2 products)", value: "2" },
   { label: "x3 (3 products)", value: "3" },
+];
+
+/* ============================== Thank You Page options ============================== */
+const THANKYOU_MODE_OPTIONS = [
+  { label: "Simple (inline message)", value: "simple" },
+  { label: "Popup after order", value: "popup" },
+];
+
+const THANKYOU_LAYOUT_OPTIONS = [
+  { label: "Image top", value: "image-top" },
+  { label: "Image left", value: "image-left" },
+  { label: "Image right", value: "image-right" },
+];
+
+const THANKYOU_SIZE_OPTIONS = [
+  { label: "Small", value: "sm" },
+  { label: "Medium", value: "md" },
+  { label: "Large", value: "lg" },
 ];
 
 /* ============================== Palettes globales ============================== */
@@ -457,14 +567,21 @@ function getProductImages(product) {
   const imgs = [];
   const push = (x) => {
     if (!x) return;
-    const src = x.src || x.url || x.originalSrc || x.transformedSrc || x.preview?.image?.url || x.previewImage?.url;
+    const src =
+      x.src ||
+      x.url ||
+      x.originalSrc ||
+      x.transformedSrc ||
+      x.preview?.image?.url ||
+      x.previewImage?.url;
     if (src && !imgs.includes(src)) imgs.push(src);
   };
 
   if (product?.image) push(product.image);
   if (product?.featuredImage) push(product.featuredImage);
   if (Array.isArray(product?.images)) product.images.forEach((im) => push(im));
-  if (Array.isArray(product?.media)) product.media.forEach((m) => push(m?.preview?.image || m?.image));
+  if (Array.isArray(product?.media))
+    product.media.forEach((m) => push(m?.preview?.image || m?.image));
 
   return imgs;
 }
@@ -540,14 +657,67 @@ const DEFAULT_UPSELL = {
   },
 };
 
+/* ============================== Thank You Page defaults ============================== */
+const DEFAULT_THANKYOU_COLORS = {
+  paletteId: "brand-gradient",
+  cardBg: "#FFFFFF",
+  borderColor: "#E5E7EB",
+  iconBg: "#EEF2FF",
+  buttonBg: "#0B3B82",
+  buttonTextColor: "#FFFFFF",
+  buttonBorder: "#0B3B82",
+};
+
+const DEFAULT_THANKYOU = {
+  enabled: true,
+
+  // ✅ mode requested: simple OR popup
+  mode: "simple", // "simple" | "popup"
+  autoOpenDelayMs: 250, // for popup mode only
+
+  // content
+  title: "Thank you!",
+  message:
+    "Your order has been received. Our team will contact you shortly to confirm.",
+  imageUrl: "",
+  iconUrl: "",
+
+  // primary action
+  primaryEnabled: true,
+  primaryText: "Continue shopping",
+  primaryUrl: "/",
+
+  // secondary action
+  secondaryEnabled: false,
+  secondaryText: "Track my order",
+  secondaryUrl: "/pages/track-order",
+
+  // layout
+  layout: "image-top", // image-top | image-left | image-right
+  size: "md", // sm | md | lg
+
+  // design
+  useGlobalColors: true, // use offers global colors OR thankyou palette/colors
+  colors: { ...DEFAULT_THANKYOU_COLORS },
+
+  // style tweaks (like Canva tools)
+  radius: 16,
+  imageHeight: 160,
+  showChip: true,
+  chipText: "Order confirmed",
+};
+
 const DEFAULT_CFG = {
-  meta: { version: 31 },
+  meta: { version: 32 }, // ✅ bumped version
   global: {
     enabled: true,
     colors: { ...DEFAULT_GLOBAL_COLORS },
   },
   offers: [JSON.parse(JSON.stringify(DEFAULT_OFFER))],
   upsells: [JSON.parse(JSON.stringify(DEFAULT_UPSELL))],
+
+  // ✅ NEW: Thank You Page section
+  thankYou: JSON.parse(JSON.stringify(DEFAULT_THANKYOU)),
 };
 
 function clampInt(n, min, max, fallback) {
@@ -562,7 +732,10 @@ function withDefaults(raw = {}) {
   const x = { ...d, ...raw };
 
   x.global = { ...d.global, ...(raw.global || {}) };
-  x.global.colors = { ...DEFAULT_GLOBAL_COLORS, ...((raw.global || {}).colors || {}) };
+  x.global.colors = {
+    ...DEFAULT_GLOBAL_COLORS,
+    ...((raw.global || {}).colors || {}),
+  };
 
   x.offers = Array.isArray(raw.offers) ? raw.offers : d.offers;
   x.upsells = Array.isArray(raw.upsells) ? raw.upsells : d.upsells;
@@ -582,7 +755,12 @@ function withDefaults(raw = {}) {
         : DEFAULT_OFFER.discountValue,
 
     // ✅ ensure qtyMultiplier exists and is 1..3
-    qtyMultiplier: clampInt(o?.qtyMultiplier, 1, 3, DEFAULT_OFFER.qtyMultiplier),
+    qtyMultiplier: clampInt(
+      o?.qtyMultiplier,
+      1,
+      3,
+      DEFAULT_OFFER.qtyMultiplier
+    ),
   }));
 
   x.upsells = x.upsells.slice(0, 3).map((u) => ({
@@ -590,6 +768,30 @@ function withDefaults(raw = {}) {
     ...u,
     colors: { ...DEFAULT_UPSELL.colors, ...(u?.colors || {}) },
   }));
+
+  // ✅ Thank You defaults/merge
+  const tyRaw = raw?.thankYou || {};
+  x.thankYou = {
+    ...DEFAULT_THANKYOU,
+    ...tyRaw,
+    colors: { ...DEFAULT_THANKYOU_COLORS, ...(tyRaw?.colors || {}) },
+    radius: clampInt(tyRaw?.radius, 10, 28, DEFAULT_THANKYOU.radius),
+    imageHeight: clampInt(
+      tyRaw?.imageHeight,
+      120,
+      240,
+      DEFAULT_THANKYOU.imageHeight
+    ),
+    autoOpenDelayMs: clampInt(
+      tyRaw?.autoOpenDelayMs,
+      0,
+      5000,
+      DEFAULT_THANKYOU.autoOpenDelayMs
+    ),
+    size: tyRaw?.size || DEFAULT_THANKYOU.size,
+    layout: tyRaw?.layout || DEFAULT_THANKYOU.layout,
+    mode: tyRaw?.mode || DEFAULT_THANKYOU.mode,
+  };
 
   return x;
 }
@@ -605,14 +807,22 @@ function PaletteSelector({ value, onChange }) {
         const accent = c[4] || c[0];
 
         return (
-          <div key={p.id} className={`tf-color-palette ${value === p.id ? "active" : ""}`} onClick={() => onChange(p.id)}>
+          <div
+            key={p.id}
+            className={`tf-color-palette ${value === p.id ? "active" : ""}`}
+            onClick={() => onChange(p.id)}
+          >
             <div className="tf-palette-colors">
               <div style={{ background: g1 }} />
               <div style={{ background: g2 }} />
             </div>
             <div className="tf-palette-info">
               <span>{p.name}</span>
-              <span className="tf-palette-accent" style={{ background: accent }} title={accent} />
+              <span
+                className="tf-palette-accent"
+                style={{ background: accent }}
+                title={accent}
+              />
             </div>
           </div>
         );
@@ -621,13 +831,17 @@ function PaletteSelector({ value, onChange }) {
   );
 }
 
-function applyPaletteToGlobal(globalColors, paletteId) {
+function applyPalette(paletteId, baseColors) {
   const p = COLOR_PALETTES.find((x) => x.id === paletteId);
-  if (!p?.preset) return globalColors;
-  return { ...globalColors, paletteId, ...p.preset };
+  if (!p?.preset) return baseColors;
+  return { ...baseColors, paletteId, ...p.preset };
 }
 
-/* ============================== Preview renderer ============================== */
+function applyPaletteToGlobal(globalColors, paletteId) {
+  return applyPalette(paletteId, globalColors);
+}
+
+/* ============================== Preview renderer (Offers/Upsells) ============================== */
 function PreviewCard({ item, products, isOffer, globalColors, tr }) {
   const product = item.productId ? getProductById(products, item.productId) : null;
   const images = product ? getProductImages(product) : [];
@@ -667,7 +881,10 @@ function PreviewCard({ item, products, isOffer, globalColors, tr }) {
   const qty = isOffer ? clampInt(item.qtyMultiplier, 1, 3, 1) : 1;
 
   return (
-    <div className={`preview-offer ${layoutClass}`} style={{ background: cardBg, borderColor }}>
+    <div
+      className={`preview-offer ${layoutClass}`}
+      style={{ background: cardBg, borderColor }}
+    >
       <div className="preview-row">
         <div className="preview-icon" style={{ background: iconBg }}>
           {item.iconUrl ? (
@@ -680,7 +897,10 @@ function PreviewCard({ item, products, isOffer, globalColors, tr }) {
               }}
             />
           ) : (
-            <SafeIcon name={isOffer ? "DiscountIcon" : "GiftCardIcon"} fallback="AppsIcon" />
+            <SafeIcon
+              name={isOffer ? "DiscountIcon" : "GiftCardIcon"}
+              fallback="AppsIcon"
+            />
           )}
         </div>
 
@@ -698,7 +918,10 @@ function PreviewCard({ item, products, isOffer, globalColors, tr }) {
         <div className="preview-main">
           <InlineStack align="space-between" blockAlign="center">
             <div className="preview-title">
-              {item.title || (isOffer ? tr("section2.offers.defaultTitle", "Offer") : tr("section2.upsells.defaultTitle", "Upsell"))}
+              {item.title ||
+                (isOffer
+                  ? tr("section2.offers.defaultTitle", "Offer")
+                  : tr("section2.upsells.defaultTitle", "Upsell"))}
             </div>
 
             <InlineStack gap="200" blockAlign="center">
@@ -715,7 +938,13 @@ function PreviewCard({ item, products, isOffer, globalColors, tr }) {
 
           <div className="preview-sub">
             {tr("section2.preview.productLabel", "Product")}:{" "}
-            <b>{product?.title ? product.title : item.productId ? tr("section2.preview.productSelected", "Selected") : tr("section2.preview.productNone", "None")}</b>
+            <b>
+              {product?.title
+                ? product.title
+                : item.productId
+                ? tr("section2.preview.productSelected", "Selected")
+                : tr("section2.preview.productNone", "None")}
+            </b>
             {isOffer ? (
               <>
                 {" "}
@@ -727,16 +956,226 @@ function PreviewCard({ item, products, isOffer, globalColors, tr }) {
           {isOffer && (
             <button
               className="offer-btn"
-              style={{ background: btnBg, color: btnText, borderColor: btnBorder }}
+              style={{
+                background: btnBg,
+                color: btnText,
+                borderColor: btnBorder,
+              }}
               type="button"
               onClick={() => {}}
             >
               <SafeIcon name="CirclePlusIcon" fallback="PlusIcon" />
-              {item.buttonText || tr("section2.offers.buttonDefault", "Activate")}
+              {item.buttonText ||
+                tr("section2.offers.buttonDefault", "Activate")}
             </button>
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+/* ============================== Thank You Preview (Admin) ============================== */
+function ThankYouPreview({ thankYou, globalColors, tr }) {
+  const fallbackImg =
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 900 520'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23EEF2FF'/%3E%3Cstop offset='1' stop-color='%23F8FAFC'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='900' height='520' rx='28' fill='url(%23g)'/%3E%3Cpath d='M220 210l110-110 220 220v180H170V210z' fill='%234F46E5' opacity='.88'/%3E%3Ccircle cx='240' cy='190' r='46' fill='%2399A7FF' opacity='.85'/%3E%3C/svg%3E";
+
+  const ty = thankYou || DEFAULT_THANKYOU;
+
+  const useGlobal = ty.useGlobalColors !== false;
+  const c = useGlobal ? globalColors : ty.colors || {};
+
+  const cardBg = c.cardBg || "#fff";
+  const borderColor = c.borderColor || "#E5E7EB";
+  const iconBg = c.iconBg || "#EEF2FF";
+  const btnBg = c.buttonBg || "#111827";
+  const btnText = c.buttonTextColor || "#fff";
+  const btnBorder = c.buttonBorder || btnBg;
+
+  const img = (ty.imageUrl || "").trim() || fallbackImg;
+
+  const radius = clampInt(ty.radius, 10, 28, 16);
+  const imageHeight = clampInt(ty.imageHeight, 120, 240, 160);
+  const layout = ty.layout || "image-top";
+
+  const chip = ty.showChip !== false ? ty.chipText || tr("thankyou.chip", "Order confirmed") : "";
+
+  const cardStyle = {
+    background: cardBg,
+    border: `1px solid ${borderColor}`,
+    borderRadius: radius,
+  };
+
+  // layout
+  const isTop = layout === "image-top";
+  const isLeft = layout === "image-left";
+  const isRight = layout === "image-right";
+
+  const contentWrapStyle = {
+    display: "grid",
+    gap: 12,
+    gridTemplateColumns: isTop ? "1fr" : "140px 1fr",
+    alignItems: "start",
+  };
+
+  const imageWrapStyle = {
+    borderRadius: Math.max(10, radius - 4),
+    border: "1px solid rgba(0,0,0,.08)",
+    background: "#F3F4F6",
+    overflow: "hidden",
+    height: isTop ? imageHeight : 140,
+  };
+
+  const iconStyle = {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    display: "grid",
+    placeItems: "center",
+    border: "1px solid rgba(0,0,0,.10)",
+    background: iconBg,
+    overflow: "hidden",
+    flex: "0 0 auto",
+  };
+
+  const renderContent = () => (
+    <div className="tf-ty-simple" style={cardStyle}>
+      <div className="tf-ty-simple-top">
+        <InlineStack gap="200" blockAlign="center">
+          <div style={iconStyle}>
+            {ty.iconUrl ? (
+              <img
+                src={ty.iconUrl}
+                alt=""
+                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.style.display = "none";
+                }}
+              />
+            ) : (
+              <SafeIcon name="CheckCircleIcon" fallback="AppsIcon" />
+            )}
+          </div>
+
+          <div>
+            <div className="tf-ty-title">{ty.title || tr("thankyou.title", "Thank you!")}</div>
+            <div className="tf-ty-text">{ty.message || ""}</div>
+          </div>
+        </InlineStack>
+
+        {chip ? <span className="tf-ty-chip">{chip}</span> : null}
+      </div>
+
+      <div style={contentWrapStyle}>
+        <div
+          className="tf-ty-banner"
+          style={{
+            ...imageWrapStyle,
+            height: isTop ? imageHeight : 140,
+            order: isRight ? 2 : 0,
+          }}
+        >
+          <img
+            src={img}
+            alt=""
+            onError={(e) => {
+              e.currentTarget.onerror = null;
+              e.currentTarget.src = fallbackImg;
+            }}
+          />
+        </div>
+
+        <div style={{ display: "grid", gap: 10, order: isRight ? 1 : 0 }}>
+          <div className="tf-ty-actions">
+            {ty.primaryEnabled !== false ? (
+              <button
+                className="tf-ty-btn"
+                type="button"
+                style={{
+                  background: btnBg,
+                  color: btnText,
+                  borderColor: btnBorder,
+                  borderWidth: 1,
+                  borderStyle: "solid",
+                }}
+              >
+                <SafeIcon name="ArrowRightIcon" fallback="AppsIcon" />
+                {ty.primaryText || tr("thankyou.primary", "Continue")}
+              </button>
+            ) : null}
+
+            {ty.secondaryEnabled ? (
+              <a className="tf-ty-link" href={ty.secondaryUrl || "#"} onClick={(e) => e.preventDefault()}>
+                <SafeIcon name="ExternalIcon" fallback="AppsIcon" />
+                {ty.secondaryText || tr("thankyou.secondary", "Track")}
+              </a>
+            ) : null}
+          </div>
+
+          <Text as="p" variant="bodySm" tone="subdued">
+            {tr("thankyou.previewHint", "Admin preview only — this shows how it can look on the storefront.")}
+          </Text>
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="tf-ty-preview-wrap">
+      {/* SIMPLE preview always visible */}
+      {ty.mode === "simple" ? (
+        renderContent()
+      ) : (
+        <>
+          {/* show base page */}
+          <div style={{ padding: 12 }}>
+            <div style={{ ...cardStyle, padding: 12 }}>
+              <InlineStack align="space-between" blockAlign="center">
+                <Text as="p" variant="bodySm" fontWeight="bold">
+                  {tr("thankyou.mode.popupLabel", "Popup mode preview")}
+                </Text>
+                <Badge tone="info">
+                  {tr("thankyou.mode.popup", "Popup")}
+                </Badge>
+              </InlineStack>
+              <Divider />
+              <Text as="p" variant="bodySm" tone="subdued">
+                {tr("thankyou.preview.popupHint", "After order success, a popup opens automatically.")}
+              </Text>
+              <div style={{ marginTop: 10 }}>
+                <button
+                  className="tf-ty-btn"
+                  type="button"
+                  style={{
+                    background: "#111827",
+                    color: "#fff",
+                    border: "1px solid #111827",
+                  }}
+                  onClick={() => {}}
+                >
+                  <SafeIcon name="CirclePlusIcon" fallback="AppsIcon" />
+                  {tr("thankyou.preview.fakeButton", "Finish order (demo)")}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* overlay popup preview */}
+          <div className="tf-ty-modal-overlay">
+            <div
+              className="tf-ty-modal"
+              style={{
+                background: cardBg,
+                borderRadius: radius,
+                border: `1px solid ${borderColor}`,
+              }}
+            >
+              <div className="tf-ty-modal-inner">{renderContent()}</div>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -991,6 +1430,347 @@ function UpsellEditor({ upsell, index, products, onChange, onRemove, canRemove, 
   );
 }
 
+/* ============================== Thank You Editor ============================== */
+function ThankYouEditor({ thankYou, globalColors, onChange, tr }) {
+  const ty = thankYou || DEFAULT_THANKYOU;
+
+  // internal sub-tabs (like Canva tools)
+  const [subTab, setSubTab] = useState("mode");
+  const subTabs = useMemo(
+    () => [
+      { id: "mode", content: tr("thankyou.subtabs.mode", "Mode") },
+      { id: "content", content: tr("thankyou.subtabs.content", "Content") },
+      { id: "actions", content: tr("thankyou.subtabs.actions", "Buttons") },
+      { id: "design", content: tr("thankyou.subtabs.design", "Design") },
+    ],
+    [tr]
+  );
+  const subSelected = Math.max(0, subTabs.findIndex((x) => x.id === subTab));
+
+  const update = (patch) => onChange({ ...ty, ...patch });
+
+  const useGlobal = ty.useGlobalColors !== false;
+  const colors = useGlobal ? globalColors : ty.colors || DEFAULT_THANKYOU_COLORS;
+
+  return (
+    <BlockStack gap="400">
+      <GroupCard title={tr("thankyou.titleGroup", "Thank You Page")}>
+        <Grid3>
+          <Checkbox
+            label={tr("thankyou.enable", "Enable Thank You Page experience")}
+            checked={ty.enabled !== false}
+            onChange={(v) => update({ enabled: v })}
+          />
+          <div />
+          <div />
+        </Grid3>
+
+        <Divider />
+
+        <Tabs
+          tabs={subTabs.map((x) => ({ id: x.id, content: x.content, panelID: `ty-${x.id}` }))}
+          selected={subSelected}
+          onSelect={(i) => setSubTab(subTabs[i]?.id || "mode")}
+        />
+
+        <Divider />
+
+        {/* MODE */}
+        {subTab === "mode" && (
+          <BlockStack gap="400">
+            <Grid3>
+              <Select
+                label={tr("thankyou.mode.label", "Thank you mode")}
+                value={ty.mode || "simple"}
+                options={THANKYOU_MODE_OPTIONS}
+                onChange={(v) => update({ mode: v })}
+                helpText={tr(
+                  "thankyou.mode.help",
+                  "Simple shows a message area. Popup opens after successful order."
+                )}
+              />
+
+              <Select
+                label={tr("thankyou.size.label", "Popup size")}
+                value={ty.size || "md"}
+                options={THANKYOU_SIZE_OPTIONS}
+                onChange={(v) => update({ size: v })}
+                disabled={ty.mode !== "popup"}
+              />
+
+              <TextField
+                type="number"
+                label={tr("thankyou.delay.label", "Auto open delay (ms)")}
+                value={String(clampInt(ty.autoOpenDelayMs, 0, 5000, 250))}
+                onChange={(v) => update({ autoOpenDelayMs: clampInt(v, 0, 5000, 250) })}
+                disabled={ty.mode !== "popup"}
+                helpText={tr("thankyou.delay.help", "0 = open instantly. Example: 250ms.")}
+              />
+            </Grid3>
+
+            <Divider />
+
+            <Text as="p" variant="bodySm" tone="subdued">
+              {tr(
+                "thankyou.mode.note",
+                "Storefront behavior needs the frontend script to show this popup after submit success."
+              )}
+            </Text>
+          </BlockStack>
+        )}
+
+        {/* CONTENT */}
+        {subTab === "content" && (
+          <BlockStack gap="400">
+            <Grid3>
+              <TextField
+                label={tr("thankyou.fields.title", "Title")}
+                value={ty.title || ""}
+                onChange={(v) => update({ title: v })}
+                autoComplete="off"
+              />
+              <TextField
+                label={tr("thankyou.fields.chipText", "Status chip text")}
+                value={ty.chipText || ""}
+                onChange={(v) => update({ chipText: v })}
+                autoComplete="off"
+                helpText={tr("thankyou.fields.chipHelp", "Small label like: Order confirmed")}
+              />
+              <Checkbox
+                label={tr("thankyou.fields.showChip", "Show chip")}
+                checked={ty.showChip !== false}
+                onChange={(v) => update({ showChip: v })}
+              />
+            </Grid3>
+
+            <TextField
+              label={tr("thankyou.fields.message", "Message")}
+              value={ty.message || ""}
+              onChange={(v) => update({ message: v })}
+              autoComplete="off"
+              multiline={4}
+            />
+
+            <Divider />
+
+            {/* "Canva like" media tools: URL + button to pick Shopify image (placeholder) */}
+            <GroupCard title={tr("thankyou.media.title", "Media (Image & Icon)")}>
+              <Grid3>
+                <TextField
+                  label={tr("thankyou.media.imageUrl", "Image URL")}
+                  value={ty.imageUrl || ""}
+                  onChange={(v) => update({ imageUrl: v })}
+                  placeholder="https://cdn.shopify.com/..."
+                  autoComplete="off"
+                  helpText={tr(
+                    "thankyou.media.imageHelp",
+                    "Paste a URL or use the button to pick a Shopify image (if connected)."
+                  )}
+                />
+                <TextField
+                  label={tr("thankyou.media.iconUrl", "Icon URL")}
+                  value={ty.iconUrl || ""}
+                  onChange={(v) => update({ iconUrl: v })}
+                  placeholder="https://cdn.shopify.com/..."
+                  autoComplete="off"
+                />
+                <div style={{ display: "grid", gap: 10 }}>
+                  <Button
+                    onClick={() => alert(tr("thankyou.media.pickNotConnected", "Shopify image picker is not connected here. Paste an URL for now."))}
+                    icon={PI.ImageIcon}
+                  >
+                    {tr("thankyou.media.pickImage", "Pick Shopify image")}
+                  </Button>
+
+                  <Button
+                    onClick={() => update({ imageUrl: "", iconUrl: "" })}
+                    icon={PI.DeleteIcon}
+                    variant="secondary"
+                  >
+                    {tr("thankyou.media.clear", "Clear media")}
+                  </Button>
+                </div>
+              </Grid3>
+
+              <Divider />
+
+              <Grid3>
+                <Select
+                  label={tr("thankyou.layout.label", "Layout")}
+                  value={ty.layout || "image-top"}
+                  options={THANKYOU_LAYOUT_OPTIONS}
+                  onChange={(v) => update({ layout: v })}
+                />
+                <TextField
+                  type="number"
+                  label={tr("thankyou.layout.imageHeight", "Image height (px)")}
+                  value={String(clampInt(ty.imageHeight, 120, 240, 160))}
+                  onChange={(v) => update({ imageHeight: clampInt(v, 120, 240, 160) })}
+                />
+                <TextField
+                  type="number"
+                  label={tr("thankyou.layout.radius", "Border radius")}
+                  value={String(clampInt(ty.radius, 10, 28, 16))}
+                  onChange={(v) => update({ radius: clampInt(v, 10, 28, 16) })}
+                />
+              </Grid3>
+            </GroupCard>
+          </BlockStack>
+        )}
+
+        {/* ACTIONS */}
+        {subTab === "actions" && (
+          <BlockStack gap="400">
+            <GroupCard title={tr("thankyou.actions.primary", "Primary button")}>
+              <Grid3>
+                <Checkbox
+                  label={tr("thankyou.actions.primaryEnabled", "Enable primary button")}
+                  checked={ty.primaryEnabled !== false}
+                  onChange={(v) => update({ primaryEnabled: v })}
+                />
+                <TextField
+                  label={tr("thankyou.actions.primaryText", "Button text")}
+                  value={ty.primaryText || ""}
+                  onChange={(v) => update({ primaryText: v })}
+                  autoComplete="off"
+                />
+                <TextField
+                  label={tr("thankyou.actions.primaryUrl", "Button URL")}
+                  value={ty.primaryUrl || ""}
+                  onChange={(v) => update({ primaryUrl: v })}
+                  placeholder="/"
+                  autoComplete="off"
+                />
+              </Grid3>
+            </GroupCard>
+
+            <GroupCard title={tr("thankyou.actions.secondary", "Secondary link")}>
+              <Grid3>
+                <Checkbox
+                  label={tr("thankyou.actions.secondaryEnabled", "Enable secondary link")}
+                  checked={!!ty.secondaryEnabled}
+                  onChange={(v) => update({ secondaryEnabled: v })}
+                />
+                <TextField
+                  label={tr("thankyou.actions.secondaryText", "Link text")}
+                  value={ty.secondaryText || ""}
+                  onChange={(v) => update({ secondaryText: v })}
+                  autoComplete="off"
+                  disabled={!ty.secondaryEnabled}
+                />
+                <TextField
+                  label={tr("thankyou.actions.secondaryUrl", "Link URL")}
+                  value={ty.secondaryUrl || ""}
+                  onChange={(v) => update({ secondaryUrl: v })}
+                  placeholder="/pages/track-order"
+                  autoComplete="off"
+                  disabled={!ty.secondaryEnabled}
+                />
+              </Grid3>
+            </GroupCard>
+          </BlockStack>
+        )}
+
+        {/* DESIGN */}
+        {subTab === "design" && (
+          <BlockStack gap="400">
+            <Grid3>
+              <Checkbox
+                label={tr("thankyou.design.useGlobal", "Use global (Offers) colors")}
+                checked={ty.useGlobalColors !== false}
+                onChange={(v) => update({ useGlobalColors: v })}
+                helpText={tr(
+                  "thankyou.design.useGlobalHelp",
+                  "If enabled, Thank You colors follow the Offers global palette."
+                )}
+              />
+              <div />
+              <div />
+            </Grid3>
+
+            {ty.useGlobalColors === false && (
+              <>
+                <Text as="p" variant="bodySm" tone="subdued">
+                  {tr(
+                    "thankyou.design.paletteHint",
+                    "Pick a palette for the Thank You popup/page."
+                  )}
+                </Text>
+
+                <PaletteSelector
+                  value={(ty.colors?.paletteId || DEFAULT_THANKYOU_COLORS.paletteId) || "brand-gradient"}
+                  onChange={(paletteId) =>
+                    update({
+                      colors: applyPalette(paletteId, ty.colors || DEFAULT_THANKYOU_COLORS),
+                    })
+                  }
+                />
+
+                <Divider />
+
+                <Text as="p" variant="bodySm" fontWeight="bold">
+                  {tr("thankyou.design.manual", "Manual colors")}
+                </Text>
+
+                <Grid3>
+                  <ColorField
+                    label={tr("thankyou.colors.cardBg", "Card background")}
+                    value={ty.colors?.cardBg || ""}
+                    onChange={(v) => update({ colors: { ...(ty.colors || {}), cardBg: v } })}
+                    placeholder="#FFFFFF"
+                  />
+                  <ColorField
+                    label={tr("thankyou.colors.borderColor", "Border color")}
+                    value={ty.colors?.borderColor || ""}
+                    onChange={(v) => update({ colors: { ...(ty.colors || {}), borderColor: v } })}
+                    placeholder="#E5E7EB"
+                  />
+                  <ColorField
+                    label={tr("thankyou.colors.iconBg", "Icon background")}
+                    value={ty.colors?.iconBg || ""}
+                    onChange={(v) => update({ colors: { ...(ty.colors || {}), iconBg: v } })}
+                    placeholder="#EEF2FF"
+                  />
+                </Grid3>
+
+                <Grid3>
+                  <ColorField
+                    label={tr("thankyou.colors.buttonBg", "Button background")}
+                    value={ty.colors?.buttonBg || ""}
+                    onChange={(v) => update({ colors: { ...(ty.colors || {}), buttonBg: v } })}
+                    placeholder="#0B3B82"
+                  />
+                  <ColorField
+                    label={tr("thankyou.colors.buttonText", "Button text color")}
+                    value={ty.colors?.buttonTextColor || ""}
+                    onChange={(v) => update({ colors: { ...(ty.colors || {}), buttonTextColor: v } })}
+                    placeholder="#FFFFFF"
+                  />
+                  <ColorField
+                    label={tr("thankyou.colors.buttonBorder", "Button border")}
+                    value={ty.colors?.buttonBorder || ""}
+                    onChange={(v) => update({ colors: { ...(ty.colors || {}), buttonBorder: v } })}
+                    placeholder="#0B3B82"
+                  />
+                </Grid3>
+              </>
+            )}
+
+            {ty.useGlobalColors !== false && (
+              <Text as="p" variant="bodySm" tone="subdued">
+                {tr(
+                  "thankyou.design.usingGlobalNote",
+                  "Using global palette from Offers. To customize separately, disable 'Use global colors'."
+                )}
+              </Text>
+            )}
+          </BlockStack>
+        )}
+      </GroupCard>
+    </BlockStack>
+  );
+}
+
 /* ============================== HEADER / SHELL ============================== */
 function PageShell({ children, tr, loading, onSave, saving, dirty }) {
   return (
@@ -1009,19 +1789,38 @@ function PageShell({ children, tr, loading, onSave, saving, dirty }) {
                 background: "linear-gradient(135deg,#0B3B82,#7D0031)",
               }}
             >
-              <img src="/tripleform-cod-icon.png" alt="TripleForm COD" style={{ width: "100%", height: "100%", display: "block", objectFit: "cover" }} />
+              <img
+                src="/tripleform-cod-icon.png"
+                alt="TripleForm COD"
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  display: "block",
+                  objectFit: "cover",
+                }}
+              />
             </div>
 
             <div>
-              <div style={{ fontWeight: 950, color: "#F9FAFB" }}>{tr("section2.header.appTitle", "TripleForm COD")}</div>
-              <div style={{ fontSize: 12, color: "rgba(249,250,251,0.85)" }}>{tr("section2.header.subtitle", "Offers & Upsells — Pro settings")}</div>
+              <div style={{ fontWeight: 950, color: "#F9FAFB" }}>
+                {tr("section2.header.appTitle", "TripleForm COD")}
+              </div>
+              <div style={{ fontSize: 12, color: "rgba(249,250,251,0.85)" }}>
+                {tr("section2.header.subtitle", "Offers & Upsells — Pro settings")}
+              </div>
             </div>
 
-            {dirty ? <Badge tone="warning">{tr("section2.badge.unsaved", "Unsaved changes")}</Badge> : <Badge tone="success">{tr("section2.badge.saved", "Saved")}</Badge>}
+            {dirty ? (
+              <Badge tone="warning">{tr("section2.badge.unsaved", "Unsaved changes")}</Badge>
+            ) : (
+              <Badge tone="success">{tr("section2.badge.saved", "Saved")}</Badge>
+            )}
           </InlineStack>
 
           <InlineStack gap="200" blockAlign="center">
-            <div style={{ fontSize: 12, color: "rgba(249,250,251,0.9)" }}>{loading ? tr("section2.common.loading", "Loading...") : ""}</div>
+            <div style={{ fontSize: 12, color: "rgba(249,250,251,0.9)" }}>
+              {loading ? tr("section2.common.loading", "Loading...") : ""}
+            </div>
             <Button variant="primary" size="slim" onClick={onSave} loading={saving}>
               {tr("section2.button.save", "Save")}
             </Button>
@@ -1074,6 +1873,8 @@ function Section2OffersInner({ products = [] }) {
       { id: "global", content: tr("section2.tabs.global", "Global"), panelID: "tab-global", icon: "SettingsIcon" },
       { id: "offers", content: tr("section2.tabs.offers", "Offers"), panelID: "tab-offers", icon: "DiscountIcon" },
       { id: "upsells", content: tr("section2.tabs.upsells", "Upsells"), panelID: "tab-upsells", icon: "GiftCardIcon" },
+      // ✅ NEW TAB
+      { id: "thankyou", content: tr("section2.tabs.thankyou", "Thank you page"), panelID: "tab-thankyou", icon: "ImageIcon" },
     ],
     [tr]
   );
@@ -1081,7 +1882,7 @@ function Section2OffersInner({ products = [] }) {
 
   const persistLocal = (next) => {
     try {
-      window.localStorage.setItem("tripleform_cod_offers_v31", JSON.stringify(withDefaults(next)));
+      window.localStorage.setItem("tripleform_cod_offers_v32", JSON.stringify(withDefaults(next)));
     } catch {}
   };
 
@@ -1092,6 +1893,7 @@ function Section2OffersInner({ products = [] }) {
       setLoading(true);
 
       try {
+        // keep compatibility: if backend still stores in "offers", merge our new keys
         const res = await fetch("/api/offers/load");
         if (res.ok) {
           const j = await res.json().catch(() => null);
@@ -1110,13 +1912,21 @@ function Section2OffersInner({ products = [] }) {
 
       if (!cancelled) {
         try {
-          const s = window.localStorage.getItem("tripleform_cod_offers_v31");
+          const s = window.localStorage.getItem("tripleform_cod_offers_v32");
           if (s) {
             const parsed = withDefaults(JSON.parse(s));
             setCfg(parsed);
             lastSavedKeyRef.current = JSON.stringify(parsed);
           } else {
-            lastSavedKeyRef.current = JSON.stringify(DEFAULT_CFG);
+            // fallback old key
+            const old = window.localStorage.getItem("tripleform_cod_offers_v31");
+            if (old) {
+              const parsedOld = withDefaults(JSON.parse(old));
+              setCfg(parsedOld);
+              lastSavedKeyRef.current = JSON.stringify(parsedOld);
+            } else {
+              lastSavedKeyRef.current = JSON.stringify(DEFAULT_CFG);
+            }
           }
         } catch {
           lastSavedKeyRef.current = JSON.stringify(DEFAULT_CFG);
@@ -1150,7 +1960,10 @@ function Section2OffersInner({ products = [] }) {
       lastSavedKeyRef.current = JSON.stringify(toSave);
     } catch (e) {
       console.error(e);
-      alert(tr("section2.save.failed", "Save failed: ") + (e?.message || tr("section2.save.unknown", "Unknown error")));
+      alert(
+        tr("section2.save.failed", "Save failed: ") +
+          (e?.message || tr("section2.save.unknown", "Unknown error"))
+      );
     } finally {
       setSaving(false);
     }
@@ -1211,6 +2024,8 @@ function Section2OffersInner({ products = [] }) {
   const activeOffers = cfg.offers.filter((o) => o.enabled && o.showInPreview);
   const activeUpsells = cfg.upsells.filter((u) => u.enabled && u.showInPreview);
 
+  const thankYou = cfg.thankYou || DEFAULT_THANKYOU;
+
   return (
     <PageShell tr={tr} loading={loading} onSave={saveOffers} saving={saving} dirty={dirty}>
       <Modal
@@ -1232,7 +2047,9 @@ function Section2OffersInner({ products = [] }) {
         ]}
       >
         <Modal.Section>
-          <Text as="p">{tr("section2.modal.unsavedBody", "You have unsaved changes. Save or discard before switching sections.")}</Text>
+          <Text as="p">
+            {tr("section2.modal.unsavedBody", "You have unsaved changes. Save or discard before switching sections.")}
+          </Text>
         </Modal.Section>
       </Modal>
 
@@ -1255,12 +2072,18 @@ function Section2OffersInner({ products = [] }) {
             <InlineStack align="space-between" blockAlign="center">
               <InlineStack gap="200" blockAlign="center">
                 <span className="tf-hero-badge">
-                  {cfg.offers.filter((o) => o.enabled).length} {tr("section2.badge.offers", "Offers")} • {cfg.upsells.filter((u) => u.enabled).length}{" "}
-                  {tr("section2.badge.upsells", "Upsells")}
+                  {cfg.offers.filter((o) => o.enabled).length} {tr("section2.badge.offers", "Offers")} •{" "}
+                  {cfg.upsells.filter((u) => u.enabled).length} {tr("section2.badge.upsells", "Upsells")}
+                  {" • "}
+                  {thankYou?.enabled !== false ? tr("thankyou.badge.on", "ThankYou ON") : tr("thankyou.badge.off", "ThankYou OFF")}
                 </span>
                 <div>
-                  <div style={{ fontWeight: 950, fontSize: 14 }}>{tr("section2.hero.title", "Offers & Upsells")}</div>
-                  <div style={{ fontSize: 12, opacity: 0.9 }}>{tr("section2.hero.subtitle", "Clean settings + professional preview")}</div>
+                  <div style={{ fontWeight: 950, fontSize: 14 }}>
+                    {tr("section2.hero.title", "Offers & Upsells")}
+                  </div>
+                  <div style={{ fontSize: 12, opacity: 0.9 }}>
+                    {tr("section2.hero.subtitle", "Clean settings + professional preview")}
+                  </div>
                 </div>
               </InlineStack>
               <InlineStack gap="200" blockAlign="center">
@@ -1275,7 +2098,11 @@ function Section2OffersInner({ products = [] }) {
               <BlockStack gap="400">
                 <GroupCard title={tr("section2.global.title", "Global")}>
                   <Grid3>
-                    <Checkbox label={tr("section2.global.enable", "Enable Offers & Upsells")} checked={!!cfg.global.enabled} onChange={(v) => setCfg((c) => ({ ...c, global: { ...c.global, enabled: v } }))} />
+                    <Checkbox
+                      label={tr("section2.global.enable", "Enable Offers & Upsells")}
+                      checked={!!cfg.global.enabled}
+                      onChange={(v) => setCfg((c) => ({ ...c, global: { ...c.global, enabled: v } }))}
+                    />
                     <div />
                     <div />
                   </Grid3>
@@ -1291,7 +2118,10 @@ function Section2OffersInner({ products = [] }) {
                     onChange={(paletteId) =>
                       setCfg((c) => ({
                         ...c,
-                        global: { ...c.global, colors: applyPaletteToGlobal(c.global?.colors || DEFAULT_GLOBAL_COLORS, paletteId) },
+                        global: {
+                          ...c.global,
+                          colors: applyPaletteToGlobal(c.global?.colors || DEFAULT_GLOBAL_COLORS, paletteId),
+                        },
                       }))
                     }
                   />
@@ -1380,6 +2210,25 @@ function Section2OffersInner({ products = [] }) {
                 </div>
               </BlockStack>
             )}
+
+            {/* ✅ NEW: THANK YOU PAGE TAB */}
+            {tab === "thankyou" && (
+              <BlockStack gap="400">
+                <InlineStack align="space-between" blockAlign="center">
+                  <Text as="h2" variant="headingMd">
+                    {tr("thankyou.tabTitle", "Thank you page")}
+                  </Text>
+                  <Badge tone="subdued">{tr("thankyou.badge.pro", "Pro tools")}</Badge>
+                </InlineStack>
+
+                <ThankYouEditor
+                  thankYou={thankYou}
+                  globalColors={globalColors}
+                  onChange={(nextTy) => setCfg((c) => ({ ...c, thankYou: nextTy }))}
+                  tr={tr}
+                />
+              </BlockStack>
+            )}
           </div>
         </div>
 
@@ -1391,7 +2240,9 @@ function Section2OffersInner({ products = [] }) {
                 <Text as="h3" variant="headingSm">
                   {tr("section2.preview.title", "Preview")}
                 </Text>
-                <Badge tone={cfg.global.enabled ? "success" : "critical"}>{cfg.global.enabled ? tr("section2.preview.active", "Active") : tr("section2.preview.inactive", "Inactive")}</Badge>
+                <Badge tone={cfg.global.enabled ? "success" : "critical"}>
+                  {cfg.global.enabled ? tr("section2.preview.active", "Active") : tr("section2.preview.inactive", "Inactive")}
+                </Badge>
               </InlineStack>
 
               <Text as="p" variant="bodySm" tone="subdued">
@@ -1429,6 +2280,25 @@ function Section2OffersInner({ products = [] }) {
               ) : (
                 <Text variant="bodySm" tone="subdued">
                   {tr("section2.preview.noUpsell", "No active upsell in preview.")}
+                </Text>
+              )}
+
+              <Divider />
+
+              <InlineStack align="space-between" blockAlign="center">
+                <Text as="p" variant="bodySm" fontWeight="bold">
+                  {tr("thankyou.preview.title", "Thank you page")}
+                </Text>
+                <Badge tone={thankYou?.enabled !== false ? "success" : "critical"}>
+                  {thankYou?.enabled !== false ? tr("thankyou.preview.on", "Enabled") : tr("thankyou.preview.off", "Disabled")}
+                </Badge>
+              </InlineStack>
+
+              {thankYou?.enabled !== false ? (
+                <ThankYouPreview thankYou={thankYou} globalColors={globalColors} tr={tr} />
+              ) : (
+                <Text variant="bodySm" tone="subdued">
+                  {tr("thankyou.preview.disabled", "Thank you page is disabled.")}
                 </Text>
               )}
             </BlockStack>

@@ -1,10 +1,12 @@
 /* =========================================================================
    TripleForm COD — OFFERS + UPSELLS (FIXED ICONS + FIXED OFFERS TOTAL)
    ✅ COUNTRY_DATA removed (paste manually)
-   ✅ Icons: real/simple SVG icons (no fake look)
-   ✅ Offers total: (price * qty) - discount   (NOT qty * (price - discount))
+   ✅ Icons: real/simple SVG icons (no fake look) + always visible (fallback)
+   ✅ Colors: unified via CSS variables (offers + form adapt on product page)
+   ✅ Offers total: (price * qty) - discount
    ✅ Discount applied ONCE by default (not per item)
    ✅ Optional: offer.bundleQty forces quantity when activated
+   ✅ Discount is capped (never > subtotal)
    ========================================================================= */
 
 window.TripleformCOD = (function () {
@@ -95,10 +97,9 @@ window.TripleformCOD = (function () {
   }
 
   /* ------------------------------------------------------------------ */
-  /* ✅ Real / Simple SVG Icons (clean + consistent)                     */
+  /* ✅ Real / Simple SVG Icons                                         */
   /* ------------------------------------------------------------------ */
   const ICON_SVGS = {
-    // Generic (polaris-like)
     AppsIcon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" aria-hidden="true">
       <path d="M5 3.5h4v4H5v-4Zm6 0h4v4h-4v-4ZM5 9.5h4v4H5v-4Zm6 0h4v4h-4v-4ZM5 15.5h4v1H5v-1Zm6 0h4v1h-4v-1Z"
         fill="currentColor" opacity=".95"/>
@@ -128,7 +129,6 @@ window.TripleformCOD = (function () {
         stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
     </svg>`,
 
-    // ✅ Form icons (simple + “real”)
     UserIcon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" aria-hidden="true">
       <path d="M10 10.2c2.2 0 4-1.8 4-4s-1.8-4-4-4-4 1.8-4 4 1.8 4 4 4Z" stroke="currentColor" stroke-width="1.7"/>
       <path d="M3.5 18c.9-3 3.4-5 6.5-5s5.6 2 6.5 5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
@@ -195,8 +195,19 @@ window.TripleformCOD = (function () {
     const style = document.createElement("style");
     style.id = "tf-global-css";
     style.textContent = `
-      .tf-ic{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto}
-      .tf-ic svg{width:100%;height:100%}
+      /* Icons always visible */
+      .tf-ic{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;line-height:0}
+      .tf-ic svg{width:100%;height:100%;display:block}
+
+      /* Component wrapper (so it adapts on product page) */
+      .tf-shell{
+        width:100%;
+        box-sizing:border-box;
+        padding:14px;
+        border-radius:18px;
+        background:var(--tf-shell-bg, transparent);
+        border:1px solid var(--tf-shell-border, transparent);
+      }
 
       /* Motion */
       .tf-motion-x{animation:tfMoveX 1.2s ease-in-out infinite}
@@ -217,10 +228,10 @@ window.TripleformCOD = (function () {
 
       .tf-offer-card{
         border-radius:14px;
-        border:1px solid #E5E7EB;
+        border:1px solid var(--tf-offer-border,#E5E7EB);
         padding:12px 12px;
         box-shadow:0 10px 22px rgba(15,23,42,0.06);
-        background:#fff;
+        background:var(--tf-offer-bg,#fff);
         overflow:hidden;
       }
 
@@ -230,22 +241,27 @@ window.TripleformCOD = (function () {
         width:34px;height:34px;border-radius:12px;
         display:grid;place-items:center;flex:none;overflow:hidden;
         border:1px solid rgba(0,0,0,.10);
-        background:#EEF2FF;
+        background:var(--tf-offer-iconbg,#EEF2FF);
+        position:relative;
       }
-      .tf-offer-icon img{width:100%;height:100%;object-fit:cover;display:block}
+      .tf-offer-icon img{width:100%;height:100%;object-fit:cover;display:block;position:relative;z-index:2}
+      .tf-offer-icon .tf-offer-icon-fallback{
+        position:absolute; inset:0; display:grid; place-items:center; z-index:1;
+        color:var(--tf-icon-color,#111827);
+      }
 
       .tf-offer-main{min-width:0;flex:1;display:flex;flex-direction:column;gap:4px}
 
       .tf-offer-title{
-        font-weight:900;font-size:13px;color:#0F172A;
+        font-weight:900;font-size:13px;color:var(--tf-title,#0F172A);
         white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2;
       }
       .tf-offer-desc{
-        font-size:12px;color:#64748B;
+        font-size:12px;color:var(--tf-muted,#64748B);
         white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2;
       }
       .tf-offer-sub{
-        font-size:11px;color:#94A3B8;margin-top:4px;
+        font-size:11px;color:var(--tf-muted2,#94A3B8);margin-top:4px;
         white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
       }
 
@@ -275,7 +291,6 @@ window.TripleformCOD = (function () {
     `;
     document.head.appendChild(style);
   }
-
  /* ------------------------------------------------------------------ */
   /* Pays / wilayas / villes COMPLET                                    */
   /* ------------------------------------------------------------------ */
@@ -1169,7 +1184,6 @@ window.TripleformCOD = (function () {
     `;
 
     const iconHtml = getIconHtml(stickyIcon, 16, text);
-
     const isLeft = stickyType === "bubble-left";
     el.style.cssText = baseStyle + `${isLeft ? "left:16px;" : "right:16px;"}`;
     el.innerHTML = `
@@ -1351,7 +1365,7 @@ window.TripleformCOD = (function () {
     if (!isActive) {
       const offer = offersList[offerIndex] || {};
 
-      // ✅ Optional: force qty to bundleQty when activating
+      // Optional: force qty to bundleQty when activating
       const bundleQty = Number(offer.bundleQty || offer.minQty || offer.requiredQty || 0);
       if (bundleQty > 0) setQty(bundleQty);
 
@@ -1365,13 +1379,10 @@ window.TripleformCOD = (function () {
           index: offerIndex,
           type: "offer",
           title: offer.title || "",
-          discountType: offer.discountType || null, // "percentage" | "fixed"
+          discountType: offer.discountType || null,
           discountValue: Number(offer.discountValue || 0),
-
           minQty: Number(offer.minQty || offer.requiredQty || offer.bundleQty || 1),
-
-          // ✅ IMPORTANT: default = discount once (not per item)
-          applyPerItem: offer.applyPerItem === true,
+          applyPerItem: offer.applyPerItem === true, // default false
         })
       );
     }
@@ -1398,12 +1409,13 @@ window.TripleformCOD = (function () {
     const useGlobal = item?.useGlobalColors !== false;
     const c = useGlobal ? (globalColors || {}) : (item?.colors || {});
     return {
-      cardBg: c.cardBg || "#FFFFFF",
-      borderColor: c.borderColor || "#E5E7EB",
-      iconBg: c.iconBg || "#EEF2FF",
-      buttonBg: c.buttonBg || "#111827",
-      buttonTextColor: c.buttonTextColor || "#FFFFFF",
-      buttonBorder: c.buttonBorder || (c.buttonBg || "#111827"),
+      cardBg: c.cardBg || "var(--tf-offer-bg,#FFFFFF)",
+      borderColor: c.borderColor || "var(--tf-offer-border,#E5E7EB)",
+      iconBg: c.iconBg || "var(--tf-offer-iconbg,#EEF2FF)",
+      buttonBg: c.buttonBg || "var(--tf-btn-bg,#111827)",
+      buttonTextColor: c.buttonTextColor || "var(--tf-btn-text,#FFFFFF)",
+      buttonBorder: c.buttonBorder || (c.buttonBg || "var(--tf-btn-bg,#111827)"),
+      iconColor: c.iconColor || "var(--tf-icon-color,#111827)",
     };
   }
 
@@ -1414,7 +1426,6 @@ window.TripleformCOD = (function () {
     if (global.enabled === false) return "";
 
     const globalColors = global.colors || {};
-
     const offers = Array.isArray(offersCfg.offers) ? offersCfg.offers : [];
     const upsells = Array.isArray(offersCfg.upsells) ? offersCfg.upsells : [];
 
@@ -1453,10 +1464,13 @@ window.TripleformCOD = (function () {
           style="background:${css(c.cardBg)};border-color:${css(c.borderColor)}">
           <div class="tf-offer-row">
             <div class="tf-offer-icon" style="background:${css(c.iconBg)}">
+              <span class="tf-offer-icon-fallback" style="color:${css(c.iconColor)}">
+                ${getIconHtml("DiscountIcon", 18, "currentColor")}
+              </span>
               ${
                 iconUrl
-                  ? `<img src="${css(iconUrl)}" alt="" onerror="this.style.display='none'"/>`
-                  : `${getIconHtml("DiscountIcon", 18, "#111827")}`
+                  ? `<img src="${css(iconUrl)}" alt="" onerror="this.remove();" />`
+                  : ``
               }
             </div>
 
@@ -1489,6 +1503,7 @@ window.TripleformCOD = (function () {
                 onerror="this.onerror=null;this.src='${fallbackImgSvg()}'"/>
             </div>
           </div>
+          <div data-tf-timer-offer="${idx}"></div>
         </div>
       `;
     });
@@ -1505,10 +1520,13 @@ window.TripleformCOD = (function () {
           style="background:${css(c.cardBg)};border-color:${css(c.borderColor)}">
           <div class="tf-offer-row">
             <div class="tf-offer-icon" style="background:${css(c.iconBg)}">
+              <span class="tf-offer-icon-fallback" style="color:${css(c.iconColor)}">
+                ${getIconHtml("GiftCardIcon", 18, "currentColor")}
+              </span>
               ${
                 iconUrl
-                  ? `<img src="${css(iconUrl)}" alt="" onerror="this.style.display='none'"/>`
-                  : `${getIconHtml("GiftCardIcon", 18, "#111827")}`
+                  ? `<img src="${css(iconUrl)}" alt="" onerror="this.remove();" />`
+                  : ``
               }
             </div>
 
@@ -1628,6 +1646,29 @@ window.TripleformCOD = (function () {
     const smallFontSize = `${Math.max(inputFontSize - 2, 10)}px`;
     const tinyFontSize = `${Math.max(inputFontSize - 3, 9)}px`;
 
+    // ✅ unified vars (fix “melange colors” between offers + form on product page)
+    const shellBg = d.shellBg || d.sectionBg || "#F3F4F6";
+    const shellBorder = d.shellBorder || "rgba(2,6,23,.08)";
+    const iconColor = d.iconColor || d.text || "#111827";
+    const offerBg = d.offerCardBg || "#FFFFFF";
+    const offerBorder = d.offerCardBorder || "#E5E7EB";
+    const offerIconBg = d.offerIconBg || "#EEF2FF";
+    const titleColor = d.titleColor || d.text || "#0F172A";
+    const mutedColor = d.mutedColor || "#64748B";
+    const muted2Color = d.muted2Color || "#94A3B8";
+
+    root.style.setProperty("--tf-shell-bg", shellBg);
+    root.style.setProperty("--tf-shell-border", shellBorder);
+    root.style.setProperty("--tf-icon-color", iconColor);
+    root.style.setProperty("--tf-offer-bg", offerBg);
+    root.style.setProperty("--tf-offer-border", offerBorder);
+    root.style.setProperty("--tf-offer-iconbg", offerIconBg);
+    root.style.setProperty("--tf-title", titleColor);
+    root.style.setProperty("--tf-muted", mutedColor);
+    root.style.setProperty("--tf-muted2", muted2Color);
+    root.style.setProperty("--tf-btn-bg", d.btnBg || "#111827");
+    root.style.setProperty("--tf-btn-text", d.btnText || "#FFFFFF");
+
     const cardStyle = `
       background:${css(d.bg)}; color:${css(d.text)};
       border:1px solid ${css(d.border)};
@@ -1742,8 +1783,10 @@ window.TripleformCOD = (function () {
       const field = f[key];
       if (!field || field.on === false) return "";
 
-      // ✅ Icon fixed display (always visible)
-      const iconHtml = field.icon ? getIconHtml(field.icon, 18, "#111827") : "";
+      // ✅ icon always visible + color from theme
+      const iconCol = d.iconColor || d.text || "#111827";
+      const iconHtml = field.icon ? getIconHtml(field.icon, 18, iconCol) : "";
+
       const req = field.required ? " *" : "";
       const label = (field.label || key) + req;
       const ph = field.ph || "";
@@ -1959,8 +2002,14 @@ window.TripleformCOD = (function () {
       `;
     }
 
-    const mainStart = `<div style="max-width:560px;margin:0 auto;display:grid;gap:14px;direction:${textDir};box-sizing:border-box;">`;
-    const mainEnd = `</div>`;
+    const mainStart = `
+      <div class="tf-shell">
+        <div style="max-width:560px;margin:0 auto;display:grid;gap:14px;direction:${textDir};box-sizing:border-box;">
+    `;
+    const mainEnd = `
+        </div>
+      </div>
+    `;
 
     let html = "";
 
@@ -2010,11 +2059,13 @@ window.TripleformCOD = (function () {
                 align-items:center; justify-content:center; border-radius:50%;">&times;</button>
             </div>
             <div style="padding:24px; box-sizing:border-box;">
-              <div style="max-width:560px;margin:0 auto;display:grid;gap:14px;direction:${textDir};">
-                ${offersHtml}
-                ${cartSummaryHTML()}
-                <div style="height:6px"></div>
-                ${formCardHTML("cta-popup", true)}
+              <div class="tf-shell">
+                <div style="max-width:560px;margin:0 auto;display:grid;gap:14px;direction:${textDir};">
+                  ${offersHtml}
+                  ${cartSummaryHTML()}
+                  <div style="height:6px"></div>
+                  ${formCardHTML("cta-popup", true)}
+                </div>
               </div>
             </div>
           </div>
@@ -2061,11 +2112,13 @@ window.TripleformCOD = (function () {
                   font-size:20px; cursor:pointer; width:32px; height:32px; display:flex;
                   align-items:center; justify-content:center; border-radius:50%;">&times;</button>
               </div>
-              <div style="max-width:560px;margin:0 auto;display:grid;gap:14px;direction:${textDir};">
-                ${offersHtml}
-                ${cartSummaryHTML()}
-                <div style="height:6px"></div>
-                ${formCardHTML("cta-drawer", true)}
+              <div class="tf-shell">
+                <div style="max-width:560px;margin:0 auto;display:grid;gap:14px;direction:${textDir};">
+                  ${offersHtml}
+                  ${cartSummaryHTML()}
+                  <div style="height:6px"></div>
+                  ${formCardHTML("cta-drawer", true)}
+                </div>
               </div>
             </div>
           </div>
@@ -2076,7 +2129,6 @@ window.TripleformCOD = (function () {
     root.innerHTML = html;
 
     setTimeout(() => initializeTimers(root, offersCfg), 80);
-
     setupLocationDropdowns(root, cfg, countryDef);
 
     const provSelect = root.querySelector('select[data-tf-role="province"]');
@@ -2106,7 +2158,6 @@ window.TripleformCOD = (function () {
       const cleaned = raw.replace(/[^\d.,-]/g, "");
       if (!cleaned) return 0;
 
-      // If decimal detected at the end => treat as money
       const hasDecimal = /[.,]\d{1,2}$/.test(cleaned);
       if (hasDecimal) {
         const normalized = cleaned.replace(",", ".");
@@ -2114,7 +2165,6 @@ window.TripleformCOD = (function () {
         return Number.isFinite(n) ? Math.round(n * 100) : 0;
       }
 
-      // Otherwise => assume cents
       const n = Number(cleaned);
       return Number.isFinite(n) ? Math.round(n) : 0;
     }
@@ -2246,7 +2296,7 @@ window.TripleformCOD = (function () {
       return { ok: true, timeOnPageMs, hpValue };
     }
 
-    /* --------------------- ✅ OFFERS DISCOUNT (fixed logic) ---------- */
+    /* --------------------- ✅ OFFERS DISCOUNT (fixed + capped) ------- */
     const offersVisible = Array.isArray(offersCfg?.offers) ? offersCfg.offers : [];
     const activeOffersOnly = offersVisible.filter(
       (o) => o && o.enabled !== false && o.showInPreview !== false
@@ -2263,27 +2313,27 @@ window.TripleformCOD = (function () {
       const discountType = offer.discountType || active.discountType || null;
       const discountValue = Number(offer.discountValue ?? active.discountValue ?? 0);
 
-      // condition minQty
       const minQty = Number(offer.minQty || offer.requiredQty || offer.bundleQty || active.minQty || 1);
       if (minQty > 1 && Number(qty || 1) < minQty) return 0;
 
       if (!discountType || !(discountValue > 0)) return 0;
 
-      // ✅ applyPerItem (optional)
       const applyPerItem = offer.applyPerItem === true || active.applyPerItem === true;
 
+      let discount = 0;
+
       if (discountType === "percentage") {
-        // percent always on total
-        return Math.round(baseTotalCents * (discountValue / 100));
-      }
-
-      if (discountType === "fixed") {
-        // ✅ FIX: default => apply ONCE, not per item
+        discount = Math.round(baseTotalCents * (discountValue / 100));
+      } else if (discountType === "fixed") {
         const onceCents = Math.round(discountValue * 100);
-        return applyPerItem ? onceCents * Math.max(1, qty) : onceCents;
+        discount = applyPerItem ? onceCents * Math.max(1, qty) : onceCents;
       }
 
-      return 0;
+      // ✅ cap discount
+      if (discount < 0) discount = 0;
+      if (discount > baseTotalCents) discount = baseTotalCents;
+
+      return discount;
     }
 
     function updateMoney() {
@@ -2331,7 +2381,7 @@ window.TripleformCOD = (function () {
         mainCta.innerHTML = `${buttonIconHtml}${label} · ${suffix} ${moneyFmt(grandTotalCents)}`;
       }
 
-      // button disable hint if qty < minQty
+      // disable hint if qty < minQty
       const buttons = root.querySelectorAll("[data-tf-offer-toggle]");
       buttons.forEach((btn) => {
         const i = parseInt(btn.getAttribute("data-tf-offer-index") || "0", 10);
