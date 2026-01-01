@@ -14,6 +14,7 @@ import {
   Tabs,
   Modal,
   Divider,
+  RangeSlider,
 } from "@shopify/polaris";
 import * as PI from "@shopify/polaris-icons";
 import { useI18n } from "../i18n/react";
@@ -381,9 +382,132 @@ const LAYOUT_CSS = `
     gap:10px;
   }
 
+  /* ===================== THANK YOU BUILDER (Canva/Paint style) ===================== */
+  .tf-ty-builder{
+    border:1px solid #E5E7EB;
+    border-radius:14px;
+    overflow:hidden;
+    background:#fff;
+    box-shadow:0 10px 24px rgba(15,23,42,0.06);
+  }
+  .tf-ty-topbar{
+    position:sticky;
+    top:0;
+    z-index:5;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    padding:10px 12px;
+    background:linear-gradient(90deg,#0B3B82,#7D0031);
+    color:#F9FAFB;
+  }
+  .tf-ty-topbar .tf-ty-topbar-left{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+  .tf-ty-topchip{
+    font-size:11px;
+    font-weight:900;
+    padding:3px 8px;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,.22);
+    background:rgba(255,255,255,.10);
+    color:#F9FAFB;
+  }
+  .tf-ty-topbar-controls{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+
+  .tf-ty-body{
+    display:grid;
+    grid-template-columns: 220px minmax(0,1fr);
+    min-height: 520px;
+  }
+  .tf-ty-rail{
+    border-right:1px solid #E5E7EB;
+    background:#F8FAFC;
+    padding:10px;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .tf-ty-toolbtn{
+    width:100%;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    justify-content:flex-start;
+    border-radius:12px;
+    padding:10px 10px;
+    border:1px solid rgba(15,23,42,0.06);
+    background:#fff;
+    cursor:pointer;
+    transition:all .15s ease;
+  }
+  .tf-ty-toolbtn:hover{ transform:translateY(-1px); box-shadow:0 8px 18px rgba(0,0,0,0.08); }
+  .tf-ty-toolbtn.active{
+    outline:2px solid #00A7A3;
+    border-color: rgba(0,167,163,0.35);
+  }
+  .tf-ty-toolname{ font-weight:950; font-size:12px; color:#111827; }
+  .tf-ty-tooldesc{ font-size:11px; color:#6B7280; margin-top:2px; }
+
+  .tf-ty-stage{
+    padding:12px;
+    display:grid;
+    gap:12px;
+    background:#FFFFFF;
+  }
+  .tf-ty-stage-grid{
+    display:grid;
+    grid-template-columns: minmax(0,1fr);
+    gap:12px;
+  }
+  .tf-ty-hint{
+    font-size:12px;
+    color:#6B7280;
+  }
+
+  .tf-ty-controls-card{
+    border:1px solid #E5E7EB;
+    border-radius:14px;
+    background:#fff;
+    padding:12px;
+    box-shadow:0 10px 22px rgba(15,23,42,0.05);
+  }
+
+  .tf-ty-minirow{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap:12px;
+    align-items:start;
+  }
+  .tf-ty-minirow3{
+    display:grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap:12px;
+    align-items:start;
+  }
+
   @media (max-width: 980px) {
     .tf-editor { grid-template-columns:1fr; }
     .tf-preview-col { position:static; max-height:none; }
+
+    .tf-ty-body{ grid-template-columns: 1fr; }
+    .tf-ty-rail{
+      flex-direction:row;
+      overflow:auto;
+      border-right:none;
+      border-bottom:1px solid #E5E7EB;
+      background:#F8FAFC;
+    }
+    .tf-ty-toolbtn{ min-width: 190px; }
   }
 `;
 
@@ -998,7 +1122,10 @@ function ThankYouPreview({ thankYou, globalColors, tr }) {
   const imageHeight = clampInt(ty.imageHeight, 120, 240, 160);
   const layout = ty.layout || "image-top";
 
-  const chip = ty.showChip !== false ? ty.chipText || tr("thankyou.chip", "Order confirmed") : "";
+  const chip =
+    ty.showChip !== false
+      ? ty.chipText || tr("thankyou.chip", "Order confirmed")
+      : "";
 
   const cardStyle = {
     background: cardBg,
@@ -1008,7 +1135,6 @@ function ThankYouPreview({ thankYou, globalColors, tr }) {
 
   // layout
   const isTop = layout === "image-top";
-  const isLeft = layout === "image-left";
   const isRight = layout === "image-right";
 
   const contentWrapStyle = {
@@ -1059,7 +1185,9 @@ function ThankYouPreview({ thankYou, globalColors, tr }) {
           </div>
 
           <div>
-            <div className="tf-ty-title">{ty.title || tr("thankyou.title", "Thank you!")}</div>
+            <div className="tf-ty-title">
+              {ty.title || tr("thankyou.title", "Thank you!")}
+            </div>
             <div className="tf-ty-text">{ty.message || ""}</div>
           </div>
         </InlineStack>
@@ -1106,7 +1234,11 @@ function ThankYouPreview({ thankYou, globalColors, tr }) {
             ) : null}
 
             {ty.secondaryEnabled ? (
-              <a className="tf-ty-link" href={ty.secondaryUrl || "#"} onClick={(e) => e.preventDefault()}>
+              <a
+                className="tf-ty-link"
+                href={ty.secondaryUrl || "#"}
+                onClick={(e) => e.preventDefault()}
+              >
                 <SafeIcon name="ExternalIcon" fallback="AppsIcon" />
                 {ty.secondaryText || tr("thankyou.secondary", "Track")}
               </a>
@@ -1114,7 +1246,10 @@ function ThankYouPreview({ thankYou, globalColors, tr }) {
           </div>
 
           <Text as="p" variant="bodySm" tone="subdued">
-            {tr("thankyou.previewHint", "Admin preview only — this shows how it can look on the storefront.")}
+            {tr(
+              "thankyou.previewHint",
+              "Admin preview only — this shows how it can look on the storefront."
+            )}
           </Text>
         </div>
       </div>
@@ -1123,25 +1258,24 @@ function ThankYouPreview({ thankYou, globalColors, tr }) {
 
   return (
     <div className="tf-ty-preview-wrap">
-      {/* SIMPLE preview always visible */}
       {ty.mode === "simple" ? (
         renderContent()
       ) : (
         <>
-          {/* show base page */}
           <div style={{ padding: 12 }}>
             <div style={{ ...cardStyle, padding: 12 }}>
               <InlineStack align="space-between" blockAlign="center">
                 <Text as="p" variant="bodySm" fontWeight="bold">
                   {tr("thankyou.mode.popupLabel", "Popup mode preview")}
                 </Text>
-                <Badge tone="info">
-                  {tr("thankyou.mode.popup", "Popup")}
-                </Badge>
+                <Badge tone="info">{tr("thankyou.mode.popup", "Popup")}</Badge>
               </InlineStack>
               <Divider />
               <Text as="p" variant="bodySm" tone="subdued">
-                {tr("thankyou.preview.popupHint", "After order success, a popup opens automatically.")}
+                {tr(
+                  "thankyou.preview.popupHint",
+                  "After order success, a popup opens automatically."
+                )}
               </Text>
               <div style={{ marginTop: 10 }}>
                 <button
@@ -1161,7 +1295,6 @@ function ThankYouPreview({ thankYou, globalColors, tr }) {
             </div>
           </div>
 
-          {/* overlay popup preview */}
           <div className="tf-ty-modal-overlay">
             <div
               className="tf-ty-modal"
@@ -1260,7 +1393,6 @@ function OfferEditor({ offer, index, products, onChange, onRemove, canRemove, tr
           </Text>
         </GroupCard>
 
-        {/* ✅ NEW GROUP: Quantity (x2 / x3) */}
         <GroupCard title={tr("section2.groups.quantity", "Quantity (Offer)")}>
           <Grid3>
             <Select
@@ -1275,7 +1407,6 @@ function OfferEditor({ offer, index, products, onChange, onRemove, canRemove, tr
           </Grid3>
         </GroupCard>
 
-        {/* ✅ Discount */}
         <GroupCard title={tr("section2.groups.discount", "Discount (Offer)")}>
           <Grid3>
             <Checkbox
@@ -1430,344 +1561,563 @@ function UpsellEditor({ upsell, index, products, onChange, onRemove, canRemove, 
   );
 }
 
-/* ============================== Thank You Editor ============================== */
+/* ============================== Thank You Editor (NEW Canva/Paint UI) ============================== */
 function ThankYouEditor({ thankYou, globalColors, onChange, tr }) {
   const ty = thankYou || DEFAULT_THANKYOU;
 
-  // internal sub-tabs (like Canva tools)
-  const [subTab, setSubTab] = useState("mode");
-  const subTabs = useMemo(
+  const update = (patch) => onChange({ ...ty, ...patch });
+
+  // Builder tools (left vertical like Paint/Canva)
+  const tools = useMemo(
     () => [
-      { id: "mode", content: tr("thankyou.subtabs.mode", "Mode") },
-      { id: "content", content: tr("thankyou.subtabs.content", "Content") },
-      { id: "actions", content: tr("thankyou.subtabs.actions", "Buttons") },
-      { id: "design", content: tr("thankyou.subtabs.design", "Design") },
+      {
+        id: "mode",
+        title: tr("thankyou.subtabs.mode", "Mode"),
+        desc: tr("thankyou.tool.modeDesc", "Simple / Popup + delay"),
+        icon: "SettingsIcon",
+      },
+      {
+        id: "content",
+        title: tr("thankyou.subtabs.content", "Title & Text"),
+        desc: tr("thankyou.tool.contentDesc", "Title, message, chip"),
+        icon: "TextIcon",
+      },
+      {
+        id: "media",
+        title: tr("thankyou.media.title", "Media"),
+        desc: tr("thankyou.tool.mediaDesc", "Image URL + Icon URL"),
+        icon: "ImageIcon",
+      },
+      {
+        id: "actions",
+        title: tr("thankyou.subtabs.actions", "Buttons"),
+        desc: tr("thankyou.tool.actionsDesc", "Primary + secondary link"),
+        icon: "ButtonIcon",
+      },
+      {
+        id: "design",
+        title: tr("thankyou.subtabs.design", "Design"),
+        desc: tr("thankyou.tool.designDesc", "Colors + palette"),
+        icon: "ColorsIcon",
+      },
     ],
     [tr]
   );
-  const subSelected = Math.max(0, subTabs.findIndex((x) => x.id === subTab));
 
-  const update = (patch) => onChange({ ...ty, ...patch });
+  const [tool, setTool] = useState("mode");
 
   const useGlobal = ty.useGlobalColors !== false;
   const colors = useGlobal ? globalColors : ty.colors || DEFAULT_THANKYOU_COLORS;
 
-  return (
-    <BlockStack gap="400">
-      <GroupCard title={tr("thankyou.titleGroup", "Thank You Page")}>
-        <Grid3>
+  const topMode = ty.mode || "simple";
+  const topLayout = ty.layout || "image-top";
+  const topSize = ty.size || "md";
+
+  const topRadius = clampInt(ty.radius, 10, 28, 16);
+  const topImgH = clampInt(ty.imageHeight, 120, 240, 160);
+  const topDelay = clampInt(ty.autoOpenDelayMs, 0, 5000, 250);
+
+  const onModeChange = (v) => update({ mode: v });
+  const onLayoutChange = (v) => update({ layout: v });
+  const onSizeChange = (v) => update({ size: v });
+  const onRadiusChange = (v) => update({ radius: clampInt(v, 10, 28, 16) });
+  const onImgHChange = (v) => update({ imageHeight: clampInt(v, 120, 240, 160) });
+  const onDelayChange = (v) => update({ autoOpenDelayMs: clampInt(v, 0, 5000, 250) });
+
+  const TopBar = () => (
+    <div className="tf-ty-topbar">
+      <div className="tf-ty-topbar-left">
+        <span className="tf-ty-topchip">{tr("thankyou.tabTitle", "Thank you page")}</span>
+        <span className="tf-ty-topchip">
+          {ty.enabled !== false ? tr("thankyou.preview.on", "Enabled") : tr("thankyou.preview.off", "Disabled")}
+        </span>
+      </div>
+
+      <div className="tf-ty-topbar-controls">
+        <div style={{ minWidth: 200 }}>
+          <Select
+            label={tr("thankyou.mode.label", "Thank you mode")}
+            labelHidden
+            value={topMode}
+            options={THANKYOU_MODE_OPTIONS}
+            onChange={onModeChange}
+          />
+        </div>
+
+        <div style={{ minWidth: 160 }}>
+          <Select
+            label={tr("thankyou.layout.label", "Layout")}
+            labelHidden
+            value={topLayout}
+            options={THANKYOU_LAYOUT_OPTIONS}
+            onChange={onLayoutChange}
+          />
+        </div>
+
+        <div style={{ minWidth: 140 }}>
+          <Select
+            label={tr("thankyou.size.label", "Popup size")}
+            labelHidden
+            value={topSize}
+            options={THANKYOU_SIZE_OPTIONS}
+            onChange={onSizeChange}
+            disabled={ty.mode !== "popup"}
+          />
+        </div>
+
+        <div style={{ width: 150 }}>
+          <RangeSlider
+            label={tr("thankyou.layout.radius", "Border radius")}
+            labelHidden
+            value={topRadius}
+            min={10}
+            max={28}
+            onChange={onRadiusChange}
+            output
+          />
+        </div>
+
+        <div style={{ width: 170 }}>
+          <RangeSlider
+            label={tr("thankyou.layout.imageHeight", "Image height (px)")}
+            labelHidden
+            value={topImgH}
+            min={120}
+            max={240}
+            onChange={onImgHChange}
+            output
+          />
+        </div>
+
+        <div style={{ width: 180 }}>
+          <RangeSlider
+            label={tr("thankyou.delay.label", "Auto open delay (ms)")}
+            labelHidden
+            value={topDelay}
+            min={0}
+            max={5000}
+            step={50}
+            onChange={onDelayChange}
+            disabled={ty.mode !== "popup"}
+            output
+          />
+        </div>
+      </div>
+    </div>
+  );
+
+  const ToolRail = () => (
+    <div className="tf-ty-rail">
+      <div style={{ display: "grid", gap: 10, marginBottom: 4 }}>
+        <Checkbox
+          label={tr("thankyou.enable", "Enable Thank You Page experience")}
+          checked={ty.enabled !== false}
+          onChange={(v) => update({ enabled: v })}
+        />
+        <Text as="p" variant="bodySm" tone="subdued">
+          {tr("thankyou.builderHint", "Like Canva/Paint: choose a tool then edit settings.")}
+        </Text>
+      </div>
+
+      <Divider />
+
+      {tools.map((t) => (
+        <div
+          key={t.id}
+          className={`tf-ty-toolbtn ${tool === t.id ? "active" : ""}`}
+          onClick={() => setTool(t.id)}
+          role="button"
+          tabIndex={0}
+        >
+          <div style={{ width: 28, height: 28, borderRadius: 10, background: "#EEF2FF", display: "grid", placeItems: "center", border: "1px solid rgba(0,0,0,.06)" }}>
+            <SafeIcon name={t.icon} fallback="AppsIcon" />
+          </div>
+          <div style={{ minWidth: 0 }}>
+            <div className="tf-ty-toolname">{t.title}</div>
+            <div className="tf-ty-tooldesc">{t.desc}</div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
+  const ModePanel = () => (
+    <div className="tf-ty-controls-card">
+      <BlockStack gap="400">
+        <Text as="h3" variant="headingSm">
+          {tr("thankyou.subtabs.mode", "Mode")}
+        </Text>
+
+        <div className="tf-ty-minirow3">
+          <Select
+            label={tr("thankyou.mode.label", "Thank you mode")}
+            value={ty.mode || "simple"}
+            options={THANKYOU_MODE_OPTIONS}
+            onChange={(v) => update({ mode: v })}
+            helpText={tr("thankyou.mode.help", "Simple shows a message area. Popup opens after successful order.")}
+          />
+
+          <Select
+            label={tr("thankyou.size.label", "Popup size")}
+            value={ty.size || "md"}
+            options={THANKYOU_SIZE_OPTIONS}
+            onChange={(v) => update({ size: v })}
+            disabled={ty.mode !== "popup"}
+          />
+
+          <TextField
+            type="number"
+            label={tr("thankyou.delay.label", "Auto open delay (ms)")}
+            value={String(clampInt(ty.autoOpenDelayMs, 0, 5000, 250))}
+            onChange={(v) => update({ autoOpenDelayMs: clampInt(v, 0, 5000, 250) })}
+            disabled={ty.mode !== "popup"}
+            helpText={tr("thankyou.delay.help", "0 = open instantly. Example: 250ms.")}
+          />
+        </div>
+
+        <Divider />
+
+        <Text as="p" variant="bodySm" tone="subdued">
+          {tr("thankyou.mode.note", "Storefront behavior needs the frontend script to show this popup after submit success.")}
+        </Text>
+      </BlockStack>
+    </div>
+  );
+
+  const ContentPanel = () => (
+    <div className="tf-ty-controls-card">
+      <BlockStack gap="400">
+        <Text as="h3" variant="headingSm">
+          {tr("thankyou.subtabs.content", "Content")}
+        </Text>
+
+        <div className="tf-ty-minirow3">
+          <TextField
+            label={tr("thankyou.fields.title", "Title")}
+            value={ty.title || ""}
+            onChange={(v) => update({ title: v })}
+            autoComplete="off"
+          />
+
+          <TextField
+            label={tr("thankyou.fields.chipText", "Status chip text")}
+            value={ty.chipText || ""}
+            onChange={(v) => update({ chipText: v })}
+            autoComplete="off"
+            helpText={tr("thankyou.fields.chipHelp", "Small label like: Order confirmed")}
+          />
+
           <Checkbox
-            label={tr("thankyou.enable", "Enable Thank You Page experience")}
-            checked={ty.enabled !== false}
-            onChange={(v) => update({ enabled: v })}
+            label={tr("thankyou.fields.showChip", "Show chip")}
+            checked={ty.showChip !== false}
+            onChange={(v) => update({ showChip: v })}
+          />
+        </div>
+
+        <TextField
+          label={tr("thankyou.fields.message", "Message")}
+          value={ty.message || ""}
+          onChange={(v) => update({ message: v })}
+          autoComplete="off"
+          multiline={4}
+        />
+      </BlockStack>
+    </div>
+  );
+
+  const MediaPanel = () => (
+    <div className="tf-ty-controls-card">
+      <BlockStack gap="400">
+        <Text as="h3" variant="headingSm">
+          {tr("thankyou.media.title", "Media (Image & Icon)")}
+        </Text>
+
+        <div className="tf-ty-minirow3">
+          <TextField
+            label={tr("thankyou.media.imageUrl", "Image URL")}
+            value={ty.imageUrl || ""}
+            onChange={(v) => update({ imageUrl: v })}
+            placeholder="https://cdn.shopify.com/..."
+            autoComplete="off"
+            helpText={tr("thankyou.media.imageHelp", "Paste a URL or use the button to pick a Shopify image (if connected).")}
+          />
+          <TextField
+            label={tr("thankyou.media.iconUrl", "Icon URL")}
+            value={ty.iconUrl || ""}
+            onChange={(v) => update({ iconUrl: v })}
+            placeholder="https://cdn.shopify.com/..."
+            autoComplete="off"
+          />
+
+          <div style={{ display: "grid", gap: 10, alignContent: "start" }}>
+            <Button
+              onClick={() =>
+                alert(
+                  tr(
+                    "thankyou.media.pickNotConnected",
+                    "Shopify image picker is not connected here. Paste an URL for now."
+                  )
+                )
+              }
+              icon={PI.ImageIcon}
+            >
+              {tr("thankyou.media.pickImage", "Pick Shopify image")}
+            </Button>
+
+            <Button
+              onClick={() => update({ imageUrl: "", iconUrl: "" })}
+              icon={PI.DeleteIcon}
+              variant="secondary"
+            >
+              {tr("thankyou.media.clear", "Clear media")}
+            </Button>
+          </div>
+        </div>
+
+        <Divider />
+
+        <div className="tf-ty-minirow3">
+          <Select
+            label={tr("thankyou.layout.label", "Layout")}
+            value={ty.layout || "image-top"}
+            options={THANKYOU_LAYOUT_OPTIONS}
+            onChange={(v) => update({ layout: v })}
+          />
+
+          <TextField
+            type="number"
+            label={tr("thankyou.layout.imageHeight", "Image height (px)")}
+            value={String(clampInt(ty.imageHeight, 120, 240, 160))}
+            onChange={(v) => update({ imageHeight: clampInt(v, 120, 240, 160) })}
+          />
+
+          <TextField
+            type="number"
+            label={tr("thankyou.layout.radius", "Border radius")}
+            value={String(clampInt(ty.radius, 10, 28, 16))}
+            onChange={(v) => update({ radius: clampInt(v, 10, 28, 16) })}
+          />
+        </div>
+      </BlockStack>
+    </div>
+  );
+
+  const ActionsPanel = () => (
+    <div className="tf-ty-controls-card">
+      <BlockStack gap="400">
+        <Text as="h3" variant="headingSm">
+          {tr("thankyou.subtabs.actions", "Buttons")}
+        </Text>
+
+        <GroupCard title={tr("thankyou.actions.primary", "Primary button")}>
+          <div className="tf-ty-minirow3">
+            <Checkbox
+              label={tr("thankyou.actions.primaryEnabled", "Enable primary button")}
+              checked={ty.primaryEnabled !== false}
+              onChange={(v) => update({ primaryEnabled: v })}
+            />
+            <TextField
+              label={tr("thankyou.actions.primaryText", "Button text")}
+              value={ty.primaryText || ""}
+              onChange={(v) => update({ primaryText: v })}
+              autoComplete="off"
+            />
+            <TextField
+              label={tr("thankyou.actions.primaryUrl", "Button URL")}
+              value={ty.primaryUrl || ""}
+              onChange={(v) => update({ primaryUrl: v })}
+              placeholder="/"
+              autoComplete="off"
+            />
+          </div>
+        </GroupCard>
+
+        <GroupCard title={tr("thankyou.actions.secondary", "Secondary link")}>
+          <div className="tf-ty-minirow3">
+            <Checkbox
+              label={tr("thankyou.actions.secondaryEnabled", "Enable secondary link")}
+              checked={!!ty.secondaryEnabled}
+              onChange={(v) => update({ secondaryEnabled: v })}
+            />
+            <TextField
+              label={tr("thankyou.actions.secondaryText", "Link text")}
+              value={ty.secondaryText || ""}
+              onChange={(v) => update({ secondaryText: v })}
+              autoComplete="off"
+              disabled={!ty.secondaryEnabled}
+            />
+            <TextField
+              label={tr("thankyou.actions.secondaryUrl", "Link URL")}
+              value={ty.secondaryUrl || ""}
+              onChange={(v) => update({ secondaryUrl: v })}
+              placeholder="/pages/track-order"
+              autoComplete="off"
+              disabled={!ty.secondaryEnabled}
+            />
+          </div>
+        </GroupCard>
+      </BlockStack>
+    </div>
+  );
+
+  const DesignPanel = () => (
+    <div className="tf-ty-controls-card">
+      <BlockStack gap="400">
+        <Text as="h3" variant="headingSm">
+          {tr("thankyou.subtabs.design", "Design")}
+        </Text>
+
+        <div className="tf-ty-minirow3">
+          <Checkbox
+            label={tr("thankyou.design.useGlobal", "Use global (Offers) colors")}
+            checked={ty.useGlobalColors !== false}
+            onChange={(v) => update({ useGlobalColors: v })}
+            helpText={tr("thankyou.design.useGlobalHelp", "If enabled, Thank You colors follow the Offers global palette.")}
           />
           <div />
           <div />
-        </Grid3>
+        </div>
 
-        <Divider />
-
-        <Tabs
-          tabs={subTabs.map((x) => ({ id: x.id, content: x.content, panelID: `ty-${x.id}` }))}
-          selected={subSelected}
-          onSelect={(i) => setSubTab(subTabs[i]?.id || "mode")}
-        />
-
-        <Divider />
-
-        {/* MODE */}
-        {subTab === "mode" && (
-          <BlockStack gap="400">
-            <Grid3>
-              <Select
-                label={tr("thankyou.mode.label", "Thank you mode")}
-                value={ty.mode || "simple"}
-                options={THANKYOU_MODE_OPTIONS}
-                onChange={(v) => update({ mode: v })}
-                helpText={tr(
-                  "thankyou.mode.help",
-                  "Simple shows a message area. Popup opens after successful order."
-                )}
-              />
-
-              <Select
-                label={tr("thankyou.size.label", "Popup size")}
-                value={ty.size || "md"}
-                options={THANKYOU_SIZE_OPTIONS}
-                onChange={(v) => update({ size: v })}
-                disabled={ty.mode !== "popup"}
-              />
-
-              <TextField
-                type="number"
-                label={tr("thankyou.delay.label", "Auto open delay (ms)")}
-                value={String(clampInt(ty.autoOpenDelayMs, 0, 5000, 250))}
-                onChange={(v) => update({ autoOpenDelayMs: clampInt(v, 0, 5000, 250) })}
-                disabled={ty.mode !== "popup"}
-                helpText={tr("thankyou.delay.help", "0 = open instantly. Example: 250ms.")}
-              />
-            </Grid3>
-
-            <Divider />
-
+        {ty.useGlobalColors === false ? (
+          <>
             <Text as="p" variant="bodySm" tone="subdued">
-              {tr(
-                "thankyou.mode.note",
-                "Storefront behavior needs the frontend script to show this popup after submit success."
-              )}
+              {tr("thankyou.design.paletteHint", "Pick a palette for the Thank You popup/page.")}
             </Text>
-          </BlockStack>
-        )}
 
-        {/* CONTENT */}
-        {subTab === "content" && (
-          <BlockStack gap="400">
-            <Grid3>
-              <TextField
-                label={tr("thankyou.fields.title", "Title")}
-                value={ty.title || ""}
-                onChange={(v) => update({ title: v })}
-                autoComplete="off"
-              />
-              <TextField
-                label={tr("thankyou.fields.chipText", "Status chip text")}
-                value={ty.chipText || ""}
-                onChange={(v) => update({ chipText: v })}
-                autoComplete="off"
-                helpText={tr("thankyou.fields.chipHelp", "Small label like: Order confirmed")}
-              />
-              <Checkbox
-                label={tr("thankyou.fields.showChip", "Show chip")}
-                checked={ty.showChip !== false}
-                onChange={(v) => update({ showChip: v })}
-              />
-            </Grid3>
-
-            <TextField
-              label={tr("thankyou.fields.message", "Message")}
-              value={ty.message || ""}
-              onChange={(v) => update({ message: v })}
-              autoComplete="off"
-              multiline={4}
+            <PaletteSelector
+              value={(ty.colors?.paletteId || DEFAULT_THANKYOU_COLORS.paletteId) || "brand-gradient"}
+              onChange={(paletteId) =>
+                update({
+                  colors: applyPalette(paletteId, ty.colors || DEFAULT_THANKYOU_COLORS),
+                })
+              }
             />
 
             <Divider />
 
-            {/* "Canva like" media tools: URL + button to pick Shopify image (placeholder) */}
-            <GroupCard title={tr("thankyou.media.title", "Media (Image & Icon)")}>
-              <Grid3>
-                <TextField
-                  label={tr("thankyou.media.imageUrl", "Image URL")}
-                  value={ty.imageUrl || ""}
-                  onChange={(v) => update({ imageUrl: v })}
-                  placeholder="https://cdn.shopify.com/..."
-                  autoComplete="off"
-                  helpText={tr(
-                    "thankyou.media.imageHelp",
-                    "Paste a URL or use the button to pick a Shopify image (if connected)."
-                  )}
-                />
-                <TextField
-                  label={tr("thankyou.media.iconUrl", "Icon URL")}
-                  value={ty.iconUrl || ""}
-                  onChange={(v) => update({ iconUrl: v })}
-                  placeholder="https://cdn.shopify.com/..."
-                  autoComplete="off"
-                />
-                <div style={{ display: "grid", gap: 10 }}>
-                  <Button
-                    onClick={() => alert(tr("thankyou.media.pickNotConnected", "Shopify image picker is not connected here. Paste an URL for now."))}
-                    icon={PI.ImageIcon}
-                  >
-                    {tr("thankyou.media.pickImage", "Pick Shopify image")}
-                  </Button>
+            <Text as="p" variant="bodySm" fontWeight="bold">
+              {tr("thankyou.design.manual", "Manual colors")}
+            </Text>
 
-                  <Button
-                    onClick={() => update({ imageUrl: "", iconUrl: "" })}
-                    icon={PI.DeleteIcon}
-                    variant="secondary"
-                  >
-                    {tr("thankyou.media.clear", "Clear media")}
-                  </Button>
-                </div>
-              </Grid3>
-
-              <Divider />
-
-              <Grid3>
-                <Select
-                  label={tr("thankyou.layout.label", "Layout")}
-                  value={ty.layout || "image-top"}
-                  options={THANKYOU_LAYOUT_OPTIONS}
-                  onChange={(v) => update({ layout: v })}
-                />
-                <TextField
-                  type="number"
-                  label={tr("thankyou.layout.imageHeight", "Image height (px)")}
-                  value={String(clampInt(ty.imageHeight, 120, 240, 160))}
-                  onChange={(v) => update({ imageHeight: clampInt(v, 120, 240, 160) })}
-                />
-                <TextField
-                  type="number"
-                  label={tr("thankyou.layout.radius", "Border radius")}
-                  value={String(clampInt(ty.radius, 10, 28, 16))}
-                  onChange={(v) => update({ radius: clampInt(v, 10, 28, 16) })}
-                />
-              </Grid3>
-            </GroupCard>
-          </BlockStack>
-        )}
-
-        {/* ACTIONS */}
-        {subTab === "actions" && (
-          <BlockStack gap="400">
-            <GroupCard title={tr("thankyou.actions.primary", "Primary button")}>
-              <Grid3>
-                <Checkbox
-                  label={tr("thankyou.actions.primaryEnabled", "Enable primary button")}
-                  checked={ty.primaryEnabled !== false}
-                  onChange={(v) => update({ primaryEnabled: v })}
-                />
-                <TextField
-                  label={tr("thankyou.actions.primaryText", "Button text")}
-                  value={ty.primaryText || ""}
-                  onChange={(v) => update({ primaryText: v })}
-                  autoComplete="off"
-                />
-                <TextField
-                  label={tr("thankyou.actions.primaryUrl", "Button URL")}
-                  value={ty.primaryUrl || ""}
-                  onChange={(v) => update({ primaryUrl: v })}
-                  placeholder="/"
-                  autoComplete="off"
-                />
-              </Grid3>
-            </GroupCard>
-
-            <GroupCard title={tr("thankyou.actions.secondary", "Secondary link")}>
-              <Grid3>
-                <Checkbox
-                  label={tr("thankyou.actions.secondaryEnabled", "Enable secondary link")}
-                  checked={!!ty.secondaryEnabled}
-                  onChange={(v) => update({ secondaryEnabled: v })}
-                />
-                <TextField
-                  label={tr("thankyou.actions.secondaryText", "Link text")}
-                  value={ty.secondaryText || ""}
-                  onChange={(v) => update({ secondaryText: v })}
-                  autoComplete="off"
-                  disabled={!ty.secondaryEnabled}
-                />
-                <TextField
-                  label={tr("thankyou.actions.secondaryUrl", "Link URL")}
-                  value={ty.secondaryUrl || ""}
-                  onChange={(v) => update({ secondaryUrl: v })}
-                  placeholder="/pages/track-order"
-                  autoComplete="off"
-                  disabled={!ty.secondaryEnabled}
-                />
-              </Grid3>
-            </GroupCard>
-          </BlockStack>
-        )}
-
-        {/* DESIGN */}
-        {subTab === "design" && (
-          <BlockStack gap="400">
-            <Grid3>
-              <Checkbox
-                label={tr("thankyou.design.useGlobal", "Use global (Offers) colors")}
-                checked={ty.useGlobalColors !== false}
-                onChange={(v) => update({ useGlobalColors: v })}
-                helpText={tr(
-                  "thankyou.design.useGlobalHelp",
-                  "If enabled, Thank You colors follow the Offers global palette."
-                )}
+            <div className="tf-ty-minirow3">
+              <ColorField
+                label={tr("thankyou.colors.cardBg", "Card background")}
+                value={ty.colors?.cardBg || ""}
+                onChange={(v) => update({ colors: { ...(ty.colors || {}), cardBg: v } })}
+                placeholder="#FFFFFF"
               />
-              <div />
-              <div />
-            </Grid3>
+              <ColorField
+                label={tr("thankyou.colors.borderColor", "Border color")}
+                value={ty.colors?.borderColor || ""}
+                onChange={(v) => update({ colors: { ...(ty.colors || {}), borderColor: v } })}
+                placeholder="#E5E7EB"
+              />
+              <ColorField
+                label={tr("thankyou.colors.iconBg", "Icon background")}
+                value={ty.colors?.iconBg || ""}
+                onChange={(v) => update({ colors: { ...(ty.colors || {}), iconBg: v } })}
+                placeholder="#EEF2FF"
+              />
+            </div>
 
-            {ty.useGlobalColors === false && (
-              <>
-                <Text as="p" variant="bodySm" tone="subdued">
-                  {tr(
-                    "thankyou.design.paletteHint",
-                    "Pick a palette for the Thank You popup/page."
-                  )}
-                </Text>
-
-                <PaletteSelector
-                  value={(ty.colors?.paletteId || DEFAULT_THANKYOU_COLORS.paletteId) || "brand-gradient"}
-                  onChange={(paletteId) =>
-                    update({
-                      colors: applyPalette(paletteId, ty.colors || DEFAULT_THANKYOU_COLORS),
-                    })
-                  }
-                />
-
-                <Divider />
-
-                <Text as="p" variant="bodySm" fontWeight="bold">
-                  {tr("thankyou.design.manual", "Manual colors")}
-                </Text>
-
-                <Grid3>
-                  <ColorField
-                    label={tr("thankyou.colors.cardBg", "Card background")}
-                    value={ty.colors?.cardBg || ""}
-                    onChange={(v) => update({ colors: { ...(ty.colors || {}), cardBg: v } })}
-                    placeholder="#FFFFFF"
-                  />
-                  <ColorField
-                    label={tr("thankyou.colors.borderColor", "Border color")}
-                    value={ty.colors?.borderColor || ""}
-                    onChange={(v) => update({ colors: { ...(ty.colors || {}), borderColor: v } })}
-                    placeholder="#E5E7EB"
-                  />
-                  <ColorField
-                    label={tr("thankyou.colors.iconBg", "Icon background")}
-                    value={ty.colors?.iconBg || ""}
-                    onChange={(v) => update({ colors: { ...(ty.colors || {}), iconBg: v } })}
-                    placeholder="#EEF2FF"
-                  />
-                </Grid3>
-
-                <Grid3>
-                  <ColorField
-                    label={tr("thankyou.colors.buttonBg", "Button background")}
-                    value={ty.colors?.buttonBg || ""}
-                    onChange={(v) => update({ colors: { ...(ty.colors || {}), buttonBg: v } })}
-                    placeholder="#0B3B82"
-                  />
-                  <ColorField
-                    label={tr("thankyou.colors.buttonText", "Button text color")}
-                    value={ty.colors?.buttonTextColor || ""}
-                    onChange={(v) => update({ colors: { ...(ty.colors || {}), buttonTextColor: v } })}
-                    placeholder="#FFFFFF"
-                  />
-                  <ColorField
-                    label={tr("thankyou.colors.buttonBorder", "Button border")}
-                    value={ty.colors?.buttonBorder || ""}
-                    onChange={(v) => update({ colors: { ...(ty.colors || {}), buttonBorder: v } })}
-                    placeholder="#0B3B82"
-                  />
-                </Grid3>
-              </>
-            )}
-
-            {ty.useGlobalColors !== false && (
-              <Text as="p" variant="bodySm" tone="subdued">
-                {tr(
-                  "thankyou.design.usingGlobalNote",
-                  "Using global palette from Offers. To customize separately, disable 'Use global colors'."
-                )}
-              </Text>
-            )}
-          </BlockStack>
+            <div className="tf-ty-minirow3">
+              <ColorField
+                label={tr("thankyou.colors.buttonBg", "Button background")}
+                value={ty.colors?.buttonBg || ""}
+                onChange={(v) => update({ colors: { ...(ty.colors || {}), buttonBg: v } })}
+                placeholder="#0B3B82"
+              />
+              <ColorField
+                label={tr("thankyou.colors.buttonText", "Button text color")}
+                value={ty.colors?.buttonTextColor || ""}
+                onChange={(v) => update({ colors: { ...(ty.colors || {}), buttonTextColor: v } })}
+                placeholder="#FFFFFF"
+              />
+              <ColorField
+                label={tr("thankyou.colors.buttonBorder", "Button border")}
+                value={ty.colors?.buttonBorder || ""}
+                onChange={(v) => update({ colors: { ...(ty.colors || {}), buttonBorder: v } })}
+                placeholder="#0B3B82"
+              />
+            </div>
+          </>
+        ) : (
+          <Text as="p" variant="bodySm" tone="subdued">
+            {tr("thankyou.design.usingGlobalNote", "Using global palette from Offers. To customize separately, disable 'Use global colors'.")}
+          </Text>
         )}
-      </GroupCard>
-    </BlockStack>
+
+        <Divider />
+
+        <Text as="p" variant="bodySm" tone="subdued">
+          {tr("thankyou.design.current", "Current applied colors (preview):")}
+        </Text>
+        <div className="tf-ty-minirow3">
+          <div style={{ display: "grid", gap: 6 }}>
+            <Text as="p" variant="bodySm" fontWeight="bold">
+              {tr("thankyou.colors.cardBg", "Card background")}
+            </Text>
+            <div style={{ height: 34, borderRadius: 12, border: "1px solid rgba(0,0,0,.10)", background: colors.cardBg || "#fff" }} />
+          </div>
+          <div style={{ display: "grid", gap: 6 }}>
+            <Text as="p" variant="bodySm" fontWeight="bold">
+              {tr("thankyou.colors.iconBg", "Icon background")}
+            </Text>
+            <div style={{ height: 34, borderRadius: 12, border: "1px solid rgba(0,0,0,.10)", background: colors.iconBg || "#EEF2FF" }} />
+          </div>
+          <div style={{ display: "grid", gap: 6 }}>
+            <Text as="p" variant="bodySm" fontWeight="bold">
+              {tr("thankyou.colors.buttonBg", "Button background")}
+            </Text>
+            <div style={{ height: 34, borderRadius: 12, border: "1px solid rgba(0,0,0,.10)", background: colors.buttonBg || "#111827" }} />
+          </div>
+        </div>
+      </BlockStack>
+    </div>
+  );
+
+  const ActivePanel = () => {
+    if (tool === "content") return <ContentPanel />;
+    if (tool === "media") return <MediaPanel />;
+    if (tool === "actions") return <ActionsPanel />;
+    if (tool === "design") return <DesignPanel />;
+    return <ModePanel />;
+  };
+
+  if (ty.enabled === false) {
+    return (
+      <BlockStack gap="300">
+        <GroupCard title={tr("thankyou.titleGroup", "Thank You Page")}>
+          <Checkbox
+            label={tr("thankyou.enable", "Enable Thank You Page experience")}
+            checked={false}
+            onChange={(v) => update({ enabled: v })}
+          />
+          <Text as="p" variant="bodySm" tone="subdued">
+            {tr("thankyou.disabledNote", "Enable this to configure the Thank you page / popup builder.")}
+          </Text>
+        </GroupCard>
+      </BlockStack>
+    );
+  }
+
+  return (
+    <div className="tf-ty-builder">
+      <TopBar />
+      <div className="tf-ty-body">
+        <ToolRail />
+
+        <div className="tf-ty-stage">
+          <div className="tf-ty-stage-grid">
+            <ActivePanel />
+
+            <div className="tf-ty-hint">
+              {tr("thankyou.builderFooter", "Tip: You can edit in the builder, and watch the preview on the right update instantly.")}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -1811,7 +2161,9 @@ function PageShell({ children, tr, loading, onSave, saving, dirty }) {
             </div>
 
             {dirty ? (
-              <Badge tone="warning">{tr("section2.badge.unsaved", "Unsaved changes")}</Badge>
+              <Badge tone="warning">
+                {tr("section2.badge.unsaved", "Unsaved changes")}
+              </Badge>
             ) : (
               <Badge tone="success">{tr("section2.badge.saved", "Saved")}</Badge>
             )}
@@ -1873,7 +2225,6 @@ function Section2OffersInner({ products = [] }) {
       { id: "global", content: tr("section2.tabs.global", "Global"), panelID: "tab-global", icon: "SettingsIcon" },
       { id: "offers", content: tr("section2.tabs.offers", "Offers"), panelID: "tab-offers", icon: "DiscountIcon" },
       { id: "upsells", content: tr("section2.tabs.upsells", "Upsells"), panelID: "tab-upsells", icon: "GiftCardIcon" },
-      // ✅ NEW TAB
       { id: "thankyou", content: tr("section2.tabs.thankyou", "Thank you page"), panelID: "tab-thankyou", icon: "ImageIcon" },
     ],
     [tr]
@@ -1893,7 +2244,6 @@ function Section2OffersInner({ products = [] }) {
       setLoading(true);
 
       try {
-        // keep compatibility: if backend still stores in "offers", merge our new keys
         const res = await fetch("/api/offers/load");
         if (res.ok) {
           const j = await res.json().catch(() => null);
@@ -1918,7 +2268,6 @@ function Section2OffersInner({ products = [] }) {
             setCfg(parsed);
             lastSavedKeyRef.current = JSON.stringify(parsed);
           } else {
-            // fallback old key
             const old = window.localStorage.getItem("tripleform_cod_offers_v31");
             if (old) {
               const parsedOld = withDefaults(JSON.parse(old));
@@ -2053,7 +2402,6 @@ function Section2OffersInner({ products = [] }) {
         </Modal.Section>
       </Modal>
 
-      {/* ✅ Top Tabs centered */}
       <div className="tf-topnav">
         <div className="tf-topnav-center">
           <div>
@@ -2211,7 +2559,6 @@ function Section2OffersInner({ products = [] }) {
               </BlockStack>
             )}
 
-            {/* ✅ NEW: THANK YOU PAGE TAB */}
             {tab === "thankyou" && (
               <BlockStack gap="400">
                 <InlineStack align="space-between" blockAlign="center">
