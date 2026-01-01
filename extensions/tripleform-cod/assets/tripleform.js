@@ -1,10 +1,10 @@
 /* =========================================================================
-   TripleForm COD — OFFERS + UPSELLS (FIXED CALC + FIXED UI OFFERS)
-   ✅ Fix 1: Discount now applies ONLY if conditions are met (ex: qty >= 2 pack)
-   ✅ Fix 2: Offer can optionally force quantity when activated (bundleQty)
-   ✅ Fix 3: Offer UI clean: image RIGHT, better spacing, title/desc 1 line (ellipsis)
-   ✅ Fix 4: Stable render (no “random” feeling) + one organized block
-   ✅ NOTE: I REMOVED COUNTRY_DATA part as you asked → paste it manually
+   TripleForm COD — OFFERS + UPSELLS (FIXED ICONS + FIXED OFFERS TOTAL)
+   ✅ COUNTRY_DATA removed (paste manually)
+   ✅ Icons: real/simple SVG icons (no fake look)
+   ✅ Offers total: (price * qty) - discount   (NOT qty * (price - discount))
+   ✅ Discount applied ONCE by default (not per item)
+   ✅ Optional: offer.bundleQty forces quantity when activated
    ========================================================================= */
 
 window.TripleformCOD = (function () {
@@ -95,32 +95,73 @@ window.TripleformCOD = (function () {
   }
 
   /* ------------------------------------------------------------------ */
-  /* Polaris-like SVG Icons (extended)                                  */
+  /* ✅ Real / Simple SVG Icons (clean + consistent)                     */
   /* ------------------------------------------------------------------ */
   const ICON_SVGS = {
-    AppsIcon: `<svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+    // Generic (polaris-like)
+    AppsIcon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" aria-hidden="true">
       <path d="M5 3.5h4v4H5v-4Zm6 0h4v4h-4v-4ZM5 9.5h4v4H5v-4Zm6 0h4v4h-4v-4ZM5 15.5h4v1H5v-1Zm6 0h4v1h-4v-1Z"
-        fill="currentColor" opacity=".9"/>
+        fill="currentColor" opacity=".95"/>
     </svg>`,
-    CirclePlusIcon: `<svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
-      <path d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z" stroke="currentColor" stroke-width="1.6"/>
+
+    CirclePlusIcon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="1.6"/>
       <path d="M10 6v8M6 10h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
     </svg>`,
-    CheckCircleIcon: `<svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
-      <path d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z" stroke="currentColor" stroke-width="1.6"/>
-      <path d="m6.5 10.2 2.2 2.2 4.8-5.1" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+
+    CheckCircleIcon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="1.6"/>
+      <path d="m6.5 10.2 2.2 2.2 4.8-5.1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>`,
-    DiscountIcon: `<svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
-      <path d="M4 10.2 10.2 4h5.8v5.8L9.8 16 4 10.2Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
-      <path d="M13.5 6.5h.01" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
-      <path d="M6.2 14.2l8-8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+
+    DiscountIcon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <path d="M4 10.2 10.2 4h5.8v5.8L9.8 16 4 10.2Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+      <path d="M13.6 6.6h.01" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/>
+      <path d="M6.2 14.2l8-8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
     </svg>`,
-    GiftCardIcon: `<svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+
+    GiftCardIcon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" aria-hidden="true">
       <path d="M3.5 8h13V17a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1V8Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
       <path d="M3.5 8V6.5a1 1 0 0 1 1-1h11a1 1 0 0 1 1 1V8" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
       <path d="M10 5.5V18" stroke="currentColor" stroke-width="1.6"/>
       <path d="M7.2 5.2c0-1.2 1-2.2 2.2-2.2.6 0 1.2.2 1.6.6.4-.4 1-.6 1.6-.6 1.2 0 2.2 1 2.2 2.2 0 1-1 1.8-2.2 1.8H9.4c-1.2 0-2.2-.8-2.2-1.8Z"
         stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
+    </svg>`,
+
+    // ✅ Form icons (simple + “real”)
+    UserIcon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <path d="M10 10.2c2.2 0 4-1.8 4-4s-1.8-4-4-4-4 1.8-4 4 1.8 4 4 4Z" stroke="currentColor" stroke-width="1.7"/>
+      <path d="M3.5 18c.9-3 3.4-5 6.5-5s5.6 2 6.5 5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+    </svg>`,
+
+    PhoneIcon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <path d="M6.2 3.6 4.9 5c-.7.7-.9 1.7-.5 2.6 1.4 3.2 4 5.8 7.2 7.2.9.4 2 .2 2.6-.5l1.4-1.3c.5-.5.6-1.3.1-1.9l-1.4-1.7c-.5-.6-1.3-.7-1.9-.3l-1 .6c-.6.3-1.3.2-1.8-.2l-2.5-2.5c-.5-.5-.6-1.2-.2-1.8l.6-1c.4-.6.3-1.4-.3-1.9L8.1 3.5c-.6-.5-1.4-.4-1.9.1Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+    </svg>`,
+
+    PhoneOffIcon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <path d="M3 3l14 14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      <path d="M6.2 3.6 4.9 5c-.7.7-.9 1.7-.5 2.6 1.4 3.2 4 5.8 7.2 7.2.9.4 2 .2 2.6-.5l1.4-1.3c.5-.5.6-1.3.1-1.9l-1.4-1.7c-.5-.6-1.3-.7-1.9-.3l-1 .6c-.6.3-1.3.2-1.8-.2l-2.5-2.5c-.5-.5-.6-1.2-.2-1.8l.6-1c.4-.6.3-1.4-.3-1.9L8.1 3.5c-.6-.5-1.4-.4-1.9.1Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+    </svg>`,
+
+    HomeIcon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <path d="M3.5 9.2 10 3.8l6.5 5.4V17a1 1 0 0 1-1 1h-3.5v-5H8v5H4.5a1 1 0 0 1-1-1V9.2Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+    </svg>`,
+
+    MapPinIcon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <path d="M10 18s5-4.7 5-9a5 5 0 1 0-10 0c0 4.3 5 9 5 9Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+      <circle cx="10" cy="9" r="1.7" stroke="currentColor" stroke-width="1.6"/>
+    </svg>`,
+
+    NoteIcon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <path d="M6 3.5h8.5a1 1 0 0 1 1 1V16a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4.5a1 1 0 0 1 1-1Z" stroke="currentColor" stroke-width="1.6"/>
+      <path d="M7.2 7h5.6M7.2 10h5.6M7.2 13h4.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+    </svg>`,
+
+    GlobeIcon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <circle cx="10" cy="10" r="7.5" stroke="currentColor" stroke-width="1.6"/>
+      <path d="M2.7 10h14.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+      <path d="M10 2.5c2.2 2.3 2.2 12.7 0 15" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+      <path d="M10 2.5c-2.2 2.3-2.2 12.7 0 15" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
     </svg>`,
   };
 
@@ -171,7 +212,7 @@ window.TripleformCOD = (function () {
         20%,40%,60%,80%{transform:translateX(3px)}
       }
 
-      /* OFFERS (clean + organized) */
+      /* OFFERS */
       .tf-offers-container{display:grid;gap:10px;margin-bottom:14px}
 
       .tf-offer-card{
@@ -183,12 +224,7 @@ window.TripleformCOD = (function () {
         overflow:hidden;
       }
 
-      /* ✅ always aligned, image RIGHT */
-      .tf-offer-row{
-        display:flex;
-        gap:12px;
-        align-items:center;
-      }
+      .tf-offer-row{display:flex;gap:12px;align-items:center}
 
       .tf-offer-icon{
         width:34px;height:34px;border-radius:12px;
@@ -198,40 +234,19 @@ window.TripleformCOD = (function () {
       }
       .tf-offer-icon img{width:100%;height:100%;object-fit:cover;display:block}
 
-      .tf-offer-main{
-        min-width:0;
-        flex:1;
-        display:flex;
-        flex-direction:column;
-        gap:4px;
-      }
+      .tf-offer-main{min-width:0;flex:1;display:flex;flex-direction:column;gap:4px}
 
-      /* ✅ title + desc ONE LINE (ellipsis) */
       .tf-offer-title{
-        font-weight:900;
-        font-size:13px;
-        color:#0F172A;
-        white-space:nowrap;
-        overflow:hidden;
-        text-overflow:ellipsis;
-        line-height:1.2;
+        font-weight:900;font-size:13px;color:#0F172A;
+        white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2;
       }
       .tf-offer-desc{
-        font-size:12px;
-        color:#64748B;
-        white-space:nowrap;
-        overflow:hidden;
-        text-overflow:ellipsis;
-        line-height:1.2;
+        font-size:12px;color:#64748B;
+        white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2;
       }
-
       .tf-offer-sub{
-        font-size:11px;
-        color:#94A3B8;
-        margin-top:4px;
-        white-space:nowrap;
-        overflow:hidden;
-        text-overflow:ellipsis;
+        font-size:11px;color:#94A3B8;margin-top:4px;
+        white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
       }
 
       .tf-offer-img{
@@ -241,30 +256,17 @@ window.TripleformCOD = (function () {
       .tf-offer-img img{width:100%;height:100%;object-fit:cover;display:block}
 
       .tf-offer-btn{
-        margin-top:8px;
-        border-radius:12px;
-        padding:9px 10px;
-        font-size:12px;
-        font-weight:900;
-        cursor:pointer;
-        border:1px solid transparent;
-        display:inline-flex;
-        align-items:center;
-        justify-content:center;
-        gap:8px;
-        transition:all .15s ease;
-        width:fit-content;
-        max-width:100%;
-        white-space:nowrap;
+        margin-top:8px;border-radius:12px;padding:9px 10px;
+        font-size:12px;font-weight:900;cursor:pointer;border:1px solid transparent;
+        display:inline-flex;align-items:center;justify-content:center;gap:8px;
+        transition:all .15s ease;width:fit-content;max-width:100%;white-space:nowrap;
       }
       .tf-offer-btn:hover{transform:translateY(-1px);opacity:.96}
       .tf-offer-btn.active{filter:saturate(1.1)}
       .tf-offer-btn.disabled{opacity:.55;cursor:not-allowed;transform:none}
 
-      /* Discount row */
       [data-tf="discount-row"]{display:none}
 
-      /* Timer */
       .offer-timer{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;margin-top:8px;padding:6px 10px;border-radius:10px}
       .timer-countdown{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;font-weight:900;letter-spacing:.6px;margin-left:auto}
       .timer-minimal{background:#F9FAFB;color:#374151;border:1px solid #E5E7EB}
@@ -274,7 +276,7 @@ window.TripleformCOD = (function () {
     document.head.appendChild(style);
   }
 
-/* ------------------------------------------------------------------ */
+ /* ------------------------------------------------------------------ */
   /* Pays / wilayas / villes COMPLET                                    */
   /* ------------------------------------------------------------------ */
 
@@ -1134,7 +1136,7 @@ window.TripleformCOD = (function () {
   }
 
   /* ------------------------------------------------------------------ */
-  /* Sticky button (unchanged)                                          */
+  /* Sticky button                                                      */
   /* ------------------------------------------------------------------ */
   function setupSticky(root, cfg, styleType, openHandler, motionClass) {
     const stickyType = cfg?.behavior?.stickyType || "none";
@@ -1263,7 +1265,7 @@ window.TripleformCOD = (function () {
   }
 
   /* ------------------------------------------------------------------ */
-  /* Timers (optional)                                                  */
+  /* Timers                                                             */
   /* ------------------------------------------------------------------ */
   function TimerComponent(minutes, message, cssClass, timeFormat) {
     const container = document.createElement("div");
@@ -1349,7 +1351,7 @@ window.TripleformCOD = (function () {
     if (!isActive) {
       const offer = offersList[offerIndex] || {};
 
-      // ✅ OPTIONAL: force qty to bundleQty when activating (ex: 2 pack)
+      // ✅ Optional: force qty to bundleQty when activating
       const bundleQty = Number(offer.bundleQty || offer.minQty || offer.requiredQty || 0);
       if (bundleQty > 0) setQty(bundleQty);
 
@@ -1366,8 +1368,10 @@ window.TripleformCOD = (function () {
           discountType: offer.discountType || null, // "percentage" | "fixed"
           discountValue: Number(offer.discountValue || 0),
 
-          // ✅ NEW: conditions
-          minQty: Number(offer.minQty || offer.requiredQty || offer.bundleQty || 1), // default 1
+          minQty: Number(offer.minQty || offer.requiredQty || offer.bundleQty || 1),
+
+          // ✅ IMPORTANT: default = discount once (not per item)
+          applyPerItem: offer.applyPerItem === true,
         })
       );
     }
@@ -1427,7 +1431,6 @@ window.TripleformCOD = (function () {
 
     let html = `<div class="tf-offers-container" data-tf-offers-block="1">`;
 
-    // Offers (button)
     activeOffers.forEach((offer, idx) => {
       const title = offer.title || "Offre spéciale";
       const description = offer.description || "";
@@ -1441,10 +1444,9 @@ window.TripleformCOD = (function () {
 
       const btnLabel = offer.buttonText || "Activer";
 
-      // ✅ show pack rule in one line (optional)
       const minQty = Number(offer.minQty || offer.requiredQty || offer.bundleQty || 1);
       const packHint =
-        minQty > 1 ? `Buy ${minQty} items to get discount` : (offer.subText || "");
+        minQty > 1 ? `Pack: ${minQty} pcs` : (offer.subText || "");
 
       html += `
         <div class="tf-offer-card"
@@ -1491,7 +1493,6 @@ window.TripleformCOD = (function () {
       `;
     });
 
-    // Upsells (no button)
     activeUpsells.forEach((upsell) => {
       const title = upsell.title || "Upsell";
       const description = upsell.description || "";
@@ -1552,7 +1553,7 @@ window.TripleformCOD = (function () {
   }
 
   /* ------------------------------------------------------------------ */
-  /* Render                                                            */
+  /* Render                                                             */
   /* ------------------------------------------------------------------ */
   function render(root, cfg, offersCfg, product, getVariant, moneyFmt, recaptchaCfg) {
     const d = cfg.design || {};
@@ -1726,7 +1727,6 @@ window.TripleformCOD = (function () {
       box-sizing:border-box;
     `;
 
-    // ✅ Offers HTML (organized)
     const offersHtml = buildOffersHtml(offersCfg || {}, root.id);
 
     function orderedFieldKeys() {
@@ -1742,6 +1742,7 @@ window.TripleformCOD = (function () {
       const field = f[key];
       if (!field || field.on === false) return "";
 
+      // ✅ Icon fixed display (always visible)
       const iconHtml = field.icon ? getIconHtml(field.icon, 18, "#111827") : "";
       const req = field.required ? " *" : "";
       const label = (field.label || key) + req;
@@ -1768,7 +1769,7 @@ window.TripleformCOD = (function () {
       if (key === "province") {
         return `
           <div style="${fieldContainerStyle}">
-            <div style="height:${inputHeight}; display:flex; align-items:center; justify-content:center;">
+            <div style="width:22px;height:${inputHeight}; display:flex; align-items:center; justify-content:center;">
               ${iconHtml}
             </div>
             <div style="flex:1;">
@@ -1784,7 +1785,7 @@ window.TripleformCOD = (function () {
       if (key === "city") {
         return `
           <div style="${fieldContainerStyle}">
-            <div style="height:${inputHeight}; display:flex; align-items:center; justify-content:center;">
+            <div style="width:22px;height:${inputHeight}; display:flex; align-items:center; justify-content:center;">
               ${iconHtml}
             </div>
             <div style="flex:1;">
@@ -1800,7 +1801,7 @@ window.TripleformCOD = (function () {
       if (field.type === "textarea") {
         return `
           <div style="${fieldContainerStyle}">
-            <div style="height:100px; display:flex; align-items:flex-start; justify-content:center; padding-top:12px;">
+            <div style="width:22px;height:100px; display:flex; align-items:flex-start; justify-content:center; padding-top:12px;">
               ${iconHtml}
             </div>
             <div style="flex:1;">
@@ -1819,7 +1820,7 @@ window.TripleformCOD = (function () {
 
         return `
           <div style="${fieldContainerStyle}">
-            <div style="height:${inputHeight}; display:flex; align-items:center; justify-content:center;">
+            <div style="width:22px;height:${inputHeight}; display:flex; align-items:center; justify-content:center;">
               ${iconHtml}
             </div>
             <div style="flex:1;">
@@ -1837,7 +1838,7 @@ window.TripleformCOD = (function () {
 
       return `
         <div style="${fieldContainerStyle}">
-          <div style="height:${inputHeight}; display:flex; align-items:center; justify-content:center;">
+          <div style="width:22px;height:${inputHeight}; display:flex; align-items:center; justify-content:center;">
             ${iconHtml}
           </div>
           <div style="flex:1;">
@@ -2097,26 +2098,23 @@ window.TripleformCOD = (function () {
       return { prefix, number: phone, fullPhone };
     }
 
-    /* --------------------- ✅ Price parse FIX (always cents safe) ---- */
+    /* --------------------- Price parse (cents-safe) ----------------- */
     function variantPriceToCents(variant) {
-      // Shopify product JSON in theme usually returns cents integer (ex: 555500)
-      // but sometimes may return "55.55" or "55.55 USD".
       const raw = variant && variant.price != null ? String(variant.price).trim() : "0";
       if (!raw) return 0;
 
       const cleaned = raw.replace(/[^\d.,-]/g, "");
       if (!cleaned) return 0;
 
-      // if contains dot or comma as decimal
+      // If decimal detected at the end => treat as money
       const hasDecimal = /[.,]\d{1,2}$/.test(cleaned);
-
       if (hasDecimal) {
         const normalized = cleaned.replace(",", ".");
         const n = Number(normalized);
         return Number.isFinite(n) ? Math.round(n * 100) : 0;
       }
 
-      // no decimal -> assume already cents
+      // Otherwise => assume cents
       const n = Number(cleaned);
       return Number.isFinite(n) ? Math.round(n) : 0;
     }
@@ -2131,7 +2129,7 @@ window.TripleformCOD = (function () {
       const priceCents = variantPriceToCents(variant);
       const baseTotalCents = priceCents * qty;
 
-      return { priceCents, totalCents: baseTotalCents, baseTotalCents, qty, variantId: vId };
+      return { priceCents, baseTotalCents, qty, variantId: vId };
     }
 
     /* --------------------- GEO shipping ---------------------------- */
@@ -2145,7 +2143,7 @@ window.TripleformCOD = (function () {
 
       const reqId = ++geoRequestId;
       const totals = computeProductTotals();
-      const baseTotalCents = totals.totalCents;
+      const baseTotalCents = totals.baseTotalCents;
 
       const province = getVal("province");
       const city = getVal("city");
@@ -2248,13 +2246,13 @@ window.TripleformCOD = (function () {
       return { ok: true, timeOnPageMs, hpValue };
     }
 
-    /* --------------------- ✅ Discount calc FIX (qty condition) ------ */
+    /* --------------------- ✅ OFFERS DISCOUNT (fixed logic) ---------- */
     const offersVisible = Array.isArray(offersCfg?.offers) ? offersCfg.offers : [];
     const activeOffersOnly = offersVisible.filter(
       (o) => o && o.enabled !== false && o.showInPreview !== false
     );
 
-    function computeDiscountCents(totalCents, qty, rootId) {
+    function computeDiscountCents(baseTotalCents, qty, rootId) {
       const active = getActiveOfferData(rootId);
       if (!active || active.type !== "offer") return 0;
 
@@ -2265,27 +2263,36 @@ window.TripleformCOD = (function () {
       const discountType = offer.discountType || active.discountType || null;
       const discountValue = Number(offer.discountValue ?? active.discountValue ?? 0);
 
-      // ✅ conditions: minQty (ex: 2-pack)
+      // condition minQty
       const minQty = Number(offer.minQty || offer.requiredQty || offer.bundleQty || active.minQty || 1);
       if (minQty > 1 && Number(qty || 1) < minQty) return 0;
 
       if (!discountType || !(discountValue > 0)) return 0;
 
+      // ✅ applyPerItem (optional)
+      const applyPerItem = offer.applyPerItem === true || active.applyPerItem === true;
+
       if (discountType === "percentage") {
-        return Math.round(totalCents * (discountValue / 100));
+        // percent always on total
+        return Math.round(baseTotalCents * (discountValue / 100));
       }
+
       if (discountType === "fixed") {
-        return Math.round(discountValue * 100);
+        // ✅ FIX: default => apply ONCE, not per item
+        const onceCents = Math.round(discountValue * 100);
+        return applyPerItem ? onceCents * Math.max(1, qty) : onceCents;
       }
+
       return 0;
     }
 
     function updateMoney() {
-      const { priceCents, totalCents, qty } = computeProductTotals();
+      const { priceCents, baseTotalCents, qty } = computeProductTotals();
 
-      const discountCents = computeDiscountCents(totalCents, qty, root.id);
-      const discountedTotalCents = Math.max(0, totalCents - discountCents);
-      const grandTotalCents = discountedTotalCents + (geoShippingCents || 0);
+      // ✅ total = (price * qty) - discount
+      const discountCents = computeDiscountCents(baseTotalCents, qty, root.id);
+      const discountedSubtotalCents = Math.max(0, baseTotalCents - discountCents);
+      const grandTotalCents = discountedSubtotalCents + (geoShippingCents || 0);
 
       root.querySelectorAll('[data-tf="price"]').forEach((el) => (el.textContent = moneyFmt(priceCents)));
       root.querySelectorAll('[data-tf="total"]').forEach((el) => (el.textContent = moneyFmt(grandTotalCents)));
@@ -2324,8 +2331,7 @@ window.TripleformCOD = (function () {
         mainCta.innerHTML = `${buttonIconHtml}${label} · ${suffix} ${moneyFmt(grandTotalCents)}`;
       }
 
-      // ✅ Also mark button disabled if qty < minQty (visual feedback)
-      const active = getActiveOfferData(root.id);
+      // button disable hint if qty < minQty
       const buttons = root.querySelectorAll("[data-tf-offer-toggle]");
       buttons.forEach((btn) => {
         const i = parseInt(btn.getAttribute("data-tf-offer-index") || "0", 10);
@@ -2337,17 +2343,11 @@ window.TripleformCOD = (function () {
         const ok = !mustHavePack || qty >= minQty;
 
         btn.classList.toggle("disabled", !ok);
-
-        if (!ok) {
-          // keep active state possible (if you forced qty it will become ok)
-          btn.title = `Need quantity ${minQty} to apply discount`;
-        } else {
-          btn.title = "";
-        }
+        btn.title = !ok ? `Need quantity ${minQty} to apply discount` : "";
       });
     }
 
-    // ✅ Wire offer buttons
+    // Wire offer buttons
     setTimeout(() => {
       const buttons = root.querySelectorAll("[data-tf-offer-toggle]");
       buttons.forEach((btn) => {
@@ -2369,12 +2369,12 @@ window.TripleformCOD = (function () {
       if (!validateRequiredFields()) return;
 
       const totals = computeProductTotals();
-      const { priceCents, totalCents, baseTotalCents, qty, variantId } = totals;
+      const { priceCents, baseTotalCents, qty, variantId } = totals;
 
-      const discountCents = computeDiscountCents(totalCents, qty, root.id);
-      const discountedTotalCents = Math.max(0, totalCents - discountCents);
+      const discountCents = computeDiscountCents(baseTotalCents, qty, root.id);
+      const discountedSubtotalCents = Math.max(0, baseTotalCents - discountCents);
       const shippingCentsToSend = geoShippingCents || 0;
-      const grandTotalCents = discountedTotalCents + shippingCentsToSend;
+      const grandTotalCents = discountedSubtotalCents + shippingCentsToSend;
 
       const phone = getPhone();
 
@@ -2418,7 +2418,7 @@ window.TripleformCOD = (function () {
         baseTotalCents,
         discountCents,
         shippingCents: shippingCentsToSend,
-        totalCents: discountedTotalCents,
+        totalCents: discountedSubtotalCents,
         grandTotalCents,
         currency: root.getAttribute("data-currency") || null,
         locale: root.getAttribute("data-locale") || null,
