@@ -1,10 +1,19 @@
+/* =========================================================================
+   TripleForm COD — OFFERS + UPSELLS (ADAPTED TO Section2Offers.jsx v30)
+   ✅ Supports: global colors/palettes, per-item colors, layouts, iconUrl/imageUrl,
+      showInPreview, offer buttonText, scoped localStorage per section/root,
+      discount calculation (percentage/fixed) if present in offer settings.
+   ✅ Fix: storefront field icons not showing → add broader icon SVG map + normalization.
+   ✅ Fix: discountEnabled + discount fields are now correctly saved & applied.
+   ✅ Fix: onSubmitClick was truncated → restored full submit flow.
+   ========================================================================= */
+
 window.TripleformCOD = (function () {
   "use strict";
 
   /* ------------------------------------------------------------------ */
   /* reCAPTCHA script loader (v3)                                       */
   /* ------------------------------------------------------------------ */
-
   let recaptchaScriptPromise = null;
 
   function ensureRecaptchaScript(cfg) {
@@ -36,7 +45,6 @@ window.TripleformCOD = (function () {
   /* ------------------------------------------------------------------ */
   /* Helpers                                                            */
   /* ------------------------------------------------------------------ */
-
   function byId(id) {
     return document.getElementById(id);
   }
@@ -52,7 +60,7 @@ window.TripleformCOD = (function () {
     } catch {
       try {
         return JSON.parse(String(raw).replace(/=>/g, ":"));
-      } catch (e2) {
+      } catch {
         return fallback;
       }
     }
@@ -61,15 +69,13 @@ window.TripleformCOD = (function () {
   function parseSettingsAttr(el) {
     const raw = el.getAttribute("data-settings") || "{}";
     const obj = safeJsonParse(raw, {});
-    if (!obj || typeof obj !== "object") return {};
-    return obj;
+    return obj && typeof obj === "object" ? obj : {};
   }
 
   function parseOffersAttr(el) {
     const raw = el.getAttribute("data-offers") || "{}";
     const obj = safeJsonParse(raw, {});
-    if (!obj || typeof obj !== "object") return {};
-    return obj;
+    return obj && typeof obj === "object" ? obj : {};
   }
 
   function fmtMoneyFactory(locale, currency) {
@@ -80,46 +86,116 @@ window.TripleformCOD = (function () {
     return (cents) => nf.format(Number(cents || 0) / 100);
   }
 
-  /* ------------------------------------------------------------------ */
-  /* Polaris-like SVG Icons (clean)                                     */
-  /* ------------------------------------------------------------------ */
+  function clamp01(x) {
+    let v = Number(x);
+    if (!Number.isFinite(v)) v = 0;
+    if (v > 1) v = v / 100;
+    if (v < 0) v = 0;
+    if (v > 1) v = 1;
+    return v;
+  }
 
+  /* ------------------------------------------------------------------ */
+  /* Polaris-like SVG Icons (extended)                                  */
+  /* ------------------------------------------------------------------ */
   const ICON_SVGS = {
-    CartIcon: `<svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
-      <path d="M2.5 3h2l1.1 9.2a2 2 0 0 0 2 1.8h6.8a2 2 0 0 0 2-1.7l1-6.3H5.1" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-      <path d="M7.7 17a.9.9 0 1 1-1.8 0 .9.9 0 0 1 1.8 0Zm9 0a.9.9 0 1 1-1.8 0 .9.9 0 0 1 1.8 0Z" fill="currentColor"/>
+    AppsIcon: `<svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <path d="M5 3.5h4v4H5v-4Zm6 0h4v4h-4v-4ZM5 9.5h4v4H5v-4Zm6 0h4v4h-4v-4ZM5 15.5h4v1H5v-1Zm6 0h4v1h-4v-1Z"
+        fill="currentColor" opacity=".9"/>
     </svg>`,
-    PhoneIcon: `<svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
-      <path d="M6.2 3.6c.4-.5 1.2-.5 1.6 0l1.3 1.6c.3.4.3 1 0 1.4l-.9 1.1a1 1 0 0 0-.1 1.1c.8 1.5 2 2.8 3.5 3.6.4.2.9.1 1.2-.2l1-1c.4-.4 1-.4 1.5-.1l1.6 1.1c.6.4.7 1.2.2 1.8l-.9 1c-.7.8-1.7 1.2-2.8 1-5.8-1.2-10.4-6-11.6-11.9-.2-1 .1-2 .8-2.8l1-.7Z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+
+    PlusIcon: `<svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
     </svg>`,
-    LocationIcon: `<svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
-      <path d="M10 18s6-5.3 6-10a6 6 0 1 0-12 0c0 4.7 6 10 6 10Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
-      <path d="M10 10.4a2.4 2.4 0 1 0 0-4.8 2.4 2.4 0 0 0 0 4.8Z" stroke="currentColor" stroke-width="1.6"/>
+
+    CirclePlusIcon: `<svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <path d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z" stroke="currentColor" stroke-width="1.6"/>
+      <path d="M10 6v8M6 10h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
     </svg>`,
+
     CheckCircleIcon: `<svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
       <path d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z" stroke="currentColor" stroke-width="1.6"/>
       <path d="m6.5 10.2 2.2 2.2 4.8-5.1" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>`,
-    ArrowRightIcon: `<svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
-      <path d="M4 10h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-      <path d="m11 5 5 5-5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+
+    DiscountIcon: `<svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <path d="M4 10.2 10.2 4h5.8v5.8L9.8 16 4 10.2Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+      <path d="M13.5 6.5h.01" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+      <path d="M6.2 14.2l8-8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
     </svg>`,
-    SendIcon: `<svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
-      <path d="M3 9.2 17 3l-6.2 14-1.6-5.2L3 9.2Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
-      <path d="M17 3 9.2 11.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+
+    GiftCardIcon: `<svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <path d="M3.5 8h13V17a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1V8Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+      <path d="M3.5 8V6.5a1 1 0 0 1 1-1h11a1 1 0 0 1 1 1V8" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+      <path d="M10 5.5V18" stroke="currentColor" stroke-width="1.6"/>
+      <path d="M7.2 5.2c0-1.2 1-2.2 2.2-2.2.6 0 1.2.2 1.6.6.4-.4 1-.6 1.6-.6 1.2 0 2.2 1 2.2 2.2 0 1-1 1.8-2.2 1.8H9.4c-1.2 0-2.2-.8-2.2-1.8Z"
+        stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
     </svg>`,
+
+    CartIcon: `<svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <path d="M2.5 3h2l1.1 9.2a2 2 0 0 0 2 1.8h6.8a2 2 0 0 0 2-1.7l1-6.3H5.1" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M7.7 17a.9.9 0 1 1-1.8 0 .9.9 0 0 1 1.8 0Zm9 0a.9.9 0 1 1-1.8 0 .9.9 0 0 1 1.8 0Z" fill="currentColor"/>
+    </svg>`,
+
+    PhoneIcon: `<svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <path d="M6.2 3.6c.4-.5 1.2-.5 1.6 0l1.3 1.6c.3.4.3 1 0 1.4l-.9 1.1a1 1 0 0 0-.1 1.1c.8 1.5 2 2.8 3.5 3.6.4.2.9.1 1.2-.2l1-1c.4-.4 1-.4 1.5-.1l1.6 1.1c.6.4.7 1.2.2 1.8l-.9 1c-.7.8-1.7 1.2-2.8 1-5.8-1.2-10.4-6-11.6-11.9-.2-1 .1-2 .8-2.8l1-.7Z"
+        stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`,
+
+    LocationIcon: `<svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <path d="M10 18s6-5.3 6-10a6 6 0 1 0-12 0c0 4.7 6 10 6 10Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+      <path d="M10 10.4a2.4 2.4 0 1 0 0-4.8 2.4 2.4 0 0 0 0 4.8Z" stroke="currentColor" stroke-width="1.6"/>
+    </svg>`,
+
+    PersonIcon: `<svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <path d="M10 10.2a3.6 3.6 0 1 0 0-7.2 3.6 3.6 0 0 0 0 7.2Z" stroke="currentColor" stroke-width="1.6"/>
+      <path d="M3.8 18c.7-3 3.1-5.1 6.2-5.1s5.5 2.1 6.2 5.1" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+    </svg>`,
+
+    NoteIcon: `<svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <path d="M5 3h10a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z" stroke="currentColor" stroke-width="1.6"/>
+      <path d="M6.5 6.5h7M6.5 9.5h7M6.5 12.5h5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+    </svg>`,
+
+    EmailIcon: `<svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <path d="M3.5 5.5h13v9h-13v-9Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+      <path d="M4 6l6 5 6-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`,
+
     HomeIcon: `<svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
-      <path d="M3 9.2 10 3l7 6.2V17a1 1 0 0 1-1 1h-4v-5H8v5H4a1 1 0 0 1-1-1V9.2Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+      <path d="M3 9.2 10 3l7 6.2V17a1 1 0 0 1-1 1h-4v-5H8v5H4a1 1 0 0 1-1-1V9.2Z"
+        stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
     </svg>`,
+
     StoreIcon: `<svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
       <path d="M3 8.5 4.2 3H15.8L17 8.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
       <path d="M4 8.5V17a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V8.5" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
       <path d="M8 18v-6h4v6" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
     </svg>`,
+
+    ArrowRightIcon: `<svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <path d="M4 10h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+      <path d="m11 5 5 5-5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`,
+
+    SendIcon: `<svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <path d="M3 9.2 17 3l-6.2 14-1.6-5.2L3 9.2Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+      <path d="M17 3 9.2 11.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+    </svg>`,
   };
 
+  function normalizeIconName(name) {
+    const raw = String(name || "").trim();
+    if (!raw) return "";
+    let n = raw.replace(/Major$/i, "").replace(/Minor$/i, "");
+    if (!/Icon$/i.test(n)) n = n + "Icon";
+    n = n[0].toUpperCase() + n.slice(1);
+    return n;
+  }
+
   function getIconHtml(iconName, size = 18, color = "currentColor") {
-    const svg = ICON_SVGS[iconName];
+    const key = normalizeIconName(iconName);
+    const svg = ICON_SVGS[key] || ICON_SVGS[iconName] || "";
     if (!svg) return "";
     const px = typeof size === "number" ? `${size}px` : css(size);
     return `
@@ -130,18 +206,17 @@ window.TripleformCOD = (function () {
   }
 
   /* ------------------------------------------------------------------ */
-  /* CSS Injection (offers + motions + icon base)                       */
+  /* CSS Injection                                                      */
   /* ------------------------------------------------------------------ */
-
   function injectGlobalCSSOnce() {
     if (document.getElementById("tf-global-css")) return;
+
     const style = document.createElement("style");
     style.id = "tf-global-css";
     style.textContent = `
       .tf-ic{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto}
       .tf-ic svg{width:100%;height:100%}
 
-      /* ✅ button motions (sync with Section1Forms.jsx) */
       .tf-motion-x{animation:tfMoveX 1.2s ease-in-out infinite}
       .tf-motion-y{animation:tfMoveY 1.2s ease-in-out infinite}
       .tf-motion-pulse{animation:tfPulse 1.1s ease-in-out infinite}
@@ -155,75 +230,68 @@ window.TripleformCOD = (function () {
         20%,40%,60%,80%{transform:translateX(3px)}
       }
 
-      /* Offers CSS */
       .tf-offers-container{display:grid;gap:10px;margin-bottom:16px}
-      .offers-strip{
-        display:grid!important;
-        grid-template-columns:60px minmax(0,1fr)!important;
-        gap:12px!important;
-        align-items:center!important;
-        background:#fff!important;
-        border:1px solid #E5E7EB!important;
-        border-radius:10px!important;
-        padding:12px!important;
-        margin-bottom:10px!important;
-        box-shadow:0 4px 12px rgba(0,0,0,0.04)!important;
-        box-sizing:border-box!important;
-        width:100%!important;
-      }
-      .offers-strip-thumb{
-        width:56px!important;height:56px!important;border-radius:12px!important;
-        overflow:hidden!important;border:1px solid #E5E7EB!important;
-        display:flex!important;align-items:center!important;justify-content:center!important;
-        flex-shrink:0!important;
-      }
-      .offers-strip-thumb-inner{
-        width:100%!important;height:100%!important;border-radius:12px!important;
-        background:linear-gradient(135deg,#3B82F6 0%,#8B5CF6 100%)!important;
-      }
-      .offers-strip-thumb-inner-upsell{
-        width:100%!important;height:100%!important;border-radius:12px!important;
-        background:linear-gradient(135deg,#EC4899 0%,#F59E0B 100%)!important;
-      }
-      .offers-strip-thumb img{width:100%!important;height:100%!important;object-fit:cover!important;border-radius:12px!important}
-      .offers-strip-main{font-size:14px!important;font-weight:600!important;color:#111827!important;margin-bottom:2px!important;line-height:1.3!important}
-      .offers-strip-desc{font-size:12px!important;color:#6B7280!important;line-height:1.4!important}
 
-      .offer-timer{display:flex!important;align-items:center!important;gap:6px!important;font-size:11px!important;font-weight:600!important;margin-top:6px!important;padding:4px 8px!important;border-radius:6px!important}
-      .offer-timer-icon{font-size:10px!important}
-      .timer-countdown{font-family:monospace!important;font-weight:bold!important;letter-spacing:1px!important;margin-left:auto!important}
+      .tf-offer-card{
+        border-radius:14px;
+        border:1px solid #E5E7EB;
+        padding:14px;
+        box-shadow:0 10px 22px rgba(15,23,42,0.06);
+        background:#fff;
+        overflow:hidden;
+      }
+      .tf-offer-row{display:flex;gap:12px;align-items:center}
+      .tf-offer-icon{
+        width:36px;height:36px;border-radius:12px;
+        display:grid;place-items:center;flex:none;overflow:hidden;
+        border:1px solid rgba(0,0,0,.10);
+        background:#EEF2FF;
+      }
+      .tf-offer-icon img{width:100%;height:100%;object-fit:cover;display:block}
+      .tf-offer-img{
+        width:92px;height:92px;border-radius:16px;overflow:hidden;flex:none;
+        border:1px solid rgba(0,0,0,.08);background:#F3F4F6;
+      }
+      .tf-offer-img img{width:100%;height:100%;object-fit:cover;display:block}
+      .tf-offer-main{min-width:0;flex:1}
+      .tf-offer-title{font-weight:900;font-size:14px;margin-bottom:3px;color:#111827}
+      .tf-offer-desc{font-size:12px;color:#6B7280;line-height:1.35}
+      .tf-offer-sub{font-size:11px;color:#94A3B8;margin-top:7px}
 
-      /* Timer presets */
-      .timer-chrono{background:linear-gradient(90deg,#1e3a8a,#3b82f6)!important;color:#fff!important;border:1px solid #60a5fa!important;font-weight:700!important;box-shadow:0 4px 12px rgba(59,130,246,.35)!important}
-      .timer-black-friday{background:linear-gradient(90deg,#000,#dc2626)!important;color:#fff!important;border:2px solid #fbbf24!important;font-weight:800!important;box-shadow:0 6px 16px rgba(220,38,38,.4)!important}
-      .timer-new-year{background:linear-gradient(135deg,#0f766e,#0ea5e9,#ec4899)!important;color:#fff!important;border:1px solid #fde047!important;font-weight:700!important;box-shadow:0 6px 20px rgba(14,165,233,.3)!important}
-      .timer-flash{background:linear-gradient(90deg,#f97316,#fbbf24)!important;color:#1f2937!important;border:1px solid #f59e0b!important;font-weight:700!important;box-shadow:0 4px 14px rgba(249,115,22,.4)!important}
-      .timer-hot{background:linear-gradient(90deg,#7c2d12,#ea580c)!important;color:#fff!important;border:1px solid #fdba74!important;animation:tfPulse 1.5s infinite!important;font-weight:800!important}
-      .timer-weekend{background:linear-gradient(135deg,#7c3aed,#10b981)!important;color:#fff!important;border:1px solid #a7f3d0!important;font-weight:700!important;box-shadow:0 4px 14px rgba(124,58,237,.3)!important}
+      .tf-offer-btn{
+        margin-top:10px;border-radius:12px;padding:9px 10px;
+        font-size:12px;font-weight:900;cursor:pointer;
+        border:1px solid transparent;
+        display:inline-flex;align-items:center;gap:8px;
+        transition:all .15s ease;
+      }
+      .tf-offer-btn:hover{transform:translateY(-1px);opacity:.95}
+      .tf-offer-btn.active{filter:saturate(1.1)}
+      .tf-offer-btn.disabled{opacity:.6;cursor:not-allowed}
 
-      .timer-simple{background:#FEF2F2!important;color:#DC2626!important;border:1px solid #FECACA!important}
-      .timer-elegant{background:linear-gradient(135deg,#8B5CF6,#EC4899)!important;color:#fff!important;border:1px solid #DDD6FE!important;font-weight:600!important}
-      .timer-minimal{background:#F9FAFB!important;color:#374151!important;border:1px solid #E5E7EB!important;font-weight:500!important}
-      .timer-urgent{background:linear-gradient(90deg,#991B1B,#DC2626)!important;color:#fff!important;border:1px solid #FCA5A5!important;font-weight:700!important;animation:tfBlink 1s infinite!important}
+      .tf-layout-image-right .tf-offer-row{flex-direction:row-reverse}
+      .tf-layout-image-top .tf-offer-row{flex-direction:column;align-items:stretch}
+      .tf-layout-image-top .tf-offer-img{width:100%;height:160px}
+      .tf-layout-image-bottom .tf-offer-row{flex-direction:column-reverse;align-items:stretch}
+      .tf-layout-image-bottom .tf-offer-img{width:100%;height:160px}
+      .tf-layout-image-bottom .tf-offer-desc{font-size:11px}
+
+      [data-tf="discount-row"]{display:none}
+
+      .offer-timer{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;margin-top:8px;padding:6px 10px;border-radius:10px}
+      .timer-countdown{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;font-weight:900;letter-spacing:.6px;margin-left:auto}
+      .timer-simple{background:#FEF2F2;color:#DC2626;border:1px solid #FECACA}
+      .timer-elegant{background:linear-gradient(135deg,#8B5CF6,#EC4899);color:#fff;border:1px solid #DDD6FE}
+      .timer-minimal{background:#F9FAFB;color:#374151;border:1px solid #E5E7EB}
+      .timer-urgent{background:linear-gradient(90deg,#991B1B,#DC2626);color:#fff;border:1px solid #FCA5A5;animation:tfBlink 1s infinite}
       @keyframes tfBlink{0%,100%{opacity:1}50%{opacity:.7}}
-
-      .offer-activate-btn{
-        background:#000!important;color:#fff!important;border:1px solid #000!important;border-radius:6px!important;
-        padding:6px 10px!important;font-size:11px!important;font-weight:600!important;cursor:pointer!important;
-        margin-top:8px!important;transition:all .2s ease!important;display:inline-flex!important;align-items:center!important;gap:6px!important;
-      }
-      .offer-activate-btn:hover{background:#374151!important;border-color:#374151!important}
-      .offer-activate-btn.active{background:#10B981!important;border-color:#10B981!important}
-      .offer-activate-btn.disabled{background:#9CA3AF!important;border-color:#9CA3AF!important;cursor:not-allowed!important}
-      .offer-activate-btn-icon{font-size:11px!important}
     `;
     document.head.appendChild(style);
   }
 
   /* ------------------------------------------------------------------ */
-  /* Pays / wilayas / villes                                            */
+  /* Country defs (trimmed)                                             */
   /* ------------------------------------------------------------------ */
-
   const COUNTRY_DATA = {
     ma: {
       label: "Maroc",
@@ -233,157 +301,10 @@ window.TripleformCOD = (function () {
         { id: "RABAT", name: "Rabat-Salé-Kénitra", cities: ["Rabat","Salé","Kénitra","Témara","Skhirat","Khémisset","Sidi Slimane","Sidi Kacem","Tiflet","Ain Aouda","Harhoura","Sidi Yahya Zaer","Oulmès","Sidi Allal El Bahraoui"] },
         { id: "TANGER", name: "Tanger-Tétouan-Al Hoceïma", cities: ["Tanger","Tétouan","Al Hoceïma","Larache","Chefchaouen","Ouazzane","Fnideq","M'diq","Martil","Ksar El Kebir","Asilah","Bni Bouayach","Imzouren","Bni Hadifa"] },
         { id: "MARRAKECH", name: "Marrakech-Safi", cities: ["Marrakech","Safi","El Kelâa des Sraghna","Essaouira","Rehamna","Youssoufia","Chichaoua","Al Haouz","Rhamna","Benguerir","Sidi Bennour","Smimou","Tamanar","Imintanoute"] },
-        { id: "FES", name: "Fès-Meknès", cities: ["Fès","Meknès","Ifrane","Taza","Sefrou","Boulemane","Taounate","Guercif","Moulay Yacoub","El Hajeb","Moulay Idriss Zerhoun","Ouazzane","Bhalil","Aïn Cheggag"] },
-        { id: "ORIENTAL", name: "Région de l'Oriental", cities: ["Oujda","Nador","Berkane","Taourirt","Jerada","Figuig","Bouarfa","Ahfir","Driouch","Beni Ensar","Selouane","Bouhdila","Talsint","Debdou"] },
-        { id: "SUSS", name: "Souss-Massa", cities: ["Agadir","Inezgane","Taroudant","Tiznit","Oulad Teima","Biougra","Ait Melloul","Dcheira","Temsia","Ait Baha","Chtouka Ait Baha","Tafraout","Aoulouz","El Guerdane"] },
-        { id: "DRAATAF", name: "Drâa-Tafilalet", cities: ["Errachidia","Ouarzazate","Tinghir","Midelt","Zagora","Rissani","Alnif","Boumalne Dades","Kelaat M'Gouna","Tinejdad","Goulmima","Jorf","M'semrir","Aït Benhaddou"] },
       ],
     },
-    dz: {
-      label: "Algérie",
-      phonePrefix: "+213",
-      provinces: [
-        { id: "ALGER", name: "Alger", cities: ["Alger Centre","Bab El Oued","El Harrach","Kouba","Hussein Dey","Bordj El Kiffan","Dar El Beïda","Bouzaréah","Birkhadem","Chéraga","Dellys","Zeralda","Staoueli","Birtouta","Ouled Fayet","Draria","Les Eucalyptus"] },
-        { id: "ORAN", name: "Oran", cities: ["Oran","Es-Sénia","Bir El Djir","Gdyel","Aïn El Turck","Arzew","Mers El Kébir","Boutlelis","Oued Tlelat","Bethioua","El Ançor","Hassi Bounif","Messerghin","Boufatis","Tafraoui"] },
-        { id: "CONSTANTINE", name: "Constantine", cities: ["Constantine","El Khroub","Hamma Bouziane","Aïn Smara","Zighoud Youcef","Didouche Mourad","Ibn Ziad","Messaoud Boudjeriou","Beni Hamidane","Aïn Abid","Ouled Rahmoun","Ben Badis","El Haria"] },
-        { id: "BLIDA", name: "Blida", cities: ["Blida","Boufarik","El Affroun","Mouzaïa","Ouled Yaïch","Beni Mered","Bouinan","Soumaa","Chebli","Bougara","Guerrouaou","Hammam Melouane","Beni Tamou","Ben Khlil"] },
-        { id: "SETIF", name: "Sétif", cities: ["Sétif","El Eulma","Aïn Oulmene","Bougaa","Aïn Azel","Amoucha","Béni Aziz","Guellal","Hammam Soukhna","Bouandas","Taya","Tella","Babor","Maoklane"] },
-        { id: "ANNABA", name: "Annaba", cities: ["Annaba","El Bouni","Sidi Amar","Berrahal","Treat","Cheurfa","Oued El Aneb","Seraidi","Ain Berda","Chaiba","El Hadjar","Chetaibi"] },
-        { id: "BATNA", name: "Batna", cities: ["Batna","Barika","Merouana","Arris","N'Gaous","Tazoult","Aïn Touta","Ouled Si Slimane","Fesdis","Timgad","Ras El Aioun","Maafa","Lazrou","Ouled Ammar"] },
-      ],
-    },
-    tn: {
-      label: "Tunisie",
-      phonePrefix: "+216",
-      provinces: [
-        { id: "TUNIS", name: "Tunis", cities: ["Tunis","La Marsa","Carthage","Le Bardo","Le Kram","Sidi Bou Said","Menzah","Ariana","El Menzah","Mornaguia","Mégrine","Radès","Djedeida","El Omrane","Ettahrir","El Kabaria"] },
-        { id: "ARIANA", name: "Ariana", cities: ["Ariana","Raoued","La Soukra","Kalaat El Andalous","Sidi Thabet","Ettadhamen","Mnihla","Borj El Amri","Kalâat el-Andalous","Sidi Amor","El Battan","Oued Ellil"] },
-        { id: "BEN_AROUS", name: "Ben Arous", cities: ["Ben Arous","Ezzahra","Rades","Mégrine","Hammam Lif","Mornag","Fouchana","Khalidia","Mhamdia","Hammam Chott","Bou Mhel el-Bassatine","El Mida","Mornaguia"] },
-        { id: "SFAX", name: "Sfax", cities: ["Sfax","El Ain","Agareb","Mahres","Sakiet Eddaïer","Sakiet Ezzit","Ghraiba","Bir Ali Ben Khalifa","Jebeniana","Kerkennah","Skhira","Menzel Chaker","Gremda","Thyna"] },
-        { id: "SOUSSE", name: "Sousse", cities: ["Sousse","Hammam Sousse","Kalaa Kebira","Kalaa Sghira","Akouda","M'saken","Enfidha","Bouficha","Hergla","Kondar","Zaouiet Sousse","Hammam Jedidi","Sidi Bou Ali","Messaadine"] },
-        { id: "BIZERTE", name: "Bizerte", cities: ["Bizerte","Menzel Jemil","Mateur","Sejnane","Ghar El Melh","Ras Jebel","Menzel Abderrahmane","El Alia","Tinja","Utique","Menzel Bourguiba","Joumine","Aousja","Metline"] },
-      ],
-    },
-    eg: {
-      label: "Égypte",
-      phonePrefix: "+20",
-      provinces: [
-        { id: "CAIRO", name: "Le Caire", cities: ["Le Caire","Nasr City","Heliopolis","Maadi","Zamalek","Dokki","Giza","Shubra","Al Haram","Al Mohandessin","6 Octobre","New Cairo","Madinet Nasr","Helwan","Qalyub","Shubra El Kheima","Badr City"] },
-        { id: "ALEX", name: "Alexandrie", cities: ["Alexandrie","Borg El Arab","Abu Qir","Al Amriya","Al Agamy","Montaza","Al Mansheya","Al Labban","Kafr Abdo","Sidi Gaber","Smouha","Miami","Stanley","Laurent","Gleem","Camp Caesar"] },
-        { id: "GIZA", name: "Gizeh", cities: ["Gizeh","Sheikh Zayed City","6th of October","Al Haram","Al Badrasheen","Al Ayat","Al Wahat Al Bahariya","Al Saff","Atfih","Al Ayyat","Awashim","Kerdasa","El Hawamdeya","Osim"] },
-        { id: "SHARQIA", name: "Sharqia", cities: ["Zagazig","10th of Ramadan City","Belbeis","Minya Al Qamh","Al Ibrahimiyah","Diarb Negm","Husseiniya","Mashtool El Souk","Abu Hammad","Abu Kebir","Faqous","El Salheya El Gedida"] },
-      ],
-    },
-    fr: {
-      label: "France",
-      phonePrefix: "+33",
-      provinces: [
-        { id: "IDF", name: "Île-de-France", cities: ["Paris","Boulogne-Billancourt","Saint-Denis","Versailles","Nanterre","Créteil","Bobigny","Montreuil","Argenteuil","Courbevoic","Asnières-sur-Seine","Colombes","Aubervilliers","Saint-Maur-des-Fossés","Issy-les-Moulineaux","Levallois-Perret"] },
-        { id: "PACA", name: "Provence-Alpes-Côte d'Azur", cities: ["Marseille","Nice","Toulon","Avignon","Aix-en-Provence","Antibes","Cannes","La Seyne-sur-Mer","Hyères","Arles","Martigues","Grasse","Fréjus","Antibes","La Ciotat","Cavaillon"] },
-        { id: "ARA", name: "Auvergne-Rhône-Alpes", cities: ["Lyon","Grenoble","Saint-Étienne","Annecy","Clermont-Ferrand","Villeurbanne","Valence","Chambéry","Roanne","Bourg-en-Bresse","Vénissieux","Saint-Priest","Caluire-et-Cuire","Vaulx-en-Velin","Meyzieu"] },
-        { id: "OCCITANIE", name: "Occitanie", cities: ["Toulouse","Montpellier","Nîmes","Perpignan","Béziers","Montauban","Narbonne","Carcassonne","Albi","Sète","Lunel","Agde","Castres","Mende","Millau","Foix"] },
-      ],
-    },
-    es: {
-      label: "España",
-      phonePrefix: "+34",
-      provinces: [
-        { id: "MADRID", name: "Comunidad de Madrid", cities: ["Madrid","Alcalá de Henares","Getafe","Leganés","Móstoles","Fuenlabrada","Alcorcón","Parla","Torrejón de Ardoz","Coslada","Las Rozas","San Sebastián de los Reyes","Alcobendas","Pozuelo de Alarcón","Rivas-Vaciamadrid"] },
-        { id: "CATALUNYA", name: "Cataluña", cities: ["Barcelona","L'Hospitalet de Llobregat","Badalona","Tarragona","Sabadell","Lleida","Mataró","Santa Coloma de Gramenet","Reus","Girona","Sant Cugat","Cornellà","Sant Boi de Llobregat","Rubí","Manresa"] },
-        { id: "ANDALUCIA", name: "Andalucía", cities: ["Sevilla","Málaga","Granada","Córdoba","Jerez de la Frontera","Almería","Huelva","Marbella","Dos Hermanas","Algeciras","Cádiz","Jaén","Almería","Mijas","Fuengirola","Chiclana de la Frontera"] },
-        { id: "VALENCIA", name: "Comunidad Valenciana", cities: ["Valencia","Alicante","Castellón de la Plana","Elche","Torrevieja","Orihuela","Gandia","Benidorm","Paterna","Sagunto","Alcoy","Elda","San Vicente del Raspeig","Vila-real","Burjassot"] },
-      ],
-    },
-    sa: {
-      label: "Arabie Saoudite",
-      phonePrefix: "+966",
-      provinces: [
-        { id: "RIYADH", name: "Riyadh", cities: ["Riyadh","Al Kharj","Al Majma'ah","Dhurma","Al Duwadimi","Al Quway'iyah","Al Muzahmiyah","Wadi ad-Dawasir","Al Hariq","Al Sulayyil","Al Aflaj","Hotat Bani Tamim","Al Diriyah","Thadiq","Huraymila"] },
-        { id: "MAKKAH", name: "Makkah", cities: ["Makkah","Jeddah","Taif","Al Qunfudhah","Al Lith","Al Jumum","Khulais","Rabigh","Turubah","Al Kamel","Bahra","Adham","Al Jumum","Al Khurma","Al Muwayh"] },
-        { id: "MADINAH", name: "Madinah", cities: ["Madinah","Yanbu","Al Ula","Badr","Mahd adh Dhahab","Al Hinakiyah","Wadi al-Fara'","Al-Mahd","Khaybar","Al Henakiyah","Al Suqiyah","Al-Mahd","Al-Ais","Hegrah"] },
-        { id: "EASTERN", name: "Eastern Province", cities: ["Dammam","Khobar","Dhahran","Jubail","Qatif","Hafr al-Batin","Al Khafji","Ras Tanura","Abqaiq","Al-'Udayd","Nu'ayriyah","Udhailiyah","Al Qaryah","Al Mubarraz","Al Awamiyah"] },
-      ],
-    },
-    ae: {
-      label: "Émirats Arabes Unis",
-      phonePrefix: "+971",
-      provinces: [
-        { id: "DUBAI", name: "Dubai", cities: ["Dubai","Jebel Ali","Hatta","Al Awir","Al Lusayli","Margham","Al Khawaneej","Al Qusais","Al Barsha","Al Warqaa","Mirdif","Nad Al Sheba","Al Quoz","Jumeirah","Business Bay","Dubai Marina"] },
-        { id: "ABU_DHABI", name: "Abu Dhabi", cities: ["Abu Dhabi","Al Ain","Madinat Zayed","Gharbia","Liwa Oasis","Al Ruwais","Al Mirfa","Al Dhafra","Al Samha","Al Shawamekh","Bani Yas","Khalifa City","Mohammed Bin Zayed City","Shahama","Al Wathba"] },
-        { id: "SHARJAH", name: "Sharjah", cities: ["Sharjah","Khor Fakkan","Kalba","Dhaid","Al Dhaid","Al Hamriyah","Al Madam","Al Batayeh","Al Sajaa","Al Ghail","Wasit","Mleiha","Al Nahda","Al Qasimia","Al Majaz"] },
-        { id: "AJMAN", name: "Ajman", cities: ["Ajman","Masfout","Manama","Al Hamidiyah","Al Zorah","Al Mowaihat","Al Jurf","Al Hamidiya","Al Rawda","Al Nuaimiya"] },
-      ],
-    },
-    us: {
-      label: "United States",
-      phonePrefix: "+1",
-      provinces: [
-        { id: "CALIFORNIA", name: "California", cities: ["Los Angeles","San Francisco","San Diego","San Jose","Sacramento","Fresno","Long Beach","Oakland","Bakersfield","Anaheim","Santa Ana","Riverside","Stockton","Chula Vista","Irvine","Modesto"] },
-        { id: "NEW_YORK", name: "New York", cities: ["New York City","Buffalo","Rochester","Yonkers","Syracuse","Albany","New Rochelle","Mount Vernon","Schenectady","Utica","White Plains","Troy","Niagara Falls","Binghamton"] },
-        { id: "TEXAS", name: "Texas", cities: ["Houston","Dallas","Austin","San Antonio","Fort Worth","El Paso","Arlington","Corpus Christi","Plano","Laredo","Lubbock","Garland","Irving","Amarillo","Grand Prairie"] },
-        { id: "FLORIDA", name: "Florida", cities: ["Miami","Orlando","Tampa","Jacksonville","Tallahassee","St. Petersburg","Hialeah","Port St. Lucie","Cape Coral","Fort Lauderdale","Pembroke Pines","Hollywood","Miramar","Gainesville"] },
-      ],
-    },
-    ng: {
-      label: "Nigeria",
-      phonePrefix: "+234",
-      provinces: [
-        { id: "LAGOS", name: "Lagos", cities: ["Lagos","Ikeja","Surulere","Apapa","Lekki","Victoria Island","Ajah","Badagry","Epe","Ikorodu","Agege","Alimosho","Kosofe","Mushin","Oshodi","Somolu"] },
-        { id: "ABUJA", name: "Abuja", cities: ["Abuja","Garki","Wuse","Maitama","Asokoro","Gwarinpa","Kubwa","Jahi","Lugbe","Karu","Nyanya","Bwari","Kuje","Gwagwalada","Kwali"] },
-        { id: "KANO", name: "Kano", cities: ["Kano","Nassarawa","Tarauni","Dala","Fagge","Gwale","Kumbotso","Ungogo","Dawakin Tofa","Tofa","Rimin Gado","Bagwai","Gezawa","Gabasawa","Minjibir"] },
-        { id: "RIVERS", name: "Rivers", cities: ["Port Harcourt","Obio-Akpor","Ikwerre","Eleme","Oyigbo","Etche","Omuma","Okrika","Ogu–Bolo","Bonny","Degema","Asari-Toru","Akuku-Toru","Abua–Odual","Ahoada"] },
-      ],
-    },
-    pk: {
-      label: "Pakistan",
-      phonePrefix: "+92",
-      provinces: [
-        { id: "PUNJAB", name: "Punjab", cities: ["Lahore","Faisalabad","Rawalpindi","Gujranwala","Multan","Sialkot","Bahawalpur","Sargodha","Sheikhupura","Jhelum","Gujrat","Sahiwal","Wah Cantonment","Kasur","Okara","Chiniot"] },
-        { id: "SINDH", name: "Sindh", cities: ["Karachi","Hyderabad","Sukkur","Larkana","Nawabshah","Mirpur Khas","Jacobabad","Shikarpur","Khairpur","Dadu","Tando Allahyar","Tando Adam","Badin","Thatta","Kotri"] },
-        { id: "KHYBER", name: "Khyber Pakhtunkhwa", cities: ["Peshawar","Mardan","Abbottabad","Mingora","Kohat","Bannu","Swabi","Dera Ismail Khan","Charsadda","Nowshera","Mansehra","Haripur","Timergara","Tank","Hangu"] },
-        { id: "BALOCHISTAN", name: "Balochistan", cities: ["Quetta","Turbat","Khuzdar","Chaman","Gwadar","Dera Murad Jamali","Dera Allah Yar","Usta Mohammad","Sibi","Loralai","Zhob","Pasni","Qila Saifullah","Khost","Hub"] },
-      ],
-    },
-    in: {
-      label: "India",
-      phonePrefix: "+91",
-      provinces: [
-        { id: "DELHI", name: "Delhi", cities: ["New Delhi","Delhi","Dwarka","Karol Bagh","Rohini","Pitampura","Janakpuri","Laxmi Nagar","Saket","Hauz Khas","Malviya Nagar","Patel Nagar","Rajouri Garden","Kalkaji","Sarita Vihar","Vasant Kunj"] },
-        { id: "MAHARASHTRA", name: "Maharashtra", cities: ["Mumbai","Pune","Nagpur","Nashik","Aurangabad","Solapur","Bhiwandi","Amravati","Nanded","Kolhapur","Ulhasnagar","Sangli","Malegaon","Jalgaon","Akola","Latur"] },
-        { id: "KARNATAKA", name: "Karnataka", cities: ["Bengaluru","Mysuru","Hubballi","Mangaluru","Belagavi","Davanagere","Ballari","Tumakuru","Shivamogga","Raichur","Bidar","Hospet","Udupi","Gadag-Betageri","Robertson Pet","Hassan"] },
-        { id: "TAMIL_NADU", name: "Tamil Nadu", cities: ["Chennai","Coimbatore","Madurai","Tiruchirappalli","Salem","Tirunelveli","Tiruppur","Vellore","Erode","Thoothukudi","Dindigul","Thanjavur","Hosur","Nagercoil","Kanchipuram","Kumarapalayam"] },
-      ],
-    },
-    id: {
-      label: "Indonesia",
-      phonePrefix: "+62",
-      provinces: [
-        { id: "JAKARTA", name: "Jakarta", cities: ["Jakarta","Central Jakarta","South Jakarta","West Jakarta","East Jakarta","North Jakarta","Thousand Islands","Kebayoran Baru","Tebet","Cilandak","Pasar Minggu","Mampang","Cengkareng","Tanjung Priok","Kelapa Gading"] },
-        { id: "WEST_JAVA", name: "West Java", cities: ["Bandung","Bekasi","Depok","Bogor","Cimahi","Sukabumi","Cirebon","Tasikmalaya","Karawang","Purwakarta","Subang","Sumedang","Garut","Majalengka","Cianjur","Banjar"] },
-        { id: "CENTRAL_JAVA", name: "Central Java", cities: ["Semarang","Surakarta","Tegal","Pekalongan","Salatiga","Magelang","Kudus","Jepara","Rembang","Blora","Batang","Pati","Wonosobo","Temanggung","Boyolali","Klaten"] },
-        { id: "EAST_JAVA", name: "East Java", cities: ["Surabaya","Malang","Kediri","Mojokerto","Jember","Banyuwangi","Madiun","Pasuruan","Probolinggo","Blitar","Lumajang","Bondowoso","Situbondo","Tulungagung","Tuban","Lamongan"] },
-      ],
-    },
-    tr: {
-      label: "Türkiye",
-      phonePrefix: "+90",
-      provinces: [
-        { id: "ISTANBUL", name: "Istanbul", cities: ["Istanbul","Kadıköy","Beşiktaş","Şişli","Fatih","Üsküdar","Bakırköy","Esenler","Küçükçekmece","Beyoğlu","Zeytinburnu","Maltepe","Sarıyer","Pendik","Kartal","Beylikdüzü"] },
-        { id: "ANKARA", name: "Ankara", cities: ["Ankara","Çankaya","Keçiören","Yenimahalle","Mamak","Sincan","Altındağ","Etimesgut","Polatlı","Gölbaşı","Pursaklar","Akyurt","Kahramankazan","Elmadağ","Bala","Ayaş"] },
-        { id: "IZMIR", name: "İzmir", cities: ["İzmir","Bornova","Karşıyaka","Konak","Buca","Bayraklı","Çiğli","Balçova","Narlıdere","Gaziemir","Güzelbahçe","Urla","Seferihisar","Menderes","Torbalı","Bergama"] },
-        { id: "ANTALYA", name: "Antalya", cities: ["Antalya","Muratpaşa","Kepez","Konyaaltı","Alanya","Manavgat","Serik","Kumluca","Kaş","Korkuteli","Finike","Gazipaşa","Demre","Akseki","Elmalı","Gündoğmuş"] },
-      ],
-    },
-    br: {
-      label: "Brazil",
-      phonePrefix: "+55",
-      provinces: [
-        { id: "SAO_PAULO", name: "São Paulo", cities: ["São Paulo","Guarulhos","Campinas","São Bernardo do Campo","Santo André","Osasco","Sorocaba","Ribeirão Preto","São José dos Campos","Santos","Mauá","Diadema","Jundiaí","Barueri","São Vicente","Carapicuíba"] },
-        { id: "RIO_JANEIRO", name: "Rio de Janeiro", cities: ["Rio de Janeiro","São Gonçalo","Duque de Caxias","Nova Iguaçu","Niterói","Belford Roxo","Campos dos Goytacazes","São João de Meriti","Petrópolis","Volta Redonda","Magé","Itaboraí","Macaé","Mesquita","Teresópolis","Nilópolis"] },
-        { id: "MINAS_GERAIS", name: "Minas Gerais", cities: ["Belo Horizonte","Uberlândia","Contagem","Juiz de Fora","Betim","Montes Claros","Ribeirão das Neves","Uberaba","Governador Valadares","Ipatinga","Sete Lagoas","Divinópolis","Santa Luzia","Ibirité","Poços de Caldas","Patos de Minas"] },
-        { id: "BAHIA", name: "Bahia", cities: ["Salvador","Feira de Santana","Vitória da Conquista","Camaçari","Itabuna","Juazeiro","Lauro de Freitas","Ilhéus","Jequié","Alagoinhas","Teixeira de Freitas","Barreiras","Porto Seguro","Simões Filho","Paulo Afonso","Eunápolis"] },
-      ],
-    },
+    dz: { label: "Algérie", phonePrefix: "+213", provinces: [] },
+    tn: { label: "Tunisie", phonePrefix: "+216", provinces: [] },
   };
 
   function getCountryDef(beh) {
@@ -397,9 +318,8 @@ window.TripleformCOD = (function () {
   }
 
   /* ------------------------------------------------------------------ */
-  /* Overlay / effect shadows / sizes                                   */
+  /* Overlay / effect shadows / sizes                                    */
   /* ------------------------------------------------------------------ */
-
   function hexToRgba(hex, alpha) {
     try {
       let h = String(hex || "").trim();
@@ -418,11 +338,7 @@ window.TripleformCOD = (function () {
 
   function overlayBackground(beh) {
     const hex = beh?.overlayColor || "#020617";
-    let op = beh?.overlayOpacity;
-    if (op == null) op = 0;
-    if (op > 1) op = op / 100;
-    if (op < 0) op = 0;
-    if (op > 1) op = 1;
+    const op = clamp01(beh?.overlayOpacity ?? 0);
     return hexToRgba(hex, op);
   }
 
@@ -466,7 +382,6 @@ window.TripleformCOD = (function () {
   /* ------------------------------------------------------------------ */
   /* Variant & qty helpers                                              */
   /* ------------------------------------------------------------------ */
-
   function getSelectedVariantId() {
     const sel = document.querySelector(
       'form[action^="/cart/add"] select[name="id"]'
@@ -504,7 +419,6 @@ window.TripleformCOD = (function () {
   /* ------------------------------------------------------------------ */
   /* Sticky button                                                      */
   /* ------------------------------------------------------------------ */
-
   function setupSticky(root, cfg, styleType, openHandler, motionClass) {
     const stickyType = cfg?.behavior?.stickyType || "none";
     const stickyLabel = css(
@@ -603,7 +517,6 @@ window.TripleformCOD = (function () {
   /* ------------------------------------------------------------------ */
   /* Dropdown wilaya / ville                                            */
   /* ------------------------------------------------------------------ */
-
   function setupLocationDropdowns(root, cfg, countryDef) {
     const beh = cfg.behavior || {};
     const def = countryDef || getCountryDef(beh);
@@ -638,7 +551,9 @@ window.TripleformCOD = (function () {
       if (!citySelect) return;
       resetSelect(
         citySelect,
-        provinceName ? (cfg.fields?.city?.ph || "Select city") : (cfg.fields?.city?.ph || "Select province first")
+        provinceName
+          ? (cfg.fields?.city?.ph || "Select city")
+          : (cfg.fields?.city?.ph || "Select province first")
       );
       if (!provinceName) return;
       const prov = provinces.find((p) => p.name === provinceName);
@@ -662,12 +577,11 @@ window.TripleformCOD = (function () {
   }
 
   /* ------------------------------------------------------------------ */
-  /* Timers                                                             */
+  /* Timers (optional)                                                  */
   /* ------------------------------------------------------------------ */
-
   function TimerComponent(minutes, message, cssClass, timeFormat) {
     const container = document.createElement("div");
-    container.className = `offer-timer ${cssClass || ""}`;
+    container.className = `offer-timer ${cssClass || "timer-minimal"}`;
 
     let timeLeft = Math.max(0, Number(minutes || 0) * 60);
 
@@ -697,7 +611,7 @@ window.TripleformCOD = (function () {
 
     function updateDisplay() {
       container.innerHTML = `
-        <span class="offer-timer-icon">⏱️</span>
+        <span>⏱️</span>
         <span>${css(message || "Offre limitée dans le temps!")}</span>
         <span class="timer-countdown">${formatTime(timeLeft, timeFormat)}</span>
       `;
@@ -709,7 +623,7 @@ window.TripleformCOD = (function () {
       if (timeLeft <= 0) {
         clearInterval(interval);
         container.innerHTML = `
-          <span class="offer-timer-icon">⏱️</span>
+          <span>⏱️</span>
           <span>Offre expirée</span>
           <span class="timer-countdown">00:00</span>
         `;
@@ -723,40 +637,52 @@ window.TripleformCOD = (function () {
   }
 
   /* ------------------------------------------------------------------ */
-  /* Offers activation + discount                                       */
+  /* Offers activation + discount (SCOPED PER ROOT)                      */
   /* ------------------------------------------------------------------ */
+  function lsKey(rootId, name) {
+    return `tf_${name}_${rootId}`;
+  }
 
-  function toggleOfferActivation(button, offerIndex, offerType, offersList, root, updateMoney) {
+  function toggleOfferActivation(button, offerIndex, offersList, root, updateMoney) {
+    const rootId = root.id || "root";
+    const storeKey = lsKey(rootId, "current_active_offer");
+
     const isActive = button.classList.contains("active");
 
-    // One offer at a time
+    // One offer at a time (inside this root)
     const allButtons = root.querySelectorAll("[data-tf-offer-toggle]");
     allButtons.forEach((btn) => {
       btn.classList.remove("active");
-      btn.innerHTML = '<span class="offer-activate-btn-icon">+</span> Activer';
-      const btnIndex = btn.getAttribute("data-tf-offer-index");
-      const btnType = btn.getAttribute("data-tf-offer-type");
-      localStorage.removeItem(`tf_active_offer_${btnType}_${btnIndex}`);
+      btn.setAttribute("aria-pressed", "false");
+      const baseText = btn.getAttribute("data-tf-btn-label") || "Activer";
+      btn.innerHTML = `${getIconHtml("CirclePlusIcon", 16, "currentColor")} ${css(baseText)}`;
     });
 
-    localStorage.removeItem("tf_current_active_offer");
+    localStorage.removeItem(storeKey);
 
     if (!isActive) {
       // Activate selected
       button.classList.add("active");
-      button.innerHTML = '<span class="offer-activate-btn-icon">✓</span> Activée';
-      localStorage.setItem(`tf_active_offer_${offerType}_${offerIndex}`, "true");
+      button.setAttribute("aria-pressed", "true");
+      button.innerHTML = `${getIconHtml("CheckCircleIcon", 16, "currentColor")} Activée`;
 
       const offer = offersList[offerIndex] || {};
+
+      // ✅ NEW: support discountEnabled + discount fields
+      const discountEnabled = !!offer.discountEnabled;
+      const discountType = offer.discountType || null; // "percentage" | "fixed"
+      const discountValue = Number(offer.discountValue || 0);
+
       localStorage.setItem(
-        "tf_current_active_offer",
+        storeKey,
         JSON.stringify({
           index: offerIndex,
-          type: offerType,
-          discountType: offer.discountType || null,
-          discountValue: Number(offer.discountValue || 0),
+          type: "offer",
           title: offer.title || "",
-          currency: offer.currency || null,
+
+          discountEnabled,
+          discountType,
+          discountValue,
         })
       );
     }
@@ -764,34 +690,55 @@ window.TripleformCOD = (function () {
     updateMoney();
   }
 
-  function getActiveOfferDiscount(offersList) {
+  function getActiveOfferDiscount(offersList, rootId) {
+    const storeKey = lsKey(rootId, "current_active_offer");
+    const raw = localStorage.getItem(storeKey);
+
+    let active = null;
+    if (raw) active = safeJsonParse(raw, null);
+
+    let discountEnabled = false;
     let discountType = null;
     let discountValue = 0;
-    let discountMessage = "";
-    let activeOfferData = null;
 
-    const raw = localStorage.getItem("tf_current_active_offer");
-    if (raw) {
-      const parsed = safeJsonParse(raw, null);
-      if (parsed && typeof parsed === "object") {
-        activeOfferData = parsed;
-        discountType = parsed.discountType || null;
-        discountValue = Number(parsed.discountValue || 0);
-
-        if (discountType === "percentage" && discountValue > 0) {
-          discountMessage = `-${discountValue}%`;
-        } else if (discountType === "fixed" && discountValue > 0) {
-          discountMessage = `-${discountValue.toFixed(2)} ${parsed.currency || ""}`.trim();
-        }
-      }
+    if (active && typeof active === "object") {
+      discountEnabled = !!active.discountEnabled;
+      discountType = active.discountType || null;
+      discountValue = Number(active.discountValue || 0);
     }
 
-    return { discountType, discountValue, discountMessage, activeOfferData };
+    return { discountEnabled, discountType, discountValue, activeOfferData: active };
   }
 
   /* ------------------------------------------------------------------ */
-  /* OFFRES / UPSELL – HTML                                             */
+  /* OFFRES / UPSELL – HTML (ADAPTED TO v30 SETTINGS)                    */
   /* ------------------------------------------------------------------ */
+  function fallbackImgSvg() {
+    return (
+      "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 220'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23EEF2FF'/%3E%3Cstop offset='1' stop-color='%23F8FAFC'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='320' height='220' rx='18' fill='url(%23g)'/%3E%3Cpath d='M120 92l40-40 80 80v72H80V92z' fill='%234F46E5' opacity='.9'/%3E%3Ccircle cx='110' cy='78' r='18' fill='%2399A7FF' opacity='.85'/%3E%3C/svg%3E"
+    );
+  }
+
+  function pickColors(item, globalColors) {
+    const useGlobal = item?.useGlobalColors !== false;
+    const c = useGlobal ? (globalColors || {}) : (item?.colors || {});
+    return {
+      cardBg: c.cardBg || "#FFFFFF",
+      borderColor: c.borderColor || "#E5E7EB",
+      iconBg: c.iconBg || "#EEF2FF",
+      buttonBg: c.buttonBg || "#111827",
+      buttonTextColor: c.buttonTextColor || "#FFFFFF",
+      buttonBorder: c.buttonBorder || (c.buttonBg || "#111827"),
+    };
+  }
+
+  function layoutClass(layoutStyle) {
+    const v = String(layoutStyle || "image-left");
+    if (v === "image-right") return "tf-layout-image-right";
+    if (v === "image-top") return "tf-layout-image-top";
+    if (v === "image-bottom") return "tf-layout-image-bottom";
+    return "tf-layout-image-left";
+  }
 
   function buildOffersHtml(offersCfg, rootId) {
     if (!offersCfg || typeof offersCfg !== "object") return "";
@@ -799,74 +746,116 @@ window.TripleformCOD = (function () {
     const global = offersCfg.global || {};
     if (global.enabled === false) return "";
 
-    const display = offersCfg.display || {};
+    const globalColors = global.colors || {};
+
     const offers = Array.isArray(offersCfg.offers) ? offersCfg.offers : [];
     const upsells = Array.isArray(offersCfg.upsells) ? offersCfg.upsells : [];
 
-    // If your Section2Offers.jsx uses showInPreview, keep it; else show enabled
-    const activeOffers = offers.filter((o) => o && o.enabled !== false && (o.showInPreview !== false));
-    const activeUpsells = upsells.filter((u) => u && u.enabled !== false && (u.showInPreview !== false));
+    const activeOffers = offers.filter(
+      (o) => o && o.enabled !== false && o.showInPreview !== false
+    );
+    const activeUpsells = upsells.filter(
+      (u) => u && u.enabled !== false && u.showInPreview !== false
+    );
 
-    if (activeOffers.length === 0 && activeUpsells.length === 0) return "";
+    if (!activeOffers.length && !activeUpsells.length) return "";
 
-    const activeOfferRaw = localStorage.getItem("tf_current_active_offer");
-    const activeOfferParsed = safeJsonParse(activeOfferRaw, null);
+    const storeKey = lsKey(rootId, "current_active_offer");
+    const active = safeJsonParse(localStorage.getItem(storeKey), null);
 
     let html = `<div class="tf-offers-container">`;
 
     activeOffers.forEach((offer, idx) => {
-      const title = offer.title || "Remise spéciale";
-      const description = offer.description || "Profitez de cette offre exclusive";
-      const img = offer.imageUrl || offer.image || "";
-      const hasTimer = !!offer.enableTimer && (display.showTimerInPreview !== false);
-      const buttonText = offer.buttonText || "Activer";
-      const timerCssClass = offer.timerCssClass || "";
+      const title = offer.title || "Offre spéciale";
+      const description = offer.description || "";
+      const img = (offer.imageUrl || "").trim() || fallbackImgSvg();
+      const iconUrl = (offer.iconUrl || "").trim();
+
+      const c = pickColors(offer, globalColors);
 
       const isActive =
-        (activeOfferParsed && Number(activeOfferParsed.index) === idx && activeOfferParsed.type === "offer") ||
-        localStorage.getItem(`tf_active_offer_offer_${idx}`) === "true";
+        active && Number(active.index) === idx && active.type === "offer";
+
+      const btnLabel = offer.buttonText || "Activer";
+
+      const hasTimer = !!offer.enableTimer;
+      const timerCssClass = offer.timerCssClass || "timer-minimal";
 
       html += `
-        <div class="offers-strip">
-          <div class="offers-strip-thumb">
-            ${img ? `<img src="${css(img)}" alt="${css(title)}" />` : `<div class="offers-strip-thumb-inner"></div>`}
-          </div>
-          <div style="flex:1; min-width:0;">
-            <div class="offers-strip-main">${css(title)}</div>
-            <div class="offers-strip-desc">${css(description)}</div>
+        <div class="tf-offer-card ${layoutClass(offer.layoutStyle)}"
+          style="background:${css(c.cardBg)};border-color:${css(c.borderColor)}">
+          <div class="tf-offer-row">
+            <div class="tf-offer-icon" style="background:${css(c.iconBg)}">
+              ${
+                iconUrl
+                  ? `<img src="${css(iconUrl)}" alt="" onerror="this.style.display='none'"/>`
+                  : `${getIconHtml("DiscountIcon", 18, "#111827")}`
+              }
+            </div>
 
-            ${hasTimer ? `<div data-tf-timer-offer="${idx}"></div>` : ""}
+            <div class="tf-offer-img">
+              <img src="${css(img)}" alt="${css(title)}"
+                onerror="this.onerror=null;this.src='${fallbackImgSvg()}'"/>
+            </div>
 
-            <button
-              class="offer-activate-btn ${isActive ? "active" : ""}"
-              data-tf-offer-toggle="1"
-              data-tf-offer-index="${idx}"
-              data-tf-offer-type="offer"
-              data-tf-root-id="${rootId}"
-            >
-              <span class="offer-activate-btn-icon">${isActive ? "✓" : "+"}</span>
-              ${isActive ? "Activée" : css(buttonText)}
-            </button>
+            <div class="tf-offer-main">
+              <div class="tf-offer-title">${css(title)}</div>
+              <div class="tf-offer-desc">${css(description)}</div>
+
+              ${hasTimer ? `<div data-tf-timer-offer="${idx}"></div>` : ""}
+
+              <button
+                type="button"
+                class="tf-offer-btn ${isActive ? "active" : ""}"
+                data-tf-offer-toggle="1"
+                data-tf-offer-index="${idx}"
+                data-tf-root-id="${css(rootId)}"
+                data-tf-btn-label="${css(btnLabel)}"
+                style="
+                  background:${css(c.buttonBg)};
+                  color:${css(c.buttonTextColor)};
+                  border:1px solid ${css(c.buttonBorder)};
+                "
+                aria-pressed="${isActive ? "true" : "false"}"
+              >
+                ${isActive ? getIconHtml("CheckCircleIcon", 16, "currentColor") : getIconHtml("CirclePlusIcon", 16, "currentColor")}
+                ${isActive ? "Activée" : css(btnLabel)}
+              </button>
+            </div>
           </div>
         </div>
       `;
     });
 
-    activeUpsells.forEach((upsell, idx) => {
-      const title = upsell.title || "Cadeau gratuit";
-      const description = upsell.description || "Recevez un cadeau spécial avec votre commande";
-      const img = upsell.imageUrl || upsell.image || "";
-      const hasTimer = !!upsell.enableTimer && (display.showTimerInPreview !== false);
+    activeUpsells.forEach((upsell) => {
+      const title = upsell.title || "Upsell";
+      const description = upsell.description || "";
+      const img = (upsell.imageUrl || "").trim() || fallbackImgSvg();
+      const iconUrl = (upsell.iconUrl || "").trim();
+
+      const c = pickColors(upsell, globalColors);
 
       html += `
-        <div class="offers-strip">
-          <div class="offers-strip-thumb">
-            ${img ? `<img src="${css(img)}" alt="${css(title)}" />` : `<div class="offers-strip-thumb-inner-upsell"></div>`}
-          </div>
-          <div style="flex:1; min-width:0;">
-            <div class="offers-strip-main">${css(title)}</div>
-            <div class="offers-strip-desc">${css(description)}</div>
-            ${hasTimer ? `<div data-tf-timer-upsell="${idx}"></div>` : ""}
+        <div class="tf-offer-card ${layoutClass(upsell.layoutStyle)}"
+          style="background:${css(c.cardBg)};border-color:${css(c.borderColor)}">
+          <div class="tf-offer-row">
+            <div class="tf-offer-icon" style="background:${css(c.iconBg)}">
+              ${
+                iconUrl
+                  ? `<img src="${css(iconUrl)}" alt="" onerror="this.style.display='none'"/>`
+                  : `${getIconHtml("GiftCardIcon", 18, "#111827")}`
+              }
+            </div>
+
+            <div class="tf-offer-img">
+              <img src="${css(img)}" alt="${css(title)}"
+                onerror="this.onerror=null;this.src='${fallbackImgSvg()}'"/>
+            </div>
+
+            <div class="tf-offer-main">
+              <div class="tf-offer-title">${css(title)}</div>
+              <div class="tf-offer-desc">${css(description)}</div>
+            </div>
           </div>
         </div>
       `;
@@ -878,47 +867,29 @@ window.TripleformCOD = (function () {
 
   function initializeTimers(root, offersCfg) {
     if (!offersCfg || typeof offersCfg !== "object") return;
-    const display = offersCfg.display || {};
     const offers = Array.isArray(offersCfg.offers) ? offersCfg.offers : [];
-    const upsells = Array.isArray(offersCfg.upsells) ? offersCfg.upsells : [];
-
-    offers.forEach((offer, idx) => {
-      if (offer && offer.enableTimer && display.showTimerInPreview !== false) {
-        const holder = root.querySelector(`[data-tf-timer-offer="${idx}"]`);
-        if (holder) {
-          holder.appendChild(
-            TimerComponent(
-              offer.timerMinutes || 60,
-              offer.timerMessage || "Offre limitée dans le temps!",
-              offer.timerCssClass || "",
-              offer.timerTimeFormat || "mm:ss"
-            )
-          );
+    offers
+      .filter((o) => o && o.enabled !== false && o.showInPreview !== false)
+      .forEach((offer, idx) => {
+        if (offer.enableTimer) {
+          const holder = root.querySelector(`[data-tf-timer-offer="${idx}"]`);
+          if (holder) {
+            holder.appendChild(
+              TimerComponent(
+                offer.timerMinutes || 60,
+                offer.timerMessage || "Offre limitée dans le temps!",
+                offer.timerCssClass || "timer-minimal",
+                offer.timerTimeFormat || "mm:ss"
+              )
+            );
+          }
         }
-      }
-    });
-
-    upsells.forEach((upsell, idx) => {
-      if (upsell && upsell.enableTimer && display.showTimerInPreview !== false) {
-        const holder = root.querySelector(`[data-tf-timer-upsell="${idx}"]`);
-        if (holder) {
-          holder.appendChild(
-            TimerComponent(
-              upsell.timerMinutes || 60,
-              upsell.timerMessage || "Cadeau limité dans le temps!",
-              upsell.timerCssClass || "",
-              upsell.timerTimeFormat || "mm:ss"
-            )
-          );
-        }
-      }
-    });
+      });
   }
 
   /* ------------------------------------------------------------------ */
   /* Render                                                            */
   /* ------------------------------------------------------------------ */
-
   function render(root, cfg, offersCfg, product, getVariant, moneyFmt, recaptchaCfg) {
     const d = cfg.design || {};
     const ui = cfg.uiTitles || {};
@@ -927,7 +898,6 @@ window.TripleformCOD = (function () {
     const beh = cfg.behavior || {};
     const styleType = (cfg.form && cfg.form.style) || "inline";
 
-    // ✅ motion class (sync with Section1Forms.jsx)
     const motion = beh.buttonMotion || "none";
     const motionClass =
       motion === "x"
@@ -952,7 +922,6 @@ window.TripleformCOD = (function () {
     const countryDef = getCountryDef(beh);
     const pageStart = Date.now();
 
-    // GEO
     const geoEndpointAttr = root.getAttribute("data-geo-endpoint") || "";
     const geoEnabledAttr = root.getAttribute("data-geo-enabled") || "";
     const geoCountryAttr = root.getAttribute("data-geo-country") || countryDef.code;
@@ -975,9 +944,6 @@ window.TripleformCOD = (function () {
     const popupCfg = popupSizeConfig(beh);
     const drawerCfg = drawerSizeConfig(beh);
 
-    const offersList = Array.isArray(offersCfg.offers) ? offersCfg.offers : [];
-
-    /* Direction / align / font size */
     const rawDirection = d.direction || d.textDirection || beh.textDirection || "ltr";
     const textDir = String(rawDirection).toLowerCase() === "rtl" ? "rtl" : "ltr";
 
@@ -1239,8 +1205,8 @@ window.TripleformCOD = (function () {
               <div style="font-weight:800;" data-tf="shipping">${css(t.shippingToCalculate || "Shipping to calculate")}</div>
             </div>
 
-            <div style="${rowStyle}; display:none;" data-tf="discount-row">
-              <div>Remise</div>
+            <div style="${rowStyle}" data-tf="discount-row">
+              <div>${css(t.discountLabel || "Remise")}</div>
               <div style="font-weight:900; color:#10B981;" data-tf="discount">—</div>
             </div>
 
@@ -1443,26 +1409,12 @@ window.TripleformCOD = (function () {
     root.innerHTML = html;
 
     setTimeout(() => initializeTimers(root, offersCfg), 80);
-
-    setTimeout(() => {
-      const buttons = root.querySelectorAll("[data-tf-offer-toggle]");
-      buttons.forEach((btn) => {
-        btn.addEventListener("click", function (e) {
-          e.preventDefault();
-          const offerIndex = parseInt(this.getAttribute("data-tf-offer-index"), 10);
-          const offerType = this.getAttribute("data-tf-offer-type") || "offer";
-          toggleOfferActivation(this, offerIndex, offerType, offersList, root, updateMoney);
-        });
-      });
-    }, 120);
-
     setupLocationDropdowns(root, cfg, countryDef);
 
     const provSelect = root.querySelector('select[data-tf-role="province"]');
     const citySelect = root.querySelector('select[data-tf-role="city"]');
 
-    /* --------------------- Field helpers (FIX) ---------------------- */
-
+    /* --------------------- Field helpers --------------------------- */
     function getField(key) {
       const el = root.querySelector(`[data-tf-field="${key}"]`);
       return el || null;
@@ -1475,14 +1427,12 @@ window.TripleformCOD = (function () {
 
     function getPhone() {
       const phone = getVal("phone");
-      // prefix input is readonly without data-tf-field, so we infer from settings if needed
-      const prefix = (f.phone && f.phone.prefix) ? String(f.phone.prefix) : "";
+      const prefix = f.phone && f.phone.prefix ? String(f.phone.prefix) : "";
       const fullPhone = prefix && phone ? `${prefix}${phone}` : phone || prefix || "";
       return { prefix, number: phone, fullPhone };
     }
 
     /* --------------------- Product totals --------------------------- */
-
     function computeProductTotals() {
       const vId = getVariant();
       const qty = getQty();
@@ -1616,21 +1566,36 @@ window.TripleformCOD = (function () {
       return { ok: true, timeOnPageMs, hpValue };
     }
 
-    /* --------------------- Money + UI (with discount) ---------------- */
+    /* --------------------- Money + UI (FIXED OFFERS DISCOUNT) -------- */
+    const offersVisible = Array.isArray(offersCfg?.offers) ? offersCfg.offers : [];
+    const activeOffersOnly = offersVisible.filter(
+      (o) => o && o.enabled !== false && o.showInPreview !== false
+    );
+
+    function computeDiscountCents(totalCents, rootId) {
+      const { discountEnabled, discountType, discountValue } = getActiveOfferDiscount(
+        activeOffersOnly,
+        rootId
+      );
+
+      if (!discountEnabled) return 0;
+      if (!discountType || !(discountValue > 0)) return 0;
+
+      if (discountType === "percentage") {
+        return Math.round(totalCents * (discountValue / 100));
+      }
+
+      if (discountType === "fixed") {
+        return Math.round(discountValue * 100);
+      }
+
+      return 0;
+    }
 
     function updateMoney() {
       const { priceCents, totalCents } = computeProductTotals();
 
-      // discount
-      let discountCents = 0;
-      const { discountType, discountValue } = getActiveOfferDiscount(offersList);
-
-      if (discountType === "percentage" && discountValue > 0) {
-        discountCents = Math.round(totalCents * discountValue / 100);
-      } else if (discountType === "fixed" && discountValue > 0) {
-        discountCents = Math.round(discountValue * 100);
-      }
-
+      const discountCents = computeDiscountCents(totalCents, root.id);
       const discountedTotalCents = Math.max(0, totalCents - discountCents);
       const grandTotalCents = discountedTotalCents + (geoShippingCents || 0);
 
@@ -1672,8 +1637,19 @@ window.TripleformCOD = (function () {
       }
     }
 
-    /* --------------------- Submit + reCAPTCHA ------------------------ */
+    // ✅ Wire offer buttons after HTML is in DOM
+    setTimeout(() => {
+      const buttons = root.querySelectorAll("[data-tf-offer-toggle]");
+      buttons.forEach((btn) => {
+        btn.addEventListener("click", function (e) {
+          e.preventDefault();
+          const offerIndex = parseInt(this.getAttribute("data-tf-offer-index"), 10);
+          toggleOfferActivation(this, offerIndex, activeOffersOnly, root, updateMoney);
+        });
+      });
+    }, 60);
 
+    /* --------------------- Submit + reCAPTCHA (FULL FIX) ------------- */
     async function onSubmitClick() {
       const ab = checkAntibotFront();
       if (!ab.ok) return;
@@ -1683,16 +1659,7 @@ window.TripleformCOD = (function () {
       const totals = computeProductTotals();
       const { priceCents, totalCents, baseTotalCents, qty, variantId } = totals;
 
-      // discount
-      let discountCents = 0;
-      const { discountType, discountValue, activeOfferData } = getActiveOfferDiscount(offersList);
-
-      if (discountType === "percentage" && discountValue > 0) {
-        discountCents = Math.round(totalCents * discountValue / 100);
-      } else if (discountType === "fixed" && discountValue > 0) {
-        discountCents = Math.round(discountValue * 100);
-      }
-
+      const discountCents = computeDiscountCents(totalCents, root.id);
       const discountedTotalCents = Math.max(0, totalCents - discountCents);
       const shippingCentsToSend = geoShippingCents || 0;
       const grandTotalCents = discountedTotalCents + shippingCentsToSend;
@@ -1719,16 +1686,9 @@ window.TripleformCOD = (function () {
         }
       }
 
-      let offerDataForSubmission = null;
-      if (activeOfferData && activeOfferData.discountType && Number(activeOfferData.discountValue || 0) > 0) {
-        offerDataForSubmission = {
-          title: activeOfferData.title,
-          discountType: activeOfferData.discountType,
-          discountValue: activeOfferData.discountValue,
-          discountApplied: discountCents,
-          currency: activeOfferData.currency,
-        };
-      }
+      // active offer info (scoped)
+      const storeKey = lsKey(root.id, "current_active_offer");
+      const activeOfferData = safeJsonParse(localStorage.getItem(storeKey), null);
 
       const payload = {
         fields: {
@@ -1753,7 +1713,7 @@ window.TripleformCOD = (function () {
         currency: root.getAttribute("data-currency") || null,
         locale: root.getAttribute("data-locale") || null,
 
-        offer: offerDataForSubmission,
+        offer: activeOfferData || null,
 
         geo: {
           enabled: geoEnabled,
@@ -1815,7 +1775,6 @@ window.TripleformCOD = (function () {
     }
 
     /* --------------------- behaviors inline/popup/drawer ------------- */
-
     let openHandler = null;
 
     if (styleType === "inline") {
@@ -1906,7 +1865,8 @@ window.TripleformCOD = (function () {
         overlay.style.display = "block";
         document.body.style.overflow = "hidden";
         drawer.getBoundingClientRect();
-        drawer.style.transform = origin === "bottom" || origin === "top" ? "translateY(0)" : "translateX(0)";
+        drawer.style.transform =
+          origin === "bottom" || origin === "top" ? "translateY(0)" : "translateX(0)";
       }
 
       function closeDrawer() {
@@ -1932,18 +1892,20 @@ window.TripleformCOD = (function () {
         });
       }
 
-      closeBtns.forEach((b) => b.addEventListener("click", (e) => { e.preventDefault(); closeDrawer(); }));
+      closeBtns.forEach((b) =>
+        b.addEventListener("click", (e) => {
+          e.preventDefault();
+          closeDrawer();
+        })
+      );
       if (drawerCta) drawerCta.addEventListener("click", onSubmitClick);
     }
 
-    // Sticky (motion sync)
     setupSticky(root, cfg, styleType, openHandler, motionClass);
 
-    // Geo listeners
     if (provSelect && geoEnabled) provSelect.addEventListener("change", recalcGeo);
     if (citySelect && geoEnabled) citySelect.addEventListener("change", recalcGeo);
 
-    // Auto-open
     const delay = Number(beh.openDelayMs || 0);
     if (delay > 0 && styleType !== "inline" && typeof openHandler === "function") {
       setTimeout(() => openHandler(), delay);
@@ -1961,7 +1923,6 @@ window.TripleformCOD = (function () {
   /* ------------------------------------------------------------------ */
   /* Boot                                                              */
   /* ------------------------------------------------------------------ */
-
   function boot(sectionId) {
     const holder =
       byId(`tripleform-cod-${sectionId}`) || document.querySelector(".tripleform-cod");

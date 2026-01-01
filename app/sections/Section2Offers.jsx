@@ -380,6 +380,12 @@ const LAYOUT_STYLE_OPTIONS = [
   { label: "Image big bottom · Text small", value: "image-bottom" },
 ];
 
+/* ============================== Discount options ============================== */
+const DISCOUNT_TYPE_OPTIONS = [
+  { label: "Percentage (%)", value: "percentage" },
+  { label: "Fixed amount", value: "fixed" },
+];
+
 /* ============================== Palettes globales ============================== */
 const COLOR_PALETTES = [
   {
@@ -502,6 +508,11 @@ const DEFAULT_OFFER = {
   },
 
   buttonText: "Activer",
+
+  // ✅ NEW: discount settings (used by storefront JS)
+  discountEnabled: false,
+  discountType: "percentage", // "percentage" | "fixed"
+  discountValue: 10, // % or fixed amount (currency units)
 };
 
 const DEFAULT_UPSELL = {
@@ -542,6 +553,7 @@ const DEFAULT_CFG = {
 function withDefaults(raw = {}) {
   const d = DEFAULT_CFG;
   const x = { ...d, ...raw };
+
   x.global = { ...d.global, ...(raw.global || {}) };
   x.global.colors = { ...DEFAULT_GLOBAL_COLORS, ...((raw.global || {}).colors || {}) };
 
@@ -552,7 +564,17 @@ function withDefaults(raw = {}) {
     ...DEFAULT_OFFER,
     ...o,
     colors: { ...DEFAULT_OFFER.colors, ...(o?.colors || {}) },
+    // ✅ ensure discount fields exist even for old saved configs
+    discountEnabled: o?.discountEnabled ?? false,
+    discountType: o?.discountType || "percentage",
+    discountValue:
+      typeof o?.discountValue === "number"
+        ? o.discountValue
+        : o?.discountValue != null
+        ? Number(o.discountValue) || 0
+        : DEFAULT_OFFER.discountValue,
   }));
+
   x.upsells = x.upsells.slice(0, 3).map((u) => ({
     ...DEFAULT_UPSELL,
     ...u,
@@ -630,6 +652,13 @@ function PreviewCard({ item, products, isOffer, globalColors, tr }) {
       ? "preview-style--image-bottom"
       : "preview-style--image-left";
 
+  const discountLabel =
+    isOffer && item.discountEnabled
+      ? item.discountType === "fixed"
+        ? `${Number(item.discountValue || 0) || 0}`
+        : `${Number(item.discountValue || 0) || 0}%`
+      : null;
+
   return (
     <div
       className={`preview-offer ${layoutClass}`}
@@ -666,9 +695,18 @@ function PreviewCard({ item, products, isOffer, globalColors, tr }) {
         </div>
 
         <div className="preview-main">
-          <div className="preview-title">
-            {item.title || (isOffer ? tr("section2.offers.defaultTitle", "Offer") : tr("section2.upsells.defaultTitle", "Upsell"))}
-          </div>
+          <InlineStack align="space-between" blockAlign="center">
+            <div className="preview-title">
+              {item.title || (isOffer ? tr("section2.offers.defaultTitle", "Offer") : tr("section2.upsells.defaultTitle", "Upsell"))}
+            </div>
+
+            {discountLabel ? (
+              <Badge tone="success">
+                {tr("section2.discount.badge", "Discount")} {discountLabel}
+              </Badge>
+            ) : null}
+          </InlineStack>
+
           <div className="preview-desc">{item.description || ""}</div>
 
           <div className="preview-sub">
@@ -706,6 +744,10 @@ function OfferEditor({ offer, index, products, onChange, onRemove, canRemove, tr
     }));
     return [{ label: tr("section2.product.placeholder", "— Choose a product —"), value: "" }, ...opts];
   }, [products, tr]);
+
+  const discountEnabled = !!offer.discountEnabled;
+  const discountType = offer.discountType || "percentage";
+  const discountValue = Number(offer.discountValue || 0);
 
   return (
     <div className="item-card">
@@ -776,11 +818,64 @@ function OfferEditor({ offer, index, products, onChange, onRemove, canRemove, tr
           </Grid3>
 
           <Text variant="bodySm" tone="subdued">
-            {tr(
-              "section2.hints.urlPriority",
-              "If URL is empty, we auto-use the Shopify product image (when available)."
-            )}
+            {tr("section2.hints.urlPriority", "If URL is empty, we auto-use the Shopify product image (when available).")}
           </Text>
+        </GroupCard>
+
+        {/* ✅ NEW GROUP: Discount */}
+        <GroupCard title={tr("section2.groups.discount", "Discount (Offer)")}>
+          <Grid3>
+            <Checkbox
+              label={tr("section2.discount.enable", "Enable discount")}
+              checked={discountEnabled}
+              onChange={(v) =>
+                onChange({
+                  ...offer,
+                  discountEnabled: v,
+                  // if disabled, keep values but storefront JS will ignore if you want
+                  // (we'll also set discountValue to 0 if you want strict disabling)
+                })
+              }
+            />
+
+            <Select
+              label={tr("section2.discount.type", "Discount type")}
+              value={discountType}
+              options={DISCOUNT_TYPE_OPTIONS}
+              disabled={!discountEnabled}
+              onChange={(v) => onChange({ ...offer, discountType: v })}
+            />
+
+            <TextField
+              type="number"
+              label={
+                discountType === "fixed"
+                  ? tr("section2.discount.valueFixed", "Discount value (amount)")
+                  : tr("section2.discount.valuePercent", "Discount value (%)")
+              }
+              value={String(discountValue)}
+              disabled={!discountEnabled}
+              onChange={(v) => {
+                const n = Number(v);
+                const safe = Number.isFinite(n) ? n : 0;
+
+                // percentage clamp 0-100
+                const finalVal =
+                  discountType === "percentage" ? Math.max(0, Math.min(100, safe)) : Math.max(0, safe);
+
+                onChange({ ...offer, discountValue: finalVal });
+              }}
+              placeholder={discountType === "fixed" ? "20" : "10"}
+              autoComplete="off"
+              helpText={
+                discountEnabled
+                  ? discountType === "fixed"
+                    ? tr("section2.discount.helpFixed", "Fixed amount in store currency (ex: 20).")
+                    : tr("section2.discount.helpPercent", "Percentage between 0 and 100 (ex: 10).")
+                  : tr("section2.discount.helpDisabled", "Enable discount to configure it.")
+              }
+            />
+          </Grid3>
         </GroupCard>
 
         <GroupCard title={tr("section2.groups.design", "Design")}>
