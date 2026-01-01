@@ -1,6 +1,13 @@
 // ===== File: app/sections/Section1FormsLayout.jsx =====
 
-import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   Card,
   BlockStack,
@@ -25,11 +32,11 @@ import {
   getShippingExample,
 } from "../data/countryData";
 
-/* ============================== Fonction utilitaire CORRIGÉE pour les icônes Polaris ============================== */
+/* ============================== FIX: Polaris Icon source resolver ============================== */
 const iconCache = new Map();
 
 function getIconSource(iconName, fallbackIcon = "AppsIcon") {
-  // ✅ support "Aucun"
+  // ✅ supports "NONE"
   if (!iconName) return null;
 
   if (typeof iconName !== "string") {
@@ -136,7 +143,7 @@ function getIconSource(iconName, fallbackIcon = "AppsIcon") {
   return fallback;
 }
 
-/* -------------------- deep link vers l'éditeur de thème -------------------- */
+/* -------------------- Theme editor deep link -------------------- */
 function b64urlToB64(s) {
   return (
     s?.replace(/-/g, "+").replace(/_/g, "/") +
@@ -150,7 +157,12 @@ function decodeHost(h) {
     return "";
   }
 }
-function buildThemeEditorUrl({ hostB64, apiKey, blockHandle = "order-form", template = "product" }) {
+function buildThemeEditorUrl({
+  hostB64,
+  apiKey,
+  blockHandle = "order-form",
+  template = "product",
+}) {
   const decoded = decodeHost(hostB64);
   if (!decoded) return "";
 
@@ -160,13 +172,17 @@ function buildThemeEditorUrl({ hostB64, apiKey, blockHandle = "order-form", temp
     if (!store) return "";
     return `https://admin.shopify.com/store/${store}/themes/current/editor?template=${encodeURIComponent(
       template
-    )}&addAppBlockId=${encodeURIComponent(apiKey)}/${encodeURIComponent(blockHandle)}&target=main`;
+    )}&addAppBlockId=${encodeURIComponent(apiKey)}/${encodeURIComponent(
+      blockHandle
+    )}&target=main`;
   }
 
   const shop = decoded.replace(/^https?:\/\//i, "").replace(/\/admin.*$/i, "");
   return `https://${shop}/admin/themes/current/editor?template=${encodeURIComponent(
     template
-  )}&addAppBlockId=${encodeURIComponent(apiKey)}/${encodeURIComponent(blockHandle)}&target=main`;
+  )}&addAppBlockId=${encodeURIComponent(apiKey)}/${encodeURIComponent(
+    blockHandle
+  )}&target=main`;
 }
 
 /* ======================= CSS / layout ======================= */
@@ -337,8 +353,7 @@ function useInjectCss() {
   }, []);
 }
 
-/* ============================== Presets de design ============================== */
-/* ✅ btnBg can be solid or gradient (btnBg2 + btnBgMode) */
+/* ============================== Design presets ============================== */
 const DESIGN_PRESETS = {
   SkyBlueUI: {
     bg: "#F0F9FF",
@@ -575,7 +590,7 @@ const DESIGN_PRESETS = {
     cartTextColor: "#374151",
   },
 
-  /* ✅ extra "event" presets */
+  /* ✅ event presets */
   BlackFriday: {
     bg: "#0B1220",
     text: "#F8FAFC",
@@ -682,95 +697,28 @@ const DESIGN_PRESETS = {
   },
 };
 
-/* ============================== Bibliothèque d'icônes Polaris (NETTOYÉE) ============================== */
-/* ✅ + option "Aucun" partout */
-/* ✅ Removed icons: Sac(BagIcon) / Produit(ProductsIcon) / Carte(MapIcon) / Cadeau(GiftIcon) / Livraison(TruckIcon) */
+/* ============================== Icons library (clean) ============================== */
 const NONE_ICON = { value: "", label: "Aucun" };
 
 const ICON_LIBRARY = {
-  cartTitle: [
-    NONE_ICON,
-    { value: "CartIcon", label: "Panier" },
-    { value: "ReceiptIcon", label: "Reçu" },
-    { value: "NoteIcon", label: "Note" },
-  ],
-  name: [
-    NONE_ICON,
-    { value: "PersonIcon", label: "Personne" },
-    { value: "ProfileIcon", label: "Profil" },
-  ],
-  phone: [
-    NONE_ICON,
-    { value: "PhoneIcon", label: "Téléphone" },
-    { value: "MobileIcon", label: "Mobile" },
-    { value: "ChatIcon", label: "WhatsApp" },
-  ],
-  quantity: [
-    NONE_ICON,
-    { value: "HashtagIcon", label: "Hashtag" },
-    { value: "CartIcon", label: "Panier" },
-  ],
-  pincode: [
-    NONE_ICON,
-    { value: "LocationIcon", label: "Localisation" },
-    { value: "PinIcon", label: "Épingle" },
-    { value: "HomeIcon", label: "Maison" },
-  ],
-  pincode2: [
-    NONE_ICON,
-    { value: "LocationIcon", label: "Localisation" },
-    { value: "GlobeIcon", label: "Globe" },
-  ],
-  pincode3: [
-    NONE_ICON,
-    { value: "HashtagIcon", label: "Hashtag" },
-    { value: "CircleInformationIcon", label: "Information" },
-    { value: "LocationIcon", label: "Marqueur" },
-  ],
-  email: [
-    NONE_ICON,
-    { value: "EmailIcon", label: "Email" },
-  ],
-  company: [
-    NONE_ICON,
-    { value: "StoreIcon", label: "Magasin" },
-  ],
-  birthday: [
-    NONE_ICON,
-    { value: "CalendarIcon", label: "Calendrier" },
-  ],
-  address: [
-    NONE_ICON,
-    { value: "HomeIcon", label: "Maison" },
-    { value: "LocationIcon", label: "Localisation" },
-    { value: "PinIcon", label: "Épingle" },
-  ],
-  city: [
-    NONE_ICON,
-    { value: "LocationIcon", label: "Localisation" },
-    { value: "GlobeIcon", label: "Globe" },
-  ],
-  province: [
-    NONE_ICON,
-    { value: "GlobeIcon", label: "Globe" },
-    { value: "LocationIcon", label: "Localisation" },
-  ],
-  notes: [
-    NONE_ICON,
-    { value: "NoteIcon", label: "Note" },
-    { value: "ClipboardIcon", label: "Presse-papier" },
-    { value: "TextIcon", label: "Texte" },
-  ],
-  button: [
-    NONE_ICON,
-    { value: "CartIcon", label: "Panier" },
-    { value: "CheckCircleIcon", label: "Valider" },
-    { value: "ArrowRightIcon", label: "Flèche droite" },
-    { value: "PlayIcon", label: "Play" },
-  ],
+  cartTitle: [NONE_ICON, { value: "CartIcon", label: "Panier" }, { value: "ReceiptIcon", label: "Reçu" }, { value: "NoteIcon", label: "Note" }],
+  name: [NONE_ICON, { value: "PersonIcon", label: "Personne" }, { value: "ProfileIcon", label: "Profil" }],
+  phone: [NONE_ICON, { value: "PhoneIcon", label: "Téléphone" }, { value: "MobileIcon", label: "Mobile" }, { value: "ChatIcon", label: "WhatsApp" }],
+  quantity: [NONE_ICON, { value: "HashtagIcon", label: "Hashtag" }, { value: "CartIcon", label: "Panier" }],
+  pincode: [NONE_ICON, { value: "LocationIcon", label: "Localisation" }, { value: "PinIcon", label: "Épingle" }, { value: "HomeIcon", label: "Maison" }],
+  pincode2: [NONE_ICON, { value: "LocationIcon", label: "Localisation" }, { value: "GlobeIcon", label: "Globe" }],
+  pincode3: [NONE_ICON, { value: "HashtagIcon", label: "Hashtag" }, { value: "CircleInformationIcon", label: "Information" }, { value: "LocationIcon", label: "Marqueur" }],
+  email: [NONE_ICON, { value: "EmailIcon", label: "Email" }],
+  company: [NONE_ICON, { value: "StoreIcon", label: "Magasin" }],
+  birthday: [NONE_ICON, { value: "CalendarIcon", label: "Calendrier" }],
+  address: [NONE_ICON, { value: "HomeIcon", label: "Maison" }, { value: "LocationIcon", label: "Localisation" }, { value: "PinIcon", label: "Épingle" }],
+  city: [NONE_ICON, { value: "LocationIcon", label: "Localisation" }, { value: "GlobeIcon", label: "Globe" }],
+  province: [NONE_ICON, { value: "GlobeIcon", label: "Globe" }, { value: "LocationIcon", label: "Localisation" }],
+  notes: [NONE_ICON, { value: "NoteIcon", label: "Note" }, { value: "ClipboardIcon", label: "Presse-papier" }, { value: "TextIcon", label: "Texte" }],
+  button: [NONE_ICON, { value: "CartIcon", label: "Panier" }, { value: "CheckCircleIcon", label: "Valider" }, { value: "ArrowRightIcon", label: "Flèche droite" }, { value: "PlayIcon", label: "Play" }],
 };
 
-/* ✅ palettes couleurs (plus + events) */
+/* ============================== Color palettes ============================== */
 const COLOR_PALETTES = [
   { id: "blue-gradient", name: "Gradient Bleu", colors: ["#0B3B82", "#7D0031", "#00A7A3", "#F0F9FF", "#0C4A6E"], preset: "SkyBlueUI" },
   { id: "clean-white", name: "Blanc Pro", colors: ["#111827", "#FFFFFF", "#E5E7EB", "#F9FAFB", "#00A7A3"], preset: "CleanWhite" },
@@ -781,8 +729,6 @@ const COLOR_PALETTES = [
   { id: "luxury-gold", name: "Luxury Gold", colors: ["#D97706", "#854D0E", "#FDE68A", "#FEF3C7", "#FEFCE8"], preset: "LuxuryGold" },
   { id: "ocean-deep", name: "Ocean", colors: ["#0891B2", "#0E7490", "#A5F3FC", "#CFFAFE", "#ECFEFF"], preset: "OceanDeep" },
   { id: "minimal-gray", name: "Minimal Gray", colors: ["#4B5563", "#111827", "#D1D5DB", "#F9FAFB", "#FFFFFF"], preset: "MinimalGray" },
-
-  // ✅ event palettes
   { id: "black-friday", name: "Black Friday", colors: ["#0B1220", "#EF4444", "#F97316", "#111827", "#F8FAFC"], preset: "BlackFriday" },
   { id: "ramadan", name: "Ramadan", colors: ["#10B981", "#0EA5E9", "#BBF7D0", "#ECFDF5", "#064E3B"], preset: "Ramadan" },
   { id: "valentine", name: "Valentine", colors: ["#EC4899", "#F43F5E", "#FECDD3", "#FFF1F2", "#9F1239"], preset: "Valentine" },
@@ -815,7 +761,7 @@ function sanitizeDeep(o) {
   return o;
 }
 
-/* ============================== Contexte ============================== */
+/* ============================== Context ============================== */
 const FormsCtx = createContext(null);
 const useForms = () => useContext(FormsCtx);
 
@@ -836,15 +782,12 @@ function getButtonBackground(design) {
 }
 
 function getGlowColor(design) {
-  // use first color as glow base
   return safeHex(design?.btnBg, "#2563EB");
 }
 
-/* ============================== Composant Icon Polaris ============================== */
+/* ============================== PolarisIcon component ============================== */
 function PolarisIcon({ iconName, size = 20, color = "currentColor", accessibilityLabel }) {
-  // ✅ Aucun icon: on n'affiche rien du tout (no empty space)
   if (!iconName) return null;
-
   const source = getIconSource(iconName);
   if (!source) return null;
 
@@ -1007,7 +950,7 @@ function Section1FormsLayoutInner() {
       phone: { on: true, required: true, type: "tel", label: "Phone (WhatsApp)", ph: "Phone number", prefix: "+212", icon: "PhoneIcon" },
       quantity: { on: true, required: true, type: "number", label: "Quantity", ph: "1", min: 1, max: 10, icon: "HashtagIcon" },
       pincode: { on: true, required: true, type: "text", label: "Pincode", ph: "Enter pincode", icon: "LocationIcon" },
-      pincode2: { on: true, required: false, type: "text", label: "Pincode 2", ph: "Additional pincode", icon: "" }, // default none
+      pincode2: { on: true, required: false, type: "text", label: "Pincode 2", ph: "Additional pincode", icon: "" },
       pincode3: { on: true, required: false, type: "text", label: "Pincode 3", ph: "Extra pincode info", icon: "CircleInformationIcon" },
       email: { on: true, required: true, type: "text", label: "Email", ph: "your.email@example.com", icon: "EmailIcon" },
       company: { on: true, required: false, type: "text", label: "Company", ph: "Your company name", icon: "StoreIcon" },
@@ -1074,7 +1017,10 @@ function Section1FormsLayoutInner() {
       }
 
       try {
-        const s = typeof window !== "undefined" ? window.localStorage.getItem("tripleform_cod_config") : null;
+        const s =
+          typeof window !== "undefined"
+            ? window.localStorage.getItem("tripleform_cod_config")
+            : null;
         if (s && !cancelled) {
           const parsed = sanitizeDeep(JSON.parse(s));
           setConfig((prev) => ({
@@ -1150,10 +1096,15 @@ function Section1FormsLayoutInner() {
   const setDesign = (p) => setConfig((c) => ({ ...c, design: { ...c.design, ...p } }));
   const setForm = (p) => setConfig((c) => ({ ...c, form: { ...c.form, ...p } }));
   const setBehav = (p) => setConfig((c) => ({ ...c, behavior: { ...c.behavior, ...p } }));
-  const setField = (k, p) => setConfig((c) => ({ ...c, fields: { ...c.fields, [k]: { ...(c.fields?.[k] || {}), ...p } } }));
+  const setField = (k, p) =>
+    setConfig((c) => ({
+      ...c,
+      fields: { ...c.fields, [k]: { ...(c.fields?.[k] || {}), ...p } },
+    }));
   const setCartT = (p) => setConfig((c) => ({ ...c, cartTitles: { ...c.cartTitles, ...p } }));
   const setUiT = (p) => setConfig((c) => ({ ...c, uiTitles: { ...c.uiTitles, ...p } }));
-  const setFieldsOrder = (order) => setConfig((c) => ({ ...c, meta: { ...(c.meta || {}), fieldsOrder: order } }));
+  const setFieldsOrder = (order) =>
+    setConfig((c) => ({ ...c, meta: { ...(c.meta || {}), fieldsOrder: order } }));
 
   function computeShadow(effect, glowPx, glowColor, hasShadow) {
     if (effect === "glow") return `0 0 ${glowPx}px ${glowColor}`;
@@ -1251,7 +1202,12 @@ function Section1FormsLayoutInner() {
       borderRadius: 10,
       background: config.design.cartRowBg,
       color: config.design.cartTextColor,
-      boxShadow: computeShadow(eff, Math.max(8, Math.round(glowPx * 0.6)), glowCol, !!config.design.shadow),
+      boxShadow: computeShadow(
+        eff,
+        Math.max(8, Math.round(glowPx * 0.6)),
+        glowCol,
+        !!config.design.shadow
+      ),
       fontSize: baseFontSize,
     }),
     [config.design, eff, glowPx, glowCol, baseFontSize]
@@ -1399,7 +1355,7 @@ function Section1FormsLayoutInner() {
   );
 }
 
-/* ============================== Composant pour les palettes de couleurs ============================== */
+/* ============================== Color palette selector ============================== */
 function ColorPaletteSelector({ onSelect }) {
   const { config, setDesign, setConfig } = useForms();
 
@@ -1444,7 +1400,7 @@ function ColorPaletteSelector({ onSelect }) {
   );
 }
 
-/* ============================== Sélecteur d'icônes Polaris ============================== */
+/* ============================== Icon selector ============================== */
 function IconSelector({ fieldKey, type = "field", onSelect, selectedIcon }) {
   const { t } = useForms();
 
@@ -1476,7 +1432,7 @@ function IconSelector({ fieldKey, type = "field", onSelect, selectedIcon }) {
   );
 }
 
-/* ============================== Éditeur (rail | réglages | preview) ============================== */
+/* ============================== Editor (rail | settings | preview) ============================== */
 function OutletEditor() {
   const { config, setCartT, setForm, setUiT, setField, setDesign, setBehav, setFieldsOrder, t } = useForms();
   const [sel, setSel] = useState("cart");
@@ -1584,7 +1540,7 @@ function OutletEditor() {
 
   return (
     <>
-      {/* RAIL GAUCHE */}
+      {/* LEFT RAIL */}
       <div className="tf-rail">
         <div className="tf-rail-card">
           <div className="tf-rail-head">{t("section1.rail.fieldsTitle")}</div>
@@ -1620,7 +1576,7 @@ function OutletEditor() {
               </div>
             ))}
 
-            {/* Ajouter un champ */}
+            {/* Add new field */}
             <div
               className="tf-rail-item"
               style={{
@@ -1656,11 +1612,16 @@ function OutletEditor() {
         </div>
       </div>
 
-      {/* COLONNE MIDDLE */}
+      {/* MIDDLE COLUMN */}
       <div className="tf-right-col">
         <div className="tf-panel">
           <div style={{ marginBottom: 12 }}>
-            <Tabs tabs={tabs} selected={selectedTab} onSelect={(idx) => setSel(tabKeys[idx])} fitted />
+            <Tabs
+              tabs={tabs}
+              selected={selectedTab}
+              onSelect={(idx) => setSel(tabKeys[idx])}
+              fitted
+            />
           </div>
 
           {sel === "cart" && (
@@ -1726,7 +1687,9 @@ function OutletEditor() {
           {sel === "colors" && (
             <GroupCard title={t("section1.group.colors.title")}>
               <BlueSection title={t("section1.colors.presets")} defaultOpen>
-                <p style={{ fontSize: 13, color: "#6B7280", marginBottom: 12 }}>{t("section1.presets.description")}</p>
+                <p style={{ fontSize: 13, color: "#6B7280", marginBottom: 12 }}>
+                  {t("section1.presets.description")}
+                </p>
                 <ColorPaletteSelector />
               </BlueSection>
 
@@ -1743,7 +1706,6 @@ function OutletEditor() {
 
               <BlueSection title={t("section1.colors.buttonSection")}>
                 <Grid3>
-                  {/* ✅ Two-colors in same setting => gradient */}
                   <GradientField
                     label={t("section1.colors.btnBg")}
                     mode={config.design.btnBgMode || "solid"}
@@ -1881,7 +1843,11 @@ function OutletEditor() {
                   />
                   <div style={{ display: "grid", gap: 8 }}>
                     <div style={{ fontSize: 13, fontWeight: 600 }}>{t("section1.options.stickyIcon")}</div>
-                    <IconSelector type="button" selectedIcon={config.behavior.stickyIcon} onSelect={(icon) => setBehav({ stickyIcon: icon })} />
+                    <IconSelector
+                      type="button"
+                      selectedIcon={config.behavior.stickyIcon}
+                      onSelect={(icon) => setBehav({ stickyIcon: icon })}
+                    />
                   </div>
                 </Grid3>
               </BlueSection>
@@ -1955,7 +1921,7 @@ function OutletEditor() {
         </div>
       </div>
 
-      {/* PREVIEW RIGHT */}
+      {/* RIGHT PREVIEW */}
       <div className="tf-preview-col">
         <div className="tf-preview-card">
           <PreviewPanel />
@@ -1965,7 +1931,7 @@ function OutletEditor() {
   );
 }
 
-/* ============================== Éditeur de champ ============================== */
+/* ============================== Field editor ============================== */
 function FieldEditor({ fieldKey }) {
   const { config, setField, t } = useForms();
   const st = config.fields[fieldKey] || {};
@@ -2063,7 +2029,11 @@ function FieldEditor({ fieldKey }) {
         <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8 }}>
           {t("section1.fieldEditor.iconLabel")}
         </div>
-        <IconSelector fieldKey={fieldKey} selectedIcon={st.icon || ""} onSelect={(icon) => setField(fieldKey, { icon })} />
+        <IconSelector
+          fieldKey={fieldKey}
+          selectedIcon={st.icon || ""}
+          onSelect={(icon) => setField(fieldKey, { icon })}
+        />
       </div>
     </GroupCard>
   );
@@ -2102,13 +2072,27 @@ function BlueSection({ title, children, defaultOpen = true }) {
 }
 
 const Grid2 = ({ children }) => (
-  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 12, alignItems: "start" }}>
+  <div
+    style={{
+      display: "grid",
+      gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+      gap: 12,
+      alignItems: "start",
+    }}
+  >
     {children}
   </div>
 );
 
 const Grid3 = ({ children }) => (
-  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12, alignItems: "start" }}>
+  <div
+    style={{
+      display: "grid",
+      gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+      gap: 12,
+      alignItems: "start",
+    }}
+  >
     {children}
   </div>
 );
@@ -2131,17 +2115,14 @@ function ColorField({ label, value, onChange }) {
   );
 }
 
-/* ✅ Gradient field (two colors in same setting) */
+/* ✅ Gradient field */
 function GradientField({ label, mode, c1, c2, onChange }) {
   const { t } = useForms();
   const m = mode || "solid";
   const col1 = safeHex(c1, "#111827");
   const col2 = safeHex(c2, col1);
 
-  const preview =
-    m === "gradient"
-      ? `linear-gradient(90deg, ${col1} 0%, ${col2} 100%)`
-      : col1;
+  const preview = m === "gradient" ? `linear-gradient(90deg, ${col1} 0%, ${col2} 100%)` : col1;
 
   return (
     <div style={{ display: "grid", gap: 6 }}>
@@ -2259,9 +2240,7 @@ function PreviewPanel() {
           <textarea style={{ ...inputWithIcon, padding: "10px 12px", minHeight: 80 }} placeholder={sStr(f.ph)} rows={3} />
         ) : f.type === "tel" ? (
           <div style={{ display: "grid", gridTemplateColumns: f.prefix ? "minmax(88px,130px) 1fr" : "1fr", gap: 8 }}>
-            {f.prefix && (
-              <input style={{ ...inputBase, textAlign: "center" }} value={f.prefix} readOnly />
-            )}
+            {f.prefix && <input style={{ ...inputBase, textAlign: "center" }} value={f.prefix} readOnly />}
             <input type="tel" style={inputWithIcon} placeholder={sStr(f.ph)} />
           </div>
         ) : (
@@ -2276,7 +2255,7 @@ function PreviewPanel() {
       </label>
     );
 
-    // ✅ no icon => no left empty space, field aligns to the extreme left
+    // ✅ no icon => no left empty space
     if (!hasIcon) {
       return (
         <div key={key} className="tf-field-no-icon">
@@ -2319,7 +2298,9 @@ function PreviewPanel() {
         <div style={{ display: "grid", gap: 8 }}>
           <div style={cartRowCSS}>
             <div>{sStr(config.cartTitles.price)}</div>
-            <div style={{ fontWeight: 700 }}>{productPrice.toFixed(2)} {currency}</div>
+            <div style={{ fontWeight: 700 }}>
+              {productPrice.toFixed(2)} {currency}
+            </div>
           </div>
 
           <div style={cartRowCSS}>
@@ -2332,7 +2313,9 @@ function PreviewPanel() {
 
           <div style={cartRowCSS}>
             <div>{sStr(config.cartTitles.total)}</div>
-            <div style={{ fontWeight: 700 }}>{total.toFixed(2)} {currency}</div>
+            <div style={{ fontWeight: 700 }}>
+              {total.toFixed(2)} {currency}
+            </div>
           </div>
         </div>
       </div>
@@ -2346,7 +2329,8 @@ function PreviewPanel() {
     const labelEl = (
       <label className="tf-field-row">
         <span style={{ fontSize: 13, color: "#475569", textAlign: fieldAlign }}>
-          {sStr(f.label)}{f.required ? " *" : ""}
+          {sStr(f.label)}
+          {f.required ? " *" : ""}
         </span>
         <select
           style={{ ...inputBase, background: config.design.inputBg }}
@@ -2355,7 +2339,9 @@ function PreviewPanel() {
         >
           <option value="">{f.ph || t("section1.preview.provincePlaceholder")}</option>
           {provincesEntries.map(([key, p]) => (
-            <option key={key} value={key}>{p.label}</option>
+            <option key={key} value={key}>
+              {p.label}
+            </option>
           ))}
         </select>
       </label>
@@ -2380,7 +2366,8 @@ function PreviewPanel() {
     const labelEl = (
       <label className="tf-field-row">
         <span style={{ fontSize: 13, color: "#475569", textAlign: fieldAlign }}>
-          {sStr(f.label)}{f.required ? " *" : ""}
+          {sStr(f.label)}
+          {f.required ? " *" : ""}
         </span>
         <select
           style={{
@@ -2396,10 +2383,14 @@ function PreviewPanel() {
           disabled={!selectedProvinceKey}
         >
           <option value="">
-            {!selectedProvinceKey ? t("section1.preview.cityPlaceholderNoProvince") : f.ph || t("section1.preview.cityPlaceholder")}
+            {!selectedProvinceKey
+              ? t("section1.preview.cityPlaceholderNoProvince")
+              : f.ph || t("section1.preview.cityPlaceholder")}
           </option>
           {cities.map((c) => (
-            <option key={c} value={c}>{c}</option>
+            <option key={c} value={c}>
+              {c}
+            </option>
           ))}
         </select>
       </label>
