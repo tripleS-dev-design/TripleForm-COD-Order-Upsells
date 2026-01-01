@@ -1526,7 +1526,11 @@ const EN = {
 "whatsapp.connected.sent": "Messages sent:",
 "whatsapp.connected.ready": "Ready to send messages",
 "common.save": "Save",
-"common.disconnect": "Disconnect"
+"common.disconnect": "Disconnect",
+"section1.fieldEditor.titlePrefix.birthday": "Birthday",
+"section1.fieldEditor.titlePrefix.company": "Company",
+"section1.fieldEditor.titlePrefix.pincode": "Postal code",
+"section1.fieldEditor.titlePrefix.email": "Email"
 
 };
 
@@ -3038,7 +3042,11 @@ const FR = {
 "whatsapp.connected.sent": "Messages envoyés :",
 "whatsapp.connected.ready": "Prêt à envoyer des messages",
 "common.save": "Enregistrer",
-"common.disconnect": "Déconnecter"
+"common.disconnect": "Déconnecter",
+"section1.fieldEditor.titlePrefix.birthday": "Date de naissance",
+"section1.fieldEditor.titlePrefix.company": "Société",
+"section1.fieldEditor.titlePrefix.pincode": "Code postal",
+"section1.fieldEditor.titlePrefix.email": "Email"
 
 };
 
@@ -4558,7 +4566,11 @@ const ES = {
 "whatsapp.connected.sent": "Mensajes enviados:",
 "whatsapp.connected.ready": "Listo para enviar mensajes",
 "common.save": "Guardar",
-"common.disconnect": "Desconectar"
+"common.disconnect": "Desconectar",
+"section1.fieldEditor.titlePrefix.birthday": "Fecha de nacimiento",
+"section1.fieldEditor.titlePrefix.company": "Empresa",
+"section1.fieldEditor.titlePrefix.pincode": "Código postal",
+"section1.fieldEditor.titlePrefix.email": "Correo electrónico"
 
 };
 
@@ -6076,7 +6088,11 @@ const AR = {
 "whatsapp.connected.sent": "الرسائل المرسلة:",
 "whatsapp.connected.ready": "جاهز لإرسال الرسائل",
 "common.save": "حفظ",
-"common.disconnect": "قطع الاتصال"
+"common.disconnect": "قطع الاتصال",
+"section1.fieldEditor.titlePrefix.birthday": "تاريخ الميلاد",
+"section1.fieldEditor.titlePrefix.company": "الشركة",
+"section1.fieldEditor.titlePrefix.pincode": "الرمز البريدي",
+"section1.fieldEditor.titlePrefix.email": "البريد الإلكتروني"
 
 };
 

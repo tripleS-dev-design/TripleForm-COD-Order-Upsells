@@ -1,7 +1,14 @@
 // ===== File: app/sections/Section1FormsLayout.jsx =====
-// ============================== PART 1 / 2 ==============================
+// ✅ FULL FILE — Corrections demandées (icônes, palettes, nav-guard Save/Cancel)
 
-import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   Card,
   BlockStack,
@@ -16,7 +23,11 @@ import {
   Tabs,
 } from "@shopify/polaris";
 import * as PI from "@shopify/polaris-icons";
-import { useRouteLoaderData } from "@remix-run/react";
+import {
+  useRouteLoaderData,
+  useBeforeUnload,
+  unstable_useBlocker as useBlocker,
+} from "@remix-run/react";
 import { useI18n } from "../i18n/react";
 
 import {
@@ -87,7 +98,6 @@ function getIconSource(iconName, fallbackIcon = "AppsIcon") {
     mail: "EmailIcon",
     location: "LocationIcon",
     pin: "PinIcon",
-    mappin: "MapPinIcon",
     map: "MapIcon",
     globe: "GlobeIcon",
     home: "HomeIcon",
@@ -96,17 +106,13 @@ function getIconSource(iconName, fallbackIcon = "AppsIcon") {
     business: "BusinessIcon",
     calendar: "CalendarIcon",
     clock: "ClockIcon",
-    gift: "GiftIcon",
     note: "NoteIcon",
-    document: "DocumentIcon",
     clipboard: "ClipboardIcon",
     text: "TextIcon",
     hashtag: "HashtagIcon",
-    number: "NumberIcon",
     add: "AddIcon",
     plus: "AddIcon",
     delete: "DeleteIcon",
-    remove: "DeleteIcon",
     trash: "DeleteIcon",
     edit: "EditIcon",
     settings: "SettingsIcon",
@@ -128,16 +134,13 @@ function getIconSource(iconName, fallbackIcon = "AppsIcon") {
     truck: "TruckIcon",
     shipping: "TruckIcon",
     delivery: "TruckIcon",
-    checkout: "CheckoutIcon",
     receipt: "ReceiptIcon",
     payment: "CreditCardIcon",
     colors: "ColorsIcon",
     palette: "ColorsIcon",
-    city: "CityIcon",
     info: "CircleInformationIcon",
     information: "CircleInformationIcon",
     help: "CircleInformationIcon",
-    play: "PlayIcon",
   };
 
   const cleanName = lowerIconName.replace(/[^a-z0-9]/g, "");
@@ -178,7 +181,12 @@ function decodeHost(h) {
     return "";
   }
 }
-function buildThemeEditorUrl({ hostB64, apiKey, blockHandle = "order-form", template = "product" }) {
+function buildThemeEditorUrl({
+  hostB64,
+  apiKey,
+  blockHandle = "order-form",
+  template = "product",
+}) {
   const decoded = decodeHost(hostB64);
   if (!decoded) return "";
 
@@ -188,13 +196,19 @@ function buildThemeEditorUrl({ hostB64, apiKey, blockHandle = "order-form", temp
     if (!store) return "";
     return `https://admin.shopify.com/store/${store}/themes/current/editor?template=${encodeURIComponent(
       template
-    )}&addAppBlockId=${encodeURIComponent(apiKey)}/${encodeURIComponent(blockHandle)}&target=main`;
+    )}&addAppBlockId=${encodeURIComponent(apiKey)}/${encodeURIComponent(
+      blockHandle
+    )}&target=main`;
   }
 
-  const shop = decoded.replace(/^https?:\/\//i, "").replace(/\/admin.*$/i, "");
+  const shop = decoded
+    .replace(/^https?:\/\//i, "")
+    .replace(/\/admin.*$/i, "");
   return `https://${shop}/admin/themes/current/editor?template=${encodeURIComponent(
     template
-  )}&addAppBlockId=${encodeURIComponent(apiKey)}/${encodeURIComponent(blockHandle)}&target=main`;
+  )}&addAppBlockId=${encodeURIComponent(apiKey)}/${encodeURIComponent(
+    blockHandle
+  )}&target=main`;
 }
 
 /* ======================= CSS / layout ======================= */
@@ -290,17 +304,19 @@ const LAYOUT_CSS = `
   .tf-accordion__btn { width:100%; text-align:left; padding:10px 12px; background:#F8FAFC; color:#111827; border:none; cursor:pointer; font-weight:700; border-radius:10px; border-bottom:1px solid #E5E7EB; }
   .tf-accordion__body { padding:12px; background:#FFFFFF; }
 
-  .tf-color-palettes { display:grid; grid-template-columns:repeat(auto-fill, minmax(140px, 1fr)); gap:12px; margin-top:12px; }
-  .tf-color-palette { border:1px solid #E5E7EB; border-radius:10px; overflow:hidden; cursor:pointer; transition:all 0.2s; }
-  .tf-color-palette:hover { transform:translateY(-2px); box-shadow:0 6px 16px rgba(0,0,0,0.1); }
+  .tf-color-palettes { display:grid; grid-template-columns:repeat(auto-fill, minmax(160px, 1fr)); gap:12px; margin-top:12px; }
+  .tf-color-palette { border:1px solid #E5E7EB; border-radius:12px; overflow:hidden; cursor:pointer; transition:all 0.2s; background:#fff; }
+  .tf-color-palette:hover { transform:translateY(-2px); box-shadow:0 6px 16px rgba(0,0,0,0.10); }
   .tf-color-palette.active { outline:2px solid #00A7A3; }
-  .tf-palette-colors { display:flex; height:36px; }
-  .tf-palette-info { padding:8px; background:#fff; font-size:11px; font-weight:600; }
+  .tf-palette-colors { display:flex; height:44px; }
+  .tf-palette-info { padding:8px 10px; background:#fff; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .tf-palette-chip{ width:10px; height:10px; border-radius:999px; border:1px solid rgba(0,0,0,.08); }
 
   .tf-icon-selector { display:grid; grid-template-columns:repeat(auto-fill, minmax(44px, 1fr)); gap:8px; margin-top:8px; max-height:200px; overflow-y:auto; padding:8px; border:1px solid #E5E7EB; border-radius:8px; }
   .tf-icon-option { width:44px; height:44px; display:flex; align-items:center; justify-content:center; border:2px solid #E5E7EB; border-radius:10px; cursor:pointer; background:#fff; transition:all 0.2s; color:#4B5563; line-height:0; }
   .tf-icon-option:hover { border-color:#00A7A3; background:#f8fafc; }
   .tf-icon-option.selected { border-color:#00A7A3; background:#ecfeff; }
+  .tf-icon-option.none { color:#9CA3AF; font-weight:800; font-size:16px; }
 
   .tf-field-with-icon { display:grid; grid-template-columns:auto 1fr; gap:10px; align-items:center; }
   .tf-field-icon { width:18px; height:18px; display:flex; align-items:center; justify-content:center; color:#6B7280; line-height:0; }
@@ -569,115 +585,163 @@ const DESIGN_PRESETS = {
 };
 
 /* ============================== Bibliothèque d'icônes Polaris ============================== */
+/**
+ * ✅ Nettoyage AUTOMATIQUE:
+ * - On garde seulement les icônes qui existent vraiment dans ta version de @shopify/polaris-icons
+ * - Et on ajoute une option "Aucun" (vide) pour TOUS les sélecteurs
+ */
+const onlyExisting = (arr) =>
+  (arr || []).filter((x) => !x?.value || !!PI[x.value]);
+
 const ICON_LIBRARY = {
-  cartTitle: [
+  cartTitle: onlyExisting([
+    { value: "", label: "Aucun" },
     { value: "CartIcon", label: "Panier" },
-    { value: "BagIcon", label: "Sac" },
-    { value: "ProductsIcon", label: "Produits" },
-    { value: "CheckoutIcon", label: "Checkout" },
     { value: "ReceiptIcon", label: "Reçu" },
     { value: "NoteIcon", label: "Note" },
-  ],
-  name: [
+    { value: "BagIcon", label: "Sac" },
+  ]),
+  name: onlyExisting([
+    { value: "", label: "Aucun" },
     { value: "ProfileIcon", label: "Profil" },
     { value: "PersonIcon", label: "Personne" },
-    { value: "CustomersIcon", label: "Clients" },
-    { value: "PersonIcon", label: "Utilisateur" },
-  ],
-  phone: [
+  ]),
+  phone: onlyExisting([
+    { value: "", label: "Aucun" },
     { value: "PhoneIcon", label: "Téléphone" },
     { value: "MobileIcon", label: "Mobile" },
-    { value: "PhoneIcon", label: "Appel" },
     { value: "ChatIcon", label: "Chat" },
-  ],
-  quantity: [
+  ]),
+  quantity: onlyExisting([
+    { value: "", label: "Aucun" },
     { value: "HashtagIcon", label: "Hashtag" },
     { value: "AddIcon", label: "Plus" },
     { value: "CartIcon", label: "Panier" },
-    { value: "NumberIcon", label: "Nombre" },
-  ],
-  pincode: [
+  ]),
+  pincode: onlyExisting([
+    { value: "", label: "Aucun" },
     { value: "LocationIcon", label: "Localisation" },
     { value: "PinIcon", label: "Épingle" },
-    { value: "MapPinIcon", label: "Épingle de carte" },
     { value: "HomeIcon", label: "Maison" },
-  ],
-  pincode2: [
-    { value: "LocationIcon", label: "Localisation" },
     { value: "MapIcon", label: "Carte" },
+  ]),
+  pincode2: onlyExisting([
+    { value: "", label: "Aucun" },
+    { value: "MapIcon", label: "Carte" },
+    { value: "LocationIcon", label: "Localisation" },
     { value: "GlobeIcon", label: "Globe" },
     { value: "PinIcon", label: "Épingle" },
-  ],
-  pincode3: [
+  ]),
+  pincode3: onlyExisting([
+    { value: "", label: "Aucun" },
     { value: "HashtagIcon", label: "Hashtag" },
-    { value: "NumberIcon", label: "Nombre" },
     { value: "CircleInformationIcon", label: "Information" },
     { value: "LocationIcon", label: "Marqueur" },
-  ],
-  email: [
+  ]),
+  email: onlyExisting([
+    { value: "", label: "Aucun" },
     { value: "EmailIcon", label: "Email" },
-    { value: "EmailIcon", label: "Enveloppe" },
-    { value: "SendIcon", label: "Envoyer" },
-    { value: "EmailIcon", label: "Courrier" },
-  ],
-  company: [
+  ]),
+  company: onlyExisting([
+    { value: "", label: "Aucun" },
     { value: "StoreIcon", label: "Magasin" },
     { value: "BuildingIcon", label: "Bâtiment" },
     { value: "BusinessIcon", label: "Business" },
-    { value: "BagIcon", label: "Sac" },
-  ],
-  birthday: [
+  ]),
+  birthday: onlyExisting([
+    { value: "", label: "Aucun" },
     { value: "CalendarIcon", label: "Calendrier" },
-    { value: "CalendarIcon", label: "Date" },
     { value: "GiftIcon", label: "Cadeau" },
-    { value: "GiftIcon", label: "Célébration" },
-  ],
-  address: [
+  ]),
+  address: onlyExisting([
+    { value: "", label: "Aucun" },
     { value: "LocationIcon", label: "Localisation" },
-    { value: "PinIcon", label: "Épingle" },
     { value: "HomeIcon", label: "Maison" },
     { value: "StoreIcon", label: "Magasin" },
-  ],
-  city: [
-    { value: "GlobeIcon", label: "Globe" },
+  ]),
+  city: onlyExisting([
+    { value: "", label: "Aucun" },
     { value: "LocationIcon", label: "Localisation" },
-    { value: "MapIcon", label: "Carte" },
-    { value: "CityIcon", label: "Ville" },
-  ],
-  province: [
     { value: "GlobeIcon", label: "Globe" },
     { value: "MapIcon", label: "Carte" },
+  ]),
+  province: onlyExisting([
+    { value: "", label: "Aucun" },
+    { value: "GlobeIcon", label: "Globe" },
+    { value: "MapIcon", label: "Carte" },
     { value: "LocationIcon", label: "Localisation" },
-    { value: "GlobeIcon", label: "Région" },
-  ],
-  notes: [
+  ]),
+  notes: onlyExisting([
+    { value: "", label: "Aucun" },
     { value: "NoteIcon", label: "Note" },
     { value: "ClipboardIcon", label: "Presse-papier" },
-    { value: "DocumentIcon", label: "Document" },
     { value: "TextIcon", label: "Texte" },
-  ],
-  button: [
+  ]),
+  button: onlyExisting([
+    { value: "", label: "Aucun" },
     { value: "CartIcon", label: "Panier" },
-    { value: "CheckoutIcon", label: "Checkout" },
-    { value: "BagIcon", label: "Sac" },
     { value: "TruckIcon", label: "Camion" },
     { value: "CheckCircleIcon", label: "Coche" },
     { value: "ArrowRightIcon", label: "Flèche droite" },
-    { value: "SendIcon", label: "Envoyer" },
-    { value: "PlayIcon", label: "Play" },
-  ],
+  ]),
 };
 
+/* ============================== Palettes pro (dégradés 2 couleurs + accents) ============================== */
 const COLOR_PALETTES = [
-  { id: "blue-gradient", name: "Gradient Bleu", colors: ["#0B3B82", "#7D0031", "#00A7A3", "#F0F9FF", "#0C4A6E"], preset: "SkyBlueUI" },
-  { id: "clean-white", name: "Blanc Propre", colors: ["#FFFFFF", "#111827", "#E5E7EB", "#F9FAFB", "#374151"], preset: "CleanWhite" },
-  { id: "dark-modern", name: "Sombre Moderne", colors: ["#0B1220", "#2563EB", "#1F2A44", "#101828", "#E5F0FF"], preset: "BoldDark" },
-  { id: "green-nature", name: "Nature Verte", colors: ["#10B981", "#065F46", "#D1FAE5", "#ECFDF5", "#F0FDF4"], preset: "GreenNature" },
-  { id: "sunset-orange", name: "Orange Couchant", colors: ["#F97316", "#9A3412", "#FDBA74", "#FFEDD5", "#FFF7ED"], preset: "SunsetOrange" },
-  { id: "purple-elegant", name: "Violet Élégant", colors: ["#8B5CF6", "#5B21B6", "#E9D5FF", "#F5F3FF", "#FAF5FF"], preset: "PurpleElegant" },
-  { id: "luxury-gold", name: "Or Luxueux", colors: ["#D97706", "#854D0E", "#FDE68A", "#FEF3C7", "#FEFCE8"], preset: "LuxuryGold" },
-  { id: "ocean-deep", name: "Océan Profond", colors: ["#0891B2", "#0E7490", "#A5F3FC", "#CFFAFE", "#ECFEFF"], preset: "OceanDeep" },
-  { id: "minimal-gray", name: "Gris Minimal", colors: ["#4B5563", "#374151", "#D1D5DB", "#F9FAFB", "#FFFFFF"], preset: "MinimalGray" },
+  {
+    id: "triple-gradient",
+    name: "Triple Gradient Pro",
+    colors: ["#0B3B82", "#7D0031", "#00A7A3", "#F6F7F9", "#0F172A"],
+    preset: "SkyBlueUI",
+  },
+  {
+    id: "clean-white",
+    name: "Clean White Pro",
+    colors: ["#111827", "#FFFFFF", "#E5E7EB", "#F9FAFB", "#0F172A"],
+    preset: "CleanWhite",
+  },
+  {
+    id: "dark-modern",
+    name: "Dark Modern",
+    colors: ["#0B1220", "#2563EB", "#1F2A44", "#101828", "#E5F0FF"],
+    preset: "BoldDark",
+  },
+  {
+    id: "green-nature",
+    name: "Green Nature",
+    colors: ["#065F46", "#10B981", "#D1FAE5", "#ECFDF5", "#052E2B"],
+    preset: "GreenNature",
+  },
+  {
+    id: "sunset-orange",
+    name: "Sunset Orange",
+    colors: ["#9A3412", "#F97316", "#FDBA74", "#FFF7ED", "#7C2D12"],
+    preset: "SunsetOrange",
+  },
+  {
+    id: "purple-elegant",
+    name: "Purple Elegant",
+    colors: ["#5B21B6", "#8B5CF6", "#E9D5FF", "#FAF5FF", "#2E1065"],
+    preset: "PurpleElegant",
+  },
+  {
+    id: "luxury-gold",
+    name: "Luxury Gold",
+    colors: ["#854D0E", "#D97706", "#FDE68A", "#FEFCE8", "#451A03"],
+    preset: "LuxuryGold",
+  },
+  {
+    id: "ocean-deep",
+    name: "Ocean Deep",
+    colors: ["#0E7490", "#0891B2", "#A5F3FC", "#ECFEFF", "#083344"],
+    preset: "OceanDeep",
+  },
+  {
+    id: "minimal-gray",
+    name: "Minimal Gray",
+    colors: ["#111827", "#4B5563", "#D1D5DB", "#F9FAFB", "#FFFFFF"],
+    preset: "MinimalGray",
+  },
 ];
 
 /* ============================== Sanitizer ============================== */
@@ -690,9 +754,7 @@ const REPLACERS = [
   [/ØŸ/g, ""],
 ];
 const sStr = (s) =>
-  typeof s === "string"
-    ? REPLACERS.reduce((x, [r, v]) => x.replace(r, v), s)
-    : s;
+  typeof s === "string" ? REPLACERS.reduce((x, [r, v]) => x.replace(r, v), s) : s;
 
 function sanitizeDeep(o) {
   if (o == null) return o;
@@ -712,6 +774,9 @@ const useForms = () => useContext(FormsCtx);
 
 /* ============================== Composant Icon Polaris ============================== */
 function PolarisIcon({ iconName, size = 20, color = "currentColor", accessibilityLabel }) {
+  // ✅ "Aucun" => pas d'icône
+  if (!iconName) return null;
+
   const source = getIconSource(iconName);
 
   if (!source) {
@@ -775,7 +840,12 @@ function PageShell({ themeLink, onOpenPreview, onSave, saving, t }) {
               <img
                 src="/tripleform-cod-icon.png"
                 alt="TripleForm COD"
-                style={{ width: "100%", height: "100%", display: "block", objectFit: "cover" }}
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  display: "block",
+                  objectFit: "cover",
+                }}
               />
             </div>
             <div>
@@ -792,7 +862,9 @@ function PageShell({ themeLink, onOpenPreview, onSave, saving, t }) {
             <Button url={themeLink} external target="_blank">
               {t("section1.header.btnAddToTheme")}
             </Button>
-            <Button onClick={onOpenPreview}>{t("section1.header.btnPreview")}</Button>
+            <Button onClick={onOpenPreview}>
+              {t("section1.header.btnPreview")}
+            </Button>
             <Button variant="primary" onClick={onSave} loading={saving}>
               {t("section1.header.btnSave")}
             </Button>
@@ -920,6 +992,30 @@ function Section1FormsLayoutInner() {
   const [showPreview, setShowPreview] = useState(false);
   const [loadingInitial, setLoadingInitial] = useState(true);
 
+  // ✅ Dirty tracking (pro)
+  const lastSavedJsonRef = useRef("");
+  const [navGuardOpen, setNavGuardOpen] = useState(false);
+  const pendingActionRef = useRef(null);
+
+  const persistLocal = () => {
+    try {
+      localStorage.setItem("tripleform_cod_config", JSON.stringify(config));
+    } catch {}
+  };
+
+  const setDesign = (p) => setConfig((c) => ({ ...c, design: { ...c.design, ...p } }));
+  const setForm = (p) => setConfig((c) => ({ ...c, form: { ...c.form, ...p } }));
+  const setBehav = (p) => setConfig((c) => ({ ...c, behavior: { ...c.behavior, ...p } }));
+  const setField = (k, p) =>
+    setConfig((c) => ({
+      ...c,
+      fields: { ...c.fields, [k]: { ...(c.fields?.[k] || {}), ...p } },
+    }));
+  const setCartT = (p) => setConfig((c) => ({ ...c, cartTitles: { ...c.cartTitles, ...p } }));
+  const setUiT = (p) => setConfig((c) => ({ ...c, uiTitles: { ...c.uiTitles, ...p } }));
+  const setFieldsOrder = (order) =>
+    setConfig((c) => ({ ...c, meta: { ...(c.meta || {}), fieldsOrder: order } }));
+
   useEffect(() => {
     let cancelled = false;
 
@@ -941,6 +1037,9 @@ function Section1FormsLayoutInner() {
               try {
                 localStorage.setItem("tripleform_cod_config", JSON.stringify(clean));
               } catch {}
+
+              // ✅ baseline saved
+              lastSavedJsonRef.current = JSON.stringify(clean);
             }
             setLoadingInitial(false);
             return;
@@ -951,7 +1050,10 @@ function Section1FormsLayoutInner() {
       }
 
       try {
-        const s = typeof window !== "undefined" ? window.localStorage.getItem("tripleform_cod_config") : null;
+        const s =
+          typeof window !== "undefined"
+            ? window.localStorage.getItem("tripleform_cod_config")
+            : null;
         if (s && !cancelled) {
           const parsed = sanitizeDeep(JSON.parse(s));
           setConfig((prev) => ({
@@ -961,33 +1063,27 @@ function Section1FormsLayoutInner() {
             form: { ...prev.form, ...(parsed.form || {}) },
             design: { ...prev.design, ...(parsed.design || {}) },
           }));
+
+          // ✅ baseline saved
+          lastSavedJsonRef.current = JSON.stringify(parsed);
         }
       } catch (e) {
         console.error("Failed to load settings from localStorage", e);
       }
 
-      if (!cancelled) setLoadingInitial(false);
+      if (!cancelled) {
+        // If nothing loaded, baseline is current initial config
+        lastSavedJsonRef.current = JSON.stringify(config);
+        setLoadingInitial(false);
+      }
     }
 
     loadConfig();
     return () => {
       cancelled = true;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const persistLocal = () => {
-    try {
-      localStorage.setItem("tripleform_cod_config", JSON.stringify(config));
-    } catch {}
-  };
-
-  const setDesign = (p) => setConfig((c) => ({ ...c, design: { ...c.design, ...p } }));
-  const setForm = (p) => setConfig((c) => ({ ...c, form: { ...c.form, ...p } }));
-  const setBehav = (p) => setConfig((c) => ({ ...c, behavior: { ...c.behavior, ...p } }));
-  const setField = (k, p) => setConfig((c) => ({ ...c, fields: { ...c.fields, [k]: { ...(c.fields?.[k] || {}), ...p } } }));
-  const setCartT = (p) => setConfig((c) => ({ ...c, cartTitles: { ...c.cartTitles, ...p } }));
-  const setUiT = (p) => setConfig((c) => ({ ...c, uiTitles: { ...c.uiTitles, ...p } }));
-  const setFieldsOrder = (order) => setConfig((c) => ({ ...c, meta: { ...(c.meta || {}), fieldsOrder: order } }));
 
   function computeShadow(effect, glowPx, glowColor, hasShadow) {
     if (effect === "glow") return `0 0 ${glowPx}px ${glowColor}`;
@@ -1081,11 +1177,42 @@ function Section1FormsLayoutInner() {
       borderRadius: 10,
       background: config.design.cartRowBg,
       color: config.design.cartTextColor,
-      boxShadow: computeShadow(eff, Math.max(8, Math.round(glowPx * 0.6)), glowCol, !!config.design.shadow),
+      boxShadow: computeShadow(
+        eff,
+        Math.max(8, Math.round(glowPx * 0.6)),
+        glowCol,
+        !!config.design.shadow
+      ),
       fontSize: baseFontSize,
     }),
     [config.design, eff, glowPx, glowCol, baseFontSize]
   );
+
+  // ✅ isDirty
+  const isDirty = useMemo(() => {
+    try {
+      const now = JSON.stringify(config);
+      return !!lastSavedJsonRef.current && now !== lastSavedJsonRef.current;
+    } catch {
+      return false;
+    }
+  }, [config]);
+
+  // ✅ Browser unload guard (refresh/close tab)
+  useBeforeUnload(
+    isDirty,
+    "You have unsaved changes. Please Save or Cancel before leaving."
+  );
+
+  // ✅ In-app navigation guard
+  const blocker = useBlocker(isDirty);
+
+  useEffect(() => {
+    if (blocker?.state === "blocked") {
+      setNavGuardOpen(true);
+      pendingActionRef.current = blocker;
+    }
+  }, [blocker?.state]);
 
   const saveToShop = async () => {
     setSaving(true);
@@ -1102,17 +1229,45 @@ function Section1FormsLayoutInner() {
       } catch {}
 
       if (!res.ok || !j.ok) {
-        const msg = j?.errors?.[0]?.message || j?.error || t("section1.save.errorGeneric");
+        const msg =
+          j?.errors?.[0]?.message || j?.error || t("section1.save.errorGeneric");
         throw new Error(msg);
       }
+
+      // ✅ update baseline saved
+      lastSavedJsonRef.current = JSON.stringify(config);
+
       alert(t("section1.save.success"));
+      return true;
     } catch (e) {
       console.error(e);
       const fallbackMessage = t("section1.save.unknownError");
       alert(t("section1.save.failedPrefix") + (e?.message || fallbackMessage));
+      return false;
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleNavSaveAndLeave = async () => {
+    const ok = await saveToShop();
+    if (!ok) return;
+    setNavGuardOpen(false);
+    const b = pendingActionRef.current;
+    pendingActionRef.current = null;
+    try {
+      b?.proceed?.();
+    } catch {}
+  };
+
+  const handleNavCancelStay = () => {
+    // “Cancel” = rester sur la page (donc on reset le blocker)
+    setNavGuardOpen(false);
+    const b = pendingActionRef.current;
+    pendingActionRef.current = null;
+    try {
+      b?.reset?.();
+    } catch {}
   };
 
   if (loadingInitial) {
@@ -1159,6 +1314,7 @@ function Section1FormsLayoutInner() {
         t={t}
       />
 
+      {/* ✅ Preview modal */}
       <Modal
         open={showPreview}
         onClose={() => setShowPreview(false)}
@@ -1173,10 +1329,33 @@ function Section1FormsLayoutInner() {
           <PreviewPanel />
         </Modal.Section>
       </Modal>
+
+      {/* ✅ Navigation guard modal (Save/Cancel obligatoire) */}
+      <Modal
+        open={navGuardOpen}
+        onClose={handleNavCancelStay}
+        title="Unsaved changes"
+        primaryAction={{
+          content: "Save & leave",
+          onAction: handleNavSaveAndLeave,
+          loading: saving,
+        }}
+        secondaryActions={[
+          {
+            content: "Cancel (stay here)",
+            onAction: handleNavCancelStay,
+          },
+        ]}
+      >
+        <Modal.Section>
+          <p style={{ margin: 0, color: "#111827" }}>
+            You changed settings. Please <b>Save</b> or <b>Cancel</b> before leaving this section.
+          </p>
+        </Modal.Section>
+      </Modal>
     </FormsCtx.Provider>
   );
 }
-// ============================== PART 2 / 2 ==============================
 
 /* ============================== Composant pour les palettes de couleurs ============================== */
 function ColorPaletteSelector({ onSelect }) {
@@ -1192,23 +1371,36 @@ function ColorPaletteSelector({ onSelect }) {
 
   return (
     <div className="tf-color-palettes">
-      {COLOR_PALETTES.map((palette) => (
-        <div
-          key={palette.id}
-          className={`tf-color-palette ${config.meta?.preset === palette.preset ? "active" : ""}`}
-          onClick={() => {
-            applyPalette(palette.id);
-            onSelect?.(palette.id);
-          }}
-        >
-          <div className="tf-palette-colors">
-            {palette.colors.map((color, idx) => (
-              <div key={idx} style={{ flex: 1, background: color, height: "100%" }} title={color} />
-            ))}
+      {COLOR_PALETTES.map((palette) => {
+        const [c1, c2, c3, c4, c5] = palette.colors;
+        return (
+          <div
+            key={palette.id}
+            className={`tf-color-palette ${config.meta?.preset === palette.preset ? "active" : ""}`}
+            onClick={() => {
+              applyPalette(palette.id);
+              onSelect?.(palette.id);
+            }}
+          >
+            {/* ✅ Pro preview: grand dégradé (c1->c2) + 3 accents */}
+            <div className="tf-palette-colors">
+              <div style={{ flex: 2.2, background: `linear-gradient(135deg, ${c1}, ${c2})` }} title={`${c1} → ${c2}`} />
+              <div style={{ flex: 1, background: c3 }} title={c3} />
+              <div style={{ flex: 1, background: c4 }} title={c4} />
+              <div style={{ flex: 1, background: c5 }} title={c5} />
+            </div>
+
+            <div className="tf-palette-info">
+              <span>{palette.name}</span>
+              <span style={{ display: "inline-flex", gap: 6, alignItems: "center" }}>
+                <span className="tf-palette-chip" style={{ background: c1 }} />
+                <span className="tf-palette-chip" style={{ background: c2 }} />
+                <span className="tf-palette-chip" style={{ background: c3 }} />
+              </span>
+            </div>
           </div>
-          <div className="tf-palette-info">{palette.name}</div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
@@ -1232,12 +1424,12 @@ function IconSelector({ fieldKey, type = "field", onSelect, selectedIcon }) {
       <div className="tf-icon-selector">
         {icons.map((icon) => (
           <div
-            key={icon.value}
-            className={`tf-icon-option ${selectedIcon === icon.value ? "selected" : ""}`}
+            key={icon.value || "none"}
+            className={`tf-icon-option ${!icon.value ? "none" : ""} ${selectedIcon === icon.value ? "selected" : ""}`}
             onClick={() => onSelect(icon.value)}
             title={icon.label}
           >
-            <PolarisIcon iconName={icon.value} size={20} />
+            {!icon.value ? "—" : <PolarisIcon iconName={icon.value} size={20} />}
           </div>
         ))}
       </div>
@@ -1290,7 +1482,7 @@ function OutletEditor() {
       key: `field:${k}`,
       label: field?.label || k,
       on: field?.on !== false,
-      iconName: field?.icon || "AppsIcon",
+      iconName: field?.icon || "",
     };
   });
 
@@ -1335,15 +1527,7 @@ function OutletEditor() {
     setField(k, { on: !currentOn });
   };
 
-  const removeField = (key) => {
-    const k = key.replace(/^field:/, "");
-    setSel(`field:${k}`);
-    if (window.confirm(t("section1.confirmRemoveField"))) {
-      setField(k, { on: false });
-    }
-  };
-
-  const RailIconBtn = ({ iconName, title, onClick, active, danger }) => (
+  const RailIconBtn = ({ iconName, title, onClick, active }) => (
     <button
       className="tf-icon-btn"
       title={title}
@@ -1353,7 +1537,6 @@ function OutletEditor() {
       }}
       style={{
         ...(active ? { background: "rgba(16,185,129,0.12)", borderColor: "#10B981" } : {}),
-        ...(danger ? { background: "rgba(239,68,68,0.10)", borderColor: "#EF4444" } : {}),
       }}
     >
       <PolarisIcon iconName={iconName} size={14} />
@@ -1379,20 +1562,22 @@ function OutletEditor() {
                 onDrop={() => onDrop(it.key)}
               >
                 <div className="tf-grip tf-rail-icon">
-                  <PolarisIcon iconName={it.iconName} size={16} />
+                  {/* ✅ si aucun icon -> on laisse vide (pro) */}
+                  {it.iconName ? <PolarisIcon iconName={it.iconName} size={16} /> : <span style={{ width: 16, height: 16 }} />}
                 </div>
 
                 <div className="tf-rail-label">{it.label}</div>
 
                 <div className="tf-rail-actions">
                   <RailIconBtn iconName="SettingsIcon" title="Settings" onClick={() => setSel(it.key)} />
+                  {/* ✅ Eye only (tu as dit pas besoin de supprimer) */}
                   <RailIconBtn
                     iconName={it.on ? "ViewIcon" : "HideIcon"}
                     title={it.on ? "Hide" : "Show"}
                     active={!!it.on}
                     onClick={() => toggleField(it.key)}
                   />
-                  <RailIconBtn iconName="DeleteIcon" title="Remove" danger onClick={() => removeField(it.key)} />
+                  {/* ✅ Delete button removed */}
                   <RailIconBtn iconName="ChevronUpIcon" title="Move up" onClick={() => moveField(it.key, -1)} />
                   <RailIconBtn iconName="ChevronDownIcon" title="Move down" onClick={() => moveField(it.key, 1)} />
                 </div>
@@ -1415,7 +1600,7 @@ function OutletEditor() {
                   type: "text",
                   label: t("section1.newFieldLabel"),
                   ph: t("section1.newFieldPlaceholder"),
-                  icon: "AddIcon",
+                  icon: "", // ✅ par défaut: aucun icon
                 });
                 setFieldsOrder([...order, newFieldKey]);
                 setSel(`field:${newFieldKey}`);
@@ -1439,7 +1624,12 @@ function OutletEditor() {
       <div className="tf-right-col">
         <div className="tf-panel">
           <div style={{ marginBottom: 12 }}>
-            <Tabs tabs={tabs} selected={selectedTab} onSelect={(idx) => setSel(tabKeys[idx])} fitted />
+            <Tabs
+              tabs={tabs}
+              selected={selectedTab}
+              onSelect={(idx) => setSel(tabKeys[idx])}
+              fitted
+            />
           </div>
 
           {sel === "cart" && (
@@ -1451,7 +1641,7 @@ function OutletEditor() {
                 <TextField label={t("section1.cart.labelTotal")} value={config.cartTitles.total} onChange={(v) => setCartT({ total: v })} />
                 <div style={{ display: "grid", gap: 8 }}>
                   <div style={{ fontSize: 13, fontWeight: 600 }}>{t("section1.cart.cartIcon")}</div>
-                  <IconSelector type="cartTitle" selectedIcon={config.cartTitles.cartIcon} onSelect={(icon) => setCartT({ cartIcon: icon })} />
+                  <IconSelector type="cartTitle" selectedIcon={config.cartTitles.cartIcon || ""} onSelect={(icon) => setCartT({ cartIcon: icon })} />
                 </div>
               </Grid2>
             </GroupCard>
@@ -1482,7 +1672,7 @@ function OutletEditor() {
                 <TextField label={t("section1.buttons.successTextLabel")} value={config.form.successText} onChange={(v) => setForm({ successText: v })} />
                 <div style={{ display: "grid", gap: 8 }}>
                   <div style={{ fontSize: 13, fontWeight: 600 }}>{t("section1.buttons.buttonIcon")}</div>
-                  <IconSelector type="button" selectedIcon={config.form.buttonIcon} onSelect={(icon) => setForm({ buttonIcon: icon })} />
+                  <IconSelector type="button" selectedIcon={config.form.buttonIcon || ""} onSelect={(icon) => setForm({ buttonIcon: icon })} />
                 </div>
               </Grid2>
             </GroupCard>
@@ -1639,7 +1829,11 @@ function OutletEditor() {
                   />
                   <div style={{ display: "grid", gap: 8 }}>
                     <div style={{ fontSize: 13, fontWeight: 600 }}>{t("section1.options.stickyIcon")}</div>
-                    <IconSelector type="button" selectedIcon={config.behavior.stickyIcon} onSelect={(icon) => setBehav({ stickyIcon: icon })} />
+                    <IconSelector
+                      type="button"
+                      selectedIcon={config.behavior.stickyIcon || ""}
+                      onSelect={(icon) => setBehav({ stickyIcon: icon })}
+                    />
                   </div>
                 </Grid3>
               </BlueSection>
@@ -1821,7 +2015,11 @@ function FieldEditor({ fieldKey }) {
         <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8 }}>
           {t("section1.fieldEditor.iconLabel")}
         </div>
-        <IconSelector fieldKey={fieldKey} selectedIcon={st.icon} onSelect={(icon) => setField(fieldKey, { icon })} />
+        <IconSelector
+          fieldKey={fieldKey}
+          selectedIcon={st.icon || ""}
+          onSelect={(icon) => setField(fieldKey, { icon })}
+        />
       </div>
     </GroupCard>
   );
@@ -1937,12 +2135,22 @@ function PreviewPanel() {
   const renderFieldWithIcon = (f, key) => {
     if (!f?.on) return null;
     const isTextarea = f.type === "textarea";
+    const hasIcon = !!f.icon;
 
     return (
-      <div key={key} className="tf-field-with-icon">
-        <div className="tf-field-icon">
-          <PolarisIcon iconName={f.icon} size={16} />
-        </div>
+      <div
+        key={key}
+        className="tf-field-with-icon"
+        style={{
+          gridTemplateColumns: hasIcon ? "auto 1fr" : "1fr",
+        }}
+      >
+        {hasIcon && (
+          <div className="tf-field-icon">
+            <PolarisIcon iconName={f.icon} size={16} />
+          </div>
+        )}
+
         <label style={{ display: "grid", gap: 6, flex: 1 }}>
           <span style={{ fontSize: 13, color: "#475569", textAlign: fieldAlign }}>
             {sStr(f.label)}
@@ -1985,9 +2193,12 @@ function PreviewPanel() {
     return (
       <div style={cartBoxCSS} dir={config.design.direction || "ltr"}>
         <div className="tf-cart-with-icon">
-          <div className="tf-cart-icon">
-            <PolarisIcon iconName={config.cartTitles.cartIcon} size={18} />
-          </div>
+          {config.cartTitles.cartIcon ? (
+            <div className="tf-cart-icon">
+              <PolarisIcon iconName={config.cartTitles.cartIcon} size={18} />
+            </div>
+          ) : null}
+
           <div style={{ fontWeight: 700, color: config.design.cartTitleColor }}>{sStr(config.cartTitles.top)}</div>
         </div>
 
@@ -2016,12 +2227,20 @@ function PreviewPanel() {
 
   const renderProvinceField = (f) => {
     if (!f?.on) return null;
+    const hasIcon = !!f.icon;
 
     return (
-      <div key="province" className="tf-field-with-icon">
-        <div className="tf-field-icon">
-          <PolarisIcon iconName={f.icon} size={16} />
-        </div>
+      <div
+        key="province"
+        className="tf-field-with-icon"
+        style={{ gridTemplateColumns: hasIcon ? "auto 1fr" : "1fr" }}
+      >
+        {hasIcon && (
+          <div className="tf-field-icon">
+            <PolarisIcon iconName={f.icon} size={16} />
+          </div>
+        )}
+
         <label style={{ display: "grid", gap: 6, flex: 1 }}>
           <span style={{ fontSize: 13, color: "#475569", textAlign: fieldAlign }}>
             {sStr(f.label)}{f.required ? " *" : ""}
@@ -2043,12 +2262,20 @@ function PreviewPanel() {
 
   const renderCityField = (f) => {
     if (!f?.on) return null;
+    const hasIcon = !!f.icon;
 
     return (
-      <div key="city" className="tf-field-with-icon">
-        <div className="tf-field-icon">
-          <PolarisIcon iconName={f.icon} size={16} />
-        </div>
+      <div
+        key="city"
+        className="tf-field-with-icon"
+        style={{ gridTemplateColumns: hasIcon ? "auto 1fr" : "1fr" }}
+      >
+        {hasIcon && (
+          <div className="tf-field-icon">
+            <PolarisIcon iconName={f.icon} size={16} />
+          </div>
+        )}
+
         <label style={{ display: "grid", gap: 6, flex: 1 }}>
           <span style={{ fontSize: 13, color: "#475569", textAlign: fieldAlign }}>
             {sStr(f.label)}{f.required ? " *" : ""}
@@ -2114,9 +2341,12 @@ function PreviewPanel() {
           )}
 
           <button type="button" style={btnCSS} className="tf-btn-with-icon">
-            <span className="tf-btn-icon">
-              <PolarisIcon iconName={config.form.buttonIcon} size={18} color={config.design.btnText} />
-            </span>
+            {config.form.buttonIcon ? (
+              <span className="tf-btn-icon">
+                <PolarisIcon iconName={config.form.buttonIcon} size={18} color={config.design.btnText} />
+              </span>
+            ) : null}
+
             <span style={{ flex: 1, textAlign: "center" }}>
               {orderLabel} · {suffix} {total.toFixed(2)} {currency}
             </span>
