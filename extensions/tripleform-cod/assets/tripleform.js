@@ -7,6 +7,7 @@
    ✅ Discount applied ONCE by default (not per item)
    ✅ Optional: offer.bundleQty forces quantity when activated
    ✅ Discount is capped (never > subtotal)
+   ✅ NEW: Thank you page (redirect / popup) after successful submit
    ========================================================================= */
 
 window.TripleformCOD = (function () {
@@ -94,6 +95,25 @@ window.TripleformCOD = (function () {
     if (v < 0) v = 0;
     if (v > 1) v = 1;
     return v;
+  }
+
+  function isObj(x) {
+    return x && typeof x === "object" && !Array.isArray(x);
+  }
+
+  function pick(obj, path, fallback) {
+    // path like "section2.thankyou"
+    try {
+      const parts = String(path || "").split(".").filter(Boolean);
+      let cur = obj;
+      for (const p of parts) {
+        if (!cur || typeof cur !== "object") return fallback;
+        cur = cur[p];
+      }
+      return cur === undefined ? fallback : cur;
+    } catch {
+      return fallback;
+    }
   }
 
   /* ------------------------------------------------------------------ */
@@ -288,9 +308,40 @@ window.TripleformCOD = (function () {
       .timer-minimal{background:#F9FAFB;color:#374151;border:1px solid #E5E7EB}
       .timer-urgent{background:linear-gradient(90deg,#991B1B,#DC2626);color:#fff;border:1px solid #FCA5A5;animation:tfBlink 1s infinite}
       @keyframes tfBlink{0%,100%{opacity:1}50%{opacity:.7}}
+
+      /* THANK YOU POPUP */
+      .tf-ty-overlay{
+        position:fixed; inset:0; display:none;
+        align-items:center; justify-content:center;
+        z-index:1000000; padding:18px; box-sizing:border-box;
+      }
+      .tf-ty-card{
+        width:100%; max-width:520px; max-height:90vh;
+        overflow:auto; box-sizing:border-box;
+        border-radius:18px;
+      }
+      .tf-ty-img{
+        width:100%; height:auto; display:block;
+        border-radius:14px;
+        border:1px solid rgba(0,0,0,.08);
+        background:#F3F4F6;
+      }
+      .tf-ty-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+      .tf-ty-btn{
+        border-radius:12px;
+        padding:10px 14px;
+        font-weight:900;
+        border:1px solid transparent;
+        cursor:pointer;
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        gap:8px;
+      }
     `;
     document.head.appendChild(style);
   }
+
  /* ------------------------------------------------------------------ */
   /* Pays / wilayas / villes COMPLET                                    */
   /* ------------------------------------------------------------------ */
@@ -1039,6 +1090,7 @@ window.TripleformCOD = (function () {
   }
 
 
+
   /* ------------------------------------------------------------------ */
   /* Overlay / effect shadows / sizes                                   */
   /* ------------------------------------------------------------------ */
@@ -1098,6 +1150,201 @@ window.TripleformCOD = (function () {
         return { sideWidth: "100%" };
       default:
         return { sideWidth: "min(450px, 95vw)" };
+    }
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* ✅ THANK YOU PAGE (NEW)                                            */
+  /* ------------------------------------------------------------------ */
+  function getThankYouConfig(cfg) {
+    // Support 2 possible locations:
+    // 1) cfg.section2.thankyou
+    // 2) cfg.thankyou
+    const a = pick(cfg, "section2.thankyou", null);
+    const b = pick(cfg, "thankyou", null);
+    const ty = (isObj(a) ? a : null) || (isObj(b) ? b : null) || null;
+    return ty || null;
+  }
+
+  function ensureThankYouDOMOnce(root, cfg) {
+    const existing = document.querySelector(`[data-tf-ty-for="${root.id}"]`);
+    if (existing) return existing;
+
+    const overlay = document.createElement("div");
+    overlay.className = "tf-ty-overlay";
+    overlay.setAttribute("data-tf-ty-for", root.id);
+
+    const beh = cfg?.behavior || {};
+    overlay.style.background = overlayBackground(beh);
+
+    overlay.innerHTML = `
+      <div class="tf-ty-card" data-tf-ty-card style="
+        background:${css(cfg?.design?.bg || "#ffffff")};
+        color:${css(cfg?.design?.text || "#0f172a")};
+        border:1px solid ${css(cfg?.design?.border || "rgba(2,6,23,.12)")};
+        box-shadow:${shadowFromEffect(cfg, cfg?.design?.btnBg || "#2563EB")};
+        padding:18px;
+      ">
+        <div style="display:flex;justify-content:flex-end;">
+          <button type="button" data-tf-ty-close style="
+            width:34px;height:34px;border-radius:999px;
+            border:1px solid ${css(cfg?.design?.border || "rgba(2,6,23,.12)")};
+            background:${css(cfg?.design?.bg || "#ffffff")};
+            color:${css(cfg?.design?.text || "#0f172a")};
+            cursor:pointer;font-size:20px;line-height:0;
+            display:flex;align-items:center;justify-content:center;
+          ">&times;</button>
+        </div>
+
+        <div data-tf-ty-body style="display:grid;gap:12px;"></div>
+      </div>
+    `;
+
+    overlay.addEventListener("click", (e) => {
+      if (e.target === overlay) hideThankYou(root);
+    });
+
+    const closeBtn = overlay.querySelector("[data-tf-ty-close]");
+    if (closeBtn) closeBtn.addEventListener("click", () => hideThankYou(root));
+
+    document.body.appendChild(overlay);
+    return overlay;
+  }
+
+  function hideThankYou(root) {
+    const overlay = document.querySelector(`[data-tf-ty-for="${root.id}"]`);
+    if (!overlay) return;
+    overlay.style.display = "none";
+    document.body.style.overflow = "";
+  }
+
+  function showThankYouPopup(root, cfg, ty, context) {
+    const overlay = ensureThankYouDOMOnce(root, cfg);
+
+    const body = overlay.querySelector("[data-tf-ty-body]");
+    if (!body) return;
+
+    const title = css(ty?.title || "Thank you!");
+    const text = css(ty?.text || "Your order has been received. We will contact you soon.");
+    const imageUrl = String(ty?.imageUrl || "").trim();
+
+    const btnBg = ty?.buttonBg || cfg?.design?.btnBg || "#111827";
+    const btnText = ty?.buttonText || cfg?.design?.btnText || "#ffffff";
+    const btnBorder = ty?.buttonBorder || cfg?.design?.btnBorder || btnBg;
+
+    const secondaryBg = ty?.secondaryButtonBg || "transparent";
+    const secondaryText = ty?.secondaryButtonText || cfg?.design?.text || "#0f172a";
+    const secondaryBorder = ty?.secondaryButtonBorder || (cfg?.design?.border || "rgba(2,6,23,.15)");
+
+    const primaryLabel = css(ty?.primaryLabel || "Continue shopping");
+    const primaryUrl = String(ty?.primaryUrl || "/").trim() || "/";
+
+    const secondaryLabel = css(ty?.secondaryLabel || "Close");
+    const secondaryAction = String(ty?.secondaryAction || "close").trim(); // close | goHome | url
+    const secondaryUrl = String(ty?.secondaryUrl || "").trim();
+
+    // Optional: simple replace tokens like {{orderId}} if server returns it
+    const vars = {
+      orderId: context?.orderId || context?.json?.orderId || context?.json?.id || "",
+      phone: context?.payload?.fields?.fullPhone || "",
+      name: context?.payload?.fields?.name || "",
+    };
+    function tpl(str) {
+      return String(str || "")
+        .replace(/\{\{orderId\}\}/g, css(vars.orderId))
+        .replace(/\{\{phone\}\}/g, css(vars.phone))
+        .replace(/\{\{name\}\}/g, css(vars.name));
+    }
+
+    body.innerHTML = `
+      ${imageUrl ? `<img class="tf-ty-img" src="${css(imageUrl)}" alt="" onerror="this.remove();" />` : ""}
+      <div style="font-weight:950;font-size:18px;line-height:1.2;">${tpl(title)}</div>
+      <div style="opacity:.88;font-size:13px;line-height:1.45;">${tpl(text)}</div>
+
+      <div class="tf-ty-actions">
+        <button type="button" class="tf-ty-btn" data-tf-ty-primary style="
+          background:${css(btnBg)};
+          color:${css(btnText)};
+          border:1px solid ${css(btnBorder)};
+        ">
+          ${getIconHtml("HomeIcon", 16, "currentColor")}
+          ${tpl(primaryLabel)}
+        </button>
+
+        <button type="button" class="tf-ty-btn" data-tf-ty-secondary style="
+          background:${css(secondaryBg)};
+          color:${css(secondaryText)};
+          border:1px solid ${css(secondaryBorder)};
+        ">
+          ${getIconHtml("CheckCircleIcon", 16, "currentColor")}
+          ${tpl(secondaryLabel)}
+        </button>
+      </div>
+    `;
+
+    const primaryBtn = overlay.querySelector("[data-tf-ty-primary]");
+    if (primaryBtn) {
+      primaryBtn.addEventListener("click", () => {
+        window.location.href = primaryUrl;
+      });
+    }
+
+    const secondaryBtn = overlay.querySelector("[data-tf-ty-secondary]");
+    if (secondaryBtn) {
+      secondaryBtn.addEventListener("click", () => {
+        if (secondaryAction === "url" && secondaryUrl) {
+          window.location.href = secondaryUrl;
+          return;
+        }
+        if (secondaryAction === "gohome") {
+          window.location.href = "/";
+          return;
+        }
+        hideThankYou(root);
+      });
+    }
+
+    // optional autoclose
+    const autoCloseMs = Number(ty?.autoCloseMs || 0);
+    if (autoCloseMs > 0) {
+      setTimeout(() => hideThankYou(root), autoCloseMs);
+    }
+
+    overlay.style.display = "flex";
+    document.body.style.overflow = "hidden";
+  }
+
+  function handleThankYou(root, cfg, payload, json) {
+    const ty = getThankYouConfig(cfg);
+    if (!ty || ty.enabled === false) return;
+
+    const mode = String(ty.mode || ty.type || "redirect").toLowerCase();
+
+    // If server provides redirectUrl -> prefer it (optional)
+    const serverRedirect =
+      (json && (json.redirectUrl || json.thankYouUrl || json.url)) || "";
+
+    if (mode === "redirect" || mode === "simple") {
+      const url = String(serverRedirect || ty.redirectUrl || ty.url || "").trim();
+      if (url) {
+        window.location.href = url;
+        return;
+      }
+      // fallback: show popup minimal if no url
+      showThankYouPopup(root, cfg, { ...ty, mode: "popup" }, { payload, json });
+      return;
+    }
+
+    if (mode === "popup") {
+      showThankYouPopup(root, cfg, ty, { payload, json });
+      return;
+    }
+
+    // mode: inline (simple message inside form)
+    if (mode === "inline") {
+      const msg = css(ty.text || "Thank you! We will contact you soon.");
+      alert(msg);
+      return;
     }
   }
 
@@ -1228,6 +1475,11 @@ window.TripleformCOD = (function () {
     const citySelect = root.querySelector('select[data-tf-role="city"]');
 
     if (!provSelect && !citySelect) return;
+
+    // if no provinces available (because COUNTRY_DATA removed) => keep placeholders only
+    if (!Array.isArray(provinces) || provinces.length === 0) {
+      return;
+    }
 
     function resetSelect(el, placeholder) {
       if (!el) return;
@@ -1646,7 +1898,7 @@ window.TripleformCOD = (function () {
     const smallFontSize = `${Math.max(inputFontSize - 2, 10)}px`;
     const tinyFontSize = `${Math.max(inputFontSize - 3, 9)}px`;
 
-    // ✅ unified vars (fix “melange colors” between offers + form on product page)
+    // ✅ unified vars
     const shellBg = d.shellBg || d.sectionBg || "#F3F4F6";
     const shellBorder = d.shellBorder || "rgba(2,6,23,.08)";
     const iconColor = d.iconColor || d.text || "#111827";
@@ -1783,7 +2035,6 @@ window.TripleformCOD = (function () {
       const field = f[key];
       if (!field || field.on === false) return "";
 
-      // ✅ icon always visible + color from theme
       const iconCol = d.iconColor || d.text || "#111827";
       const iconHtml = field.icon ? getIconHtml(field.icon, 18, iconCol) : "";
 
@@ -1916,7 +2167,7 @@ window.TripleformCOD = (function () {
             </div>
 
             <div style="${rowStyle}" data-tf="discount-row">
-              <div>${css(t.discountLabel || "Remise")}</div>
+              <div>${css(t.discountLabel || "Discount")}</div>
               <div style="font-weight:900; color:#10B981;" data-tf="discount">—</div>
             </div>
 
@@ -2329,7 +2580,6 @@ window.TripleformCOD = (function () {
         discount = applyPerItem ? onceCents * Math.max(1, qty) : onceCents;
       }
 
-      // ✅ cap discount
       if (discount < 0) discount = 0;
       if (discount > baseTotalCents) discount = baseTotalCents;
 
@@ -2339,7 +2589,6 @@ window.TripleformCOD = (function () {
     function updateMoney() {
       const { priceCents, baseTotalCents, qty } = computeProductTotals();
 
-      // ✅ total = (price * qty) - discount
       const discountCents = computeDiscountCents(baseTotalCents, qty, root.id);
       const discountedSubtotalCents = Math.max(0, baseTotalCents - discountCents);
       const grandTotalCents = discountedSubtotalCents + (geoShippingCents || 0);
@@ -2517,7 +2766,17 @@ window.TripleformCOD = (function () {
 
         const json = await res.json().catch(() => ({}));
         if (res.ok && json?.ok) {
+          // ✅ local button success text
           if (btn) btn.innerHTML = css(cfg.form?.successText || "Thanks! We'll contact you");
+
+          // ✅ NEW: Thank you page behavior
+          // (redirect / popup / inline) based on cfg.section2.thankyou or cfg.thankyou
+          try {
+            handleThankYou(root, cfg, payload, json);
+          } catch (e) {
+            console.warn("[Tripleform COD] Thank you handler error:", e);
+          }
+
         } else {
           if (btn) {
             btn.disabled = false;
