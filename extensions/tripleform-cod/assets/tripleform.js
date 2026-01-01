@@ -1,11 +1,13 @@
 /* =========================================================================
-   TripleForm COD — OFFERS + UPSELLS (FULL JS v31)
-   ✅ Fix 1: Icons in COD fields now always show (strong normalization + fallback)
-   ✅ Fix 2: Discount logic correct:
-       - Product price = subtotal (unit * qty)
-       - Remise computed on subtotal
-       - Total = (subtotal - remise) + shipping
-   ✅ Fix 3: Offer "Activate" button works in Inline + Popup + Drawer (event delegation)
+   TripleForm COD — OFFERS + UPSELLS (FULL JS v32)
+   ✅ Fix 1: Globe icon now always shows (new GlobeIcon + aliases + fallback)
+   ✅ Fix 2: COD button palette + Gradient(2 colors) supported for CTA/launcher/sticky
+       - Default gradient: #0B3B82 → #7D0031
+       - Button text color applied too
+   ✅ Fix 3: Discount logic + totals fixed:
+       - subtotal = unit * qty
+       - discount computed on subtotal
+       - total = (subtotal - discount) + shipping
    ========================================================================= */
 
 window.TripleformCOD = (function () {
@@ -93,6 +95,10 @@ window.TripleformCOD = (function () {
     if (v < 0) v = 0;
     if (v > 1) v = 1;
     return v;
+  }
+
+  function isFiniteNumber(n) {
+    return typeof n === "number" && Number.isFinite(n);
   }
 
   /* ------------------------------------------------------------------ */
@@ -199,6 +205,14 @@ window.TripleformCOD = (function () {
       <path d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z" stroke="currentColor" stroke-width="1.6"/>
       <path d="M7.2 7.2 12.8 12.8M12.8 7.2 7.2 12.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
     </svg>`,
+
+    /* ✅ NEW: GlobeIcon (for country/geo fields) */
+    GlobeIcon: `<svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <path d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z" stroke="currentColor" stroke-width="1.6"/>
+      <path d="M2.5 10h15" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+      <path d="M10 2c2.2 2.1 3.5 5 3.5 8s-1.3 5.9-3.5 8c-2.2-2.1-3.5-5-3.5-8S7.8 4.1 10 2Z"
+        stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+    </svg>`,
   };
 
   function normalizeIconName(name) {
@@ -207,7 +221,7 @@ window.TripleformCOD = (function () {
 
     let n = raw.replace(/Major$/i, "").replace(/Minor$/i, "");
 
-    // common aliases (to survive different admin names)
+    // ✅ common aliases (admin can send random names)
     const alias = {
       phone: "PhoneIcon",
       mobile: "PhoneMobileIcon",
@@ -223,6 +237,13 @@ window.TripleformCOD = (function () {
       discount: "DiscountIcon",
       gift: "GiftCardIcon",
       package: "PackageIcon",
+
+      // ✅ NEW: globe aliases
+      globe: "GlobeIcon",
+      world: "GlobeIcon",
+      planet: "GlobeIcon",
+      earth: "GlobeIcon",
+      country: "GlobeIcon",
     };
 
     const k = n.toLowerCase().replace(/[^a-z]/g, "");
@@ -499,6 +520,45 @@ window.TripleformCOD = (function () {
   }
 
   /* ------------------------------------------------------------------ */
+  /* ✅ Gradient button resolver (COD palette)                           */
+  /* ------------------------------------------------------------------ */
+  const DEFAULT_GRAD_1 = "#0B3B82";
+  const DEFAULT_GRAD_2 = "#7D0031";
+
+  function isValidHex(x) {
+    const s = String(x || "").trim();
+    return /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(s);
+  }
+
+  function resolveButtonTheme(d) {
+    // Mode can be: "solid" | "gradient" | "gradient2" | "gradient (2 colors)" etc.
+    const modeRaw =
+      d?.btnBgMode || d?.buttonBgMode || d?.btnBackgroundMode || d?.btnMode || "";
+    const mode = String(modeRaw || "").toLowerCase();
+
+    const g1 =
+      d?.btnBg1 || d?.btnGradient1 || d?.btnBgGradient1 || d?.btnColor1 || DEFAULT_GRAD_1;
+    const g2 =
+      d?.btnBg2 || d?.btnGradient2 || d?.btnBgGradient2 || d?.btnColor2 || DEFAULT_GRAD_2;
+
+    const solid = d?.btnBg || DEFAULT_GRAD_1;
+
+    const useGradient =
+      mode.includes("gradient") || mode.includes("2 colors") || mode.includes("two");
+
+    const btnText = d?.btnText || "#FFFFFF";
+    const border =
+      d?.btnBorder ||
+      (useGradient ? (isValidHex(g1) ? g1 : DEFAULT_GRAD_1) : (isValidHex(solid) ? solid : DEFAULT_GRAD_1));
+
+    const background = useGradient
+      ? `linear-gradient(90deg, ${isValidHex(g1) ? g1 : DEFAULT_GRAD_1}, ${isValidHex(g2) ? g2 : DEFAULT_GRAD_2})`
+      : css(isValidHex(solid) ? solid : DEFAULT_GRAD_1);
+
+    return { background, border, text: css(btnText || "#FFFFFF"), isGradient: useGradient };
+  }
+
+  /* ------------------------------------------------------------------ */
   /* Variant & qty helpers                                              */
   /* ------------------------------------------------------------------ */
   function getSelectedVariantId() {
@@ -550,9 +610,11 @@ window.TripleformCOD = (function () {
     if (stickyType === "none") return;
 
     const d = cfg.design || {};
-    const bg = d.btnBg || "#111827";
-    const text = d.btnText || "#FFFFFF";
-    const br = d.btnBorder || bg;
+    const bt = resolveButtonTheme(d);
+
+    const bg = bt.background;
+    const text = bt.text;
+    const br = bt.border;
 
     const el = document.createElement("div");
     el.setAttribute("data-tf-sticky-for", root.id);
@@ -588,7 +650,7 @@ window.TripleformCOD = (function () {
             border:1px solid ${br};
             background:${bg};
             color:${text};
-            font-weight:700;
+            font-weight:800;
             padding:8px 18px;
             font-size:13px;
             cursor:pointer;
@@ -608,7 +670,7 @@ window.TripleformCOD = (function () {
           border:1px solid ${br};
           background:${bg};
           color:${text};
-          font-weight:700;
+          font-weight:800;
           padding:10px 18px;
           font-size:13px;
           cursor:pointer;
@@ -792,7 +854,6 @@ window.TripleformCOD = (function () {
 
       const offer = offersList[offerIndex] || {};
 
-      // ✅ discount fields
       const discountEnabled = !!offer.discountEnabled;
       const discountType = offer.discountType || null; // "percentage" | "fixed"
       const discountValue = Number(offer.discountValue || 0);
@@ -900,7 +961,6 @@ window.TripleformCOD = (function () {
         active && Number(active.index) === idx && active.type === "offer";
 
       const btnLabel = offer.buttonText || "Activer";
-
       const hasTimer = !!offer.enableTimer;
 
       html += `
@@ -1064,7 +1124,10 @@ window.TripleformCOD = (function () {
     let geoNote = "";
     let geoRequestId = 0;
 
-    const baseGlow = d.btnBg || "#2563EB";
+    // ✅ base palette (button theme supports gradient)
+    const bt = resolveButtonTheme(d);
+
+    const baseGlow = (d.btnBg && isValidHex(d.btnBg) ? d.btnBg : DEFAULT_GRAD_1);
     const cardShadow = shadowFromEffect(cfg, baseGlow);
     const cartShadow = shadowFromEffect(cfg, baseGlow);
     const rowShadow = shadowFromEffect(cfg, baseGlow);
@@ -1144,14 +1207,15 @@ window.TripleformCOD = (function () {
       resize:vertical;
     `;
 
+    // ✅ CTA button supports gradient
     const btnStyle = `
       width:100%;
       height:${inputHeight};
       border-radius:${+d.btnRadius || 10}px;
-      border:1px solid ${css(d.btnBorder)};
-      color:${css(d.btnText)};
-      background:${css(d.btnBg)};
-      font-weight:800;
+      border:1px solid ${css(bt.border)};
+      color:${css(bt.text)};
+      background:${css(bt.background)};
+      font-weight:900;
       letter-spacing:.2px;
       box-shadow:${btnShadow};
       font-size:${inputFontSize}px;
@@ -1213,7 +1277,10 @@ window.TripleformCOD = (function () {
       const field = f[key];
       if (!field || field.on === false) return "";
 
-      const iconHtml = field.icon ? getIconHtml(field.icon, 18, "#111827") : "";
+      // ✅ icon always real + fallback guaranteed
+      const iconName = field.icon || (key === "country" ? "GlobeIcon" : "");
+      const iconHtml = iconName ? getIconHtml(iconName, 18, "#111827") : "";
+
       const req = field.required ? " *" : "";
       const label = (field.label || key) + req;
       const ph = field.ph || "";
@@ -1374,7 +1441,7 @@ window.TripleformCOD = (function () {
       const suffix = css(ui.totalSuffix || "Total:");
 
       const buttonIconHtml = cfg.form?.buttonIcon
-        ? getIconHtml(cfg.form.buttonIcon, 18, css(d.btnText || "#fff"))
+        ? getIconHtml(cfg.form.buttonIcon, 18, css(bt.text || "#fff"))
         : "";
 
       const honeypotInputHTML = `
@@ -1476,7 +1543,7 @@ window.TripleformCOD = (function () {
             data-tf-cta="1" data-tf="launcher">
             ${
               cfg.form?.buttonIcon
-                ? getIconHtml(cfg.form.buttonIcon, 18, css(d.btnText || "#fff"))
+                ? getIconHtml(cfg.form.buttonIcon, 18, css(bt.text || "#fff"))
                 : ""
             }${css(ui.orderNow || cfg.form?.buttonText || "Order now")} · ${css(
           ui.totalSuffix || "Total:"
@@ -1530,7 +1597,7 @@ window.TripleformCOD = (function () {
             data-tf-cta="1" data-tf="launcher">
             ${
               cfg.form?.buttonIcon
-                ? getIconHtml(cfg.form.buttonIcon, 18, css(d.btnText || "#fff"))
+                ? getIconHtml(cfg.form.buttonIcon, 18, css(bt.text || "#fff"))
                 : ""
             }${css(ui.orderNow || cfg.form?.buttonText || "Order now")} · ${css(
           ui.totalSuffix || "Total:"
@@ -1598,32 +1665,44 @@ window.TripleformCOD = (function () {
       return { prefix, number: phone, fullPhone };
     }
 
-    /* --------------------- Product totals --------------------------- */
+    /* --------------------- Product totals (FIXED) -------------------- */
+    function parseVariantPriceToCents(priceAny) {
+      if (priceAny == null) return 0;
+
+      // Shopify product json often uses cents as integer string: "10900"
+      // sometimes you may send decimals: "109.00"
+      let rawStr = String(priceAny).trim();
+      if (!rawStr) return 0;
+
+      // normalize commas
+      rawStr = rawStr.replace(",", ".");
+
+      const rawNum = Number(rawStr);
+      if (!Number.isFinite(rawNum)) return 0;
+
+      // if contains ".", treat as currency units
+      if (rawStr.includes(".")) return Math.round(rawNum * 100);
+
+      // if integer => treat as cents
+      return Math.round(rawNum);
+    }
+
     function computeProductTotals() {
       const vId = getVariant();
       const qty = getQty();
+
+      const variants = Array.isArray(product?.variants) ? product.variants : [];
       const variant =
-        product.variants.find((v) => String(v.id) === String(vId)) ||
-        product.variants[0];
+        variants.find((v) => String(v.id) === String(vId)) || variants[0] || null;
 
-      let unitPriceCents = 0;
-      if (variant && variant.price != null) {
-        const rawStr = String(variant.price);
-        const rawNum = Number(rawStr);
-        if (Number.isFinite(rawNum)) {
-          // if price includes decimals => convert to cents
-          unitPriceCents = rawStr.includes(".")
-            ? Math.round(rawNum * 100)
-            : Math.round(rawNum);
-        }
-      }
+      const unitPriceCents = parseVariantPriceToCents(variant && variant.price != null ? variant.price : 0);
 
-      const subtotalCents = unitPriceCents * qty;
+      const subtotalCents = (isFiniteNumber(unitPriceCents) ? unitPriceCents : 0) * (isFiniteNumber(qty) ? qty : 1);
 
       return {
-        unitPriceCents,
-        subtotalCents,
-        qty,
+        unitPriceCents: isFiniteNumber(unitPriceCents) ? unitPriceCents : 0,
+        subtotalCents: isFiniteNumber(subtotalCents) ? subtotalCents : 0,
+        qty: isFiniteNumber(qty) && qty > 0 ? qty : 1,
         variantId: vId,
       };
     }
@@ -1772,7 +1851,6 @@ window.TripleformCOD = (function () {
       }
 
       if (discountType === "fixed") {
-        // fixed value is in "currency units" => convert to cents
         return Math.round(discountValue * 100);
       }
 
@@ -1780,15 +1858,15 @@ window.TripleformCOD = (function () {
     }
 
     function updateMoney() {
-      const { subtotalCents } = computeProductTotals();
+      const totals = computeProductTotals();
+      const subtotalCents = isFiniteNumber(totals.subtotalCents) ? totals.subtotalCents : 0;
 
       const discountCents = computeDiscountCents(subtotalCents, root.id);
       const discountedSubtotalCents = Math.max(0, subtotalCents - discountCents);
-      const shippingCents = geoShippingCents || 0;
+      const shippingCents = geoShippingCents == null ? 0 : geoShippingCents;
 
       const grandTotalCents = discountedSubtotalCents + shippingCents;
 
-      // ✅ Product price row shows SUBTOTAL (unit*qty)
       root.querySelectorAll('[data-tf="price"]').forEach((el) => {
         el.textContent = moneyFmt(subtotalCents);
       });
@@ -1818,8 +1896,9 @@ window.TripleformCOD = (function () {
 
       const label = css(ui.orderNow || cfg.form?.buttonText || "Order now");
       const suffix = css(ui.totalSuffix || "Total:");
+
       const buttonIconHtml = cfg.form?.buttonIcon
-        ? getIconHtml(cfg.form.buttonIcon, 18, css(d.btnText || "#fff"))
+        ? getIconHtml(cfg.form.buttonIcon, 18, css(bt.text || "#fff"))
         : "";
 
       root.querySelectorAll('[data-tf-cta="1"]').forEach((el) => {
@@ -1858,7 +1937,7 @@ window.TripleformCOD = (function () {
       const discountCents = computeDiscountCents(subtotalCents, root.id);
       const discountedSubtotalCents = Math.max(0, subtotalCents - discountCents);
 
-      const shippingCentsToSend = geoShippingCents || 0;
+      const shippingCentsToSend = geoShippingCents == null ? 0 : geoShippingCents;
       const grandTotalCents = discountedSubtotalCents + shippingCentsToSend;
 
       const phone = getPhone();
@@ -1902,7 +1981,6 @@ window.TripleformCOD = (function () {
         variantId,
         qty,
 
-        // pricing
         unitPriceCents,
         subtotalCents,
         discountCents,
