@@ -77,7 +77,7 @@ function getIconSource(iconName, fallbackIcon = "AppsIcon") {
   const commonMappings = {
     cart: "CartIcon",
     shoppingcart: "CartIcon",
-    bag: "BagIcon",
+    // ✅ removed bag/products/truck/gift/map as requested
     person: "PersonIcon",
     user: "PersonIcon",
     phone: "PhoneIcon",
@@ -87,13 +87,11 @@ function getIconSource(iconName, fallbackIcon = "AppsIcon") {
     mail: "EmailIcon",
     location: "LocationIcon",
     pin: "PinIcon",
-    map: "MapIcon",
     globe: "GlobeIcon",
     home: "HomeIcon",
     store: "StoreIcon",
     calendar: "CalendarIcon",
     clock: "ClockIcon",
-    gift: "GiftIcon",
     note: "NoteIcon",
     clipboard: "ClipboardIcon",
     text: "TextIcon",
@@ -111,7 +109,6 @@ function getIconSource(iconName, fallbackIcon = "AppsIcon") {
     chevrondown: "ChevronDownIcon",
     chevronleft: "ChevronLeftIcon",
     chevronright: "ChevronRightIcon",
-    truck: "TruckIcon",
     checkout: "CheckoutIcon",
   };
 
@@ -270,7 +267,6 @@ const LAYOUT_CSS = `
   .tf-color-palette:hover { transform:translateY(-2px); box-shadow:0 8px 18px rgba(0,0,0,0.10); }
   .tf-color-palette.active { outline:2px solid #00A7A3; }
 
-  /* ✅ palette pro: 2 gradients + accent */
   .tf-palette-colors { height:44px; display:grid; grid-template-columns:1fr 1fr; }
   .tf-palette-info { padding:8px; background:#fff; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:space-between; gap:8px; }
   .tf-palette-accent{ width:14px; height:14px; border-radius:999px; border:1px solid rgba(0,0,0,.12); }
@@ -281,8 +277,12 @@ const LAYOUT_CSS = `
   .tf-icon-option.selected { border-color:#00A7A3; background:#ecfeff; }
   .tf-icon-option.none { font-size:11px; font-weight:800; color:#64748B; }
 
-  .tf-field-with-icon { display:grid; grid-template-columns:auto 1fr; gap:10px; align-items:center; }
-  .tf-field-icon { width:18px; height:18px; display:flex; align-items:center; justify-content:center; color:#6B7280; line-height:0; }
+  /* ✅ when icon is NONE we don't reserve space */
+  .tf-field-row { display:grid; gap:6px; }
+  .tf-field-with-icon { display:grid; grid-template-columns:18px 1fr; gap:10px; align-items:start; }
+  .tf-field-no-icon { display:block; }
+  .tf-field-icon { width:18px; height:18px; display:flex; align-items:center; justify-content:center; color:#6B7280; line-height:0; margin-top:2px; }
+
   .tf-btn-icon { display:flex; align-items:center; line-height:0; }
   .tf-cart-icon { display:flex; align-items:center; justify-content:center; width:22px; height:22px; line-height:0; }
   .tf-rail-icon { width:18px; height:18px; display:flex; align-items:center; justify-content:center; line-height:0; }
@@ -307,6 +307,17 @@ const LAYOUT_CSS = `
   .tf-btn-with-icon{ display:flex; align-items:center; gap:8px; line-height:0; }
   .tf-btn-with-icon span{ line-height:1.2; }
 
+  /* ✅ button motions */
+  @keyframes tfMoveX { 0%{transform:translateX(0)} 50%{transform:translateX(8px)} 100%{transform:translateX(0)} }
+  @keyframes tfMoveY { 0%{transform:translateY(0)} 50%{transform:translateY(-6px)} 100%{transform:translateY(0)} }
+  @keyframes tfPulse { 0%{transform:scale(1)} 50%{transform:scale(1.03)} 100%{transform:scale(1)} }
+  @keyframes tfShake { 0%{transform:translateX(0)} 20%{transform:translateX(-4px)} 40%{transform:translateX(4px)} 60%{transform:translateX(-3px)} 80%{transform:translateX(3px)} 100%{transform:translateX(0)} }
+
+  .tf-motion-x { animation: tfMoveX 1.2s ease-in-out infinite; }
+  .tf-motion-y { animation: tfMoveY 1.2s ease-in-out infinite; }
+  .tf-motion-pulse { animation: tfPulse 1.1s ease-in-out infinite; }
+  .tf-motion-shake { animation: tfShake 1.4s ease-in-out infinite; }
+
   @media (max-width: 1200px) {
     .tf-editor { grid-template-columns: 360px minmax(0, 2.2fr) minmax(320px, 1.4fr); }
   }
@@ -327,6 +338,7 @@ function useInjectCss() {
 }
 
 /* ============================== Presets de design ============================== */
+/* ✅ btnBg can be solid or gradient (btnBg2 + btnBgMode) */
 const DESIGN_PRESETS = {
   SkyBlueUI: {
     bg: "#F0F9FF",
@@ -337,7 +349,9 @@ const DESIGN_PRESETS = {
     inputBg: "#FFFFFF",
     inputBorder: "#CBD5E1",
     placeholder: "#94A3B8",
+    btnBgMode: "gradient",
     btnBg: "#0EA5E9",
+    btnBg2: "#7D0031",
     btnText: "#FFFFFF",
     btnBorder: "#0284C7",
     btnHeight: 46,
@@ -361,7 +375,9 @@ const DESIGN_PRESETS = {
     inputBg: "#FFFFFF",
     inputBorder: "#E5E7EB",
     placeholder: "#94A3B8",
+    btnBgMode: "solid",
     btnBg: "#111827",
+    btnBg2: "#111827",
     btnText: "#FFFFFF",
     btnBorder: "#111827",
     btnHeight: 46,
@@ -385,7 +401,9 @@ const DESIGN_PRESETS = {
     inputBg: "#101828",
     inputBorder: "#334155",
     placeholder: "#A3AEC2",
+    btnBgMode: "gradient",
     btnBg: "#2563EB",
+    btnBg2: "#00A7A3",
     btnText: "#FFFFFF",
     btnBorder: "#1D4ed8",
     btnHeight: 46,
@@ -409,7 +427,9 @@ const DESIGN_PRESETS = {
     inputBg: "#FFFFFF",
     inputBorder: "#A7F3D0",
     placeholder: "#6EE7B7",
+    btnBgMode: "gradient",
     btnBg: "#10B981",
+    btnBg2: "#065F46",
     btnText: "#FFFFFF",
     btnBorder: "#059669",
     btnHeight: 46,
@@ -433,7 +453,9 @@ const DESIGN_PRESETS = {
     inputBg: "#FFFFFF",
     inputBorder: "#FDBA74",
     placeholder: "#FB923C",
+    btnBgMode: "gradient",
     btnBg: "#F97316",
+    btnBg2: "#EA580C",
     btnText: "#FFFFFF",
     btnBorder: "#EA580C",
     btnHeight: 46,
@@ -457,7 +479,9 @@ const DESIGN_PRESETS = {
     inputBg: "#FFFFFF",
     inputBorder: "#D8B4FE",
     placeholder: "#C084FC",
+    btnBgMode: "gradient",
     btnBg: "#8B5CF6",
+    btnBg2: "#5B21B6",
     btnText: "#FFFFFF",
     btnBorder: "#7C3AED",
     btnHeight: 48,
@@ -481,7 +505,9 @@ const DESIGN_PRESETS = {
     inputBg: "#FFFFFF",
     inputBorder: "#FCD34D",
     placeholder: "#FBBF24",
+    btnBgMode: "gradient",
     btnBg: "#D97706",
+    btnBg2: "#854D0E",
     btnText: "#FFFFFF",
     btnBorder: "#B45309",
     btnHeight: 50,
@@ -505,7 +531,9 @@ const DESIGN_PRESETS = {
     inputBg: "#FFFFFF",
     inputBorder: "#67E8F9",
     placeholder: "#22D3EE",
+    btnBgMode: "gradient",
     btnBg: "#0891B2",
+    btnBg2: "#0E7490",
     btnText: "#FFFFFF",
     btnBorder: "#0E7490",
     btnHeight: 46,
@@ -529,7 +557,9 @@ const DESIGN_PRESETS = {
     inputBg: "#FFFFFF",
     inputBorder: "#D1D5DB",
     placeholder: "#9CA3AF",
+    btnBgMode: "gradient",
     btnBg: "#4B5563",
+    btnBg2: "#111827",
     btnText: "#FFFFFF",
     btnBorder: "#374151",
     btnHeight: 44,
@@ -544,18 +574,123 @@ const DESIGN_PRESETS = {
     cartTitleColor: "#374151",
     cartTextColor: "#374151",
   },
+
+  /* ✅ extra "event" presets */
+  BlackFriday: {
+    bg: "#0B1220",
+    text: "#F8FAFC",
+    border: "#1F2A44",
+    radius: 14,
+    padding: 18,
+    inputBg: "#0F172A",
+    inputBorder: "#334155",
+    placeholder: "#94A3B8",
+    btnBgMode: "gradient",
+    btnBg: "#F97316",
+    btnBg2: "#EF4444",
+    btnText: "#FFFFFF",
+    btnBorder: "#F97316",
+    btnHeight: 48,
+    btnRadius: 14,
+    shadow: true,
+    glow: true,
+    glowPx: 22,
+    cartBg: "#0F172A",
+    cartBorder: "#1F2A44",
+    cartRowBg: "#101828",
+    cartRowBorder: "#1F2A44",
+    cartTitleColor: "#F8FAFC",
+    cartTextColor: "#F8FAFC",
+  },
+  Ramadan: {
+    bg: "#F0FDF4",
+    text: "#064E3B",
+    border: "#BBF7D0",
+    radius: 14,
+    padding: 18,
+    inputBg: "#FFFFFF",
+    inputBorder: "#86EFAC",
+    placeholder: "#34D399",
+    btnBgMode: "gradient",
+    btnBg: "#10B981",
+    btnBg2: "#0EA5E9",
+    btnText: "#FFFFFF",
+    btnBorder: "#10B981",
+    btnHeight: 48,
+    btnRadius: 14,
+    shadow: true,
+    glow: false,
+    glowPx: 18,
+    cartBg: "#FFFFFF",
+    cartBorder: "#BBF7D0",
+    cartRowBg: "#ECFDF5",
+    cartRowBorder: "#BBF7D0",
+    cartTitleColor: "#064E3B",
+    cartTextColor: "#064E3B",
+  },
+  Valentine: {
+    bg: "#FFF1F2",
+    text: "#9F1239",
+    border: "#FECDD3",
+    radius: 16,
+    padding: 20,
+    inputBg: "#FFFFFF",
+    inputBorder: "#FECDD3",
+    placeholder: "#FDA4AF",
+    btnBgMode: "gradient",
+    btnBg: "#EC4899",
+    btnBg2: "#F43F5E",
+    btnText: "#FFFFFF",
+    btnBorder: "#EC4899",
+    btnHeight: 48,
+    btnRadius: 16,
+    shadow: true,
+    glow: true,
+    glowPx: 20,
+    cartBg: "#FFFFFF",
+    cartBorder: "#FECDD3",
+    cartRowBg: "#FFF1F2",
+    cartRowBorder: "#FECDD3",
+    cartTitleColor: "#9F1239",
+    cartTextColor: "#9F1239",
+  },
+  NewYear: {
+    bg: "#F8FAFC",
+    text: "#0F172A",
+    border: "#E2E8F0",
+    radius: 14,
+    padding: 18,
+    inputBg: "#FFFFFF",
+    inputBorder: "#E2E8F0",
+    placeholder: "#94A3B8",
+    btnBgMode: "gradient",
+    btnBg: "#0B3B82",
+    btnBg2: "#7D0031",
+    btnText: "#FFFFFF",
+    btnBorder: "#0B3B82",
+    btnHeight: 48,
+    btnRadius: 14,
+    shadow: true,
+    glow: true,
+    glowPx: 20,
+    cartBg: "#FFFFFF",
+    cartBorder: "#E2E8F0",
+    cartRowBg: "#FFFFFF",
+    cartRowBorder: "#E2E8F0",
+    cartTitleColor: "#0F172A",
+    cartTextColor: "#0F172A",
+  },
 };
 
 /* ============================== Bibliothèque d'icônes Polaris (NETTOYÉE) ============================== */
 /* ✅ + option "Aucun" partout */
+/* ✅ Removed icons: Sac(BagIcon) / Produit(ProductsIcon) / Carte(MapIcon) / Cadeau(GiftIcon) / Livraison(TruckIcon) */
 const NONE_ICON = { value: "", label: "Aucun" };
 
 const ICON_LIBRARY = {
   cartTitle: [
     NONE_ICON,
     { value: "CartIcon", label: "Panier" },
-    { value: "BagIcon", label: "Sac" },
-    { value: "ProductsIcon", label: "Produits" },
     { value: "ReceiptIcon", label: "Reçu" },
     { value: "NoteIcon", label: "Note" },
   ],
@@ -583,7 +718,6 @@ const ICON_LIBRARY = {
   ],
   pincode2: [
     NONE_ICON,
-    { value: "MapIcon", label: "Carte" },
     { value: "LocationIcon", label: "Localisation" },
     { value: "GlobeIcon", label: "Globe" },
   ],
@@ -600,12 +734,10 @@ const ICON_LIBRARY = {
   company: [
     NONE_ICON,
     { value: "StoreIcon", label: "Magasin" },
-    { value: "BagIcon", label: "Sac" },
   ],
   birthday: [
     NONE_ICON,
     { value: "CalendarIcon", label: "Calendrier" },
-    { value: "GiftIcon", label: "Cadeau" },
   ],
   address: [
     NONE_ICON,
@@ -616,13 +748,11 @@ const ICON_LIBRARY = {
   city: [
     NONE_ICON,
     { value: "LocationIcon", label: "Localisation" },
-    { value: "MapIcon", label: "Carte" },
     { value: "GlobeIcon", label: "Globe" },
   ],
   province: [
     NONE_ICON,
     { value: "GlobeIcon", label: "Globe" },
-    { value: "MapIcon", label: "Carte" },
     { value: "LocationIcon", label: "Localisation" },
   ],
   notes: [
@@ -634,14 +764,13 @@ const ICON_LIBRARY = {
   button: [
     NONE_ICON,
     { value: "CartIcon", label: "Panier" },
-    { value: "TruckIcon", label: "Livraison" },
     { value: "CheckCircleIcon", label: "Valider" },
     { value: "ArrowRightIcon", label: "Flèche droite" },
     { value: "PlayIcon", label: "Play" },
   ],
 };
 
-/* ✅ palettes couleurs (on garde 5 couleurs mais UI gradient pro) */
+/* ✅ palettes couleurs (plus + events) */
 const COLOR_PALETTES = [
   { id: "blue-gradient", name: "Gradient Bleu", colors: ["#0B3B82", "#7D0031", "#00A7A3", "#F0F9FF", "#0C4A6E"], preset: "SkyBlueUI" },
   { id: "clean-white", name: "Blanc Pro", colors: ["#111827", "#FFFFFF", "#E5E7EB", "#F9FAFB", "#00A7A3"], preset: "CleanWhite" },
@@ -651,7 +780,13 @@ const COLOR_PALETTES = [
   { id: "purple-elegant", name: "Purple Elegant", colors: ["#8B5CF6", "#5B21B6", "#E9D5FF", "#F5F3FF", "#FAF5FF"], preset: "PurpleElegant" },
   { id: "luxury-gold", name: "Luxury Gold", colors: ["#D97706", "#854D0E", "#FDE68A", "#FEF3C7", "#FEFCE8"], preset: "LuxuryGold" },
   { id: "ocean-deep", name: "Ocean", colors: ["#0891B2", "#0E7490", "#A5F3FC", "#CFFAFE", "#ECFEFF"], preset: "OceanDeep" },
-  { id: "minimal-gray", name: "Minimal Gray", colors: ["#4B5563", "#374151", "#D1D5DB", "#F9FAFB", "#FFFFFF"], preset: "MinimalGray" },
+  { id: "minimal-gray", name: "Minimal Gray", colors: ["#4B5563", "#111827", "#D1D5DB", "#F9FAFB", "#FFFFFF"], preset: "MinimalGray" },
+
+  // ✅ event palettes
+  { id: "black-friday", name: "Black Friday", colors: ["#0B1220", "#EF4444", "#F97316", "#111827", "#F8FAFC"], preset: "BlackFriday" },
+  { id: "ramadan", name: "Ramadan", colors: ["#10B981", "#0EA5E9", "#BBF7D0", "#ECFDF5", "#064E3B"], preset: "Ramadan" },
+  { id: "valentine", name: "Valentine", colors: ["#EC4899", "#F43F5E", "#FECDD3", "#FFF1F2", "#9F1239"], preset: "Valentine" },
+  { id: "new-year", name: "New Year", colors: ["#0B3B82", "#7D0031", "#00A7A3", "#F8FAFC", "#0F172A"], preset: "NewYear" },
 ];
 
 /* ============================== Sanitizer ============================== */
@@ -684,17 +819,34 @@ function sanitizeDeep(o) {
 const FormsCtx = createContext(null);
 const useForms = () => useContext(FormsCtx);
 
+/* ============================== Helpers (colors/gradient) ============================== */
+function safeHex(v, fallback = "#111827") {
+  if (typeof v !== "string") return fallback;
+  const s = v.trim();
+  if (/^#([0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(s)) return s;
+  return fallback;
+}
+
+function getButtonBackground(design) {
+  const mode = design?.btnBgMode || "solid";
+  const c1 = safeHex(design?.btnBg, "#111827");
+  const c2 = safeHex(design?.btnBg2, c1);
+  if (mode === "gradient") return `linear-gradient(90deg, ${c1} 0%, ${c2} 100%)`;
+  return c1;
+}
+
+function getGlowColor(design) {
+  // use first color as glow base
+  return safeHex(design?.btnBg, "#2563EB");
+}
+
 /* ============================== Composant Icon Polaris ============================== */
 function PolarisIcon({ iconName, size = 20, color = "currentColor", accessibilityLabel }) {
-  // ✅ Aucun icon: on n'affiche rien
-  if (!iconName) {
-    return <span style={{ width: size, height: size, display: "inline-flex" }} />;
-  }
+  // ✅ Aucun icon: on n'affiche rien du tout (no empty space)
+  if (!iconName) return null;
 
   const source = getIconSource(iconName);
-  if (!source) {
-    return <span style={{ width: size, height: size, display: "inline-flex" }} />;
-  }
+  if (!source) return null;
 
   return (
     <span
@@ -795,7 +947,7 @@ function Section1FormsLayoutInner() {
 
   const [config, setConfig] = useState(() => ({
     meta: {
-      version: 2,
+      version: 3,
       preset: "CleanWhite",
       fieldsOrder: [
         "name",
@@ -847,13 +999,15 @@ function Section1FormsLayoutInner() {
       country: "MA",
       provinceKey: "",
       cityKey: "",
+      // ✅ button animation
+      buttonMotion: "none", // none | x | y | pulse | shake
     },
     fields: {
       name: { on: true, required: true, type: "text", label: "Full name", ph: "Your full name", icon: "PersonIcon" },
       phone: { on: true, required: true, type: "tel", label: "Phone (WhatsApp)", ph: "Phone number", prefix: "+212", icon: "PhoneIcon" },
       quantity: { on: true, required: true, type: "number", label: "Quantity", ph: "1", min: 1, max: 10, icon: "HashtagIcon" },
       pincode: { on: true, required: true, type: "text", label: "Pincode", ph: "Enter pincode", icon: "LocationIcon" },
-      pincode2: { on: true, required: false, type: "text", label: "Pincode 2", ph: "Additional pincode", icon: "MapIcon" },
+      pincode2: { on: true, required: false, type: "text", label: "Pincode 2", ph: "Additional pincode", icon: "" }, // default none
       pincode3: { on: true, required: false, type: "text", label: "Pincode 3", ph: "Extra pincode info", icon: "CircleInformationIcon" },
       email: { on: true, required: true, type: "text", label: "Email", ph: "your.email@example.com", icon: "EmailIcon" },
       company: { on: true, required: false, type: "text", label: "Company", ph: "Your company name", icon: "StoreIcon" },
@@ -908,7 +1062,6 @@ function Section1FormsLayoutInner() {
               try {
                 localStorage.setItem("tripleform_cod_config", JSON.stringify(clean));
               } catch {}
-              // ✅ baseline saved
               lastSavedRef.current = JSON.stringify(clean);
               setDirty(false);
             }
@@ -976,7 +1129,6 @@ function Section1FormsLayoutInner() {
       const target = a.getAttribute("target");
       if (!href || href.startsWith("#") || target === "_blank") return;
 
-      // ✅ internal navigation only
       const isHttp = /^https?:\/\//i.test(href);
       if (isHttp) return;
 
@@ -1012,7 +1164,7 @@ function Section1FormsLayoutInner() {
 
   const eff = config.behavior?.effect || "none";
   const glowPx = config.design?.glowPx ?? config.behavior?.glowPx ?? 18;
-  const glowCol = config.design?.btnBg || "#2563EB";
+  const glowCol = getGlowColor(config.design);
   const direction = config.design?.direction || "ltr";
   const baseFontSize = config.design?.fontSize || 14;
 
@@ -1035,10 +1187,11 @@ function Section1FormsLayoutInner() {
     [config.design, eff, glowPx, glowCol, direction, baseFontSize]
   );
 
+  // ✅ base input style WITHOUT icon padding
   const inputBase = useMemo(
     () => ({
       width: "100%",
-      padding: "10px 12px 10px 40px",
+      padding: "10px 12px",
       borderRadius: config.design.btnRadius,
       border: `1px solid ${config.design.inputBorder}`,
       background: config.design.inputBg,
@@ -1046,9 +1199,12 @@ function Section1FormsLayoutInner() {
       outline: "none",
       fontSize: baseFontSize,
       textAlign: fieldAlign,
+      boxSizing: "border-box",
     }),
     [config.design, baseFontSize, fieldAlign]
   );
+
+  const btnBackground = useMemo(() => getButtonBackground(config.design), [config.design]);
 
   const btnCSS = useMemo(
     () => ({
@@ -1057,7 +1213,7 @@ function Section1FormsLayoutInner() {
       borderRadius: config.design.btnRadius,
       border: `1px solid ${config.design.btnBorder}`,
       color: config.design.btnText,
-      background: config.design.btnBg,
+      background: btnBackground,
       fontWeight: 700,
       letterSpacing: 0.2,
       boxShadow: computeShadow(eff, glowPx, glowCol, !!config.design.shadow),
@@ -1068,7 +1224,7 @@ function Section1FormsLayoutInner() {
       gap: "8px",
       cursor: "pointer",
     }),
-    [config.design, eff, glowPx, glowCol, baseFontSize]
+    [config.design, btnBackground, eff, glowPx, glowCol, baseFontSize]
   );
 
   const cartBoxCSS = useMemo(
@@ -1120,7 +1276,6 @@ function Section1FormsLayoutInner() {
         throw new Error(msg);
       }
 
-      // ✅ mark saved
       lastSavedRef.current = JSON.stringify(config);
       setDirty(false);
 
@@ -1446,7 +1601,7 @@ function OutletEditor() {
                 onDrop={() => onDrop(it.key)}
               >
                 <div className="tf-grip tf-rail-icon">
-                  <PolarisIcon iconName={it.iconName} size={16} />
+                  {it.iconName ? <PolarisIcon iconName={it.iconName} size={16} /> : null}
                 </div>
 
                 <div className="tf-rail-label">{it.label}</div>
@@ -1459,7 +1614,6 @@ function OutletEditor() {
                     active={!!it.on}
                     onClick={() => toggleField(it.key)}
                   />
-                  {/* ✅ Delete icon removed كما طلبتي */}
                   <RailIconBtn iconName="ChevronUpIcon" title="Move up" onClick={() => moveField(it.key, -1)} />
                   <RailIconBtn iconName="ChevronDownIcon" title="Move down" onClick={() => moveField(it.key, 1)} />
                 </div>
@@ -1489,7 +1643,7 @@ function OutletEditor() {
               }}
             >
               <div className="tf-grip tf-rail-icon">
-                <PolarisIcon iconName="AddIcon" size={16} color="#0ea5e9" />
+                <PolarisIcon iconName="AddIcon" size={16} />
               </div>
               <div className="tf-rail-label" style={{ color: "#0ea5e9" }}>
                 {t("section1.addNewField")}
@@ -1551,6 +1705,20 @@ function OutletEditor() {
                   <div style={{ fontSize: 13, fontWeight: 600 }}>{t("section1.buttons.buttonIcon")}</div>
                   <IconSelector type="button" selectedIcon={config.form.buttonIcon} onSelect={(icon) => setForm({ buttonIcon: icon })} />
                 </div>
+
+                {/* ✅ button motion options */}
+                <Select
+                  label="Button animation"
+                  options={[
+                    { label: "None", value: "none" },
+                    { label: "Horizontal move", value: "x" },
+                    { label: "Vertical move", value: "y" },
+                    { label: "Pulse", value: "pulse" },
+                    { label: "Shake", value: "shake" },
+                  ]}
+                  value={config.behavior.buttonMotion || "none"}
+                  onChange={(v) => setBehav({ buttonMotion: v })}
+                />
               </Grid2>
             </GroupCard>
           )}
@@ -1575,7 +1743,14 @@ function OutletEditor() {
 
               <BlueSection title={t("section1.colors.buttonSection")}>
                 <Grid3>
-                  <ColorField label={t("section1.colors.btnBg")} value={config.design.btnBg} onChange={(v) => setDesign({ btnBg: v })} />
+                  {/* ✅ Two-colors in same setting => gradient */}
+                  <GradientField
+                    label={t("section1.colors.btnBg")}
+                    mode={config.design.btnBgMode || "solid"}
+                    c1={config.design.btnBg}
+                    c2={config.design.btnBg2}
+                    onChange={(next) => setDesign(next)}
+                  />
                   <ColorField label={t("section1.colors.btnText")} value={config.design.btnText} onChange={(v) => setDesign({ btnText: v })} />
                   <ColorField label={t("section1.colors.btnBorder")} value={config.design.btnBorder} onChange={(v) => setDesign({ btnBorder: v })} />
                 </Grid3>
@@ -1946,11 +2121,76 @@ function ColorField({ label, value, onChange }) {
       <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
         <input
           type="color"
-          value={value}
+          value={safeHex(value)}
           onChange={(e) => onChange(e.target.value)}
           style={{ width: 44, height: 32, border: "1px solid #E5E7EB", borderRadius: 8, background: "#fff" }}
         />
         <TextField label={t("section1.colors.hexLabel")} value={value} onChange={onChange} />
+      </div>
+    </div>
+  );
+}
+
+/* ✅ Gradient field (two colors in same setting) */
+function GradientField({ label, mode, c1, c2, onChange }) {
+  const { t } = useForms();
+  const m = mode || "solid";
+  const col1 = safeHex(c1, "#111827");
+  const col2 = safeHex(c2, col1);
+
+  const preview =
+    m === "gradient"
+      ? `linear-gradient(90deg, ${col1} 0%, ${col2} 100%)`
+      : col1;
+
+  return (
+    <div style={{ display: "grid", gap: 6 }}>
+      <span style={{ fontSize: 13, color: "#111827", fontWeight: 600 }}>{label}</span>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 10 }}>
+        <Select
+          label="Mode"
+          options={[
+            { label: "Solid", value: "solid" },
+            { label: "Gradient (2 colors)", value: "gradient" },
+          ]}
+          value={m}
+          onChange={(v) => onChange({ btnBgMode: v })}
+        />
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+          <div style={{ display: "grid", gap: 6 }}>
+            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <input
+                type="color"
+                value={col1}
+                onChange={(e) => onChange({ btnBg: e.target.value })}
+                style={{ width: 44, height: 32, border: "1px solid #E5E7EB", borderRadius: 8, background: "#fff" }}
+              />
+              <TextField label={t("section1.colors.hexLabel")} value={col1} onChange={(v) => onChange({ btnBg: v })} />
+            </div>
+          </div>
+
+          <div style={{ display: "grid", gap: 6, opacity: m === "gradient" ? 1 : 0.45 }}>
+            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <input
+                type="color"
+                value={col2}
+                disabled={m !== "gradient"}
+                onChange={(e) => onChange({ btnBg2: e.target.value })}
+                style={{ width: 44, height: 32, border: "1px solid #E5E7EB", borderRadius: 8, background: "#fff" }}
+              />
+              <TextField
+                label={t("section1.colors.hexLabel")}
+                value={col2}
+                disabled={m !== "gradient"}
+                onChange={(v) => onChange({ btnBg2: v })}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div style={{ height: 36, borderRadius: 10, border: "1px solid #E5E7EB", background: preview }} />
       </div>
     </div>
   );
@@ -2001,40 +2241,56 @@ function PreviewPanel() {
     setShippingNote(`${t("section1.preview.shippingTo")} ${city} - ${shippingData.note}`);
   };
 
-  const renderFieldWithIcon = (f, key) => {
+  const renderField = (f, key) => {
     if (!f?.on) return null;
     const isTextarea = f.type === "textarea";
+    const hasIcon = !!f.icon;
+
+    const inputWithIcon = hasIcon ? { ...inputBase, padding: "10px 12px 10px 40px" } : inputBase;
+
+    const labelEl = (
+      <label className="tf-field-row">
+        <span style={{ fontSize: 13, color: "#475569", textAlign: fieldAlign }}>
+          {sStr(f.label)}
+          {f.required ? " *" : ""}
+        </span>
+
+        {isTextarea ? (
+          <textarea style={{ ...inputWithIcon, padding: "10px 12px", minHeight: 80 }} placeholder={sStr(f.ph)} rows={3} />
+        ) : f.type === "tel" ? (
+          <div style={{ display: "grid", gridTemplateColumns: f.prefix ? "minmax(88px,130px) 1fr" : "1fr", gap: 8 }}>
+            {f.prefix && (
+              <input style={{ ...inputBase, textAlign: "center" }} value={f.prefix} readOnly />
+            )}
+            <input type="tel" style={inputWithIcon} placeholder={sStr(f.ph)} />
+          </div>
+        ) : (
+          <input
+            type={f.type === "number" ? "number" : "text"}
+            style={inputWithIcon}
+            placeholder={sStr(f.ph)}
+            min={f.type === "number" && f.min != null ? f.min : undefined}
+            max={f.type === "number" && f.max != null ? f.max : undefined}
+          />
+        )}
+      </label>
+    );
+
+    // ✅ no icon => no left empty space, field aligns to the extreme left
+    if (!hasIcon) {
+      return (
+        <div key={key} className="tf-field-no-icon">
+          {labelEl}
+        </div>
+      );
+    }
 
     return (
       <div key={key} className="tf-field-with-icon">
         <div className="tf-field-icon">
-          <PolarisIcon iconName={f.icon || ""} size={16} />
+          <PolarisIcon iconName={f.icon} size={16} />
         </div>
-        <label style={{ display: "grid", gap: 6, flex: 1 }}>
-          <span style={{ fontSize: 13, color: "#475569", textAlign: fieldAlign }}>
-            {sStr(f.label)}
-            {f.required ? " *" : ""}
-          </span>
-
-          {isTextarea ? (
-            <textarea style={{ ...inputBase, padding: "10px 12px", minHeight: 80 }} placeholder={sStr(f.ph)} rows={3} />
-          ) : f.type === "tel" ? (
-            <div style={{ display: "grid", gridTemplateColumns: f.prefix ? "minmax(88px,130px) 1fr" : "1fr", gap: 8 }}>
-              {f.prefix && (
-                <input style={{ ...inputBase, textAlign: "center", padding: "10px 12px" }} value={f.prefix} readOnly />
-              )}
-              <input type="tel" style={inputBase} placeholder={sStr(f.ph)} />
-            </div>
-          ) : (
-            <input
-              type={f.type === "number" ? "number" : "text"}
-              style={inputBase}
-              placeholder={sStr(f.ph)}
-              min={f.type === "number" && f.min != null ? f.min : undefined}
-              max={f.type === "number" && f.max != null ? f.max : undefined}
-            />
-          )}
-        </label>
+        {labelEl}
       </div>
     );
   };
@@ -2052,9 +2308,11 @@ function PreviewPanel() {
     return (
       <div style={cartBoxCSS} dir={config.design.direction || "ltr"}>
         <div className="tf-cart-with-icon">
-          <div className="tf-cart-icon">
-            <PolarisIcon iconName={config.cartTitles.cartIcon || ""} size={18} />
-          </div>
+          {config.cartTitles.cartIcon ? (
+            <div className="tf-cart-icon">
+              <PolarisIcon iconName={config.cartTitles.cartIcon || ""} size={18} />
+            </div>
+          ) : null}
           <div style={{ fontWeight: 700, color: config.design.cartTitleColor }}>{sStr(config.cartTitles.top)}</div>
         </div>
 
@@ -2083,65 +2341,78 @@ function PreviewPanel() {
 
   const renderProvinceField = (f) => {
     if (!f?.on) return null;
+    const hasIcon = !!f.icon;
+
+    const labelEl = (
+      <label className="tf-field-row">
+        <span style={{ fontSize: 13, color: "#475569", textAlign: fieldAlign }}>
+          {sStr(f.label)}{f.required ? " *" : ""}
+        </span>
+        <select
+          style={{ ...inputBase, background: config.design.inputBg }}
+          value={selectedProvinceKey}
+          onChange={(e) => setBehav({ provinceKey: e.target.value, cityKey: "" })}
+        >
+          <option value="">{f.ph || t("section1.preview.provincePlaceholder")}</option>
+          {provincesEntries.map(([key, p]) => (
+            <option key={key} value={key}>{p.label}</option>
+          ))}
+        </select>
+      </label>
+    );
+
+    if (!hasIcon) return <div key="province" className="tf-field-no-icon">{labelEl}</div>;
 
     return (
       <div key="province" className="tf-field-with-icon">
         <div className="tf-field-icon">
-          <PolarisIcon iconName={f.icon || ""} size={16} />
+          <PolarisIcon iconName={f.icon} size={16} />
         </div>
-        <label style={{ display: "grid", gap: 6, flex: 1 }}>
-          <span style={{ fontSize: 13, color: "#475569", textAlign: fieldAlign }}>
-            {sStr(f.label)}{f.required ? " *" : ""}
-          </span>
-          <select
-            style={{ ...inputBase, padding: "10px 12px", background: config.design.inputBg }}
-            value={selectedProvinceKey}
-            onChange={(e) => setBehav({ provinceKey: e.target.value, cityKey: "" })}
-          >
-            <option value="">{f.ph || t("section1.preview.provincePlaceholder")}</option>
-            {provincesEntries.map(([key, p]) => (
-              <option key={key} value={key}>{p.label}</option>
-            ))}
-          </select>
-        </label>
+        {labelEl}
       </div>
     );
   };
 
   const renderCityField = (f) => {
     if (!f?.on) return null;
+    const hasIcon = !!f.icon;
+
+    const labelEl = (
+      <label className="tf-field-row">
+        <span style={{ fontSize: 13, color: "#475569", textAlign: fieldAlign }}>
+          {sStr(f.label)}{f.required ? " *" : ""}
+        </span>
+        <select
+          style={{
+            ...inputBase,
+            backgroundColor: selectedProvinceKey ? inputBase.background : "#F3F4F6",
+          }}
+          value={config.behavior.cityKey || ""}
+          onChange={(e) => {
+            const city = e.target.value;
+            setBehav({ cityKey: city });
+            handleCityChange(city);
+          }}
+          disabled={!selectedProvinceKey}
+        >
+          <option value="">
+            {!selectedProvinceKey ? t("section1.preview.cityPlaceholderNoProvince") : f.ph || t("section1.preview.cityPlaceholder")}
+          </option>
+          {cities.map((c) => (
+            <option key={c} value={c}>{c}</option>
+          ))}
+        </select>
+      </label>
+    );
+
+    if (!hasIcon) return <div key="city" className="tf-field-no-icon">{labelEl}</div>;
 
     return (
       <div key="city" className="tf-field-with-icon">
         <div className="tf-field-icon">
-          <PolarisIcon iconName={f.icon || ""} size={16} />
+          <PolarisIcon iconName={f.icon} size={16} />
         </div>
-        <label style={{ display: "grid", gap: 6, flex: 1 }}>
-          <span style={{ fontSize: 13, color: "#475569", textAlign: fieldAlign }}>
-            {sStr(f.label)}{f.required ? " *" : ""}
-          </span>
-          <select
-            style={{
-              ...inputBase,
-              padding: "10px 12px",
-              backgroundColor: selectedProvinceKey ? inputBase.background : "#F3F4F6",
-            }}
-            value={config.behavior.cityKey || ""}
-            onChange={(e) => {
-              const city = e.target.value;
-              setBehav({ cityKey: city });
-              handleCityChange(city);
-            }}
-            disabled={!selectedProvinceKey}
-          >
-            <option value="">
-              {!selectedProvinceKey ? t("section1.preview.cityPlaceholderNoProvince") : f.ph || t("section1.preview.cityPlaceholder")}
-            </option>
-            {cities.map((c) => (
-              <option key={c} value={c}>{c}</option>
-            ))}
-          </select>
-        </label>
+        {labelEl}
       </div>
     );
   };
@@ -2150,6 +2421,13 @@ function PreviewPanel() {
     const total = productPrice + (shippingPrice || 0);
     const orderLabel = sStr(config.uiTitles.orderNow || config.form?.buttonText || "Order now");
     const suffix = sStr(config.uiTitles.totalSuffix || "Total:");
+
+    const motion = config.behavior?.buttonMotion || "none";
+    const motionClass =
+      motion === "x" ? "tf-motion-x" :
+      motion === "y" ? "tf-motion-y" :
+      motion === "pulse" ? "tf-motion-pulse" :
+      motion === "shake" ? "tf-motion-shake" : "";
 
     return (
       <div style={cardCSS} dir={config.design.direction || "ltr"}>
@@ -2166,7 +2444,7 @@ function PreviewPanel() {
             if (!f?.on) return null;
             if (key === "province") return renderProvinceField(f);
             if (key === "city") return renderCityField(f);
-            return renderFieldWithIcon(f, key);
+            return renderField(f, key);
           })}
 
           {config.behavior.requireGDPR && (
@@ -2180,10 +2458,12 @@ function PreviewPanel() {
             </label>
           )}
 
-          <button type="button" style={btnCSS} className="tf-btn-with-icon">
-            <span className="tf-btn-icon">
-              <PolarisIcon iconName={config.form.buttonIcon || ""} size={18} color={config.design.btnText} />
-            </span>
+          <button type="button" style={btnCSS} className={`tf-btn-with-icon ${motionClass}`}>
+            {config.form.buttonIcon ? (
+              <span className="tf-btn-icon">
+                <PolarisIcon iconName={config.form.buttonIcon || ""} size={18} color={config.design.btnText} />
+              </span>
+            ) : null}
             <span style={{ flex: 1, textAlign: "center" }}>
               {orderLabel} · {suffix} {total.toFixed(2)} {currency}
             </span>
