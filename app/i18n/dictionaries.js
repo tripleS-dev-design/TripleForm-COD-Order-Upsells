@@ -1562,7 +1562,48 @@ const EN = {
 "section2.ui.preview.upsells.none": "No active upsell in preview.",
 "section2.ui.preview.productLabel": "Product:",
 "section2.ui.preview.product.none": "None",
-"section2.ui.preview.product.selected": "Selected product"
+"section2.ui.preview.product.selected": "Selected product",
+"section2.ui.offers.title": "Offers ({count}/3)",
+"section2.ui.upsells.title": "Upsells ({count}/3)",
+
+"section2.ui.badge.proSettings": "Pro settings",
+"section2.ui.badge.noButton": "No button",
+
+"section2.ui.offer.cardTitle": "Offer {n}",
+"section2.ui.upsell.cardTitle": "Upsell {n}",
+"section2.ui.field.enable": "Enable",
+
+"section2.ui.group.content": "Content",
+"section2.ui.group.iconDesign": "Icon & Design",
+"section2.ui.group.button": "Button (Offer)",
+"section2.ui.group.preview": "Preview",
+
+"section2.ui.field.title": "Title",
+"section2.ui.field.description": "Text",
+"section2.ui.field.product": "Shopify product",
+"section2.ui.field.image": "Image",
+"section2.ui.field.imageMode.product": "Product image (auto)",
+"section2.ui.field.imageMode.custom": "Custom image (URL)",
+"section2.ui.field.imageUrl": "Image URL",
+
+"section2.ui.field.icon": "Icon",
+"section2.ui.field.iconBg": "Icon background",
+"section2.ui.field.cardBg": "Background",
+"section2.ui.field.borderColor": "Border",
+
+"section2.ui.field.buttonText": "Button text",
+"section2.ui.field.buttonBg": "Button background",
+"section2.ui.field.buttonTextColor": "Button text color",
+"section2.ui.field.buttonBorder": "Button border",
+
+"section2.ui.field.showInPreview": "Show in preview",
+
+"section2.ui.helper.noImagesDetected": "No images detected for this product (based on returned format).",
+
+"section2.ui.action.addOffer": "Add an offer",
+"section2.ui.action.addUpsell": "Add an upsell",
+"section2.ui.action.remove": "Remove"
+
 
 
 };
@@ -3112,7 +3153,47 @@ const FR = {
 "section2.ui.preview.upsells.none": "Aucun upsell actif dans la preview.",
 "section2.ui.preview.productLabel": "Produit:",
 "section2.ui.preview.product.none": "Aucun",
-"section2.ui.preview.product.selected": "Produit sélectionné"
+"section2.ui.preview.product.selected": "Produit sélectionné",
+"section2.ui.offers.title": "Offres ({count}/3)",
+"section2.ui.upsells.title": "Upsells ({count}/3)",
+
+"section2.ui.badge.proSettings": "Pro settings",
+"section2.ui.badge.noButton": "Sans bouton",
+
+"section2.ui.offer.cardTitle": "Offre {n}",
+"section2.ui.upsell.cardTitle": "Upsell {n}",
+"section2.ui.field.enable": "Activer",
+
+"section2.ui.group.content": "Contenu",
+"section2.ui.group.iconDesign": "Icon & Design",
+"section2.ui.group.button": "Bouton (Offre)",
+"section2.ui.group.preview": "Prévisualisation",
+
+"section2.ui.field.title": "Titre",
+"section2.ui.field.description": "Texte",
+"section2.ui.field.product": "Produit Shopify",
+"section2.ui.field.image": "Image",
+"section2.ui.field.imageMode.product": "Image du produit (auto)",
+"section2.ui.field.imageMode.custom": "Image personnalisée (URL)",
+"section2.ui.field.imageUrl": "URL image",
+
+"section2.ui.field.icon": "Icône",
+"section2.ui.field.iconBg": "Fond de l’icône",
+"section2.ui.field.cardBg": "Background",
+"section2.ui.field.borderColor": "Border",
+
+"section2.ui.field.buttonText": "Texte du bouton",
+"section2.ui.field.buttonBg": "Bouton background",
+"section2.ui.field.buttonTextColor": "Bouton texte",
+"section2.ui.field.buttonBorder": "Bouton border",
+
+"section2.ui.field.showInPreview": "Afficher dans preview",
+
+"section2.ui.helper.noImagesDetected": "Ce produit n’a pas d’images détectées (selon le format retourné).",
+
+"section2.ui.action.addOffer": "Ajouter une offre",
+"section2.ui.action.addUpsell": "Ajouter un upsell",
+"section2.ui.action.remove": "Supprimer"
 
 
 };
@@ -4669,7 +4750,47 @@ const ES = {
 "section2.ui.preview.upsells.none": "No hay upsells activos en la vista previa.",
 "section2.ui.preview.productLabel": "Producto:",
 "section2.ui.preview.product.none": "Ninguno",
-"section2.ui.preview.product.selected": "Producto seleccionado"
+"section2.ui.preview.product.selected": "Producto seleccionado",
+"section2.ui.offers.title": "Ofertas ({count}/3)",
+"section2.ui.upsells.title": "Upsells ({count}/3)",
+
+"section2.ui.badge.proSettings": "Ajustes pro",
+"section2.ui.badge.noButton": "Sin botón",
+
+"section2.ui.offer.cardTitle": "Oferta {n}",
+"section2.ui.upsell.cardTitle": "Upsell {n}",
+"section2.ui.field.enable": "Activar",
+
+"section2.ui.group.content": "Contenido",
+"section2.ui.group.iconDesign": "Icono y diseño",
+"section2.ui.group.button": "Botón (Oferta)",
+"section2.ui.group.preview": "Vista previa",
+
+"section2.ui.field.title": "Título",
+"section2.ui.field.description": "Texto",
+"section2.ui.field.product": "Producto Shopify",
+"section2.ui.field.image": "Imagen",
+"section2.ui.field.imageMode.product": "Imagen del producto (auto)",
+"section2.ui.field.imageMode.custom": "Imagen personalizada (URL)",
+"section2.ui.field.imageUrl": "URL de la imagen",
+
+"section2.ui.field.icon": "Icono",
+"section2.ui.field.iconBg": "Fondo del icono",
+"section2.ui.field.cardBg": "Fondo",
+"section2.ui.field.borderColor": "Borde",
+
+"section2.ui.field.buttonText": "Texto del botón",
+"section2.ui.field.buttonBg": "Fondo del botón",
+"section2.ui.field.buttonTextColor": "Texto del botón",
+"section2.ui.field.buttonBorder": "Borde del botón",
+
+"section2.ui.field.showInPreview": "Mostrar en vista previa",
+
+"section2.ui.helper.noImagesDetected": "No se detectaron imágenes para este producto (según el formato devuelto).",
+
+"section2.ui.action.addOffer": "Añadir una oferta",
+"section2.ui.action.addUpsell": "Añadir un upsell",
+"section2.ui.action.remove": "Eliminar"
 
 };
 
@@ -6223,7 +6344,47 @@ const AR = {
 "section2.ui.preview.upsells.none": "لا يوجد Upsell نشط في المعاينة.",
 "section2.ui.preview.productLabel": "المنتج:",
 "section2.ui.preview.product.none": "لا يوجد",
-"section2.ui.preview.product.selected": "تم اختيار منتج"
+"section2.ui.preview.product.selected": "تم اختيار منتج",
+"section2.ui.offers.title": "العروض ({count}/3)",
+"section2.ui.upsells.title": "Upsells ({count}/3)",
+
+"section2.ui.badge.proSettings": "إعدادات احترافية",
+"section2.ui.badge.noButton": "بدون زر",
+
+"section2.ui.offer.cardTitle": "عرض {n}",
+"section2.ui.upsell.cardTitle": "Upsell {n}",
+"section2.ui.field.enable": "تفعيل",
+
+"section2.ui.group.content": "المحتوى",
+"section2.ui.group.iconDesign": "الأيقونة والتصميم",
+"section2.ui.group.button": "الزر (العرض)",
+"section2.ui.group.preview": "المعاينة",
+
+"section2.ui.field.title": "العنوان",
+"section2.ui.field.description": "النص",
+"section2.ui.field.product": "منتج Shopify",
+"section2.ui.field.image": "الصورة",
+"section2.ui.field.imageMode.product": "صورة المنتج (تلقائي)",
+"section2.ui.field.imageMode.custom": "صورة مخصصة (URL)",
+"section2.ui.field.imageUrl": "رابط الصورة",
+
+"section2.ui.field.icon": "الأيقونة",
+"section2.ui.field.iconBg": "خلفية الأيقونة",
+"section2.ui.field.cardBg": "الخلفية",
+"section2.ui.field.borderColor": "الحدود",
+
+"section2.ui.field.buttonText": "نص الزر",
+"section2.ui.field.buttonBg": "خلفية الزر",
+"section2.ui.field.buttonTextColor": "لون نص الزر",
+"section2.ui.field.buttonBorder": "حدود الزر",
+
+"section2.ui.field.showInPreview": "عرض في المعاينة",
+
+"section2.ui.helper.noImagesDetected": "لم يتم العثور على صور لهذا المنتج (حسب الفورمات المُرجع).",
+
+"section2.ui.action.addOffer": "إضافة عرض",
+"section2.ui.action.addUpsell": "إضافة Upsell",
+"section2.ui.action.remove": "حذف"
 
 };
 
