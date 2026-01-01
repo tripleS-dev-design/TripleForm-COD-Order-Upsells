@@ -1,19 +1,17 @@
 /* =========================================================================
-   TripleForm COD — OFFERS + UPSELLS (FULL JS v33)
-   ✅ Fix 1: Offers layout clean (image right, spacing, 1-line text, organized)
-   ✅ Fix 2: Discount calc robust:
-       - subtotal = unit * qty
-       - percentage discount ok
-       - fixed discount supports "value in currency" OR "value already in cents"
-       - total = (subtotal - discount) + shipping
-   ✅ Fix 3: Keep icons real (SVG) + fallback
+   TripleForm COD — OFFERS + UPSELLS (FIXED CALC + FIXED UI OFFERS)
+   ✅ Fix 1: Discount now applies ONLY if conditions are met (ex: qty >= 2 pack)
+   ✅ Fix 2: Offer can optionally force quantity when activated (bundleQty)
+   ✅ Fix 3: Offer UI clean: image RIGHT, better spacing, title/desc 1 line (ellipsis)
+   ✅ Fix 4: Stable render (no “random” feeling) + one organized block
+   ✅ NOTE: I REMOVED COUNTRY_DATA part as you asked → paste it manually
    ========================================================================= */
 
 window.TripleformCOD = (function () {
   "use strict";
 
   /* ------------------------------------------------------------------ */
-  /* reCAPTCHA script loader (v3)                                        */
+  /* reCAPTCHA script loader (v3)                                       */
   /* ------------------------------------------------------------------ */
   let recaptchaScriptPromise = null;
 
@@ -96,35 +94,27 @@ window.TripleformCOD = (function () {
     return v;
   }
 
-  function isFiniteNumber(n) {
-    return typeof n === "number" && Number.isFinite(n);
-  }
-
   /* ------------------------------------------------------------------ */
-  /* Polaris-like SVG Icons (extended + fallback)                        */
+  /* Polaris-like SVG Icons (extended)                                  */
   /* ------------------------------------------------------------------ */
   const ICON_SVGS = {
     AppsIcon: `<svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
       <path d="M5 3.5h4v4H5v-4Zm6 0h4v4h-4v-4ZM5 9.5h4v4H5v-4Zm6 0h4v4h-4v-4ZM5 15.5h4v1H5v-1Zm6 0h4v1h-4v-1Z"
         fill="currentColor" opacity=".9"/>
     </svg>`,
-
     CirclePlusIcon: `<svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
       <path d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z" stroke="currentColor" stroke-width="1.6"/>
       <path d="M10 6v8M6 10h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
     </svg>`,
-
     CheckCircleIcon: `<svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
       <path d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z" stroke="currentColor" stroke-width="1.6"/>
       <path d="m6.5 10.2 2.2 2.2 4.8-5.1" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>`,
-
     DiscountIcon: `<svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
       <path d="M4 10.2 10.2 4h5.8v5.8L9.8 16 4 10.2Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
       <path d="M13.5 6.5h.01" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
       <path d="M6.2 14.2l8-8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
     </svg>`,
-
     GiftCardIcon: `<svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
       <path d="M3.5 8h13V17a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1V8Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
       <path d="M3.5 8V6.5a1 1 0 0 1 1-1h11a1 1 0 0 1 1 1V8" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
@@ -132,31 +122,12 @@ window.TripleformCOD = (function () {
       <path d="M7.2 5.2c0-1.2 1-2.2 2.2-2.2.6 0 1.2.2 1.6.6.4-.4 1-.6 1.6-.6 1.2 0 2.2 1 2.2 2.2 0 1-1 1.8-2.2 1.8H9.4c-1.2 0-2.2-.8-2.2-1.8Z"
         stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
     </svg>`,
-
-    GlobeIcon: `<svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
-      <path d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z" stroke="currentColor" stroke-width="1.6"/>
-      <path d="M2.5 10h15" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-      <path d="M10 2c2.2 2.1 3.5 5 3.5 8s-1.3 5.9-3.5 8c-2.2-2.1-3.5-5-3.5-8S7.8 4.1 10 2Z"
-        stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
-    </svg>`,
   };
 
   function normalizeIconName(name) {
     const raw = String(name || "").trim();
     if (!raw) return "";
     let n = raw.replace(/Major$/i, "").replace(/Minor$/i, "");
-
-    const alias = {
-      discount: "DiscountIcon",
-      gift: "GiftCardIcon",
-      globe: "GlobeIcon",
-      country: "GlobeIcon",
-      world: "GlobeIcon",
-      earth: "GlobeIcon",
-    };
-
-    const k = n.toLowerCase().replace(/[^a-z]/g, "");
-    if (alias[k]) return alias[k];
     if (!/Icon$/i.test(n)) n = n + "Icon";
     n = n[0].toUpperCase() + n.slice(1);
     return n;
@@ -164,11 +135,12 @@ window.TripleformCOD = (function () {
 
   function getIconHtml(iconName, size = 18, color = "currentColor") {
     const key = normalizeIconName(iconName);
-    const svg = ICON_SVGS[key] || ICON_SVGS[String(iconName || "").trim()] || ICON_SVGS["AppsIcon"];
+    const svg = ICON_SVGS[key] || ICON_SVGS[iconName] || "";
+    if (!svg) return "";
     const px = typeof size === "number" ? `${size}px` : css(size);
     return `
       <span class="tf-ic" style="width:${px};height:${px};color:${css(color)}">
-        ${svg || ""}
+        ${svg}
       </span>
     `;
   }
@@ -185,8 +157,22 @@ window.TripleformCOD = (function () {
       .tf-ic{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto}
       .tf-ic svg{width:100%;height:100%}
 
-      /* OFFERS — cleaner layout */
-      .tf-offers-container{display:grid;gap:12px;margin-bottom:16px}
+      /* Motion */
+      .tf-motion-x{animation:tfMoveX 1.2s ease-in-out infinite}
+      .tf-motion-y{animation:tfMoveY 1.2s ease-in-out infinite}
+      .tf-motion-pulse{animation:tfPulse 1.1s ease-in-out infinite}
+      .tf-motion-shake{animation:tfShake 1.4s ease-in-out infinite}
+      @keyframes tfMoveX{0%,100%{transform:translateX(0)}50%{transform:translateX(6px)}}
+      @keyframes tfMoveY{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+      @keyframes tfPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+      @keyframes tfShake{
+        0%,100%{transform:translateX(0)}
+        10%,30%,50%,70%,90%{transform:translateX(-3px)}
+        20%,40%,60%,80%{transform:translateX(3px)}
+      }
+
+      /* OFFERS (clean + organized) */
+      .tf-offers-container{display:grid;gap:10px;margin-bottom:14px}
 
       .tf-offer-card{
         border-radius:14px;
@@ -197,73 +183,98 @@ window.TripleformCOD = (function () {
         overflow:hidden;
       }
 
-      /* 3 columns: left icon, center text, right image */
+      /* ✅ always aligned, image RIGHT */
       .tf-offer-row{
-        display:grid;
-        grid-template-columns:40px 1fr 92px;
+        display:flex;
         gap:12px;
         align-items:center;
       }
 
       .tf-offer-icon{
-        width:36px;height:36px;border-radius:12px;
-        display:grid;place-items:center;overflow:hidden;
+        width:34px;height:34px;border-radius:12px;
+        display:grid;place-items:center;flex:none;overflow:hidden;
         border:1px solid rgba(0,0,0,.10);
         background:#EEF2FF;
       }
       .tf-offer-icon img{width:100%;height:100%;object-fit:cover;display:block}
 
+      .tf-offer-main{
+        min-width:0;
+        flex:1;
+        display:flex;
+        flex-direction:column;
+        gap:4px;
+      }
+
+      /* ✅ title + desc ONE LINE (ellipsis) */
+      .tf-offer-title{
+        font-weight:900;
+        font-size:13px;
+        color:#0F172A;
+        white-space:nowrap;
+        overflow:hidden;
+        text-overflow:ellipsis;
+        line-height:1.2;
+      }
+      .tf-offer-desc{
+        font-size:12px;
+        color:#64748B;
+        white-space:nowrap;
+        overflow:hidden;
+        text-overflow:ellipsis;
+        line-height:1.2;
+      }
+
+      .tf-offer-sub{
+        font-size:11px;
+        color:#94A3B8;
+        margin-top:4px;
+        white-space:nowrap;
+        overflow:hidden;
+        text-overflow:ellipsis;
+      }
+
       .tf-offer-img{
-        width:92px;height:92px;border-radius:16px;overflow:hidden;
+        width:86px;height:86px;border-radius:16px;overflow:hidden;flex:none;
         border:1px solid rgba(0,0,0,.08);background:#F3F4F6;
-        justify-self:end;
       }
       .tf-offer-img img{width:100%;height:100%;object-fit:cover;display:block}
 
-      .tf-offer-main{min-width:0}
-      .tf-offer-title{
-        font-weight:900;font-size:13px;color:#111827;
-        white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-        line-height:1.25;
-        margin-bottom:2px;
-      }
-      .tf-offer-desc{
-        font-size:12px;color:#64748B;
-        white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-        line-height:1.25;
-      }
-
-      .tf-offer-sub{font-size:11px;color:#94A3B8;margin-top:8px}
-
       .tf-offer-btn{
-        margin-top:10px;border-radius:12px;padding:9px 10px;
-        font-size:12px;font-weight:900;cursor:pointer;
+        margin-top:8px;
+        border-radius:12px;
+        padding:9px 10px;
+        font-size:12px;
+        font-weight:900;
+        cursor:pointer;
         border:1px solid transparent;
-        display:inline-flex;align-items:center;gap:8px;
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        gap:8px;
         transition:all .15s ease;
-        width:max-content;
+        width:fit-content;
         max-width:100%;
+        white-space:nowrap;
       }
-      .tf-offer-btn:hover{transform:translateY(-1px);opacity:.95}
+      .tf-offer-btn:hover{transform:translateY(-1px);opacity:.96}
+      .tf-offer-btn.active{filter:saturate(1.1)}
+      .tf-offer-btn.disabled{opacity:.55;cursor:not-allowed;transform:none}
 
+      /* Discount row */
       [data-tf="discount-row"]{display:none}
 
+      /* Timer */
       .offer-timer{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;margin-top:8px;padding:6px 10px;border-radius:10px}
       .timer-countdown{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;font-weight:900;letter-spacing:.6px;margin-left:auto}
       .timer-minimal{background:#F9FAFB;color:#374151;border:1px solid #E5E7EB}
       .timer-urgent{background:linear-gradient(90deg,#991B1B,#DC2626);color:#fff;border:1px solid #FCA5A5;animation:tfBlink 1s infinite}
       @keyframes tfBlink{0%,100%{opacity:1}50%{opacity:.7}}
-
-      /* Mobile: keep image right but smaller */
-      @media (max-width:420px){
-        .tf-offer-row{grid-template-columns:40px 1fr 78px}
-        .tf-offer-img{width:78px;height:78px}
-      }
     `;
     document.head.appendChild(style);
   }
 
-  /* ------------------------------------------------------------------ */
+/* ------------------------------------------------------------------ */
   /* Pays / wilayas / villes COMPLET                                    */
   /* ------------------------------------------------------------------ */
 
@@ -1012,7 +1023,7 @@ window.TripleformCOD = (function () {
 
 
   /* ------------------------------------------------------------------ */
-  /* Overlay helpers                                                    */
+  /* Overlay / effect shadows / sizes                                   */
   /* ------------------------------------------------------------------ */
   function hexToRgba(hex, alpha) {
     try {
@@ -1077,10 +1088,14 @@ window.TripleformCOD = (function () {
   /* Variant & qty helpers                                              */
   /* ------------------------------------------------------------------ */
   function getSelectedVariantId() {
-    const sel = document.querySelector('form[action^="/cart/add"] select[name="id"]');
+    const sel = document.querySelector(
+      'form[action^="/cart/add"] select[name="id"]'
+    );
     if (sel && sel.value) return sel.value;
 
-    const radio = document.querySelector('form[action^="/cart/add"] input[name="id"]:checked');
+    const radio = document.querySelector(
+      'form[action^="/cart/add"] input[name="id"]:checked'
+    );
     if (radio && radio.value) return radio.value;
 
     const holder = document.querySelector(".tripleform-cod[data-variant-id]");
@@ -1088,14 +1103,29 @@ window.TripleformCOD = (function () {
   }
 
   function getQty() {
-    const q = document.querySelector('form[action^="/cart/add"] input[name="quantity"]');
+    const q = document.querySelector(
+      'form[action^="/cart/add"] input[name="quantity"]'
+    );
     const v = Number(q && q.value ? q.value : 1);
     return v > 0 ? v : 1;
   }
 
+  function setQty(nextQty) {
+    const q = document.querySelector(
+      'form[action^="/cart/add"] input[name="quantity"]'
+    );
+    if (!q) return false;
+    const n = Math.max(1, Number(nextQty || 1));
+    q.value = String(n);
+    q.dispatchEvent(new Event("input", { bubbles: true }));
+    q.dispatchEvent(new Event("change", { bubbles: true }));
+    return true;
+  }
+
   function watchVariantAndQty(onChange) {
     document.addEventListener("change", (e) => {
-      if (e.target && (e.target.name === "id" || e.target.name === "quantity")) onChange();
+      if (e.target && (e.target.name === "id" || e.target.name === "quantity"))
+        onChange();
     });
     document.addEventListener("input", (e) => {
       if (e.target && e.target.name === "quantity") onChange();
@@ -1104,11 +1134,141 @@ window.TripleformCOD = (function () {
   }
 
   /* ------------------------------------------------------------------ */
-  /* Timers                                                             */
+  /* Sticky button (unchanged)                                          */
+  /* ------------------------------------------------------------------ */
+  function setupSticky(root, cfg, styleType, openHandler, motionClass) {
+    const stickyType = cfg?.behavior?.stickyType || "none";
+    const stickyLabel = css(
+      cfg?.behavior?.stickyLabel || cfg?.uiTitles?.orderNow || "Order now"
+    );
+    const stickyIcon = cfg?.behavior?.stickyIcon || "AppsIcon";
+
+    const prev = document.querySelector(`[data-tf-sticky-for="${root.id}"]`);
+    if (prev && prev.parentNode) prev.parentNode.removeChild(prev);
+    if (stickyType === "none") return;
+
+    const d = cfg.design || {};
+    const bg = d.btnBg || "#111827";
+    const text = d.btnText || "#FFFFFF";
+    const br = d.btnBorder || bg;
+
+    const el = document.createElement("div");
+    el.setAttribute("data-tf-sticky-for", root.id);
+    el.style.zIndex = "999999";
+
+    const baseStyle = `
+      position:fixed;
+      z-index:999999;
+      bottom:12px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    `;
+
+    const iconHtml = getIconHtml(stickyIcon, 16, text);
+
+    const isLeft = stickyType === "bubble-left";
+    el.style.cssText = baseStyle + `${isLeft ? "left:16px;" : "right:16px;"}`;
+    el.innerHTML = `
+      <button type="button" data-tf-sticky-cta class="${motionClass}" style="
+        border-radius:999px;
+        border:1px solid ${br};
+        background:${bg};
+        color:${text};
+        font-weight:800;
+        padding:10px 18px;
+        font-size:13px;
+        cursor:pointer;
+        box-shadow:0 18px 36px rgba(0,0,0,.55);
+        max-width:220px;
+        white-space:nowrap;
+        display:flex; align-items:center; gap:8px;
+      ">
+        ${iconHtml}${stickyLabel}
+      </button>
+    `;
+
+    const btn = el.querySelector("[data-tf-sticky-cta]");
+    if (btn) {
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        if (typeof openHandler === "function") openHandler();
+      });
+    }
+
+    document.body.appendChild(el);
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Dropdown wilaya / ville                                            */
+  /* ------------------------------------------------------------------ */
+  function setupLocationDropdowns(root, cfg, countryDef) {
+    const beh = cfg.behavior || {};
+    const def = countryDef || getCountryDef(beh);
+    const provinces = def.provinces || [];
+
+    const provSelect = root.querySelector('select[data-tf-role="province"]');
+    const citySelect = root.querySelector('select[data-tf-role="city"]');
+
+    if (!provSelect && !citySelect) return;
+
+    function resetSelect(el, placeholder) {
+      if (!el) return;
+      el.innerHTML = "";
+      const opt = document.createElement("option");
+      opt.value = "";
+      opt.textContent = placeholder;
+      el.appendChild(opt);
+    }
+
+    function fillProvinces() {
+      if (!provSelect) return;
+      resetSelect(provSelect, cfg.fields?.province?.ph || "Wilaya / Province");
+      provinces.forEach((p) => {
+        const o = document.createElement("option");
+        o.value = p.name;
+        o.textContent = p.name;
+        provSelect.appendChild(o);
+      });
+    }
+
+    function fillCities(provinceName) {
+      if (!citySelect) return;
+      resetSelect(
+        citySelect,
+        provinceName
+          ? (cfg.fields?.city?.ph || "Select city")
+          : (cfg.fields?.city?.ph || "Select province first")
+      );
+      if (!provinceName) return;
+      const prov = provinces.find((p) => p.name === provinceName);
+      if (!prov) return;
+      (prov.cities || []).forEach((city) => {
+        const o = document.createElement("option");
+        o.value = city;
+        o.textContent = city;
+        citySelect.appendChild(o);
+      });
+    }
+
+    fillProvinces();
+    fillCities("");
+
+    if (provSelect) {
+      provSelect.addEventListener("change", (e) => {
+        fillCities(e.target.value || "");
+      });
+    }
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Timers (optional)                                                  */
   /* ------------------------------------------------------------------ */
   function TimerComponent(minutes, message, cssClass, timeFormat) {
     const container = document.createElement("div");
     container.className = `offer-timer ${cssClass || "timer-minimal"}`;
+
     let timeLeft = Math.max(0, Number(minutes || 0) * 60);
 
     function formatTime(seconds, format) {
@@ -1118,14 +1278,20 @@ window.TripleformCOD = (function () {
 
       switch (format) {
         case "hh[h] mm[m]":
-          return `${h.toString().padStart(2, "0")}h ${m.toString().padStart(2, "0")}m`;
+          return `${h.toString().padStart(2, "0")}h ${m
+            .toString()
+            .padStart(2, "0")}m`;
         case "mm[m] ss[s]":
-          return `${m.toString().padStart(2, "0")}m ${s.toString().padStart(2, "0")}s`;
+          return `${m.toString().padStart(2, "0")}m ${s
+            .toString()
+            .padStart(2, "0")}s`;
         case "hh[h]":
           return `${h.toString().padStart(2, "0")}h`;
         case "mm:ss":
         default:
-          return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+          return `${m.toString().padStart(2, "0")}:${s
+            .toString()
+            .padStart(2, "0")}`;
       }
     }
 
@@ -1166,8 +1332,10 @@ window.TripleformCOD = (function () {
   function toggleOfferActivation(button, offerIndex, offersList, root, updateMoney) {
     const rootId = root.id || "root";
     const storeKey = lsKey(rootId, "current_active_offer");
+
     const isActive = button.classList.contains("active");
 
+    // One offer at a time
     const allButtons = root.querySelectorAll("[data-tf-offer-toggle]");
     allButtons.forEach((btn) => {
       btn.classList.remove("active");
@@ -1179,14 +1347,15 @@ window.TripleformCOD = (function () {
     localStorage.removeItem(storeKey);
 
     if (!isActive) {
+      const offer = offersList[offerIndex] || {};
+
+      // ✅ OPTIONAL: force qty to bundleQty when activating (ex: 2 pack)
+      const bundleQty = Number(offer.bundleQty || offer.minQty || offer.requiredQty || 0);
+      if (bundleQty > 0) setQty(bundleQty);
+
       button.classList.add("active");
       button.setAttribute("aria-pressed", "true");
       button.innerHTML = `${getIconHtml("CheckCircleIcon", 16, "currentColor")} Activée`;
-
-      const offer = offersList[offerIndex] || {};
-      const discountEnabled = !!offer.discountEnabled;
-      const discountType = offer.discountType || null; // "percentage" | "fixed"
-      const discountValue = Number(offer.discountValue || 0);
 
       localStorage.setItem(
         storeKey,
@@ -1194,9 +1363,11 @@ window.TripleformCOD = (function () {
           index: offerIndex,
           type: "offer",
           title: offer.title || "",
-          discountEnabled,
-          discountType,
-          discountValue,
+          discountType: offer.discountType || null, // "percentage" | "fixed"
+          discountValue: Number(offer.discountValue || 0),
+
+          // ✅ NEW: conditions
+          minQty: Number(offer.minQty || offer.requiredQty || offer.bundleQty || 1), // default 1
         })
       );
     }
@@ -1204,28 +1375,14 @@ window.TripleformCOD = (function () {
     updateMoney();
   }
 
-  function getActiveOfferDiscount(offersList, rootId) {
+  function getActiveOfferData(rootId) {
     const storeKey = lsKey(rootId, "current_active_offer");
     const raw = localStorage.getItem(storeKey);
-
-    let active = null;
-    if (raw) active = safeJsonParse(raw, null);
-
-    let discountEnabled = false;
-    let discountType = null;
-    let discountValue = 0;
-
-    if (active && typeof active === "object") {
-      discountEnabled = !!active.discountEnabled;
-      discountType = active.discountType || null;
-      discountValue = Number(active.discountValue || 0);
-    }
-
-    return { discountEnabled, discountType, discountValue, activeOfferData: active };
+    return raw ? safeJsonParse(raw, null) : null;
   }
 
   /* ------------------------------------------------------------------ */
-  /* OFFRES / UPSELL – HTML                                              */
+  /* OFFRES / UPSELL – HTML                                             */
   /* ------------------------------------------------------------------ */
   function fallbackImgSvg() {
     return (
@@ -1248,36 +1405,50 @@ window.TripleformCOD = (function () {
 
   function buildOffersHtml(offersCfg, rootId) {
     if (!offersCfg || typeof offersCfg !== "object") return "";
+
     const global = offersCfg.global || {};
     if (global.enabled === false) return "";
 
     const globalColors = global.colors || {};
+
     const offers = Array.isArray(offersCfg.offers) ? offersCfg.offers : [];
     const upsells = Array.isArray(offersCfg.upsells) ? offersCfg.upsells : [];
 
-    // ✅ keep original order, only hide disabled
-    const activeOffers = offers.filter((o) => o && o.enabled !== false && o.showInPreview !== false);
-    const activeUpsells = upsells.filter((u) => u && u.enabled !== false && u.showInPreview !== false);
+    const activeOffers = offers.filter(
+      (o) => o && o.enabled !== false && o.showInPreview !== false
+    );
+    const activeUpsells = upsells.filter(
+      (u) => u && u.enabled !== false && u.showInPreview !== false
+    );
+
     if (!activeOffers.length && !activeUpsells.length) return "";
 
-    const storeKey = lsKey(rootId, "current_active_offer");
-    const active = safeJsonParse(localStorage.getItem(storeKey), null);
+    const active = getActiveOfferData(rootId);
 
-    let html = `<div class="tf-offers-container">`;
+    let html = `<div class="tf-offers-container" data-tf-offers-block="1">`;
 
+    // Offers (button)
     activeOffers.forEach((offer, idx) => {
       const title = offer.title || "Offre spéciale";
       const description = offer.description || "";
       const img = (offer.imageUrl || "").trim() || fallbackImgSvg();
       const iconUrl = (offer.iconUrl || "").trim();
+
       const c = pickColors(offer, globalColors);
 
-      const isActive = active && Number(active.index) === idx && active.type === "offer";
+      const isActive =
+        active && Number(active.index) === idx && active.type === "offer";
+
       const btnLabel = offer.buttonText || "Activer";
-      const hasTimer = !!offer.enableTimer;
+
+      // ✅ show pack rule in one line (optional)
+      const minQty = Number(offer.minQty || offer.requiredQty || offer.bundleQty || 1);
+      const packHint =
+        minQty > 1 ? `Buy ${minQty} items to get discount` : (offer.subText || "");
 
       html += `
-        <div class="tf-offer-card" style="background:${css(c.cardBg)};border-color:${css(c.borderColor)}">
+        <div class="tf-offer-card"
+          style="background:${css(c.cardBg)};border-color:${css(c.borderColor)}">
           <div class="tf-offer-row">
             <div class="tf-offer-icon" style="background:${css(c.iconBg)}">
               ${
@@ -1290,8 +1461,7 @@ window.TripleformCOD = (function () {
             <div class="tf-offer-main">
               <div class="tf-offer-title">${css(title)}</div>
               <div class="tf-offer-desc">${css(description)}</div>
-
-              ${hasTimer ? `<div data-tf-timer-offer="${idx}"></div>` : ""}
+              ${packHint ? `<div class="tf-offer-sub">${css(packHint)}</div>` : ""}
 
               <button
                 type="button"
@@ -1307,11 +1477,7 @@ window.TripleformCOD = (function () {
                 "
                 aria-pressed="${isActive ? "true" : "false"}"
               >
-                ${
-                  isActive
-                    ? getIconHtml("CheckCircleIcon", 16, "currentColor")
-                    : getIconHtml("CirclePlusIcon", 16, "currentColor")
-                }
+                ${isActive ? getIconHtml("CheckCircleIcon", 16, "currentColor") : getIconHtml("CirclePlusIcon", 16, "currentColor")}
                 ${isActive ? "Activée" : css(btnLabel)}
               </button>
             </div>
@@ -1325,6 +1491,7 @@ window.TripleformCOD = (function () {
       `;
     });
 
+    // Upsells (no button)
     activeUpsells.forEach((upsell) => {
       const title = upsell.title || "Upsell";
       const description = upsell.description || "";
@@ -1333,7 +1500,8 @@ window.TripleformCOD = (function () {
       const c = pickColors(upsell, globalColors);
 
       html += `
-        <div class="tf-offer-card" style="background:${css(c.cardBg)};border-color:${css(c.borderColor)}">
+        <div class="tf-offer-card"
+          style="background:${css(c.cardBg)};border-color:${css(c.borderColor)}">
           <div class="tf-offer-row">
             <div class="tf-offer-icon" style="background:${css(c.iconBg)}">
               ${
@@ -1384,62 +1552,7 @@ window.TripleformCOD = (function () {
   }
 
   /* ------------------------------------------------------------------ */
-  /* Dropdown wilaya / ville                                            */
-  /* ------------------------------------------------------------------ */
-  function setupLocationDropdowns(root, cfg, countryDef) {
-    const beh = cfg.behavior || {};
-    const def = countryDef || getCountryDef(beh);
-    const provinces = def.provinces || [];
-
-    const provSelect = root.querySelector('select[data-tf-role="province"]');
-    const citySelect = root.querySelector('select[data-tf-role="city"]');
-    if (!provSelect && !citySelect) return;
-
-    function resetSelect(el, placeholder) {
-      if (!el) return;
-      el.innerHTML = "";
-      const opt = document.createElement("option");
-      opt.value = "";
-      opt.textContent = placeholder;
-      el.appendChild(opt);
-    }
-
-    function fillProvinces() {
-      if (!provSelect) return;
-      resetSelect(provSelect, cfg.fields?.province?.ph || "Wilaya / Province");
-      provinces.forEach((p) => {
-        const o = document.createElement("option");
-        o.value = p.name;
-        o.textContent = p.name;
-        provSelect.appendChild(o);
-      });
-    }
-
-    function fillCities(provinceName) {
-      if (!citySelect) return;
-      resetSelect(
-        citySelect,
-        provinceName ? (cfg.fields?.city?.ph || "Select city") : (cfg.fields?.city?.ph || "Select province first")
-      );
-      if (!provinceName) return;
-      const prov = provinces.find((p) => p.name === provinceName);
-      if (!prov) return;
-      (prov.cities || []).forEach((city) => {
-        const o = document.createElement("option");
-        o.value = city;
-        o.textContent = city;
-        citySelect.appendChild(o);
-      });
-    }
-
-    fillProvinces();
-    fillCities("");
-
-    if (provSelect) provSelect.addEventListener("change", (e) => fillCities(e.target.value || ""));
-  }
-
-  /* ------------------------------------------------------------------ */
-  /* Render                                                             */
+  /* Render                                                            */
   /* ------------------------------------------------------------------ */
   function render(root, cfg, offersCfg, product, getVariant, moneyFmt, recaptchaCfg) {
     const d = cfg.design || {};
@@ -1448,6 +1561,18 @@ window.TripleformCOD = (function () {
     const f = cfg.fields || {};
     const beh = cfg.behavior || {};
     const styleType = (cfg.form && cfg.form.style) || "inline";
+
+    const motion = beh.buttonMotion || "none";
+    const motionClass =
+      motion === "x"
+        ? "tf-motion-x"
+        : motion === "y"
+        ? "tf-motion-y"
+        : motion === "pulse"
+        ? "tf-motion-pulse"
+        : motion === "shake"
+        ? "tf-motion-shake"
+        : "";
 
     const hpState = { startTime: Date.now(), mouseMoved: false };
     window.addEventListener(
@@ -1461,19 +1586,21 @@ window.TripleformCOD = (function () {
     const countryDef = getCountryDef(beh);
     const pageStart = Date.now();
 
+    // GEO
     const geoEndpointAttr = root.getAttribute("data-geo-endpoint") || "";
     const geoEnabledAttr = root.getAttribute("data-geo-enabled") || "";
     const geoCountryAttr = root.getAttribute("data-geo-country") || countryDef.code;
 
     const geoEnabled =
-      !!geoEndpointAttr && (geoEnabledAttr === "1" || geoEnabledAttr === "true" || geoEnabledAttr === "yes");
+      !!geoEndpointAttr &&
+      (geoEnabledAttr === "1" || geoEnabledAttr === "true" || geoEnabledAttr === "yes");
 
     const geoEndpoint = geoEndpointAttr || "";
     let geoShippingCents = null;
     let geoNote = "";
     let geoRequestId = 0;
 
-    const baseGlow = (d.btnBg && /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(d.btnBg) ? d.btnBg : "#0B3B82");
+    const baseGlow = d.btnBg || "#2563EB";
     const cardShadow = shadowFromEffect(cfg, baseGlow);
     const cartShadow = shadowFromEffect(cfg, baseGlow);
     const rowShadow = shadowFromEffect(cfg, baseGlow);
@@ -1528,6 +1655,8 @@ window.TripleformCOD = (function () {
       line-height:normal;
     `;
 
+    const selectStyle = inputStyle;
+
     const textareaStyle = `
       width:100%;
       padding:12px;
@@ -1547,10 +1676,10 @@ window.TripleformCOD = (function () {
       width:100%;
       height:${inputHeight};
       border-radius:${+d.btnRadius || 10}px;
-      border:1px solid ${css(d.btnBorder || d.btnBg || "#0B3B82")};
-      color:${css(d.btnText || "#fff")};
-      background:${css(d.btnBg || "#0B3B82")};
-      font-weight:900;
+      border:1px solid ${css(d.btnBorder)};
+      color:${css(d.btnText)};
+      background:${css(d.btnBg)};
+      font-weight:800;
       letter-spacing:.2px;
       box-shadow:${btnShadow};
       font-size:${inputFontSize}px;
@@ -1597,6 +1726,7 @@ window.TripleformCOD = (function () {
       box-sizing:border-box;
     `;
 
+    // ✅ Offers HTML (organized)
     const offersHtml = buildOffersHtml(offersCfg || {}, root.id);
 
     function orderedFieldKeys() {
@@ -1612,9 +1742,7 @@ window.TripleformCOD = (function () {
       const field = f[key];
       if (!field || field.on === false) return "";
 
-      const iconName = field.icon || (key === "country" ? "GlobeIcon" : "");
-      const iconHtml = iconName ? getIconHtml(iconName, 18, "#111827") : "";
-
+      const iconHtml = field.icon ? getIconHtml(field.icon, 18, "#111827") : "";
       const req = field.required ? " *" : "";
       const label = (field.label || key) + req;
       const ph = field.ph || "";
@@ -1645,7 +1773,7 @@ window.TripleformCOD = (function () {
             </div>
             <div style="flex:1;">
               <label style="${labelStyle}">${css(label)}</label>
-              <select data-tf-role="province" data-tf-field="${key}" style="${inputStyle}" ${requiredAttr}>
+              <select data-tf-role="province" data-tf-field="${key}" style="${selectStyle}" ${requiredAttr}>
                 <option value="">${css(ph || "Wilaya / Province")}</option>
               </select>
             </div>
@@ -1661,7 +1789,7 @@ window.TripleformCOD = (function () {
             </div>
             <div style="flex:1;">
               <label style="${labelStyle}">${css(label)}</label>
-              <select data-tf-role="city" data-tf-field="${key}" style="${inputStyle}" ${requiredAttr}>
+              <select data-tf-role="city" data-tf-field="${key}" style="${selectStyle}" ${requiredAttr}>
                 <option value="">${css(ph || "Select province first")}</option>
               </select>
             </div>
@@ -1678,6 +1806,28 @@ window.TripleformCOD = (function () {
             <div style="flex:1;">
               <label style="${labelStyle}">${css(label)}</label>
               <textarea data-tf-field="${key}" style="${textareaStyle}" rows="3" placeholder="${css(ph)}" ${requiredAttr}></textarea>
+            </div>
+          </div>
+        `;
+      }
+
+      if (field.type === "tel") {
+        const prefix = field.prefix
+          ? `<input style="${inputStyle}; text-align:center;" value="${css(field.prefix)}" readonly />`
+          : "";
+        const grid = field.prefix ? "minmax(88px,130px) 1fr" : "1fr";
+
+        return `
+          <div style="${fieldContainerStyle}">
+            <div style="height:${inputHeight}; display:flex; align-items:center; justify-content:center;">
+              ${iconHtml}
+            </div>
+            <div style="flex:1;">
+              <label style="${labelStyle}">${css(label)}</label>
+              <div style="display:grid; grid-template-columns:${grid}; gap:8px;">
+                ${prefix}
+                <input type="tel" data-tf-field="${key}" style="${inputStyle}" placeholder="${css(ph)}" ${requiredAttr} />
+              </div>
             </div>
           </div>
         `;
@@ -1703,11 +1853,10 @@ window.TripleformCOD = (function () {
     }
 
     function cartSummaryHTML() {
+      const cartIconHtml = t.cartIcon ? getIconHtml(t.cartIcon, 18, css(d.cartTitleColor || "#111827")) : "";
       return `
         <div style="${cartBoxStyle}">
-          <div style="${cartTitleStyle}">
-            ${css(t.top || "Order summary")}
-          </div>
+          <div style="${cartTitleStyle}">${cartIconHtml}${css(t.top || "Order summary")}</div>
           <div style="display:grid; gap:8px;">
             <div style="${rowStyle}">
               <div>${css(t.price || "Product price")}</div>
@@ -1736,17 +1885,114 @@ window.TripleformCOD = (function () {
       `;
     }
 
-    const mainStart = `<div style="max-width:560px;margin:0 auto;display:grid;gap:16px;direction:${textDir};box-sizing:border-box;">`;
+    function formCardHTML(ctaKey, isPopupOrDrawer = false) {
+      const orderLabel = css(ui.orderNow || cfg.form?.buttonText || "Order now");
+      const suffix = css(ui.totalSuffix || "Total:");
+
+      const buttonIconHtml = cfg.form?.buttonIcon
+        ? getIconHtml(cfg.form.buttonIcon, 18, css(d.btnText || "#fff"))
+        : "";
+
+      const honeypotInputHTML = `
+        <input type="text" name="tf_hp_token" data-tf-hp="1" autocomplete="off" tabindex="-1"
+          style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;opacity:0;" />
+      `;
+
+      const formContainerStyle = isPopupOrDrawer
+        ? `padding:0;background:transparent;border:none;box-shadow:none;border-radius:0;`
+        : cardStyle;
+
+      return `
+        <div style="${formContainerStyle}" data-tf-role="form-card">
+          ${
+            cfg.form?.title || cfg.form?.subtitle
+              ? `
+            <div style="text-align:${titleAlign}; margin-bottom:20px;">
+              ${
+                cfg.form?.title
+                  ? `<div style="font-weight:900; font-size:${labelFontSize}; margin-bottom:4px;">${css(cfg.form.title)}</div>`
+                  : ""
+              }
+              ${
+                cfg.form?.subtitle
+                  ? `<div style="opacity:.85; font-size:${smallFontSize};">${css(cfg.form.subtitle)}</div>`
+                  : ""
+              }
+            </div>`
+              : ""
+          }
+
+          <div style="position:relative;">
+            <input type="text" data-tf-role="honeypot" name="tf_hp_token"
+              style="position:absolute;left:-9999px;opacity:0;pointer-events:none;height:0;width:0;"
+              tabindex="-1" autocomplete="off" />
+
+            ${fieldsBlockHTML()}
+            ${honeypotInputHTML}
+
+            ${
+              beh?.requireGDPR
+                ? `
+              <label style="display:flex; gap:8px; align-items:center; font-size:${smallFontSize}; color:#374151; margin:12px 0;">
+                <input type="checkbox" /> ${css(beh.gdprLabel || "I accept the privacy policy")}
+              </label>`
+                : ""
+            }
+
+            ${
+              beh?.whatsappOptIn
+                ? `
+              <label style="display:flex; gap:8px; align-items:center; font-size:${smallFontSize}; color:#374151; margin:12px 0;">
+                <input type="checkbox" /> ${css(beh.whatsappLabel || "Receive confirmation on WhatsApp")}
+              </label>`
+                : ""
+            }
+
+            <button type="button" style="${btnStyle}; margin-top:16px;"
+              class="${motionClass}"
+              data-tf-cta="1" data-tf="${ctaKey}">
+              ${buttonIconHtml}${orderLabel} · ${suffix} …
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    const mainStart = `<div style="max-width:560px;margin:0 auto;display:grid;gap:14px;direction:${textDir};box-sizing:border-box;">`;
     const mainEnd = `</div>`;
 
     let html = "";
+
     if (styleType === "inline") {
-      html = mainStart + offersHtml + cartSummaryHTML() + `<div style="height:8px"></div>` + `<div style="${cardStyle}" data-tf-role="form-card">${fieldsBlockHTML()}</div>` + mainEnd;
+      html =
+        mainStart +
+        offersHtml +
+        cartSummaryHTML() +
+        `<div style="height:6px"></div>` +
+        formCardHTML("cta-inline", false) +
+        mainEnd;
     } else if (styleType === "popup") {
       html =
         mainStart +
         offersHtml +
         cartSummaryHTML() +
+        `<div style="height:6px"></div>` +
+        `
+        <div style="text-align:${titleAlign};">
+          <button type="button" style="${btnStyle}"
+            class="${motionClass}"
+            data-tf-cta="1" data-tf="launcher">
+            ${
+              cfg.form?.buttonIcon
+                ? getIconHtml(cfg.form.buttonIcon, 18, css(d.btnText || "#fff"))
+                : ""
+            }${css(ui.orderNow || cfg.form?.buttonText || "Order now")} · ${css(ui.totalSuffix || "Total:")} …
+          </button>
+          <div style="font-size:${tinyFontSize}; color:#6B7280; margin-top:4px; text-align:${titleAlign};">
+            Click to open COD form (popup)
+          </div>
+        </div>
+        ` +
         mainEnd +
         `
         <div data-tf-role="popup" style="
@@ -1756,36 +2002,69 @@ window.TripleformCOD = (function () {
             width:100%; max-width:${popupCfg.maxWidth}; max-height:${popupCfg.maxHeight};
             box-sizing:border-box; position:relative; background:${css(d.bg)};
             border-radius:${+d.radius || 12}px; box-shadow:${cardShadow}; overflow:auto;">
+            <div style="text-align:right; margin-bottom:8px; position:absolute; top:12px; right:12px; z-index:10;">
+              <button type="button" data-tf="close" style="
+                background:${css(d.bg)}; border:1px solid ${css(d.border)}; color:${css(d.text)};
+                font-size:20px; cursor:pointer; width:32px; height:32px; display:flex;
+                align-items:center; justify-content:center; border-radius:50%;">&times;</button>
+            </div>
             <div style="padding:24px; box-sizing:border-box;">
-              <div style="max-width:560px;margin:0 auto;display:grid;gap:16px;direction:${textDir};">
+              <div style="max-width:560px;margin:0 auto;display:grid;gap:14px;direction:${textDir};">
                 ${offersHtml}
                 ${cartSummaryHTML()}
-                <div style="${cardStyle}" data-tf-role="form-card">${fieldsBlockHTML()}</div>
+                <div style="height:6px"></div>
+                ${formCardHTML("cta-popup", true)}
               </div>
             </div>
           </div>
         </div>
       `;
     } else {
+      const origin = beh.drawerOrigin || beh.drawerDirection || "right";
+
       html =
         mainStart +
         offersHtml +
         cartSummaryHTML() +
+        `<div style="height:6px"></div>` +
+        `
+        <div style="text-align:${titleAlign};">
+          <button type="button" style="${btnStyle}"
+            class="${motionClass}"
+            data-tf-cta="1" data-tf="launcher">
+            ${
+              cfg.form?.buttonIcon
+                ? getIconHtml(cfg.form.buttonIcon, 18, css(d.btnText || "#fff"))
+                : ""
+            }${css(ui.orderNow || cfg.form?.buttonText || "Order now")} · ${css(ui.totalSuffix || "Total:")} …
+          </button>
+          <div style="font-size:${tinyFontSize}; color:#6B7280; margin-top:4px; text-align:${titleAlign};">
+            Click to open COD form (drawer)
+          </div>
+        </div>
+        ` +
         mainEnd +
         `
         <div data-tf-role="drawer-overlay" style="
           position:fixed; inset:0; display:none; z-index:999999;
           background:${ovBg}; overflow:hidden; padding:0;">
-          <div data-tf-role="drawer" style="
-            position:absolute; top:0; bottom:0; right:0; width:${drawerCfg.sideWidth};
+          <div data-tf-role="drawer" data-origin="${origin}" style="
+            position:absolute; top:0; bottom:0; width:${drawerCfg.sideWidth};
             max-height:100%; background:${css(d.bg)}; box-shadow:0 0 40px rgba(15,23,42,0.65);
             display:flex; flex-direction:column; padding:0; box-sizing:border-box;
             transform:translateX(100%); transition:transform 260ms ease; overflow:hidden;">
             <div style="padding:24px; overflow:auto; flex:1; box-sizing:border-box;">
-              <div style="max-width:560px;margin:0 auto;display:grid;gap:16px;direction:${textDir};">
+              <div style="text-align:right; margin-bottom:16px;">
+                <button type="button" data-tf="close" style="
+                  background:${css(d.bg)}; border:1px solid ${css(d.border)}; color:${css(d.text)};
+                  font-size:20px; cursor:pointer; width:32px; height:32px; display:flex;
+                  align-items:center; justify-content:center; border-radius:50%;">&times;</button>
+              </div>
+              <div style="max-width:560px;margin:0 auto;display:grid;gap:14px;direction:${textDir};">
                 ${offersHtml}
                 ${cartSummaryHTML()}
-                <div style="${cardStyle}" data-tf-role="form-card">${fieldsBlockHTML()}</div>
+                <div style="height:6px"></div>
+                ${formCardHTML("cta-drawer", true)}
               </div>
             </div>
           </div>
@@ -1794,82 +2073,68 @@ window.TripleformCOD = (function () {
     }
 
     root.innerHTML = html;
+
     setTimeout(() => initializeTimers(root, offersCfg), 80);
+
     setupLocationDropdowns(root, cfg, countryDef);
 
-    /* --------------------- Product totals (robust) -------------------- */
-    function parseVariantPriceToCents(priceAny) {
-      if (priceAny == null) return 0;
+    const provSelect = root.querySelector('select[data-tf-role="province"]');
+    const citySelect = root.querySelector('select[data-tf-role="city"]');
 
-      let rawStr = String(priceAny).trim();
-      if (!rawStr) return 0;
+    /* --------------------- Field helpers --------------------------- */
+    function getField(key) {
+      const el = root.querySelector(`[data-tf-field="${key}"]`);
+      return el || null;
+    }
+    function getVal(key) {
+      const el = getField(key);
+      return el ? String(el.value || "").trim() : "";
+    }
+    function getPhone() {
+      const phone = getVal("phone");
+      const prefix = f.phone && f.phone.prefix ? String(f.phone.prefix) : "";
+      const fullPhone = prefix && phone ? `${prefix}${phone}` : phone || prefix || "";
+      return { prefix, number: phone, fullPhone };
+    }
 
-      // normalize commas
-      rawStr = rawStr.replace(",", ".");
+    /* --------------------- ✅ Price parse FIX (always cents safe) ---- */
+    function variantPriceToCents(variant) {
+      // Shopify product JSON in theme usually returns cents integer (ex: 555500)
+      // but sometimes may return "55.55" or "55.55 USD".
+      const raw = variant && variant.price != null ? String(variant.price).trim() : "0";
+      if (!raw) return 0;
 
-      const rawNum = Number(rawStr);
-      if (!Number.isFinite(rawNum)) return 0;
+      const cleaned = raw.replace(/[^\d.,-]/g, "");
+      if (!cleaned) return 0;
 
-      // if contains ".", treat as currency units
-      if (rawStr.includes(".")) return Math.round(rawNum * 100);
+      // if contains dot or comma as decimal
+      const hasDecimal = /[.,]\d{1,2}$/.test(cleaned);
 
-      // integer => could be cents (Shopify product json)
-      return Math.round(rawNum);
+      if (hasDecimal) {
+        const normalized = cleaned.replace(",", ".");
+        const n = Number(normalized);
+        return Number.isFinite(n) ? Math.round(n * 100) : 0;
+      }
+
+      // no decimal -> assume already cents
+      const n = Number(cleaned);
+      return Number.isFinite(n) ? Math.round(n) : 0;
     }
 
     function computeProductTotals() {
       const vId = getVariant();
       const qty = getQty();
+      const variant =
+        product.variants.find((v) => String(v.id) === String(vId)) ||
+        product.variants[0];
 
-      const variants = Array.isArray(product?.variants) ? product.variants : [];
-      const variant = variants.find((v) => String(v.id) === String(vId)) || variants[0] || null;
+      const priceCents = variantPriceToCents(variant);
+      const baseTotalCents = priceCents * qty;
 
-      const unitPriceCents = parseVariantPriceToCents(variant && variant.price != null ? variant.price : 0);
-      const safeQty = isFiniteNumber(qty) && qty > 0 ? qty : 1;
-
-      const subtotalCents = (isFiniteNumber(unitPriceCents) ? unitPriceCents : 0) * safeQty;
-
-      return {
-        unitPriceCents: isFiniteNumber(unitPriceCents) ? unitPriceCents : 0,
-        subtotalCents: isFiniteNumber(subtotalCents) ? subtotalCents : 0,
-        qty: safeQty,
-        variantId: vId,
-      };
+      return { priceCents, totalCents: baseTotalCents, baseTotalCents, qty, variantId: vId };
     }
 
-    /* --------------------- Discount (FIXED robust) -------------------- */
-    const offersVisible = Array.isArray(offersCfg?.offers) ? offersCfg.offers : [];
-    const activeOffersOnly = offersVisible.filter((o) => o && o.enabled !== false && o.showInPreview !== false);
-
-    function fixedDiscountToCents(discountValue, subtotalCents) {
-      const v = Number(discountValue || 0);
-      if (!Number.isFinite(v) || v <= 0) return 0;
-
-      // ✅ Heuristic:
-      // If v*100 <= subtotalCents => v is currency units (MAD) -> convert to cents
-      // Else => v is already cents
-      const asCurrencyCents = Math.round(v * 100);
-      if (asCurrencyCents <= subtotalCents) return asCurrencyCents;
-      return Math.round(v);
-    }
-
-    function computeDiscountCents(subtotalCents, rootId) {
-      const { discountEnabled, discountType, discountValue } = getActiveOfferDiscount(activeOffersOnly, rootId);
-      if (!discountEnabled) return 0;
-      if (!discountType || !(discountValue > 0)) return 0;
-
-      if (discountType === "percentage") {
-        return Math.round(subtotalCents * (Number(discountValue) / 100));
-      }
-
-      if (discountType === "fixed") {
-        return fixedDiscountToCents(discountValue, subtotalCents);
-      }
-
-      return 0;
-    }
-
-    /* --------------------- Geo shipping (unchanged) ------------------- */
+    /* --------------------- GEO shipping ---------------------------- */
     async function recalcGeo() {
       if (!geoEnabled || !geoEndpoint) {
         geoShippingCents = null;
@@ -1880,10 +2145,10 @@ window.TripleformCOD = (function () {
 
       const reqId = ++geoRequestId;
       const totals = computeProductTotals();
-      const baseTotalCents = totals.subtotalCents;
+      const baseTotalCents = totals.totalCents;
 
-      const province = (root.querySelector('[data-tf-field="province"]')?.value || "").trim();
-      const city = (root.querySelector('[data-tf-field="city"]')?.value || "").trim();
+      const province = getVal("province");
+      const city = getVal("city");
 
       if (!province || !city) {
         if (reqId !== geoRequestId) return;
@@ -1933,18 +2198,96 @@ window.TripleformCOD = (function () {
       updateMoney();
     }
 
-    /* --------------------- UI money update (correct) ------------------ */
+    function validateRequiredFields() {
+      const requiredKeys = Object.keys(f || {}).filter((k) => f[k]?.on && f[k]?.required);
+      if (!requiredKeys.length) return true;
+
+      let firstInvalid = null;
+      const missing = [];
+
+      requiredKeys.forEach((k) => {
+        const el = getField(k);
+        if (!el) return;
+        const value = String(el.value || "").trim();
+        if (!value) {
+          missing.push(f[k]?.label || k);
+          if (!firstInvalid) firstInvalid = el;
+          el.style.borderColor = "#ef4444";
+          el.style.boxShadow = "0 0 0 1px rgba(239,68,68,0.35)";
+        } else {
+          el.style.borderColor = css(d.inputBorder);
+          el.style.boxShadow = "none";
+        }
+      });
+
+      if (missing.length) {
+        alert("Merci de remplir les champs obligatoires :\n- " + missing.join("\n- "));
+        if (firstInvalid && typeof firstInvalid.focus === "function") firstInvalid.focus();
+        return false;
+      }
+      return true;
+    }
+
+    function checkAntibotFront() {
+      const now = Date.now();
+      const timeOnPageMs = now - pageStart;
+
+      const hpInput = root.querySelector('[data-tf-role="honeypot"]');
+      const hpValue = hpInput ? String(hpInput.value || "").trim() : "";
+
+      if (hpInput && hpValue) {
+        alert("Votre commande n'a pas pu être envoyée. (anti-bot)");
+        return { ok: false, reason: "honeypot", timeOnPageMs, hpValue };
+      }
+
+      if (timeOnPageMs < 1500) {
+        alert("Merci de prendre quelques secondes avant d'envoyer le formulaire.");
+        return { ok: false, reason: "too_fast", timeOnPageMs };
+      }
+
+      return { ok: true, timeOnPageMs, hpValue };
+    }
+
+    /* --------------------- ✅ Discount calc FIX (qty condition) ------ */
+    const offersVisible = Array.isArray(offersCfg?.offers) ? offersCfg.offers : [];
+    const activeOffersOnly = offersVisible.filter(
+      (o) => o && o.enabled !== false && o.showInPreview !== false
+    );
+
+    function computeDiscountCents(totalCents, qty, rootId) {
+      const active = getActiveOfferData(rootId);
+      if (!active || active.type !== "offer") return 0;
+
+      const idx = Number(active.index);
+      const offer = activeOffersOnly[idx];
+      if (!offer) return 0;
+
+      const discountType = offer.discountType || active.discountType || null;
+      const discountValue = Number(offer.discountValue ?? active.discountValue ?? 0);
+
+      // ✅ conditions: minQty (ex: 2-pack)
+      const minQty = Number(offer.minQty || offer.requiredQty || offer.bundleQty || active.minQty || 1);
+      if (minQty > 1 && Number(qty || 1) < minQty) return 0;
+
+      if (!discountType || !(discountValue > 0)) return 0;
+
+      if (discountType === "percentage") {
+        return Math.round(totalCents * (discountValue / 100));
+      }
+      if (discountType === "fixed") {
+        return Math.round(discountValue * 100);
+      }
+      return 0;
+    }
+
     function updateMoney() {
-      const totals = computeProductTotals();
-      const subtotalCents = isFiniteNumber(totals.subtotalCents) ? totals.subtotalCents : 0;
+      const { priceCents, totalCents, qty } = computeProductTotals();
 
-      const discountCents = computeDiscountCents(subtotalCents, root.id);
-      const discountedSubtotalCents = Math.max(0, subtotalCents - discountCents);
+      const discountCents = computeDiscountCents(totalCents, qty, root.id);
+      const discountedTotalCents = Math.max(0, totalCents - discountCents);
+      const grandTotalCents = discountedTotalCents + (geoShippingCents || 0);
 
-      const shippingCents = geoShippingCents == null ? 0 : geoShippingCents;
-      const grandTotalCents = discountedSubtotalCents + shippingCents;
-
-      root.querySelectorAll('[data-tf="price"]').forEach((el) => (el.textContent = moneyFmt(subtotalCents)));
+      root.querySelectorAll('[data-tf="price"]').forEach((el) => (el.textContent = moneyFmt(priceCents)));
       root.querySelectorAll('[data-tf="total"]').forEach((el) => (el.textContent = moneyFmt(grandTotalCents)));
 
       const discountRow = root.querySelector('[data-tf="discount-row"]');
@@ -1965,23 +2308,322 @@ window.TripleformCOD = (function () {
 
       root.querySelectorAll('[data-tf="shipping"]').forEach((el) => (el.textContent = shippingText));
       root.querySelectorAll('[data-tf="shipping-note"]').forEach((el) => (el.textContent = geoNote || ""));
+
+      const label = css(ui.orderNow || cfg.form?.buttonText || "Order now");
+      const suffix = css(ui.totalSuffix || "Total:");
+      const buttonIconHtml = cfg.form?.buttonIcon
+        ? getIconHtml(cfg.form.buttonIcon, 18, css(d.btnText || "#fff"))
+        : "";
+
+      root.querySelectorAll('[data-tf-cta="1"]').forEach((el) => {
+        el.innerHTML = `${buttonIconHtml}${label} · ${suffix} ${moneyFmt(grandTotalCents)}`;
+      });
+
+      const mainCta = root.querySelector('[data-tf="launcher"]');
+      if (mainCta) {
+        mainCta.innerHTML = `${buttonIconHtml}${label} · ${suffix} ${moneyFmt(grandTotalCents)}`;
+      }
+
+      // ✅ Also mark button disabled if qty < minQty (visual feedback)
+      const active = getActiveOfferData(root.id);
+      const buttons = root.querySelectorAll("[data-tf-offer-toggle]");
+      buttons.forEach((btn) => {
+        const i = parseInt(btn.getAttribute("data-tf-offer-index") || "0", 10);
+        const offer = activeOffersOnly[i];
+        if (!offer) return;
+
+        const minQty = Number(offer.minQty || offer.requiredQty || offer.bundleQty || 1);
+        const mustHavePack = minQty > 1;
+        const ok = !mustHavePack || qty >= minQty;
+
+        btn.classList.toggle("disabled", !ok);
+
+        if (!ok) {
+          // keep active state possible (if you forced qty it will become ok)
+          btn.title = `Need quantity ${minQty} to apply discount`;
+        } else {
+          btn.title = "";
+        }
+      });
     }
 
-    /* --------------------- Offer activation click --------------------- */
-    root.addEventListener("click", (e) => {
-      const btn = e.target && e.target.closest ? e.target.closest("[data-tf-offer-toggle]") : null;
-      if (!btn) return;
+    // ✅ Wire offer buttons
+    setTimeout(() => {
+      const buttons = root.querySelectorAll("[data-tf-offer-toggle]");
+      buttons.forEach((btn) => {
+        btn.addEventListener("click", function (e) {
+          e.preventDefault();
+          if (this.classList.contains("disabled")) return;
 
-      e.preventDefault();
-      e.stopPropagation();
+          const offerIndex = parseInt(this.getAttribute("data-tf-offer-index"), 10);
+          toggleOfferActivation(this, offerIndex, activeOffersOnly, root, updateMoney);
+        });
+      });
+    }, 60);
 
-      const offerIndex = parseInt(btn.getAttribute("data-tf-offer-index") || "0", 10);
-      if (!Number.isFinite(offerIndex)) return;
+    /* --------------------- Submit + reCAPTCHA ------------------------ */
+    async function onSubmitClick() {
+      const ab = checkAntibotFront();
+      if (!ab.ok) return;
 
-      toggleOfferActivation(btn, offerIndex, activeOffersOnly, root, updateMoney);
-    });
+      if (!validateRequiredFields()) return;
 
-    // initial
+      const totals = computeProductTotals();
+      const { priceCents, totalCents, baseTotalCents, qty, variantId } = totals;
+
+      const discountCents = computeDiscountCents(totalCents, qty, root.id);
+      const discountedTotalCents = Math.max(0, totalCents - discountCents);
+      const shippingCentsToSend = geoShippingCents || 0;
+      const grandTotalCents = discountedTotalCents + shippingCentsToSend;
+
+      const phone = getPhone();
+
+      const now = Date.now();
+      const hpInput = root.querySelector('input[data-tf-hp="1"]');
+      const hpValue = hpInput ? (hpInput.value || "") : "";
+
+      let recaptchaToken = null;
+      let recaptchaVersion = recaptchaCfg?.version || null;
+
+      if (recaptchaCfg?.enabled && recaptchaCfg.version === "v3" && recaptchaCfg.siteKey) {
+        try {
+          await ensureRecaptchaScript(recaptchaCfg);
+          if (window.grecaptcha && window.grecaptcha.execute) {
+            recaptchaToken = await window.grecaptcha.execute(recaptchaCfg.siteKey, {
+              action: "submit_cod",
+            });
+          }
+        } catch (e) {
+          console.warn("[Tripleform COD] reCAPTCHA v3 error:", e);
+        }
+      }
+
+      const activeOfferData = getActiveOfferData(root.id);
+
+      const payload = {
+        fields: {
+          name: getVal("name"),
+          phone: phone.number || phone.fullPhone,
+          phonePrefix: phone.prefix,
+          fullPhone: phone.fullPhone,
+          address: getVal("address"),
+          city: getVal("city"),
+          province: getVal("province"),
+          notes: getVal("notes"),
+        },
+        productId: root.getAttribute("data-product-id") || null,
+        variantId,
+        qty,
+        priceCents,
+        baseTotalCents,
+        discountCents,
+        shippingCents: shippingCentsToSend,
+        totalCents: discountedTotalCents,
+        grandTotalCents,
+        currency: root.getAttribute("data-currency") || null,
+        locale: root.getAttribute("data-locale") || null,
+
+        offer: activeOfferData || null,
+
+        geo: {
+          enabled: geoEnabled,
+          country: geoCountryAttr,
+          province: getVal("province"),
+          city: getVal("city"),
+          note: geoNote,
+        },
+
+        tracking: {
+          eventSourceUrl: window.location.href,
+          referrer: document.referrer || null,
+        },
+
+        honeypot: {
+          fieldValue: hpValue,
+          timeOnPageMs: Math.max(0, now - hpState.startTime),
+          mouseMoved: !!hpState.mouseMoved,
+        },
+
+        recaptchaToken,
+        recaptchaVersion,
+      };
+
+      const formCard = root.querySelector('[data-tf-role="form-card"]');
+      const btn = formCard ? formCard.querySelector('[data-tf-cta="1"]') : null;
+      const original = btn ? btn.innerHTML : "";
+
+      try {
+        if (btn) {
+          btn.disabled = true;
+          btn.innerHTML = "Sending...";
+        }
+
+        const res = await fetch("/apps/tripleform-cod/submit", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify(payload),
+        });
+
+        const json = await res.json().catch(() => ({}));
+        if (res.ok && json?.ok) {
+          if (btn) btn.innerHTML = css(cfg.form?.successText || "Thanks! We'll contact you");
+        } else {
+          if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = original;
+          }
+          alert("Erreur: " + (json?.error || res.statusText || "Submit failed"));
+        }
+      } catch {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = original;
+        }
+        alert("Erreur réseau. Réessaie.");
+      }
+    }
+
+    /* --------------------- behaviors inline/popup/drawer ------------- */
+    let openHandler = null;
+
+    if (styleType === "inline") {
+      const btn = root.querySelector('[data-tf="cta-inline"]');
+      if (btn) btn.addEventListener("click", onSubmitClick);
+      openHandler = () => root.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+
+    if (styleType === "popup") {
+      const popup = root.querySelector('[data-tf-role="popup"]');
+      const launcher = root.querySelector('[data-tf="launcher"]');
+      const closeBtns = root.querySelectorAll('[data-tf="close"]');
+      const popupCta = root.querySelector('[data-tf="cta-popup"]');
+
+      if (popup && launcher) {
+        openHandler = () => {
+          popup.style.display = "flex";
+          document.body.style.overflow = "hidden";
+        };
+        launcher.addEventListener("click", (e) => {
+          e.preventDefault();
+          openHandler();
+        });
+      }
+
+      if (popup && beh.closeOnOutside !== false) {
+        popup.addEventListener("click", (e) => {
+          if (e.target === popup) {
+            popup.style.display = "none";
+            document.body.style.overflow = "";
+          }
+        });
+      }
+
+      closeBtns.forEach((b) =>
+        b.addEventListener("click", (e) => {
+          e.preventDefault();
+          if (!popup) return;
+          popup.style.display = "none";
+          document.body.style.overflow = "";
+        })
+      );
+
+      if (popupCta) popupCta.addEventListener("click", onSubmitClick);
+    }
+
+    if (styleType === "drawer") {
+      const overlay = root.querySelector('[data-tf-role="drawer-overlay"]');
+      const drawer = root.querySelector('[data-tf-role="drawer"]');
+      const launcher = root.querySelector('[data-tf="launcher"]');
+      const closeBtns = root.querySelectorAll('[data-tf="close"]');
+      const drawerCta = root.querySelector('[data-tf="cta-drawer"]');
+      const origin = beh.drawerOrigin || beh.drawerDirection || "right";
+
+      let hiddenTransform = "translateX(100%)";
+      if (drawer) {
+        if (origin === "left") {
+          drawer.style.left = "0";
+          drawer.style.right = "auto";
+          hiddenTransform = "translateX(-100%)";
+        } else if (origin === "bottom") {
+          drawer.style.left = "0";
+          drawer.style.right = "0";
+          drawer.style.bottom = "0";
+          drawer.style.top = "auto";
+          drawer.style.height = "auto";
+          drawer.style.maxHeight = "80vh";
+          drawer.style.width = "100%";
+          hiddenTransform = "translateY(100%)";
+        } else if (origin === "top") {
+          drawer.style.left = "0";
+          drawer.style.right = "0";
+          drawer.style.top = "0";
+          drawer.style.bottom = "auto";
+          drawer.style.height = "auto";
+          drawer.style.maxHeight = "80vh";
+          drawer.style.width = "100%";
+          hiddenTransform = "translateY(-100%)";
+        } else {
+          drawer.style.right = "0";
+          drawer.style.left = "auto";
+        }
+        drawer.style.transform = hiddenTransform;
+      }
+
+      function openDrawer() {
+        if (!overlay || !drawer) return;
+        overlay.style.display = "block";
+        document.body.style.overflow = "hidden";
+        drawer.getBoundingClientRect();
+        drawer.style.transform =
+          origin === "bottom" || origin === "top" ? "translateY(0)" : "translateX(0)";
+      }
+
+      function closeDrawer() {
+        if (!overlay || !drawer) return;
+        drawer.style.transform = hiddenTransform;
+        setTimeout(() => {
+          overlay.style.display = "none";
+          document.body.style.overflow = "";
+        }, 260);
+      }
+
+      if (launcher && overlay && drawer) {
+        openHandler = openDrawer;
+        launcher.addEventListener("click", (e) => {
+          e.preventDefault();
+          openDrawer();
+        });
+      }
+
+      if (overlay && beh.closeOnOutside !== false) {
+        overlay.addEventListener("click", (e) => {
+          if (e.target === overlay) closeDrawer();
+        });
+      }
+
+      closeBtns.forEach((b) =>
+        b.addEventListener("click", (e) => {
+          e.preventDefault();
+          closeDrawer();
+        })
+      );
+      if (drawerCta) drawerCta.addEventListener("click", onSubmitClick);
+    }
+
+    // Sticky
+    setupSticky(root, cfg, styleType, openHandler, motionClass);
+
+    // Geo listeners
+    if (provSelect && geoEnabled) provSelect.addEventListener("change", recalcGeo);
+    if (citySelect && geoEnabled) citySelect.addEventListener("change", recalcGeo);
+
+    // Auto-open
+    const delay = Number(beh.openDelayMs || 0);
+    if (delay > 0 && styleType !== "inline" && typeof openHandler === "function") {
+      setTimeout(() => openHandler(), delay);
+    }
+
     updateMoney();
     if (geoEnabled) recalcGeo();
 
@@ -1995,7 +2637,8 @@ window.TripleformCOD = (function () {
   /* Boot                                                              */
   /* ------------------------------------------------------------------ */
   function boot(sectionId) {
-    const holder = byId(`tripleform-cod-${sectionId}`) || document.querySelector(".tripleform-cod");
+    const holder =
+      byId(`tripleform-cod-${sectionId}`) || document.querySelector(".tripleform-cod");
     if (!holder) return;
 
     injectGlobalCSSOnce();
@@ -2037,4 +2680,4 @@ window.TripleformCOD = (function () {
   }
 
   return { boot };
-})()
+})();
