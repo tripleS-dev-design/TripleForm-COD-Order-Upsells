@@ -1530,7 +1530,40 @@ const EN = {
 "section1.fieldEditor.titlePrefix.birthday": "Birthday",
 "section1.fieldEditor.titlePrefix.company": "Company",
 "section1.fieldEditor.titlePrefix.pincode": "Postal code",
-"section1.fieldEditor.titlePrefix.email": "Email"
+"section1.fieldEditor.titlePrefix.email": "Email",
+"section2.ui.header.subtitle": "Offers & Upsells — Pro settings",
+"section2.ui.status.dirty": "Unsaved changes",
+"section2.ui.status.saved": "Saved",
+"section2.ui.status.loading": "Loading...",
+
+"section2.ui.tabs.global": "Global",
+"section2.ui.tabs.offers": "Offers",
+"section2.ui.tabs.upsells": "Upsells",
+
+"section2.ui.hero.badge": "{offers} Offers • {upsells} Upsells",
+"section2.ui.hero.title": "Offers & Upsells",
+"section2.ui.hero.subtitle": "Clean settings + solid preview",
+"section2.ui.hero.currentTab": "{tab}",
+
+"section2.ui.modal.unsaved.title": "Unsaved changes",
+"section2.ui.modal.unsaved.body": "You have unsaved changes. Save or discard before switching sections?",
+"section2.ui.modal.unsaved.primary": "Save & continue",
+"section2.ui.modal.unsaved.primaryLoading": "Saving...",
+"section2.ui.modal.unsaved.cancel": "Cancel",
+"section2.ui.modal.unsaved.discard": "Discard",
+
+"section2.ui.preview.title": "Preview",
+"section2.ui.preview.badge.active": "Active",
+"section2.ui.preview.badge.inactive": "Inactive",
+"section2.ui.preview.subtitle": "Quick preview (what the customer will see).",
+"section2.ui.preview.offers.title": "Offers",
+"section2.ui.preview.offers.none": "No active offer in preview.",
+"section2.ui.preview.upsells.title": "Upsells",
+"section2.ui.preview.upsells.none": "No active upsell in preview.",
+"section2.ui.preview.productLabel": "Product:",
+"section2.ui.preview.product.none": "None",
+"section2.ui.preview.product.selected": "Selected product"
+
 
 };
 
@@ -3046,7 +3079,41 @@ const FR = {
 "section1.fieldEditor.titlePrefix.birthday": "Date de naissance",
 "section1.fieldEditor.titlePrefix.company": "Société",
 "section1.fieldEditor.titlePrefix.pincode": "Code postal",
-"section1.fieldEditor.titlePrefix.email": "Email"
+"section1.fieldEditor.titlePrefix.email": "Email",
+// ======================= Section2 Offers & Upsells (NEW UI) =======================
+"section2.ui.header.subtitle": "Offres & Upsells — Settings pro",
+"section2.ui.status.dirty": "Modifications non enregistrées",
+"section2.ui.status.saved": "Enregistré",
+"section2.ui.status.loading": "Chargement...",
+
+"section2.ui.tabs.global": "Global",
+"section2.ui.tabs.offers": "Offres",
+"section2.ui.tabs.upsells": "Upsells",
+
+"section2.ui.hero.badge": "{offers} Offres • {upsells} Upsells",
+"section2.ui.hero.title": "Offres & Upsells",
+"section2.ui.hero.subtitle": "Settings clairs + preview propre",
+"section2.ui.hero.currentTab": "{tab}",
+
+"section2.ui.modal.unsaved.title": "Modifications non enregistrées",
+"section2.ui.modal.unsaved.body": "Tu as des modifications non enregistrées. Tu veux sauvegarder ou ignorer avant de changer de section ?",
+"section2.ui.modal.unsaved.primary": "Sauvegarder & continuer",
+"section2.ui.modal.unsaved.primaryLoading": "Enregistrement...",
+"section2.ui.modal.unsaved.cancel": "Annuler",
+"section2.ui.modal.unsaved.discard": "Ignorer",
+
+"section2.ui.preview.title": "Preview",
+"section2.ui.preview.badge.active": "Actif",
+"section2.ui.preview.badge.inactive": "Inactif",
+"section2.ui.preview.subtitle": "Preview rapide (ce que le client va voir).",
+"section2.ui.preview.offers.title": "Offres",
+"section2.ui.preview.offers.none": "Aucune offre active dans la preview.",
+"section2.ui.preview.upsells.title": "Upsells",
+"section2.ui.preview.upsells.none": "Aucun upsell actif dans la preview.",
+"section2.ui.preview.productLabel": "Produit:",
+"section2.ui.preview.product.none": "Aucun",
+"section2.ui.preview.product.selected": "Produit sélectionné"
+
 
 };
 
@@ -4570,7 +4637,39 @@ const ES = {
 "section1.fieldEditor.titlePrefix.birthday": "Fecha de nacimiento",
 "section1.fieldEditor.titlePrefix.company": "Empresa",
 "section1.fieldEditor.titlePrefix.pincode": "Código postal",
-"section1.fieldEditor.titlePrefix.email": "Correo electrónico"
+"section1.fieldEditor.titlePrefix.email": "Correo electrónico",
+"section2.ui.header.subtitle": "Ofertas & Upsells — Ajustes pro",
+"section2.ui.status.dirty": "Cambios sin guardar",
+"section2.ui.status.saved": "Guardado",
+"section2.ui.status.loading": "Cargando...",
+
+"section2.ui.tabs.global": "Global",
+"section2.ui.tabs.offers": "Ofertas",
+"section2.ui.tabs.upsells": "Upsells",
+
+"section2.ui.hero.badge": "{offers} Ofertas • {upsells} Upsells",
+"section2.ui.hero.title": "Ofertas & Upsells",
+"section2.ui.hero.subtitle": "Ajustes claros + vista previa limpia",
+"section2.ui.hero.currentTab": "{tab}",
+
+"section2.ui.modal.unsaved.title": "Cambios sin guardar",
+"section2.ui.modal.unsaved.body": "Tienes cambios sin guardar. ¿Guardar o ignorar antes de cambiar de sección?",
+"section2.ui.modal.unsaved.primary": "Guardar y continuar",
+"section2.ui.modal.unsaved.primaryLoading": "Guardando...",
+"section2.ui.modal.unsaved.cancel": "Cancelar",
+"section2.ui.modal.unsaved.discard": "Ignorar",
+
+"section2.ui.preview.title": "Vista previa",
+"section2.ui.preview.badge.active": "Activo",
+"section2.ui.preview.badge.inactive": "Inactivo",
+"section2.ui.preview.subtitle": "Vista previa rápida (lo que verá el cliente).",
+"section2.ui.preview.offers.title": "Ofertas",
+"section2.ui.preview.offers.none": "No hay ofertas activas en la vista previa.",
+"section2.ui.preview.upsells.title": "Upsells",
+"section2.ui.preview.upsells.none": "No hay upsells activos en la vista previa.",
+"section2.ui.preview.productLabel": "Producto:",
+"section2.ui.preview.product.none": "Ninguno",
+"section2.ui.preview.product.selected": "Producto seleccionado"
 
 };
 
@@ -6092,7 +6191,39 @@ const AR = {
 "section1.fieldEditor.titlePrefix.birthday": "تاريخ الميلاد",
 "section1.fieldEditor.titlePrefix.company": "الشركة",
 "section1.fieldEditor.titlePrefix.pincode": "الرمز البريدي",
-"section1.fieldEditor.titlePrefix.email": "البريد الإلكتروني"
+"section1.fieldEditor.titlePrefix.email": "البريد الإلكتروني",
+"section2.ui.header.subtitle": "العروض و الـUpsells — إعدادات احترافية",
+"section2.ui.status.dirty": "تغييرات غير محفوظة",
+"section2.ui.status.saved": "تم الحفظ",
+"section2.ui.status.loading": "جاري التحميل...",
+
+"section2.ui.tabs.global": "عام",
+"section2.ui.tabs.offers": "عروض",
+"section2.ui.tabs.upsells": "Upsells",
+
+"section2.ui.hero.badge": "{offers} عروض • {upsells} Upsells",
+"section2.ui.hero.title": "العروض و الـUpsells",
+"section2.ui.hero.subtitle": "إعدادات واضحة + معاينة ممتازة",
+"section2.ui.hero.currentTab": "{tab}",
+
+"section2.ui.modal.unsaved.title": "تغييرات غير محفوظة",
+"section2.ui.modal.unsaved.body": "لديك تغييرات غير محفوظة. هل تريد الحفظ أو التجاهل قبل تغيير القسم؟",
+"section2.ui.modal.unsaved.primary": "حفظ والمتابعة",
+"section2.ui.modal.unsaved.primaryLoading": "جاري الحفظ...",
+"section2.ui.modal.unsaved.cancel": "إلغاء",
+"section2.ui.modal.unsaved.discard": "تجاهل",
+
+"section2.ui.preview.title": "معاينة",
+"section2.ui.preview.badge.active": "نشط",
+"section2.ui.preview.badge.inactive": "غير نشط",
+"section2.ui.preview.subtitle": "معاينة سريعة (ما سيراه العميل).",
+"section2.ui.preview.offers.title": "العروض",
+"section2.ui.preview.offers.none": "لا توجد عروض نشطة في المعاينة.",
+"section2.ui.preview.upsells.title": "Upsells",
+"section2.ui.preview.upsells.none": "لا يوجد Upsell نشط في المعاينة.",
+"section2.ui.preview.productLabel": "المنتج:",
+"section2.ui.preview.product.none": "لا يوجد",
+"section2.ui.preview.product.selected": "تم اختيار منتج"
 
 };
 
