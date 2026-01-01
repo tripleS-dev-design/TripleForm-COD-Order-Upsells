@@ -1602,7 +1602,89 @@ const EN = {
 
 "section2.ui.action.addOffer": "Add an offer",
 "section2.ui.action.addUpsell": "Add an upsell",
-"section2.ui.action.remove": "Remove"
+"section2.ui.action.remove": "Remove",
+
+// ======================= Section2 — Thank You Page (EN) =======================
+
+// Tab
+"section2.ui.tabs.thankyou": "Thank you page",
+
+// Global / intro
+"section2.ui.thankyou.title": "Thank you page",
+"section2.ui.thankyou.subtitle": "Customize the post-order experience",
+"section2.ui.thankyou.enable": "Enable thank you page",
+"section2.ui.thankyou.mode.label": "Mode",
+"section2.ui.thankyou.mode.simple": "Simple (button / redirect)",
+"section2.ui.thankyou.mode.popup": "Popup (image + content)",
+"section2.ui.thankyou.mode.help": "Choose how the thank you page behaves after checkout",
+
+// Popup behavior
+"section2.ui.thankyou.popup.enable": "Enable popup",
+"section2.ui.thankyou.popup.title": "Popup title",
+"section2.ui.thankyou.popup.text": "Popup text",
+"section2.ui.thankyou.popup.showClose": "Show close button",
+"section2.ui.thankyou.popup.closeLabel": "Close",
+"section2.ui.thankyou.popup.delayMs": "Open delay (ms)",
+"section2.ui.thankyou.popup.autoCloseMs": "Auto close (ms)",
+"section2.ui.thankyou.popup.overlay": "Overlay background",
+"section2.ui.thankyou.popup.overlayOpacity": "Overlay opacity",
+"section2.ui.thankyou.popup.animation": "Animation",
+"section2.ui.thankyou.popup.animation.none": "None",
+"section2.ui.thankyou.popup.animation.zoom": "Zoom",
+"section2.ui.thankyou.popup.animation.slideUp": "Slide up",
+"section2.ui.thankyou.popup.position": "Position",
+"section2.ui.thankyou.popup.position.center": "Center",
+"section2.ui.thankyou.popup.position.bottom": "Bottom",
+
+// Visual editor (Canva-like)
+"section2.ui.thankyou.editor.title": "Editor",
+"section2.ui.thankyou.editor.hint": "Add image, icon, text and buttons like a mini Canva editor",
+"section2.ui.thankyou.editor.addBlock": "Add element",
+"section2.ui.thankyou.editor.block.text": "Text",
+"section2.ui.thankyou.editor.block.image": "Image",
+"section2.ui.thankyou.editor.block.icon": "Icon",
+"section2.ui.thankyou.editor.block.button": "Button",
+"section2.ui.thankyou.editor.block.divider": "Divider",
+
+// Insert / sources
+"section2.ui.thankyou.insert.title": "Insert",
+"section2.ui.thankyou.insert.image": "Insert image",
+"section2.ui.thankyou.insert.imageUrl": "Image URL",
+"section2.ui.thankyou.insert.iconUrl": "Icon URL",
+"section2.ui.thankyou.insert.linkUrl": "Link URL",
+"section2.ui.thankyou.insert.shopifyImage": "Choose Shopify image",
+
+// Styling tools
+"section2.ui.thankyou.style.title": "Style",
+"section2.ui.thankyou.style.bg": "Background",
+"section2.ui.thankyou.style.textColor": "Text color",
+"section2.ui.thankyou.style.borderColor": "Border color",
+"section2.ui.thankyou.style.radius": "Border radius",
+"section2.ui.thankyou.style.shadow": "Shadow",
+"section2.ui.thankyou.style.padding": "Padding",
+"section2.ui.thankyou.style.align": "Alignment",
+"section2.ui.thankyou.style.align.left": "Left",
+"section2.ui.thankyou.style.align.center": "Center",
+"section2.ui.thankyou.style.align.right": "Right",
+"section2.ui.thankyou.style.fontSize": "Font size",
+"section2.ui.thankyou.style.fontWeight": "Font weight",
+
+// Palette
+"section2.ui.thankyou.palette.title": "Palettes",
+"section2.ui.thankyou.palette.apply": "Apply palette",
+"section2.ui.thankyou.palette.custom": "Custom colors",
+
+// Buttons
+"section2.ui.thankyou.button.primaryText": "Primary button text",
+"section2.ui.thankyou.button.primaryUrl": "Primary button link",
+"section2.ui.thankyou.button.secondaryText": "Secondary button text",
+"section2.ui.thankyou.button.secondaryUrl": "Secondary button link",
+
+// Preview
+"section2.ui.thankyou.preview.title": "Thank you page preview",
+"section2.ui.thankyou.preview.openPopup": "Open popup preview",
+"section2.ui.thankyou.preview.empty": "No elements yet. Add text, image or button to start."
+
 
 
 
@@ -3193,7 +3275,88 @@ const FR = {
 
 "section2.ui.action.addOffer": "Ajouter une offre",
 "section2.ui.action.addUpsell": "Ajouter un upsell",
-"section2.ui.action.remove": "Supprimer"
+"section2.ui.action.remove": "Supprimer",
+// ======================= Section2 — Thank You Page (FR) =======================
+
+// Tab
+"section2.ui.tabs.thankyou": "Page de remerciement",
+
+// Global / intro
+"section2.ui.thankyou.title": "Page de remerciement",
+"section2.ui.thankyou.subtitle": "Personnalisez l’expérience après la commande",
+"section2.ui.thankyou.enable": "Activer la page de remerciement",
+"section2.ui.thankyou.mode.label": "Mode",
+"section2.ui.thankyou.mode.simple": "Simple (bouton / redirection)",
+"section2.ui.thankyou.mode.popup": "Popup (image + contenu)",
+"section2.ui.thankyou.mode.help": "Choisissez le comportement après la commande",
+
+// Popup behavior
+"section2.ui.thankyou.popup.enable": "Activer le popup",
+"section2.ui.thankyou.popup.title": "Titre du popup",
+"section2.ui.thankyou.popup.text": "Texte du popup",
+"section2.ui.thankyou.popup.showClose": "Afficher le bouton fermer",
+"section2.ui.thankyou.popup.closeLabel": "Fermer",
+"section2.ui.thankyou.popup.delayMs": "Délai d’ouverture (ms)",
+"section2.ui.thankyou.popup.autoCloseMs": "Fermeture automatique (ms)",
+"section2.ui.thankyou.popup.overlay": "Fond assombri",
+"section2.ui.thankyou.popup.overlayOpacity": "Opacité du fond",
+"section2.ui.thankyou.popup.animation": "Animation",
+"section2.ui.thankyou.popup.animation.none": "Aucune",
+"section2.ui.thankyou.popup.animation.zoom": "Zoom",
+"section2.ui.thankyou.popup.animation.slideUp": "Glissement vers le haut",
+"section2.ui.thankyou.popup.position": "Position",
+"section2.ui.thankyou.popup.position.center": "Centre",
+"section2.ui.thankyou.popup.position.bottom": "Bas",
+
+// Visual editor
+"section2.ui.thankyou.editor.title": "Éditeur",
+"section2.ui.thankyou.editor.hint": "Ajoutez image, icône, texte et boutons comme dans Canva",
+"section2.ui.thankyou.editor.addBlock": "Ajouter un élément",
+"section2.ui.thankyou.editor.block.text": "Texte",
+"section2.ui.thankyou.editor.block.image": "Image",
+"section2.ui.thankyou.editor.block.icon": "Icône",
+"section2.ui.thankyou.editor.block.button": "Bouton",
+"section2.ui.thankyou.editor.block.divider": "Séparateur",
+
+// Insert
+"section2.ui.thankyou.insert.title": "Insérer",
+"section2.ui.thankyou.insert.image": "Insérer une image",
+"section2.ui.thankyou.insert.imageUrl": "URL de l’image",
+"section2.ui.thankyou.insert.iconUrl": "URL de l’icône",
+"section2.ui.thankyou.insert.linkUrl": "URL du lien",
+"section2.ui.thankyou.insert.shopifyImage": "Choisir une image Shopify",
+
+// Style
+"section2.ui.thankyou.style.title": "Style",
+"section2.ui.thankyou.style.bg": "Arrière-plan",
+"section2.ui.thankyou.style.textColor": "Couleur du texte",
+"section2.ui.thankyou.style.borderColor": "Couleur de la bordure",
+"section2.ui.thankyou.style.radius": "Arrondi",
+"section2.ui.thankyou.style.shadow": "Ombre",
+"section2.ui.thankyou.style.padding": "Espacement",
+"section2.ui.thankyou.style.align": "Alignement",
+"section2.ui.thankyou.style.align.left": "Gauche",
+"section2.ui.thankyou.style.align.center": "Centre",
+"section2.ui.thankyou.style.align.right": "Droite",
+"section2.ui.thankyou.style.fontSize": "Taille du texte",
+"section2.ui.thankyou.style.fontWeight": "Épaisseur du texte",
+
+// Palette
+"section2.ui.thankyou.palette.title": "Palettes",
+"section2.ui.thankyou.palette.apply": "Appliquer la palette",
+"section2.ui.thankyou.palette.custom": "Couleurs personnalisées",
+
+// Buttons
+"section2.ui.thankyou.button.primaryText": "Texte du bouton principal",
+"section2.ui.thankyou.button.primaryUrl": "Lien du bouton principal",
+"section2.ui.thankyou.button.secondaryText": "Texte du bouton secondaire",
+"section2.ui.thankyou.button.secondaryUrl": "Lien du bouton secondaire",
+
+// Preview
+"section2.ui.thankyou.preview.title": "Aperçu de la page de remerciement",
+"section2.ui.thankyou.preview.openPopup": "Ouvrir l’aperçu du popup",
+"section2.ui.thankyou.preview.empty": "Aucun élément. Ajoutez du contenu pour commencer."
+
 
 
 };
@@ -4790,7 +4953,79 @@ const ES = {
 
 "section2.ui.action.addOffer": "Añadir una oferta",
 "section2.ui.action.addUpsell": "Añadir un upsell",
-"section2.ui.action.remove": "Eliminar"
+"section2.ui.action.remove": "Eliminar",
+// ======================= Section2 — Thank You Page (ES) =======================
+
+"section2.ui.tabs.thankyou": "Página de agradecimiento",
+
+"section2.ui.thankyou.title": "Página de agradecimiento",
+"section2.ui.thankyou.subtitle": "Personaliza la experiencia después del pedido",
+"section2.ui.thankyou.enable": "Activar página de agradecimiento",
+"section2.ui.thankyou.mode.label": "Modo",
+"section2.ui.thankyou.mode.simple": "Simple (botón / redirección)",
+"section2.ui.thankyou.mode.popup": "Popup (imagen + contenido)",
+"section2.ui.thankyou.mode.help": "Elige cómo se muestra después del pedido",
+
+"section2.ui.thankyou.popup.enable": "Activar popup",
+"section2.ui.thankyou.popup.title": "Título del popup",
+"section2.ui.thankyou.popup.text": "Texto del popup",
+"section2.ui.thankyou.popup.showClose": "Mostrar botón cerrar",
+"section2.ui.thankyou.popup.closeLabel": "Cerrar",
+"section2.ui.thankyou.popup.delayMs": "Retraso de apertura (ms)",
+"section2.ui.thankyou.popup.autoCloseMs": "Cierre automático (ms)",
+"section2.ui.thankyou.popup.overlay": "Fondo oscuro",
+"section2.ui.thankyou.popup.overlayOpacity": "Opacidad del fondo",
+"section2.ui.thankyou.popup.animation": "Animación",
+"section2.ui.thankyou.popup.animation.none": "Ninguna",
+"section2.ui.thankyou.popup.animation.zoom": "Zoom",
+"section2.ui.thankyou.popup.animation.slideUp": "Deslizar hacia arriba",
+"section2.ui.thankyou.popup.position": "Posición",
+"section2.ui.thankyou.popup.position.center": "Centro",
+"section2.ui.thankyou.popup.position.bottom": "Abajo",
+
+"section2.ui.thankyou.editor.title": "Editor",
+"section2.ui.thankyou.editor.hint": "Agrega imagen, icono, texto y botones como Canva",
+"section2.ui.thankyou.editor.addBlock": "Agregar elemento",
+"section2.ui.thankyou.editor.block.text": "Texto",
+"section2.ui.thankyou.editor.block.image": "Imagen",
+"section2.ui.thankyou.editor.block.icon": "Icono",
+"section2.ui.thankyou.editor.block.button": "Botón",
+"section2.ui.thankyou.editor.block.divider": "Separador",
+
+"section2.ui.thankyou.insert.title": "Insertar",
+"section2.ui.thankyou.insert.image": "Insertar imagen",
+"section2.ui.thankyou.insert.imageUrl": "URL de la imagen",
+"section2.ui.thankyou.insert.iconUrl": "URL del icono",
+"section2.ui.thankyou.insert.linkUrl": "URL del enlace",
+"section2.ui.thankyou.insert.shopifyImage": "Elegir imagen de Shopify",
+
+"section2.ui.thankyou.style.title": "Estilo",
+"section2.ui.thankyou.style.bg": "Fondo",
+"section2.ui.thankyou.style.textColor": "Color del texto",
+"section2.ui.thankyou.style.borderColor": "Color del borde",
+"section2.ui.thankyou.style.radius": "Radio del borde",
+"section2.ui.thankyou.style.shadow": "Sombra",
+"section2.ui.thankyou.style.padding": "Espaciado",
+"section2.ui.thankyou.style.align": "Alineación",
+"section2.ui.thankyou.style.align.left": "Izquierda",
+"section2.ui.thankyou.style.align.center": "Centro",
+"section2.ui.thankyou.style.align.right": "Derecha",
+"section2.ui.thankyou.style.fontSize": "Tamaño del texto",
+"section2.ui.thankyou.style.fontWeight": "Grosor del texto",
+
+"section2.ui.thankyou.palette.title": "Paletas",
+"section2.ui.thankyou.palette.apply": "Aplicar paleta",
+"section2.ui.thankyou.palette.custom": "Colores personalizados",
+
+"section2.ui.thankyou.button.primaryText": "Texto del botón principal",
+"section2.ui.thankyou.button.primaryUrl": "Enlace del botón principal",
+"section2.ui.thankyou.button.secondaryText": "Texto del botón secundario",
+"section2.ui.thankyou.button.secondaryUrl": "Enlace del botón secundario",
+
+"section2.ui.thankyou.preview.title": "Vista previa de agradecimiento",
+"section2.ui.thankyou.preview.openPopup": "Abrir vista previa del popup",
+"section2.ui.thankyou.preview.empty": "Aún no hay elementos. Agrega contenido para empezar."
+
 
 };
 
@@ -6384,7 +6619,80 @@ const AR = {
 
 "section2.ui.action.addOffer": "إضافة عرض",
 "section2.ui.action.addUpsell": "إضافة Upsell",
-"section2.ui.action.remove": "حذف"
+"section2.ui.action.remove": "حذف",
+
+// ======================= Section2 — Thank You Page (AR) =======================
+
+"section2.ui.tabs.thankyou": "صفحة الشكر",
+
+"section2.ui.thankyou.title": "صفحة الشكر",
+"section2.ui.thankyou.subtitle": "تخصيص التجربة بعد تأكيد الطلب",
+"section2.ui.thankyou.enable": "تفعيل صفحة الشكر",
+"section2.ui.thankyou.mode.label": "الوضع",
+"section2.ui.thankyou.mode.simple": "بسيط (زر / تحويل)",
+"section2.ui.thankyou.mode.popup": "نافذة منبثقة (صورة + محتوى)",
+"section2.ui.thankyou.mode.help": "اختيار طريقة العرض بعد الطلب",
+
+"section2.ui.thankyou.popup.enable": "تفعيل النافذة",
+"section2.ui.thankyou.popup.title": "عنوان النافذة",
+"section2.ui.thankyou.popup.text": "نص النافذة",
+"section2.ui.thankyou.popup.showClose": "إظهار زر الإغلاق",
+"section2.ui.thankyou.popup.closeLabel": "إغلاق",
+"section2.ui.thankyou.popup.delayMs": "تأخير الفتح (مللي ثانية)",
+"section2.ui.thankyou.popup.autoCloseMs": "إغلاق تلقائي (مللي ثانية)",
+"section2.ui.thankyou.popup.overlay": "خلفية معتمة",
+"section2.ui.thankyou.popup.overlayOpacity": "شفافية الخلفية",
+"section2.ui.thankyou.popup.animation": "الحركة",
+"section2.ui.thankyou.popup.animation.none": "بدون",
+"section2.ui.thankyou.popup.animation.zoom": "تكبير",
+"section2.ui.thankyou.popup.animation.slideUp": "سحب للأعلى",
+"section2.ui.thankyou.popup.position": "المكان",
+"section2.ui.thankyou.popup.position.center": "وسط",
+"section2.ui.thankyou.popup.position.bottom": "أسفل",
+
+"section2.ui.thankyou.editor.title": "المحرر",
+"section2.ui.thankyou.editor.hint": "أضف صورة، أيقونة، نص وأزرار مثل Canva",
+"section2.ui.thankyou.editor.addBlock": "إضافة عنصر",
+"section2.ui.thankyou.editor.block.text": "نص",
+"section2.ui.thankyou.editor.block.image": "صورة",
+"section2.ui.thankyou.editor.block.icon": "أيقونة",
+"section2.ui.thankyou.editor.block.button": "زر",
+"section2.ui.thankyou.editor.block.divider": "فاصل",
+
+"section2.ui.thankyou.insert.title": "إدراج",
+"section2.ui.thankyou.insert.image": "إدراج صورة",
+"section2.ui.thankyou.insert.imageUrl": "رابط الصورة",
+"section2.ui.thankyou.insert.iconUrl": "رابط الأيقونة",
+"section2.ui.thankyou.insert.linkUrl": "رابط",
+"section2.ui.thankyou.insert.shopifyImage": "اختيار صورة من Shopify",
+
+"section2.ui.thankyou.style.title": "التصميم",
+"section2.ui.thankyou.style.bg": "الخلفية",
+"section2.ui.thankyou.style.textColor": "لون النص",
+"section2.ui.thankyou.style.borderColor": "لون الإطار",
+"section2.ui.thankyou.style.radius": "تدوير الحواف",
+"section2.ui.thankyou.style.shadow": "ظل",
+"section2.ui.thankyou.style.padding": "المسافات",
+"section2.ui.thankyou.style.align": "المحاذاة",
+"section2.ui.thankyou.style.align.left": "يسار",
+"section2.ui.thankyou.style.align.center": "وسط",
+"section2.ui.thankyou.style.align.right": "يمين",
+"section2.ui.thankyou.style.fontSize": "حجم الخط",
+"section2.ui.thankyou.style.fontWeight": "سُمك الخط",
+
+"section2.ui.thankyou.palette.title": "لوحات الألوان",
+"section2.ui.thankyou.palette.apply": "تطبيق اللوحة",
+"section2.ui.thankyou.palette.custom": "ألوان مخصصة",
+
+"section2.ui.thankyou.button.primaryText": "نص الزر الرئيسي",
+"section2.ui.thankyou.button.primaryUrl": "رابط الزر الرئيسي",
+"section2.ui.thankyou.button.secondaryText": "نص الزر الثانوي",
+"section2.ui.thankyou.button.secondaryUrl": "رابط الزر الثانوي",
+
+"section2.ui.thankyou.preview.title": "معاينة صفحة الشكر",
+"section2.ui.thankyou.preview.openPopup": "فتح معاينة النافذة",
+"section2.ui.thankyou.preview.empty": "لا توجد عناصر بعد. أضف محتوى للبدء."
+
 
 };
 
