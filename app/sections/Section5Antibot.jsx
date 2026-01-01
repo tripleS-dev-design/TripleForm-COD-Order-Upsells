@@ -1,5 +1,5 @@
 // ===== File: app/sections/Section5Antibot.jsx =====
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Card,
   BlockStack,
@@ -12,9 +12,6 @@ import {
   Badge,
 } from "@shopify/polaris";
 import { useI18n } from "../i18n/react";
-
-// ✅ même logique country que Section Form
-import { getCountries, getPhonePrefixByCountry } from "../data/countryData";
 
 /* ======================= CSS / layout ======================= */
 const LAYOUT_CSS = `
@@ -298,88 +295,10 @@ function TokenEditor({
   );
 }
 
-/* ============================== Country tokens (sync with Form countries logic) ============================== */
-function CountryTokenPicker({
-  label,
-  items,
-  options,
-  codeToLabel,
-  onAddCode,
-  onRemoveAt,
-  addLabel,
-  removeLabel,
-  emptyLabel,
-  helpText,
-}) {
-  const [val, setVal] = useState("");
-
-  return (
-    <div style={{ display: "grid", gap: 8 }}>
-      <Text as="span" variant="bodySm" tone="subdued">
-        {label}
-      </Text>
-
-      <InlineStack gap="200" wrap blockAlign="center">
-        <div style={{ flex: 1, minWidth: 220 }}>
-          <Select options={options} value={val} onChange={setVal} label="" />
-        </div>
-        <Button
-          onClick={() => {
-            if (!val) return;
-            onAddCode(val);
-            setVal("");
-          }}
-        >
-          {addLabel}
-        </Button>
-      </InlineStack>
-
-      {helpText && (
-        <Text as="p" tone="subdued">
-          {helpText}
-        </Text>
-      )}
-
-      <div className="token-wrap">
-        {(items || []).map((code, idx) => {
-          const name = codeToLabel(code);
-          const show = name ? `${code} — ${name}` : code;
-          return (
-            <span className="token" key={`${code}-${idx}`}>
-              <span
-                style={{
-                  maxWidth: 260,
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                }}
-                title={show}
-              >
-                {show}
-              </span>
-              <button aria-label={removeLabel} onClick={() => onRemoveAt(idx)}>
-                ×
-              </button>
-            </span>
-          );
-        })}
-        {(!items || items.length === 0) && (
-          <Text tone="subdued" as="span">
-            {emptyLabel}
-          </Text>
-        )}
-      </div>
-    </div>
-  );
-}
-
 /* ============================== default config ============================== */
 function defaultCfg() {
   return {
-    meta: {
-      version: 4,
-      // ✅ country principal (même logique que section form)
-      shopCountry: "MA",
-    },
+    meta: { version: 4 },
 
     ipBlock: {
       enabled: true,
@@ -406,7 +325,7 @@ function defaultCfg() {
     countryBlock: {
       enabled: false,
       defaultAction: "allow", // allow | block | challenge
-      allowList: [], // ISO2 : MA, DZ, FR...
+      allowList: [],
       denyList: [],
     },
 
@@ -508,71 +427,20 @@ export default function Section5Antibot() {
     }
   };
 
-  // petit helper: si key manquante => fallback
-  const tr = (key, fallback, vars) => {
-    const r = t(key, vars);
-    return r === key ? fallback : r;
-  };
-
   const [cfg, setCfg] = useState(defaultCfg);
   const [sel, setSel] = useState("overview");
   const [saving, setSaving] = useState(false);
-
-  /* ===== Countries options (same logic as Form section) ===== */
-  const countriesList = useMemo(() => (getCountries?.() || []), []);
-  const countryOptions = useMemo(() => {
-    const base = [
-      { label: tr("section5.country.selectPlaceholder", "Select country"), value: "" },
-    ];
-    const list = countriesList.map((c) => ({ label: c.label, value: c.code }));
-    return [...base, ...list];
-  }, [countriesList]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const countryLabelByCode = useMemo(() => {
-    const map = new Map();
-    countriesList.forEach((c) => map.set(String(c.code || "").toUpperCase(), c.label));
-    return map;
-  }, [countriesList]);
-
-  const codeToLabel = (code) => {
-    const k = String(code || "").toUpperCase();
-    return countryLabelByCode.get(k) || "";
-  };
-
-  const setMeta = (p) => setCfg((c) => ({ ...c, meta: { ...(c.meta || {}), ...p } }));
-
-  // ✅ sync initial: si la section form a déjà un country, on le récupère
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    try {
-      const raw = window.localStorage.getItem("tripleform_cod_config");
-      if (!raw) return;
-      const parsed = JSON.parse(raw);
-      const formCountry = parsed?.behavior?.country;
-      if (formCountry) {
-        setCfg((prev) => {
-          const current = prev?.meta?.shopCountry;
-          if (current) return prev;
-          return { ...prev, meta: { ...(prev.meta || {}), shopCountry: formCountry } };
-        });
-      }
-    } catch {
-      /* ignore */
-    }
-  }, []);
 
   /* ===== load depuis localStorage (front) ===== */
   useEffect(() => {
     if (typeof window === "undefined") return;
     try {
-      const raw = window.localStorage.getItem("tripleform_cod_antibot_min_v4");
+      const raw = window.localStorage.getItem(
+        "tripleform_cod_antibot_min_v4"
+      );
       if (raw) {
         const parsed = JSON.parse(raw);
-        setCfg((prev) => ({
-          ...prev,
-          ...parsed,
-          meta: { ...(prev.meta || {}), ...(parsed.meta || {}) },
-        }));
+        setCfg((prev) => ({ ...prev, ...parsed }));
       }
     } catch {
       /* ignore */
@@ -593,7 +461,6 @@ export default function Section5Antibot() {
           setCfg((prev) => ({
             ...prev,
             ...j.antibot,
-            meta: { ...(prev.meta || {}), ...(j.antibot?.meta || {}) },
           }));
         }
       } catch (e) {
@@ -662,22 +529,6 @@ export default function Section5Antibot() {
     return Array.from(set);
   };
   const removeAt = (arr, idx) => (arr || []).filter((_, i) => i !== idx);
-
-  // ✅ country change (same behavior as form: update prefixes suggestion)
-  const handleShopCountryChange = (code) => {
-    setMeta({ shopCountry: code });
-    const prefix = getPhonePrefixByCountry?.(code);
-    if (prefix) {
-      setCfg((c) => {
-        const cur = c.phoneBlock?.allowedPrefixes || [];
-        if (cur.includes(prefix)) return c;
-        return {
-          ...c,
-          phoneBlock: { ...c.phoneBlock, allowedPrefixes: [prefix, ...cur] },
-        };
-      });
-    }
-  };
 
   // rail
   const panels = [
@@ -774,17 +625,6 @@ export default function Section5Antibot() {
               <GroupCard title="section5.overview.title" t={t}>
                 <BlockStack gap="200">
                   <Text as="p">{t("section5.overview.description")}</Text>
-
-                  {/* ✅ Store Country (sync logic) */}
-                  <Grid2>
-                    <Select
-                      label={tr("section5.country.shopCountryLabel", "Store country")}
-                      options={countryOptions}
-                      value={cfg.meta?.shopCountry || ""}
-                      onChange={handleShopCountryChange}
-                    />
-                  </Grid2>
-
                   <ul
                     style={{
                       paddingLeft: "1.2rem",
@@ -813,7 +653,7 @@ export default function Section5Antibot() {
                     </li>
                   </ul>
                   <Text tone="subdued" as="p">
-                    Pour l&apos;instant, cette interface est uniquement <b>front</b>.
+                    Pour l'instant, cette interface est uniquement <b>front</b>.
                     Tu pourras brancher la logique réelle dans tes routes Remix
                     et dans le bloc du formulaire COD.
                   </Text>
@@ -938,18 +778,6 @@ export default function Section5Antibot() {
           {sel === "phone" && (
             <div className="tf-panel">
               <GroupCard title="section5.phoneBlock.title" t={t}>
-                {/* ✅ store country select (same as form) */}
-                <Grid3>
-                  <Select
-                    label={tr("section5.country.shopCountryLabel", "Store country")}
-                    options={countryOptions}
-                    value={cfg.meta?.shopCountry || ""}
-                    onChange={handleShopCountryChange}
-                  />
-                </Grid3>
-
-                <div style={{ height: 10 }} />
-
                 <Grid3>
                   <Checkbox
                     label={t("section5.phoneBlock.enable")}
@@ -974,57 +802,81 @@ export default function Section5Antibot() {
                 <TokenEditor
                   label={t("section5.phoneBlock.allowedPrefixes")}
                   items={cfg.phoneBlock.allowedPrefixes}
-                  placeholder={t("section5.phoneBlock.allowedPrefixesPlaceholder")}
+                  placeholder={t(
+                    "section5.phoneBlock.allowedPrefixesPlaceholder"
+                  )}
                   addLabel={t("section5.buttons.add")}
                   addCSVLabel={t("section5.buttons.addCSV")}
                   removeLabel={t("section5.buttons.remove")}
                   emptyLabel={t("section5.empty")}
                   onAddItems={(arr) =>
                     setTEL({
-                      allowedPrefixes: addItems(cfg.phoneBlock.allowedPrefixes, arr),
+                      allowedPrefixes: addItems(
+                        cfg.phoneBlock.allowedPrefixes,
+                        arr
+                      ),
                     })
                   }
                   onRemoveAt={(i) =>
                     setTEL({
-                      allowedPrefixes: removeAt(cfg.phoneBlock.allowedPrefixes, i),
+                      allowedPrefixes: removeAt(
+                        cfg.phoneBlock.allowedPrefixes,
+                        i
+                      ),
                     })
                   }
                 />
                 <TokenEditor
                   label={t("section5.phoneBlock.blockedNumbers")}
                   items={cfg.phoneBlock.blockedNumbers}
-                  placeholder={t("section5.phoneBlock.blockedNumbersPlaceholder")}
+                  placeholder={t(
+                    "section5.phoneBlock.blockedNumbersPlaceholder"
+                  )}
                   addLabel={t("section5.buttons.add")}
                   addCSVLabel={t("section5.buttons.addCSV")}
                   removeLabel={t("section5.buttons.remove")}
                   emptyLabel={t("section5.empty")}
                   onAddItems={(arr) =>
                     setTEL({
-                      blockedNumbers: addItems(cfg.phoneBlock.blockedNumbers, arr),
+                      blockedNumbers: addItems(
+                        cfg.phoneBlock.blockedNumbers,
+                        arr
+                      ),
                     })
                   }
                   onRemoveAt={(i) =>
                     setTEL({
-                      blockedNumbers: removeAt(cfg.phoneBlock.blockedNumbers, i),
+                      blockedNumbers: removeAt(
+                        cfg.phoneBlock.blockedNumbers,
+                        i
+                      ),
                     })
                   }
                 />
                 <TokenEditor
                   label={t("section5.phoneBlock.blockedPatterns")}
                   items={cfg.phoneBlock.blockedPatterns}
-                  placeholder={t("section5.phoneBlock.blockedPatternsPlaceholder")}
+                  placeholder={t(
+                    "section5.phoneBlock.blockedPatternsPlaceholder"
+                  )}
                   addLabel={t("section5.buttons.add")}
                   addCSVLabel={t("section5.buttons.addCSV")}
                   removeLabel={t("section5.buttons.remove")}
                   emptyLabel={t("section5.empty")}
                   onAddItems={(arr) =>
                     setTEL({
-                      blockedPatterns: addItems(cfg.phoneBlock.blockedPatterns, arr),
+                      blockedPatterns: addItems(
+                        cfg.phoneBlock.blockedPatterns,
+                        arr
+                      ),
                     })
                   }
                   onRemoveAt={(i) =>
                     setTEL({
-                      blockedPatterns: removeAt(cfg.phoneBlock.blockedPatterns, i),
+                      blockedPatterns: removeAt(
+                        cfg.phoneBlock.blockedPatterns,
+                        i
+                      ),
                     })
                   }
                 />
@@ -1049,18 +901,6 @@ export default function Section5Antibot() {
           {sel === "country" && (
             <div className="tf-panel">
               <GroupCard title="section5.countryBlock.title" t={t}>
-                {/* ✅ store country select (same as form) */}
-                <Grid3>
-                  <Select
-                    label={tr("section5.country.shopCountryLabel", "Store country")}
-                    options={countryOptions}
-                    value={cfg.meta?.shopCountry || ""}
-                    onChange={handleShopCountryChange}
-                  />
-                </Grid3>
-
-                <div style={{ height: 10 }} />
-
                 <Grid3>
                   <Checkbox
                     label={t("section5.countryBlock.enable")}
@@ -1073,37 +913,40 @@ export default function Section5Antibot() {
                     onChange={(v) => setCTRY({ defaultAction: v })}
                     options={[
                       {
-                        label: t("section5.countryBlock.defaultActionOptions.allow"),
+                        label: t(
+                          "section5.countryBlock.defaultActionOptions.allow"
+                        ),
                         value: "allow",
                       },
                       {
-                        label: t("section5.countryBlock.defaultActionOptions.block"),
+                        label: t(
+                          "section5.countryBlock.defaultActionOptions.block"
+                        ),
                         value: "block",
                       },
                       {
-                        label: t("section5.countryBlock.defaultActionOptions.challenge"),
+                        label: t(
+                          "section5.countryBlock.defaultActionOptions.challenge"
+                        ),
                         value: "challenge",
                       },
                     ]}
                   />
                 </Grid3>
 
-                {/* ✅ allow list: picker dynamique (ISO2) */}
-                <CountryTokenPicker
+                <TokenEditor
                   label={t("section5.countryBlock.allowList")}
                   items={cfg.countryBlock.allowList}
-                  options={countryOptions}
-                  codeToLabel={codeToLabel}
+                  placeholder={t(
+                    "section5.countryBlock.allowListPlaceholder"
+                  )}
                   addLabel={t("section5.buttons.add")}
+                  addCSVLabel={t("section5.buttons.addCSV")}
                   removeLabel={t("section5.buttons.remove")}
                   emptyLabel={t("section5.empty")}
-                  helpText={tr(
-                    "section5.countryBlock.allowHelp",
-                    "Pick countries to ALLOW (ISO codes)."
-                  )}
-                  onAddCode={(code) =>
+                  onAddItems={(arr) =>
                     setCTRY({
-                      allowList: addItems(cfg.countryBlock.allowList, [String(code).toUpperCase()]),
+                      allowList: addItems(cfg.countryBlock.allowList, arr),
                     })
                   }
                   onRemoveAt={(i) =>
@@ -1112,23 +955,17 @@ export default function Section5Antibot() {
                     })
                   }
                 />
-
-                {/* ✅ deny list: picker dynamique (ISO2) */}
-                <CountryTokenPicker
+                <TokenEditor
                   label={t("section5.countryBlock.denyList")}
                   items={cfg.countryBlock.denyList}
-                  options={countryOptions}
-                  codeToLabel={codeToLabel}
+                  placeholder={t("section5.countryBlock.denyListPlaceholder")}
                   addLabel={t("section5.buttons.add")}
+                  addCSVLabel={t("section5.buttons.addCSV")}
                   removeLabel={t("section5.buttons.remove")}
                   emptyLabel={t("section5.empty")}
-                  helpText={tr(
-                    "section5.countryBlock.denyHelp",
-                    "Pick countries to BLOCK (ISO codes)."
-                  )}
-                  onAddCode={(code) =>
+                  onAddItems={(arr) =>
                     setCTRY({
-                      denyList: addItems(cfg.countryBlock.denyList, [String(code).toUpperCase()]),
+                      denyList: addItems(cfg.countryBlock.denyList, arr),
                     })
                   }
                   onRemoveAt={(i) =>
@@ -1157,11 +994,15 @@ export default function Section5Antibot() {
                     onChange={(v) => setRC({ version: v })}
                     options={[
                       {
-                        label: t("section5.recaptcha.versionOptions.v2_checkbox"),
+                        label: t(
+                          "section5.recaptcha.versionOptions.v2_checkbox"
+                        ),
                         value: "v2_checkbox",
                       },
                       {
-                        label: t("section5.recaptcha.versionOptions.v2_invisible"),
+                        label: t(
+                          "section5.recaptcha.versionOptions.v2_invisible"
+                        ),
                         value: "v2_invisible",
                       },
                       {
