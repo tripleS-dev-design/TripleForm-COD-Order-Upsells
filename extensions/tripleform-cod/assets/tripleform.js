@@ -198,11 +198,40 @@ function safeJsonParse(raw, fallback = {}) {
       <path d="M10 2.5c2.2 2.3 2.2 12.7 0 15" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
       <path d="M10 2.5c-2.2 2.3-2.2 12.7 0 15" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
     </svg>`,
+
+EmailIcon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+  <path d="M3.5 5.5h13a1.5 1.5 0 0 1 1.5 1.5v8a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 2 15V7A1.5 1.5 0 0 1 3.5 5.5Z"
+    stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+  <path d="M3 7l7 5 7-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>`,
+
+CartIcon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+  <path d="M3 4h2l1.3 8.2a1.5 1.5 0 0 0 1.5 1.3h7.1a1.5 1.5 0 0 0 1.5-1.2l1-5.3H6.2"
+    stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="8" cy="16.2" r="1.1" fill="currentColor"/>
+  <circle cx="14.5" cy="16.2" r="1.1" fill="currentColor"/>
+</svg>`,
   };
 
   // ✅ Map Polaris/legacy icon names -> our inline SVG icons
   const ICON_ALIASES = {
-    // People / name
+    
+    // FR / AR / misc names used in admin
+    PanierIcon: "CartIcon",
+    Panier: "CartIcon",
+    Cart: "CartIcon",
+    BasketIcon: "CartIcon",
+    Basket: "CartIcon",
+    ShoppingBagIcon: "CartIcon",
+    ShoppingBag: "CartIcon",
+    Email: "EmailIcon",
+    Mail: "EmailIcon",
+    Envelope: "EmailIcon",
+    LettreIcon: "EmailIcon",
+    TelephoneIcon: "PhoneIcon",
+    TelIcon: "PhoneIcon",
+    WhatsAppIcon: "PhoneIcon",
+// People / name
     PersonIcon: "UserIcon",
     ProfileIcon: "UserIcon",
     CustomerIcon: "UserIcon",
@@ -239,28 +268,88 @@ function safeJsonParse(raw, fallback = {}) {
     // Country / globe
     WorldIcon: "GlobeIcon",
     GlobeIcon: "GlobeIcon",
+// Cart / bag
+CartIcon: "CartIcon",
+CartMajor: "CartIcon",
+CartMinor: "CartIcon",
+Cart: "CartIcon",
+BagIcon: "CartIcon",
+BagMajor: "CartIcon",
+BagMinor: "CartIcon",
+ShoppingBagIcon: "CartIcon",
+ShoppingCartIcon: "CartIcon",
+
+// Email / mail
+EmailIcon: "EmailIcon",
+EmailMajor: "EmailIcon",
+EmailMinor: "EmailIcon",
+MailIcon: "EmailIcon",
+MailMajor: "EmailIcon",
+MailMinor: "EmailIcon",
+EnvelopeIcon: "EmailIcon",
+EnvelopeMajor: "EmailIcon",
+EnvelopeMinor: "EmailIcon",
   };
 
   function normalizeIconName(name) {
-    const raw = String(name || "").trim();
-    if (!raw) return "";
-    // remove Polaris suffixes
-    let n = raw.replace(/Major$/i, "").replace(/Minor$/i, "");
-    // ensure Icon suffix
-    if (!/Icon$/i.test(n)) n = n + "Icon";
-    // normalize first letter
-    n = n[0].toUpperCase() + n.slice(1);
+  const raw0 = String(name || "").trim();
+  if (!raw0) return "AppsIcon";
 
-    // alias mapping (Polaris / legacy / UI names)
-    const aliased =
-      ICON_ALIASES[n] ||
-      ICON_ALIASES[raw] ||
-      ICON_ALIASES[n.replace(/Icon$/i, "")] ||
-      ICON_ALIASES[raw.replace(/Icon$/i, "")] ||
-      "";
+  // allow things like "iconpanier", "icon-email", "cart", "email", etc.
+  let raw = raw0
+    .replace(/^icon[\s_-]*/i, "")      // leading "icon"
+    .replace(/[\s_-]+/g, "")           // separators
+    .trim();
 
-    return aliased || n;
-  }
+  const lower = raw.toLowerCase();
+
+  const quick = {
+    panier: "CartIcon",
+    cart: "CartIcon",
+    basket: "CartIcon",
+    bag: "CartIcon",
+    shoppingcart: "CartIcon",
+    mail: "EmailIcon",
+    email: "EmailIcon",
+    envelope: "EmailIcon",
+    telephone: "PhoneIcon",
+    tel: "PhoneIcon",
+    phone: "PhoneIcon",
+    whatsapp: "PhoneIcon",
+    location: "MapPinIcon",
+    map: "MapPinIcon",
+    pin: "MapPinIcon",
+    note: "NoteIcon",
+    clipboard: "NoteIcon",
+    world: "GlobeIcon",
+    globe: "GlobeIcon",
+    user: "UserIcon",
+    person: "UserIcon",
+    profile: "UserIcon",
+    discount: "DiscountIcon",
+    gift: "GiftCardIcon",
+    plus: "CirclePlusIcon",
+    check: "CheckCircleIcon",
+    apps: "AppsIcon",
+  };
+  if (quick[lower]) return quick[lower];
+
+  // Ensure Icon suffix and PascalCase
+  let n = raw0.trim();
+  n = n.replace(/Major$/i, "").replace(/Minor$/i, "");
+  if (!/Icon$/i.test(n)) n = n + "Icon";
+  n = n.replace(/[\s_-]+/g, "");
+  n = n[0].toUpperCase() + n.slice(1);
+
+  const aliased =
+    ICON_ALIASES[n] ||
+    ICON_ALIASES[raw0] ||
+    ICON_ALIASES[n.replace(/Icon$/i, "")] ||
+    ICON_ALIASES[raw0.replace(/Icon$/i, "")] ||
+    "";
+
+  return aliased || n;
+}
 
   function getIconHtml(iconName, size = 18, color = "currentColor") {
     const key = normalizeIconName(iconName);
@@ -411,11 +500,12 @@ function safeJsonParse(raw, fallback = {}) {
     `;
     document.head.appendChild(style);
   }
- /* ------------------------------------------------------------------ */
-  /* Pays / wilayas / villes COMPLET                                    */
-  /* ------------------------------------------------------------------ */
 
-  const COUNTRY_DATA = {
+   /* ------------------------------------------------------------------ */
+/* Pays / wilayas / villes                                            */
+/* ------------------------------------------------------------------ */
+// ✅ NO COUNTRY_DATA in this file (paste manually if you want)
+ const COUNTRY_DATA = {
     ma: {
       label: "Maroc",
       phonePrefix: "+212",
@@ -1146,258 +1236,153 @@ function safeJsonParse(raw, fallback = {}) {
     }
   };
 
-  function getCountryDef(beh) {
-    const raw =
-      beh && (beh.country || beh.codCountry)
-        ? beh.country || beh.codCountry
-        : "MA";
+function getCountryDef(beh) {
+  const raw =
+    beh && (beh.country || beh.codCountry)
+      ? beh.country || beh.codCountry
+      : "MA";
 
-    const code = String(raw).toLowerCase();
-    const def = COUNTRY_DATA[code] || COUNTRY_DATA.ma;
+  const code = String(raw).toLowerCase();
+  const def = COUNTRY_DATA[code] || {
+    label: code.toUpperCase(),
+    phonePrefix: "",
+    provinces: [],
+  };
 
-    return { ...def, code: (code || "ma").toUpperCase() };
-  }
+  return { ...def, code: (code || "ma").toUpperCase() };
+}
 
+/* ------------------------------------------------------------------ */
+/* Thank you (popup / redirect / inline)                               */
+/* ------------------------------------------------------------------ */
+function getThankYouConfig(cfg, offersCfg) {
+  const a =
+    (cfg && (cfg.thankYou || cfg.thankyou || cfg.thank_you)) ||
+    (cfg && cfg.behavior && (cfg.behavior.thankYou || cfg.behavior.thankyou)) ||
+    (cfg && cfg.form && (cfg.form.thankYou || cfg.form.thankyou)) ||
+    (offersCfg && (offersCfg.thankYou || offersCfg.thankyou)) ||
+    (offersCfg && offersCfg.global && (offersCfg.global.thankYou || offersCfg.global.thankyou)) ||
+    null;
 
+  if (!a || typeof a !== "object") return null;
 
+  const ty = { ...a };
+  if (ty.enabled === undefined) ty.enabled = true;
+  if (!ty.mode && ty.type) ty.mode = ty.type;
 
+  return ty;
+}
 
-  /* ------------------------------------------------------------------ */
-  /* Overlay / effect shadows / sizes                                   */
-  /* ------------------------------------------------------------------ */
-  function hexToRgba(hex, alpha) {
-    try {
-      let h = String(hex || "").trim();
-      if (!h) return `rgba(0,0,0,${alpha})`;
-      if (h[0] === "#") h = h.slice(1);
-      if (h.length === 3) h = h.split("").map((c) => c + c).join("");
-      const num = parseInt(h, 16);
-      const r = (num >> 16) & 255;
-      const g = (num >> 8) & 255;
-      const b = num & 255;
-      return `rgba(${r},${g},${b},${alpha})`;
-    } catch {
-      return `rgba(0,0,0,${alpha})`;
-    }
-  }
+function thankYouOverlayId(root) {
+  return `tf-ty-${root && root.id ? root.id : "root"}`;
+}
 
-  function overlayBackground(beh) {
-    const hex = beh?.overlayColor || "#020617";
-    const op = clamp01(beh?.overlayOpacity ?? 0);
-    return hexToRgba(hex, op);
-  }
+function ensureThankYouOverlay(root) {
+  const id = thankYouOverlayId(root);
+  let overlay = document.getElementById(id);
+  if (overlay) return overlay;
 
-  function shadowFromEffect(cfg, baseColor) {
-    const effect = cfg?.behavior?.effect || "none";
-    const glowPx = cfg?.design?.glowPx || 18;
-    if (effect === "glow") return `0 0 ${glowPx}px ${baseColor}`;
-    if (effect === "light") return "0 10px 24px rgba(0,0,0,.12)";
-    if (cfg?.design?.shadow) return "0 10px 24px rgba(0,0,0,.10)";
-    return "none";
-  }
+  overlay = document.createElement("div");
+  overlay.id = id;
+  overlay.className = "tf-ty-overlay";
+  overlay.innerHTML = `<div class="tf-ty-card" data-tf-ty-card="1"></div>`;
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) hideThankYou(root);
+  });
 
-  function popupSizeConfig(beh) {
-    const size = beh?.popupSize || beh?.drawerSize || "md";
-    switch (size) {
-      case "sm":
-        return { maxWidth: "95vw", maxHeight: "85vh" };
-      case "lg":
-        return { maxWidth: "95vw", maxHeight: "92vh" };
-      case "full":
-        return { maxWidth: "100%", maxHeight: "100vh" };
-      default:
-        return { maxWidth: "95vw", maxHeight: "90vh" };
-    }
-  }
+  document.body.appendChild(overlay);
+  return overlay;
+}
 
-  function drawerSizeConfig(beh) {
-    const size = beh?.drawerSize || "md";
-    switch (size) {
-      case "sm":
-        return { sideWidth: "min(380px, 95vw)" };
-      case "lg":
-        return { sideWidth: "min(500px, 95vw)" };
-      case "full":
-        return { sideWidth: "100%" };
-      default:
-        return { sideWidth: "min(450px, 95vw)" };
-    }
-  }
+function hideThankYou(root) {
+  const overlay = document.getElementById(thankYouOverlayId(root));
+  if (overlay) overlay.style.display = "none";
+  document.body.style.overflow = "";
+}
 
-  /* ------------------------------------------------------------------ */
-  /* ✅ THANK YOU (FIXED)                                               */
-  /* ------------------------------------------------------------------ */
-  function getThankYouConfig(cfg, offersCfg) {
-    // from settings (data-settings)
-    const a1 = pick(cfg, "section2.thankyou", null);
-    const a2 = pick(cfg, "section2.thankYou", null);
-    const b1 = pick(cfg, "thankyou", null);
-    const b2 = pick(cfg, "thankYou", null);
+function showThankYouPopup(root, cfg, ty, ctx) {
+  const overlay = ensureThankYouOverlay(root);
+  const card = overlay.querySelector('[data-tf-ty-card="1"]');
+  if (!card) return;
 
-    // from offers (data-offers)
-    const o1 = pick(offersCfg, "thankyou", null);
-    const o2 = pick(offersCfg, "thankYou", null);
+  const d = normalizeDesign((cfg && cfg.design) || {});
+  const bg = css(d.bg || "#ffffff");
+  const text = css(d.text || "#111827");
+  const border = css(d.border || "rgba(2,6,23,.10)");
+  const btnBg = resolveButtonBackground(d);
+  const btnBorder = resolveButtonBorder(d, btnBg);
+  const btnText = css(d.btnText || "#ffffff");
 
-    const ty =
-      (isObj(a1) ? a1 : null) ||
-      (isObj(a2) ? a2 : null) ||
-      (isObj(b1) ? b1 : null) ||
-      (isObj(b2) ? b2 : null) ||
-      (isObj(o1) ? o1 : null) ||
-      (isObj(o2) ? o2 : null) ||
-      null;
+  const title = css(ty.title || ty.heading || "Thank you!");
+  const message = css(ty.text || ty.message || "We will contact you soon.");
+  const img = String(ty.imageUrl || ty.image || "").trim();
 
-    return ty;
-  }
+  const primaryText = css(ty.primaryText || ty.buttonText || "Close");
+  const secondaryText = css(ty.secondaryText || ty.secondaryButtonText || "Continue shopping");
 
-  function ensureThankYouDOMOnce(root, cfg) {
-    const existing = document.querySelector(`[data-tf-ty-for="${root.id}"]`);
-    if (existing) return existing;
-
-    const overlay = document.createElement("div");
-    overlay.className = "tf-ty-overlay";
-    overlay.setAttribute("data-tf-ty-for", root.id);
-
-    const beh = cfg?.behavior || {};
-    overlay.style.background = overlayBackground(beh);
-
-    overlay.innerHTML = `
-      <div class="tf-ty-card" data-tf-ty-card style="
-        background:${css(cfg?.design?.bg || "#ffffff")};
-        color:${css(cfg?.design?.text || "#0f172a")};
-        border:1px solid ${css(cfg?.design?.border || "rgba(2,6,23,.12)")};
-        box-shadow:${shadowFromEffect(cfg, cfg?.design?.btnBg || "#2563EB")};
-        padding:18px;
-      ">
-        <div style="display:flex;justify-content:flex-end;">
-          <button type="button" data-tf-ty-close style="
-            width:34px;height:34px;border-radius:999px;
-            border:1px solid ${css(cfg?.design?.border || "rgba(2,6,23,.12)")};
-            background:${css(cfg?.design?.bg || "#ffffff")};
-            color:${css(cfg?.design?.text || "#0f172a")};
-            cursor:pointer;font-size:20px;line-height:0;
-            display:flex;align-items:center;justify-content:center;
-          ">&times;</button>
+  card.innerHTML = `
+    <div style="
+      background:${bg};
+      color:${text};
+      border:1px solid ${border};
+      border-radius:18px;
+      padding:16px;
+      box-shadow:0 26px 60px rgba(15,23,42,.38);
+    ">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:900;font-size:16px;line-height:1.2;margin-bottom:6px;">${title}</div>
+          <div style="opacity:.9;line-height:1.45;font-size:13px;">${message}</div>
         </div>
-
-        <div data-tf-ty-body style="display:grid;gap:12px;"></div>
+        <button type="button" data-tf-ty-x="1" aria-label="Close" style="
+          width:36px;height:36px;border-radius:999px;
+          background:transparent;border:1px solid ${border};
+          color:${text};cursor:pointer;font-size:20px;
+          display:flex;align-items:center;justify-content:center;
+        ">&times;</button>
       </div>
-    `;
 
-    overlay.addEventListener("click", (e) => {
-      if (e.target === overlay) hideThankYou(root);
-    });
-
-    const closeBtn = overlay.querySelector("[data-tf-ty-close]");
-    if (closeBtn) closeBtn.addEventListener("click", () => hideThankYou(root));
-
-    document.body.appendChild(overlay);
-    return overlay;
-  }
-
-  function hideThankYou(root) {
-    const overlay = document.querySelector(`[data-tf-ty-for="${root.id}"]`);
-    if (!overlay) return;
-    overlay.style.display = "none";
-    document.body.style.overflow = "";
-  }
-
-  function showThankYouPopup(root, cfg, ty, context) {
-    const overlay = ensureThankYouDOMOnce(root, cfg);
-    const body = overlay.querySelector("[data-tf-ty-body]");
-    if (!body) return;
-
-    const title = css(ty?.title || "Thank you!");
-    const text = css(
-      ty?.text || "Your order has been received. We will contact you soon."
-    );
-    const imageUrl = String(ty?.imageUrl || "").trim();
-
-    const btnBg = ty?.buttonBg || cfg?.design?.btnBg || "#111827";
-    const btnText = ty?.buttonText || cfg?.design?.btnText || "#ffffff";
-    const btnBorder = ty?.buttonBorder || cfg?.design?.btnBorder || btnBg;
-
-    const secondaryBg = ty?.secondaryButtonBg || "transparent";
-    const secondaryText =
-      ty?.secondaryButtonText || cfg?.design?.text || "#0f172a";
-    const secondaryBorder =
-      ty?.secondaryButtonBorder ||
-      (cfg?.design?.border || "rgba(2,6,23,.15)");
-
-    const primaryLabel = css(ty?.primaryLabel || "Continue shopping");
-    const primaryUrl = String(ty?.primaryUrl || "/").trim() || "/";
-
-    const secondaryLabel = css(ty?.secondaryLabel || "Close");
-    const secondaryAction = String(ty?.secondaryAction || "close").trim(); // close | goHome | url
-    const secondaryUrl = String(ty?.secondaryUrl || "").trim();
-
-    const vars = {
-      orderId: context?.orderId || context?.json?.orderId || context?.json?.id || "",
-      phone: context?.payload?.fields?.fullPhone || "",
-      name: context?.payload?.fields?.name || "",
-    };
-    function tpl(str) {
-      return String(str || "")
-        .replace(/\{\{orderId\}\}/g, css(vars.orderId))
-        .replace(/\{\{phone\}\}/g, css(vars.phone))
-        .replace(/\{\{name\}\}/g, css(vars.name));
-    }
-
-    body.innerHTML = `
-      ${
-        imageUrl
-          ? `<img class="tf-ty-img" src="${css(imageUrl)}" alt="" onerror="this.remove();" />`
-          : ""
-      }
-      <div style="font-weight:950;font-size:18px;line-height:1.2;">${tpl(
-        title
-      )}</div>
-      <div style="opacity:.88;font-size:13px;line-height:1.45;">${tpl(
-        text
-      )}</div>
+      ${img ? `<div style="margin-top:14px;"><img class="tf-ty-img" src="${css(img)}" alt="" /></div>` : ""}
 
       <div class="tf-ty-actions">
-        <button type="button" class="tf-ty-btn" data-tf-ty-primary style="
-          background:${css(btnBg)};
-          color:${css(btnText)};
-          border:1px solid ${css(btnBorder)};
-        ">
-          ${getIconHtml("HomeIcon", 16, "currentColor")}
-          ${tpl(primaryLabel)}
-        </button>
+        <button type="button" data-tf-ty-primary="1" class="tf-ty-btn" style="
+          background:${btnBg};
+          border:1px solid ${btnBorder};
+          color:${btnText};
+        ">${primaryText}</button>
 
-        <button type="button" class="tf-ty-btn" data-tf-ty-secondary style="
-          background:${css(secondaryBg)};
-          color:${css(secondaryText)};
-          border:1px solid ${css(secondaryBorder)};
-        ">
-          ${getIconHtml("CheckCircleIcon", 16, "currentColor")}
-          ${tpl(secondaryLabel)}
-        </button>
+        <button type="button" data-tf-ty-secondary="1" class="tf-ty-btn" style="
+          background:transparent;
+          border:1px solid ${border};
+          color:${text};
+        ">${secondaryText}</button>
       </div>
-    `;
+    </div>
+  `;
 
-    const primaryBtn = overlay.querySelector("[data-tf-ty-primary]");
-    if (primaryBtn) primaryBtn.onclick = () => (window.location.href = primaryUrl);
+  const xBtn = overlay.querySelector('[data-tf-ty-x="1"]');
+  const primary = overlay.querySelector('[data-tf-ty-primary="1"]');
+  const secondary = overlay.querySelector('[data-tf-ty-secondary="1"]');
 
-    const secondaryBtn = overlay.querySelector("[data-tf-ty-secondary]");
-    if (secondaryBtn) {
-      secondaryBtn.onclick = () => {
-        if (secondaryAction === "url" && secondaryUrl)
-          return (window.location.href = secondaryUrl);
-        if (secondaryAction === "gohome") return (window.location.href = "/");
-        hideThankYou(root);
-      };
-    }
+  const close = () => hideThankYou(root);
 
-    const autoCloseMs = Number(ty?.autoCloseMs || 0);
-    if (autoCloseMs > 0) setTimeout(() => hideThankYou(root), autoCloseMs);
+  if (xBtn) xBtn.onclick = (e) => { e.preventDefault(); close(); };
+  if (primary) primary.onclick = (e) => { e.preventDefault(); close(); };
+  if (secondary) secondary.onclick = (e) => {
+    e.preventDefault();
+    const url = String(ty.secondaryUrl || ty.continueUrl || "").trim();
+    if (url) window.location.href = url;
+    else close();
+  };
 
-    overlay.style.display = "flex";
-    document.body.style.overflow = "hidden";
-  }
+  const autoCloseMs = Number(ty && ty.autoCloseMs ? ty.autoCloseMs : 0);
+  if (autoCloseMs > 0) setTimeout(() => hideThankYou(root), autoCloseMs);
 
-  function handleThankYou(root, cfg, offersCfg, payload, json) {
+  overlay.style.display = "flex";
+  document.body.style.overflow = "hidden";
+}
+
+function handleThankYou(root, cfg, offersCfg, payload, json) {
     const ty = getThankYouConfig(cfg, offersCfg);
     if (!ty || ty.enabled === false) return;
 
@@ -1436,25 +1421,31 @@ function safeJsonParse(raw, fallback = {}) {
     return holder ? holder.getAttribute("data-variant-id") : null;
   }
 
-  function getQty() {
-    const q = document.querySelector(
-      'form[action^="/cart/add"] input[name="quantity"]'
-    );
-    const v = Number(q && q.value ? q.value : 1);
-    return v > 0 ? v : 1;
-  }
+  // ✅ Qty helper (works even when theme has no quantity input)
+let __tfInternalQty = 1;
 
-  function setQty(nextQty) {
-    const q = document.querySelector(
-      'form[action^="/cart/add"] input[name="quantity"]'
-    );
-    if (!q) return false;
-    const n = Math.max(1, Number(nextQty || 1));
+function getQty() {
+  const q = document.querySelector('form[action^="/cart/add"] input[name="quantity"]');
+  const v = Number(q && q.value ? q.value : NaN);
+  if (v && v > 0) {
+    __tfInternalQty = v;
+    return v;
+  }
+  return Math.max(1, Number(__tfInternalQty || 1));
+}
+
+function setQty(nextQty) {
+  const n = Math.max(1, Number(nextQty || 1));
+  __tfInternalQty = n;
+
+  const q = document.querySelector('form[action^="/cart/add"] input[name="quantity"]');
+  if (q) {
     q.value = String(n);
     q.dispatchEvent(new Event("input", { bubbles: true }));
     q.dispatchEvent(new Event("change", { bubbles: true }));
-    return true;
   }
+  return true;
+}
 
   function watchVariantAndQty(onChange) {
     document.addEventListener("change", (e) => {
@@ -1481,10 +1472,10 @@ function safeJsonParse(raw, fallback = {}) {
     if (prev && prev.parentNode) prev.parentNode.removeChild(prev);
     if (stickyType === "none") return;
 
-    const d = cfg.design || {};
-    const bg = d.btnBg || "#111827";
+    const d = normalizeDesign(cfg.design || {});
+    const bg = resolveButtonBackground(d);
     const text = d.btnText || "#FFFFFF";
-    const br = d.btnBorder || bg;
+    const br = resolveButtonBorder(d, bg);
 
     const el = document.createElement("div");
     el.setAttribute("data-tf-sticky-for", root.id);
@@ -1897,7 +1888,31 @@ function safeJsonParse(raw, fallback = {}) {
   /* ------------------------------------------------------------------ */
   /* Render                                                             */
   /* ------------------------------------------------------------------ */
-  function render(root, cfg, offersCfg, product, getVariant, moneyFmt, recaptchaCfg) {
+  function normalizeDesign(d0) {
+  const d = d0 && typeof d0 === "object" ? { ...d0 } : {};
+  if (!d.bg) d.bg = "#ffffff";
+  if (!d.text) d.text = "#111827";
+  if (!d.border) d.border = "rgba(2,6,23,.10)";
+  if (!d.inputBg) d.inputBg = "#FFFFFF";
+  if (!d.inputBorder) d.inputBorder = "rgba(2,6,23,.15)";
+  if (!d.btnBg) d.btnBg = "#111827";
+  if (!d.btnBg2) d.btnBg2 = "#2563EB";
+  if (!d.btnBgMode) d.btnBgMode = "solid";
+  if (!d.btnText) d.btnText = "#FFFFFF";
+  if (!d.cartBg) d.cartBg = "#FFFFFF";
+  if (!d.cartBorder) d.cartBorder = "rgba(2,6,23,.10)";
+  if (!d.cartRowBg) d.cartRowBg = "#F8FAFC";
+  if (!d.cartRowBorder) d.cartRowBorder = "rgba(2,6,23,.08)";
+  if (!d.cartTitleColor) d.cartTitleColor = d.text;
+  if (!d.cartTextColor) d.cartTextColor = d.text;
+  if (d.radius == null) d.radius = 12;
+  if (d.padding == null) d.padding = 16;
+  if (d.btnRadius == null) d.btnRadius = 10;
+  if (d.btnHeight == null) d.btnHeight = 46;
+  return d;
+}
+
+function render(root, cfg, offersCfg, product, getVariant, moneyFmt, recaptchaCfg) {
     const d = cfg.design || {};
     const ui = cfg.uiTitles || {};
     const t = cfg.cartTitles || {};
@@ -2016,23 +2031,23 @@ function safeJsonParse(raw, fallback = {}) {
     `;
 
     const btnStyle = `
-      width:100%;
-      height:${inputHeight};
-      border-radius:${+d.btnRadius || 10}px;
-      border:1px solid ${css(d.btnBorder)};
-      color:${css(d.btnText)};
-      background:${css(d.btnBg)};
-      font-weight:800;
-      letter-spacing:.2px;
-      box-shadow:${btnShadow};
-      font-size:${inputFontSize}px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      gap:10px;
-      cursor:pointer;
-      box-sizing:border-box;
-    `;
+  width:100%;
+  height:${inputHeight};
+  border-radius:${+d.btnRadius || 10}px;
+  border:1px solid ${css(__btnSolid)};
+  color:${css(d.btnText)};
+  background:${css(__btnBg)};
+  font-weight:800;
+  letter-spacing:.2px;
+  box-shadow:${btnShadow};
+  font-size:${inputFontSize}px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  cursor:pointer;
+  box-sizing:border-box;
+`;
 
     const cartBoxStyle = `
       background:${css(d.cartBg)};
