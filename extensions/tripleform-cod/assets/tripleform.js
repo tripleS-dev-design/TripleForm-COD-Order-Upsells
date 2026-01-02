@@ -54,6 +54,60 @@ window.TripleformCOD = (function () {
     return String(s ?? "");
   }
 
+
+function hexToRgba(hex, alpha) {
+  const h = String(hex || "").trim();
+  let a = Number(alpha);
+  if (!Number.isFinite(a)) a = 1;
+  a = Math.max(0, Math.min(1, a));
+
+  let x = h.replace("#", "");
+  if (x.length === 3) x = x.split("").map(ch => ch + ch).join("");
+  if (x.length !== 6) return `rgba(2,6,23,${a})`;
+
+  const r = parseInt(x.slice(0, 2), 16);
+  const g = parseInt(x.slice(2, 4), 16);
+  const b = parseInt(x.slice(4, 6), 16);
+  return `rgba(${r},${g},${b},${a})`;
+}
+
+function shadowFromEffect(cfg, baseGlow) {
+  const d = (cfg && cfg.design) || {};
+  const shadowOn = d.shadow !== false;
+  if (!shadowOn) return "none";
+
+  const base = "0 18px 40px rgba(15,23,42,0.10)";
+  const glowOn = d.glow === true;
+  if (!glowOn) return base;
+
+  const px = Math.max(0, Number(d.glowPx || 18));
+  const glowColor = hexToRgba(baseGlow || d.btnBg || "#2563EB", 0.30);
+  return `${base}, 0 0 ${px}px ${glowColor}`;
+}
+
+function overlayBackground(beh) {
+  const b = beh || {};
+  const col = String(b.overlayColor || "#020617");
+  let op = Number(b.overlayOpacity);
+  if (!Number.isFinite(op)) op = 70;
+  op = Math.max(0, Math.min(100, op));
+  return hexToRgba(col, op / 100);
+}
+
+function popupSizeConfig(beh) {
+  const size = String((beh && (beh.popupSize || beh.size)) || "md").toLowerCase();
+  if (size === "sm") return { maxWidth: "520px", maxHeight: "92vh" };
+  if (size === "lg") return { maxWidth: "760px", maxHeight: "92vh" };
+  return { maxWidth: "640px", maxHeight: "92vh" };
+}
+
+function drawerSizeConfig(beh) {
+  const size = String((beh && (beh.drawerSize || beh.size)) || "md").toLowerCase();
+  if (size === "sm") return { sideWidth: "360px" };
+  if (size === "lg") return { sideWidth: "520px" };
+  return { sideWidth: "420px" };
+}
+
   
 function resolveButtonBackground(design) {
     const d = design || {};
@@ -73,15 +127,29 @@ function resolveButtonBackground(design) {
   }
 function safeJsonParse(raw, fallback = {}) {
     if (!raw) return fallback;
-    try {
-      return JSON.parse(raw);
-    } catch {
-      try {
-        return JSON.parse(String(raw).replace(/=>/g, ":"));
-      } catch {
-        return fallback;
+
+    function tryParse(v) {
+      try { return JSON.parse(v); } catch { return undefined; }
+    }
+
+    let out = tryParse(raw);
+    if (out === undefined) {
+      out = tryParse(String(raw).replace(/=>/g, ":"));
+    }
+
+    // handle double-encoded JSON (ex: "{\"a\":1}" => string => parse again)
+    if (typeof out === "string") {
+      const trimmed = out.trim();
+      if (
+        (trimmed.startsWith("{") && trimmed.endsWith("}")) ||
+        (trimmed.startsWith("[") && trimmed.endsWith("]"))
+      ) {
+        const out2 = tryParse(trimmed);
+        if (out2 !== undefined) out = out2;
       }
     }
+
+    return out === undefined ? fallback : out;
   }
 
   function parseSettingsAttr(el) {
@@ -135,6 +203,9 @@ function safeJsonParse(raw, fallback = {}) {
   /* ✅ Real / Simple SVG Icons (always visible)                         */
   /* ------------------------------------------------------------------ */
   const ICON_SVGS = {
+    CityIcon: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 20V8l8-4 8 4v12" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 20v-6h6v6" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M8 10h.01M12 10h.01M16 10h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`,
+    RegionIcon: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 6h16M4 12h16M4 18h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M18 18l2 2 3-3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+    HashtagIcon: `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 3L7 21M17 3l-2 18M4 8h18M3 16h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`,
     AppsIcon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" aria-hidden="true">
       <path d="M5 3.5h4v4H5v-4Zm6 0h4v4h-4v-4ZM5 9.5h4v4H5v-4Zm6 0h4v4h-4v-4ZM5 15.5h4v1H5v-1Zm6 0h4v1h-4v-1Z"
         fill="currentColor" opacity=".95"/>
@@ -289,6 +360,26 @@ MailMinor: "EmailIcon",
 EnvelopeIcon: "EmailIcon",
 EnvelopeMajor: "EmailIcon",
 EnvelopeMinor: "EmailIcon",
+
+    // ✅ Custom/translated names (your admin labels)
+    iconpanier: "CartIcon",
+    Iconpanier: "CartIcon",
+    Panier: "CartIcon",
+    PanierIcon: "CartIcon",
+    panier: "CartIcon",
+
+    email: "EmailIcon",
+    Email: "EmailIcon",
+    mail: "EmailIcon",
+    Mail: "EmailIcon",
+    gmail: "EmailIcon",
+
+    telephone: "PhoneIcon",
+    Telephone: "PhoneIcon",
+    tel: "PhoneIcon",
+    Tel: "PhoneIcon",
+    phone: "PhoneIcon",
+    Phone: "PhoneIcon",
   };
 
   function normalizeIconName(name) {
@@ -505,7 +596,7 @@ EnvelopeMinor: "EmailIcon",
 /* Pays / wilayas / villes                                            */
 /* ------------------------------------------------------------------ */
 // ✅ NO COUNTRY_DATA in this file (paste manually if you want)
- const COUNTRY_DATA = {
+const COUNTRY_DATA = {
     ma: {
       label: "Maroc",
       phonePrefix: "+212",
@@ -1236,6 +1327,8 @@ EnvelopeMinor: "EmailIcon",
     }
   };
 
+
+
 function getCountryDef(beh) {
   const raw =
     beh && (beh.country || beh.codCountry)
@@ -1913,7 +2006,32 @@ function setQty(nextQty) {
 }
 
 function render(root, cfg, offersCfg, product, getVariant, moneyFmt, recaptchaCfg) {
-    const d = cfg.design || {};
+const d0 = cfg.design || {};
+const d = Object.assign(
+  {
+    bg: "#FFFFFF",
+    text: "#111827",
+    border: "rgba(2,6,23,.12)",
+    padding: 16,
+    radius: 12,
+
+    inputBg: "#FFFFFF",
+    inputBorder: "rgba(2,6,23,.15)",
+
+    btnText: "#FFFFFF",
+    btnRadius: 10,
+    btnHeight: 46,
+    btnBg: "#111827",
+
+    cartBg: "#FFFFFF",
+    cartBorder: "rgba(2,6,23,.12)",
+    cartTitleColor: "#111827",
+    cartRowBg: "#F9FAFB",
+    cartRowBorder: "rgba(2,6,23,.10)",
+    cartTextColor: "#111827",
+  },
+  d0
+);
     const ui = cfg.uiTitles || {};
     const t = cfg.cartTitles || {};
     const f = cfg.fields || {};
@@ -2921,10 +3039,61 @@ function render(root, cfg, offersCfg, product, getVariant, moneyFmt, recaptchaCf
   /* ------------------------------------------------------------------ */
   /* Boot                                                              */
   /* ------------------------------------------------------------------ */
-  function boot(sectionId) {
-    const holder =
-      byId(`tripleform-cod-${sectionId}`) || document.querySelector(".tripleform-cod");
+  /* ------------------------------------------------------------------ */
+  /* Boot                                                              */
+  /* ------------------------------------------------------------------ */
+
+  function deriveSectionIdFromHolder(holder) {
+    if (!holder) return "";
+    const id = String(holder.id || "");
+    const m = id.match(/^tripleform-cod-(.+)$/);
+    if (m && m[1]) return String(m[1]);
+    const ds = holder.getAttribute("data-section-id") || holder.getAttribute("data-tf-section-id");
+    return ds ? String(ds) : "";
+  }
+
+  function findProductJsonEl(holder, sectionId) {
+    // prefer JSON inside the holder (best for multiple sections)
+    if (holder) {
+      const inside =
+        holder.querySelector('script[id^="tf-product-json-"]') ||
+        holder.querySelector('script[data-tf-product-json]') ||
+        holder.querySelector('script[type="application/json"][data-product-json]') ||
+        null;
+      if (inside) return inside;
+    }
+
+    // legacy id format
+    if (sectionId) {
+      const byLegacy = byId(`tf-product-json-${sectionId}`);
+      if (byLegacy) return byLegacy;
+    }
+
+    // last resort: first matching JSON on page
+    return document.querySelector('script[id^="tf-product-json-"]') || null;
+  }
+
+  function boot(sectionIdOrEl) {
+    let holder = null;
+    let sectionId = "";
+
+    // allow passing the holder element directly
+    if (sectionIdOrEl && sectionIdOrEl.nodeType === 1) {
+      holder = sectionIdOrEl;
+      sectionId = deriveSectionIdFromHolder(holder);
+    } else {
+      sectionId = String(sectionIdOrEl || "");
+      holder =
+        byId(`tripleform-cod-${sectionId}`) ||
+        document.querySelector(`.tripleform-cod[data-section-id="${sectionId}"]`) ||
+        document.querySelector(".tripleform-cod");
+    }
+
     if (!holder) return;
+
+    // prevent double boot
+    if (holder.getAttribute("data-tf-booted") === "1") return;
+    holder.setAttribute("data-tf-booted", "1");
 
     injectGlobalCSSOnce();
 
@@ -2937,7 +3106,9 @@ function render(root, cfg, offersCfg, product, getVariant, moneyFmt, recaptchaCf
 
     const recaptchaEnabledAttr = holder.getAttribute("data-recaptcha-enabled");
     const recaptchaEnabled =
-      recaptchaEnabledAttr === "true" || recaptchaEnabledAttr === "1" || recaptchaEnabledAttr === "yes";
+      recaptchaEnabledAttr === "true" ||
+      recaptchaEnabledAttr === "1" ||
+      recaptchaEnabledAttr === "yes";
 
     const recaptchaVersion = holder.getAttribute("data-recaptcha-version") || "";
     const recaptchaSiteKey = holder.getAttribute("data-recaptcha-site-key") || "";
@@ -2951,17 +3122,48 @@ function render(root, cfg, offersCfg, product, getVariant, moneyFmt, recaptchaCf
       minScore: isNaN(recaptchaMinScore) ? 0.5 : recaptchaMinScore,
     };
 
-    const prodEl = byId(`tf-product-json-${sectionId}`);
+    const prodEl = findProductJsonEl(holder, sectionId);
     if (!prodEl) {
       console.error("[Tripleform COD] product JSON introuvable");
       return;
     }
+
     const product = safeJsonParse(prodEl.textContent || "{}", { variants: [] });
 
-    const getVariant = () => getSelectedVariantId() || holder.getAttribute("data-variant-id");
+    const getVariant = () =>
+      getSelectedVariantId() || holder.getAttribute("data-variant-id");
 
-    const doUpdate = render(holder, cfg, offersCfg, product, getVariant, moneyFmt, recaptchaCfg);
+    const doUpdate = render(
+      holder,
+      cfg,
+      offersCfg,
+      product,
+      getVariant,
+      moneyFmt,
+      recaptchaCfg
+    );
+
     watchVariantAndQty(() => doUpdate());
+  }
+
+  // ✅ Auto-boot (so the form shows even if Liquid forgot to call boot())
+  function autoBootAll() {
+    document.querySelectorAll(".tripleform-cod").forEach((el) => {
+      try {
+        boot(el);
+      } catch (e) {
+        console.warn("[Tripleform COD] autoBoot error:", e);
+      }
+    });
+  }
+
+  if (!window.__TripleformCOD_AutoBooted) {
+    window.__TripleformCOD_AutoBooted = true;
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", autoBootAll);
+    } else {
+      setTimeout(autoBootAll, 0);
+    }
   }
 
   return { boot };
