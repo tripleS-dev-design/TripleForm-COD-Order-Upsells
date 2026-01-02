@@ -462,17 +462,12 @@ EnvelopeMinor: "EmailIcon",
     const style = document.createElement("style");
     style.id = "tf-global-css";
     style.textContent = `
+      .tripleform-cod{width:100%;margin:0;padding:0;}
+      .tripleform-cod *{box-sizing:border-box;}
       .tf-ic{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;line-height:0}
       .tf-ic svg{width:100%;height:100%;display:block}
 
-      .tf-shell{
-        width:100%;
-        box-sizing:border-box;
-        padding:14px;
-        border-radius:18px;
-        background:var(--tf-shell-bg, transparent);
-        border:1px solid var(--tf-shell-border, transparent);
-      }
+      .tf-shell{width:100%;max-width:none;margin:0;padding:0;border:0;background:transparent;box-shadow:none}
 
       .tf-motion-x{animation:tfMoveX 1.2s ease-in-out infinite}
       .tf-motion-y{animation:tfMoveY 1.2s ease-in-out infinite}
@@ -595,7 +590,6 @@ EnvelopeMinor: "EmailIcon",
    /* ------------------------------------------------------------------ */
 /* Pays / wilayas / villes                                            */
 /* ------------------------------------------------------------------ */
-// ✅ NO COUNTRY_DATA in this file (paste manually if you want)
 const COUNTRY_DATA = {
     ma: {
       label: "Maroc",
@@ -1328,7 +1322,6 @@ const COUNTRY_DATA = {
   };
 
 
-
 function getCountryDef(beh) {
   const raw =
     beh && (beh.country || beh.codCountry)
@@ -1782,14 +1775,34 @@ function setQty(nextQty) {
       // ✅ support pack option (x2/x3/x4...) stored too
       const selectedPackQty = Number(button.getAttribute("data-tf-pack-qty") || 0) || bundleQty || 0;
 
+      if (selectedPackQty > 0) {
+        // Pack buttons must update quantity, otherwise totals/discounts become wrong
+        setQty(selectedPackQty);
+      }
+
       setActiveOfferData(rootId, {
         index: offerIndex,
         type: "offer",
         title: offer.title || "",
         discountType: offer.discountType || null,
         discountValue: Number(offer.discountValue || 0),
-        minQty: Number(offer.minQty || offer.requiredQty || offer.bundleQty || 1),
+
+        // If user picked a pack (x2/x3...), that becomes the required qty
+        minQty: Number(selectedPackQty || offer.requiredQty || offer.bundleQty || offer.minQty || 1),
+
+        // Discount behavior
         applyPerItem: offer.applyPerItem === true,
+        fixedMode: offer.fixedMode || null,               // "once" | "per_item" (optional)
+        capDiscount: offer.capDiscount !== false,         // default true
+        maxDiscountCents: Number(offer.maxDiscountCents || 0),
+
+        // Bundle / qty overrides
+        forceQty: offer.forceQty === true || !!selectedPackQty || !!offer.requiredQty || !!offer.bundleQty,
+        bundleQty: Number(selectedPackQty || offer.requiredQty || offer.bundleQty || 0),
+        bundleTotal: offer.bundleTotal ?? null,
+        bundleTotalCents: offer.bundleTotalCents ?? null,
+
+        // UI
         packQty: selectedPackQty || null,
       });
     }

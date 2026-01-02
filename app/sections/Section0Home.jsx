@@ -1,5 +1,7 @@
 // ===== File: app/sections/Section0Home.jsx =====
 import React, { useEffect, useState } from "react";
+import CountryFlagsBar from "../components/CountryFlagsBar";
+
 import {
   Card,
   BlockStack,
@@ -361,6 +363,23 @@ const LAYOUT_CSS = `
     .tf-editor { grid-template-columns: 1fr; }
     .tf-rail, .tf-preview-col { position:static; max-height:none; }
   }
+      /* Flags bar (header center) */
+  .tf-flags{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    padding:6px 10px;
+    max-width:520px;
+    overflow-x:auto;
+    scrollbar-width:none; /* Firefox */
+  }
+  .tf-flags::-webkit-scrollbar{ display:none; } /* Chrome */
+  .tf-flag-item{ display:flex; align-items:center; }
+  @media (max-width: 980px) {
+    .tf-flags{ max-width:240px; gap:8px; }
+  }
+
 `;
 
 function useInjectCss() {
@@ -807,7 +826,9 @@ function Section0Inner() {
               </div>
             </div>
           </InlineStack>
-
+            <div style={{ flex: 1, display: "flex", justifyContent: "center" }}>
+              <CountryFlagsBar />
+            </div>
           <InlineStack gap="200" blockAlign="center">
             <span
               style={{
