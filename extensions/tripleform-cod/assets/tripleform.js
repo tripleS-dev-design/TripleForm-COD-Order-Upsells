@@ -54,7 +54,24 @@ window.TripleformCOD = (function () {
     return String(s ?? "");
   }
 
-  function safeJsonParse(raw, fallback = {}) {
+  
+function resolveButtonBackground(design) {
+    const d = design || {};
+    const mode = String(d.btnBgMode || "").toLowerCase();
+    const c1 = String(d.btnBg || "").trim();
+    const c2 = String(d.btnBg2 || "").trim();
+    if (mode === "gradient" && c1 && c2) return `linear-gradient(90deg, ${c1}, ${c2})`;
+    return c1 || "#111827";
+  }
+
+  function resolveButtonBorder(design, resolvedBg) {
+    const d = design || {};
+    const mode = String(d.btnBgMode || "").toLowerCase();
+    if (d.btnBorder) return String(d.btnBorder);
+    if (mode === "gradient" && d.btnBg) return String(d.btnBg);
+    return resolvedBg || "#111827";
+  }
+function safeJsonParse(raw, fallback = {}) {
     if (!raw) return fallback;
     try {
       return JSON.parse(raw);
@@ -183,13 +200,66 @@ window.TripleformCOD = (function () {
     </svg>`,
   };
 
+  // ✅ Map Polaris/legacy icon names -> our inline SVG icons
+  const ICON_ALIASES = {
+    // People / name
+    PersonIcon: "UserIcon",
+    ProfileIcon: "UserIcon",
+    CustomerIcon: "UserIcon",
+    CustomersIcon: "UserIcon",
+    Person: "UserIcon",
+    PersonMajor: "UserIcon",
+    PersonMinor: "UserIcon",
+
+    // Phone
+    MobileIcon: "PhoneIcon",
+    PhoneIcon: "PhoneIcon",
+    PhoneMajor: "PhoneIcon",
+    PhoneMinor: "PhoneIcon",
+    PhoneOffIcon: "PhoneOffIcon",
+    PhoneOffMajor: "PhoneOffIcon",
+    PhoneOffMinor: "PhoneOffIcon",
+
+    // Location
+    LocationIcon: "MapPinIcon",
+    LocationMajor: "MapPinIcon",
+    LocationMinor: "MapPinIcon",
+    PinIcon: "MapPinIcon",
+    MapPinIcon: "MapPinIcon",
+
+    // Notes / clipboard
+    ClipboardIcon: "NoteIcon",
+    ClipboardMajor: "NoteIcon",
+    ClipboardMinor: "NoteIcon",
+    NoteIcon: "NoteIcon",
+    NoteMajor: "NoteIcon",
+    NoteMinor: "NoteIcon",
+    OrdersIcon: "NoteIcon",
+
+    // Country / globe
+    WorldIcon: "GlobeIcon",
+    GlobeIcon: "GlobeIcon",
+  };
+
   function normalizeIconName(name) {
     const raw = String(name || "").trim();
     if (!raw) return "";
+    // remove Polaris suffixes
     let n = raw.replace(/Major$/i, "").replace(/Minor$/i, "");
+    // ensure Icon suffix
     if (!/Icon$/i.test(n)) n = n + "Icon";
+    // normalize first letter
     n = n[0].toUpperCase() + n.slice(1);
-    return n;
+
+    // alias mapping (Polaris / legacy / UI names)
+    const aliased =
+      ICON_ALIASES[n] ||
+      ICON_ALIASES[raw] ||
+      ICON_ALIASES[n.replace(/Icon$/i, "")] ||
+      ICON_ALIASES[raw.replace(/Icon$/i, "")] ||
+      "";
+
+    return aliased || n;
   }
 
   function getIconHtml(iconName, size = 18, color = "currentColor") {
@@ -297,7 +367,7 @@ window.TripleformCOD = (function () {
       }
       .tf-pack-pill.active{
         background:var(--tf-btn-bg,#111827);
-        border-color:var(--tf-btn-bg,#111827);
+        border-color:var(--tf-btn-solid,var(--tf-btn-bg,#111827));
         color:var(--tf-btn-text,#fff);
       }
 
@@ -341,8 +411,7 @@ window.TripleformCOD = (function () {
     `;
     document.head.appendChild(style);
   }
-
-   /* ------------------------------------------------------------------ */
+ /* ------------------------------------------------------------------ */
   /* Pays / wilayas / villes COMPLET                                    */
   /* ------------------------------------------------------------------ */
 
@@ -1088,6 +1157,8 @@ window.TripleformCOD = (function () {
 
     return { ...def, code: (code || "ma").toUpperCase() };
   }
+
+
 
 
 
@@ -1893,7 +1964,10 @@ window.TripleformCOD = (function () {
     root.style.setProperty("--tf-title", titleColor);
     root.style.setProperty("--tf-muted", mutedColor);
     root.style.setProperty("--tf-muted2", muted2Color);
-    root.style.setProperty("--tf-btn-bg", d.btnBg || "#111827");
+    const __btnBg = resolveButtonBackground(d);
+    const __btnSolid = resolveButtonBorder(d, __btnBg);
+    root.style.setProperty("--tf-btn-bg", __btnBg);
+    root.style.setProperty("--tf-btn-solid", __btnSolid);
     root.style.setProperty("--tf-btn-text", d.btnText || "#FFFFFF");
 
     const cardStyle = `
