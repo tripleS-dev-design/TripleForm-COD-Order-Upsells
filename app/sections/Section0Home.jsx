@@ -30,21 +30,23 @@ const LAYOUT_CSS = `
   }
   .Polaris-TextField, .Polaris-Select, .Polaris-Labelled__LabelWrapper { min-width:0; }
 
+  /* ✅ HEADER SLIM */
   .tf-header {
     background:linear-gradient(90deg,#0B3B82,#7D0031);
     border-bottom:none;
-    padding:12px 16px;
+    padding:8px 12px;             /* ✅ plus slim */
     position:sticky;
     top:0;
     z-index:40;
-    box-shadow:0 10px 28px rgba(11,59,130,0.45);
+    box-shadow:0 10px 28px rgba(11,59,130,0.35);
   }
+
   .tf-shell { padding:16px; }
 
   /* 3 colonnes : gauche | milieu | droite */
   .tf-editor {
     display:grid;
-    grid-template-columns: 340px 3fr 1.4fr;
+    grid-template-columns: 340px 3fr 1.35fr;
     gap:16px;
     align-items:start;
   }
@@ -52,8 +54,8 @@ const LAYOUT_CSS = `
   /* colonne gauche (sticky) */
   .tf-rail {
     position:sticky;
-    top:68px;
-    max-height:calc(100vh - 84px);
+    top:58px; /* ✅ header slim */
+    max-height:calc(100vh - 74px);
     overflow:auto;
   }
 
@@ -64,9 +66,11 @@ const LAYOUT_CSS = `
   /* colonne droite (preview) */
   .tf-preview-col {
     position:sticky;
-    top:68px;
-    max-height:calc(100vh - 84px);
+    top:58px; /* ✅ header slim */
+    max-height:calc(100vh - 74px);
     overflow:auto;
+    display:grid;
+    gap:12px;
   }
   .tf-preview-card {
     background:#fff;
@@ -88,49 +92,78 @@ const LAYOUT_CSS = `
     box-shadow:0 6px 18px rgba(205, 211, 218, 0.35);
   }
 
-  /* =================== FLAGS BAR (FIXED) =================== */
+  /* =================== FLAGS BAR (clean) =================== */
   .tf-flags-wrap{
     display:flex;
     justify-content:center;
     align-items:center;
     width:100%;
+    min-width:0;
   }
   .tf-flags{
     display:flex;
     align-items:center;
-    gap:10px;               /* ✅ spacing */
-    padding:6px 12px;       /* ✅ breathing */
-    max-width:820px;
+    gap:10px;
+    padding:6px 12px;
+    max-width:760px;
     overflow-x:auto;
     white-space:nowrap;
     scrollbar-width:none;
     -webkit-overflow-scrolling: touch;
     border-radius:999px;
-    background:rgba(255,255,255,0.08);
+    background:rgba(255,255,255,0.09);
     border:1px solid rgba(255,255,255,0.18);
-    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05);
   }
   .tf-flags::-webkit-scrollbar{ display:none; }
-  .tf-flag-item{
-    flex:0 0 auto;
+
+  /* =================== RIGHT CONTROLS (extreme right) =================== */
+  .tf-header-right{
     display:flex;
     align-items:center;
-    justify-content:center;
-    padding:2px 4px;
-    border-radius:8px;
+    justify-content:flex-end;
+    gap:10px;
   }
-  .tf-flags span{ font-size:18px; line-height:1; }
-  .tf-flags img{ width:22px; height:16px; border-radius:3px; display:block; }
+  .tf-pill{
+    font-size:12px;
+    padding:5px 10px;
+    border-radius:999px;
+    border:1px solid rgba(248,250,252,0.40);
+    color:rgba(248,250,251,0.92);
+    background:linear-gradient(90deg,rgba(15,23,42,0.30),rgba(15,23,42,0.08));
+    white-space:nowrap;
+  }
+
+  /* ✅ left single button in header */
+  .tf-video-btn{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:6px 10px;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,0.22);
+    background:rgba(255,255,255,0.10);
+    color:#F9FAFB;
+    cursor:pointer;
+    box-shadow:0 6px 16px rgba(0,0,0,0.18);
+    transition:all .15s ease-out;
+    font-size:12px;
+    font-weight:700;
+    white-space:nowrap;
+  }
+  .tf-video-btn:hover{
+    transform:translateY(-1px);
+    background:rgba(255,255,255,0.14);
+    border-color:rgba(255,255,255,0.30);
+  }
 
   @media (max-width: 980px) {
     .tf-editor { grid-template-columns: 1fr; }
     .tf-rail, .tf-preview-col { position:static; max-height:none; }
     .tf-flags{ max-width:260px; gap:8px; padding:6px 10px; }
-    .tf-flags span{ font-size:16px; }
-    .tf-flags img{ width:20px; height:14px; }
+    .tf-pill{ display:none; } /* ✅ header slim on mobile */
   }
 
-  /* =================== PLANS (RESTORED DESIGN) =================== */
+  /* =================== PLANS (design) =================== */
   .pricing-grid{
     display:grid;
     grid-template-columns: repeat(3, minmax(280px, 1fr));
@@ -389,6 +422,57 @@ const LAYOUT_CSS = `
   .wa-user-meta{ display:flex; flex-direction:column; min-width:0; }
   .wa-user-meta b{ font-size:12px; color:#0F172A; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .wa-user-meta span{ font-size:11px; color:#6B7280; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+  /* ✅ Single video preview */
+  .tf-video-hero{
+    border-radius:14px;
+    border:1px solid #E5E7EB;
+    background:#0B1220;
+    overflow:hidden;
+    box-shadow:0 12px 28px rgba(15,23,42,0.20);
+  }
+  .tf-video-hero-top{
+    padding:10px 12px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+    background:linear-gradient(90deg, rgba(11,59,130,0.35), rgba(125,0,49,0.35));
+    border-bottom:1px solid rgba(255,255,255,0.10);
+    color:#F9FAFB;
+    font-weight:800;
+    font-size:12px;
+  }
+  .tf-video-hero-body{
+    padding:14px 12px 12px;
+    color:#E5E7EB;
+  }
+  .tf-video-screen{
+    height:160px;
+    border-radius:12px;
+    background:
+      radial-gradient(circle at 30% 30%, rgba(255,255,255,0.10), transparent 55%),
+      linear-gradient(135deg, rgba(239,68,68,0.90), rgba(127,29,29,0.85));
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    margin-bottom:10px;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.10);
+  }
+  .tf-video-play{
+    width:54px; height:54px;
+    border-radius:999px;
+    background:rgba(255,255,255,0.18);
+    border:1px solid rgba(255,255,255,0.30);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:22px;
+    color:#fff;
+    box-shadow:0 10px 22px rgba(0,0,0,0.25);
+  }
+  .tf-video-hero-title{ font-weight:900; color:#F9FAFB; margin-bottom:4px; }
+  .tf-video-hero-sub{ font-size:12px; color:rgba(229,231,235,0.85); }
 `;
 
 function useInjectCss() {
@@ -400,9 +484,7 @@ function useInjectCss() {
     t.appendChild(document.createTextNode(LAYOUT_CSS));
     document.head.appendChild(t);
     return () => {
-      try {
-        t.remove();
-      } catch {}
+      try { t.remove(); } catch {}
     };
   }, []);
 }
@@ -656,49 +738,50 @@ function WhatsAppMonitorPanel({ stats, wa, loading }) {
   );
 }
 
-/* -------- Preview visuel à droite : centre vidéos -------- */
-function OverviewPreview() {
+/* ✅ Single global video window (one only) */
+function SingleVideoPreview() {
   const { t } = useI18n();
-
-  const videos = [
-    { key: "intro", title: t("section0.videos.item.intro.title"), sub: t("section0.videos.item.intro.sub"), tag: "Dashboard", duration: "2 min" },
-    { key: "forms", title: t("section0.videos.item.forms.title"), sub: t("section0.videos.item.forms.sub"), tag: "Forms", duration: "4 min" },
-    { key: "offers", title: t("section0.videos.item.offers.title"), sub: t("section0.videos.item.offers.sub"), tag: "Offers", duration: "3 min" },
-    { key: "sheets", title: t("section0.videos.item.sheets.title"), sub: t("section0.videos.item.sheets.sub"), tag: "Sheets", duration: "3 min" },
-    { key: "pixels", title: t("section0.videos.item.pixels.title"), sub: t("section0.videos.item.pixels.sub"), tag: "Pixels", duration: "3 min" },
-    { key: "antibot", title: t("section0.videos.item.antibot.title"), sub: t("section0.videos.item.antibot.sub"), tag: "Anti-bot", duration: "2 min" },
-    { key: "locations", title: t("section0.videos.item.locations.title"), sub: t("section0.videos.item.locations.sub"), tag: "Geo", duration: "3 min" },
-  ];
-
   return (
-    <div className="tf-hero">
-      <div className="tf-hero-pill">
-        <Icon source={PI.PlayIcon} />
-        <span>{t("section0.videos.pill")}</span>
+    <div className="tf-video-hero">
+      <div className="tf-video-hero-top">
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+          <Icon source={PI.PlayIcon} />
+          <span>Video guide</span>
+        </span>
+        <span style={{ opacity: 0.9, fontWeight: 700 }}>TripleForm COD</span>
       </div>
 
-      <Text as="h3" variant="headingMd">{t("section0.videos.title")}</Text>
-      <Text as="p" tone="subdued" style={{ marginTop: 4, fontSize: 12, color: "#6B7280" }}>
-        {t("section0.videos.subtitle")}
-      </Text>
-
-      <div className="tf-video-list">
-        {videos.map((v) => (
-          <button key={v.key} type="button" className="tf-video-item" onClick={() => {}}>
-            <div className="tf-video-thumb">▶</div>
-            <div className="tf-video-meta">
-              <div className="tf-video-title">{v.title}</div>
-              <div className="tf-video-sub">{v.sub}</div>
-              <div className="tf-video-footer">
-                <span className="tf-video-tag">{v.tag}</span>
-                <span className="tf-video-duration">{v.duration}</span>
-              </div>
-            </div>
-          </button>
-        ))}
+      <div className="tf-video-hero-body">
+        <div className="tf-video-screen">
+          <div className="tf-video-play">▶</div>
+        </div>
+        <div className="tf-video-hero-title">
+          {t?.("section0.videos.item.intro.title") || "Introduction - Full walkthrough"}
+        </div>
+        <div className="tf-video-hero-sub">
+          {t?.("section0.videos.item.intro.sub") ||
+            "Installation, settings, sheets, pixels, anti-bot, WhatsApp (one complete guide)."}
+        </div>
       </div>
     </div>
   );
+}
+
+/* ======================= CSS injection ======================= */
+function useInjectCss() {
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    if (document.getElementById("tf-layout-css")) return;
+    const t = document.createElement("style");
+    t.id = "tf-layout-css";
+    t.appendChild(document.createTextNode(LAYOUT_CSS));
+    document.head.appendChild(t);
+    return () => {
+      try {
+        t.remove();
+      } catch {}
+    };
+  }, []);
 }
 
 /* ============================== Contenu Section0 ============================== */
@@ -730,41 +813,6 @@ function Section0Inner() {
     lastConnected: null,
     users: null,
   });
-
-  // Keep helpers (even if not used now)
-  const sameOrigin = (p) => {
-    try {
-      return new URL(p, window.location.origin).origin === window.location.origin;
-    } catch {
-      return false;
-    }
-  };
-  const ping = async (p) => {
-    if (typeof window === "undefined" || !sameOrigin(p)) return false;
-    try {
-      const res = await fetch(p, { method: "HEAD", cache: "no-store" });
-      return res.ok;
-    } catch {
-      return false;
-    }
-  };
-  const smartGo = async (candidates) => {
-    for (const p of candidates) {
-      if (await ping(p)) {
-        navigate(p);
-        return;
-      }
-    }
-    navigate(candidates[0]);
-  };
-
-  const PATHS = useMemo(
-    () => ({
-      sheets: ["/app/sections/3", "/app/google-sheets", "/google-sheets", "/sections/3"],
-      whatsapp: ["/app/sections/3?tab=whatsapp", "/app/sections/3", "/sections/3"],
-    }),
-    []
-  );
 
   // billing
   useEffect(() => {
@@ -893,9 +941,10 @@ function Section0Inner() {
 
   return (
     <>
-      {/* ===== Header ===== */}
+      {/* ===== Header (SLIM) ===== */}
       <div className="tf-header">
         <InlineStack align="space-between" blockAlign="center">
+          {/* Left: logo + title + ONE video button */}
           <InlineStack gap="300" blockAlign="center">
             <div
               style={{
@@ -914,50 +963,53 @@ function Section0Inner() {
                 style={{ width: "100%", height: "100%", display: "block", objectFit: "cover" }}
               />
             </div>
-            <div>
-              <div style={{ fontWeight: 700, color: "#F9FAFB" }}>{t("section0.header.title")}</div>
-              <div style={{ fontSize: 12, color: "rgba(249,250,251,0.8)" }}>{t("section0.header.subtitle")}</div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              <div style={{ fontWeight: 800, color: "#F9FAFB", lineHeight: 1.05 }}>
+                {t("section0.header.title")}
+              </div>
+              <div style={{ fontSize: 12, color: "rgba(249,250,251,0.78)" }}>
+                {t("section0.header.subtitle")}
+              </div>
+
+              {/* ✅ ONE button only */}
+              <button
+                type="button"
+                className="tf-video-btn"
+                onClick={() => {
+                  // optional: open your global video page or youtube
+                  // navigate("/app/help/video");  // if you have it
+                }}
+              >
+                <span style={{ display: "inline-flex" }}>
+                  <Icon source={PI.PlayIcon} />
+                </span>
+                <span>Video guide</span>
+              </button>
             </div>
           </InlineStack>
 
-          {/* ✅ FLAGS : wrap + spacing */}
+          {/* Center flags */}
           <div className="tf-flags-wrap">
             <div className="tf-flags">
               <CountryFlagsBar />
             </div>
           </div>
 
-          <InlineStack gap="200" blockAlign="center">
-            <span
-              style={{
-                fontSize: 12,
-                padding: "4px 10px",
-                borderRadius: 999,
-                border: "1px solid rgba(248,250,252,0.45)",
-                color: "rgba(248,250,251,0.9)",
-                background: "linear-gradient(90deg,rgba(15,23,42,0.35),rgba(15,23,42,0.1))",
-              }}
-            >
-              {t("section0.header.pill")}
-            </span>
+          {/* Right: pill + language (extreme right) */}
+          <div className="tf-header-right">
+            <span className="tf-pill">{t("section0.header.pill")}</span>
             <LanguageSelector />
-          </InlineStack>
+          </div>
         </InlineStack>
       </div>
 
       {/* ===== Grille 3 colonnes ===== */}
       <div className="tf-shell">
         <div className="tf-editor">
-          {/* Colonne gauche */}
+          {/* ✅ Colonne gauche: WhatsApp ONLY */}
           <div className="tf-rail">
             <WhatsAppMonitorPanel stats={waStats} wa={waLive} loading={waLive.loading} />
-
-            <PlanUsageWidget
-              isSubscribed={isSubscribed}
-              planKey={currentKey}
-              currentTerm={currentTerm}
-              usage={planUsage}
-            />
           </div>
 
           {/* Colonne milieu */}
@@ -1021,7 +1073,6 @@ function Section0Inner() {
                     </div>
                   )}
 
-                  {/* ✅ Plans restored */}
                   <div className="pricing-grid">
                     <PlanCard
                       title={t("section0.plans.starter.title")}
@@ -1072,10 +1123,19 @@ function Section0Inner() {
             </div>
           </div>
 
-          {/* Colonne droite */}
+          {/* ✅ Colonne droite: PlanUsage TOP + Video BELOW */}
           <div className="tf-preview-col">
             <div className="tf-preview-card">
-              <OverviewPreview />
+              <PlanUsageWidget
+                isSubscribed={isSubscribed}
+                planKey={currentKey}
+                currentTerm={currentTerm}
+                usage={planUsage}
+              />
+            </div>
+
+            <div className="tf-preview-card">
+              <SingleVideoPreview />
             </div>
           </div>
         </div>
