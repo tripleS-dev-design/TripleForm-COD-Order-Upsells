@@ -320,7 +320,7 @@ const LAYOUT_CSS = `
       linear-gradient(135deg, rgba(124,5,54,0.18), rgba(11,59,130,0.18)),
       linear-gradient(180deg, #0B0F1A, #141A2A);
     box-shadow:0 18px 46px rgba(15,23,42,0.22);
-    position:relative;
+    position:"relative";
     padding:12px;
     color:#F9FAFB;
   }
