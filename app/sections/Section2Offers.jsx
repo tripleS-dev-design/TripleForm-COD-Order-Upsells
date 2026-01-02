@@ -374,41 +374,6 @@ const LAYOUT_CSS = `
     background:#fff;
     box-shadow:0 10px 24px rgba(15,23,42,0.06);
   }
-  .tf-ty-topbar{
-    position:sticky;
-    top:0;
-    z-index:5;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:10px;
-    padding:10px 12px;
-    background:linear-gradient(90deg,#0B3B82,#7D0031);
-    color:#F9FAFB;
-  }
-  .tf-ty-topbar-left{
-    display:flex;
-    align-items:center;
-    gap:10px;
-    flex-wrap:wrap;
-  }
-  .tf-ty-topchip{
-    font-size:11px;
-    font-weight:900;
-    padding:3px 8px;
-    border-radius:999px;
-    border:1px solid rgba(255,255,255,0.22);
-    background:rgba(255,255,255,0.10);
-    color:#F9FAFB;
-  }
-
-  /* ✅ TOPBAR controls are compact (ONLY 3 selects) */
-  .tf-ty-topbar-controls{
-    display:flex;
-    align-items:center;
-    gap:10px;
-    flex-wrap:wrap;
-  }
 
   /* ✅ LEFT tools + MIDDLE preview + RIGHT settings */
   .tf-ty-body{
@@ -430,13 +395,13 @@ const LAYOUT_CSS = `
     background:#FFFFFF;
     padding:14px;
     display:flex;
-    align-items:stretch;      /* ✅ fill height */
-    justify-content:stretch;  /* ✅ no fake empty center */
+    align-items:stretch;
+    justify-content:stretch;
     border-right:1px solid #E5E7EB;
   }
   .tf-ty-stage-inner{
-    width:100%;              /* ✅ take full width */
-    max-width:none;          /* ✅ remove 740px limitation */
+    width:100%;
+    max-width:none;
   }
 
   .tf-ty-settings{
@@ -1556,51 +1521,6 @@ function ThankYouEditor({ thankYou, globalColors, onChange, tr }) {
     });
   };
 
-  // ✅ TOPBAR compact: only 3 selects (no sliders here)
-  const TopBar = () => (
-    <div className="tf-ty-topbar">
-      <div className="tf-ty-topbar-left">
-        <span className="tf-ty-topchip">{tr("thankyou.tabTitle", "Thank you page")}</span>
-        <span className="tf-ty-topchip">
-          {ty.enabled !== false ? tr("thankyou.preview.on", "Enabled") : tr("thankyou.preview.off", "Disabled")}
-        </span>
-      </div>
-
-      <div className="tf-ty-topbar-controls">
-        <div style={{ minWidth: 190 }}>
-          <Select
-            label={tr("thankyou.mode.label", "Thank you mode")}
-            labelHidden
-            value={ty.mode || "simple"}
-            options={THANKYOU_MODE_OPTIONS}
-            onChange={(v) => update({ mode: v })}
-          />
-        </div>
-
-        <div style={{ minWidth: 150 }}>
-          <Select
-            label={tr("thankyou.layout.label", "Layout")}
-            labelHidden
-            value={ty.layout || "image-top"}
-            options={THANKYOU_LAYOUT_OPTIONS}
-            onChange={(v) => update({ layout: v })}
-          />
-        </div>
-
-        <div style={{ minWidth: 140 }}>
-          <Select
-            label={tr("thankyou.size.label", "Popup size")}
-            labelHidden
-            value={ty.size || "md"}
-            options={THANKYOU_SIZE_OPTIONS}
-            onChange={(v) => update({ size: v })}
-            disabled={ty.mode !== "popup"}
-          />
-        </div>
-      </div>
-    </div>
-  );
-
   const ToolRail = () => (
     <div className="tf-ty-rail">
       <div style={{ display: "grid", gap: 10, marginBottom: 4 }}>
@@ -1650,6 +1570,8 @@ function ThankYouEditor({ thankYou, globalColors, onChange, tr }) {
     <div className="tf-ty-controls-card">
       <BlockStack gap="400">
         <Text as="h3" variant="headingSm">{tr("thankyou.subtabs.mode", "Mode")}</Text>
+
+        {/* ✅ controls moved here (top band removed) */}
         <div className="tf-ty-minirow3">
           <Select
             label={tr("thankyou.mode.label", "Thank you mode")}
@@ -1658,17 +1580,16 @@ function ThankYouEditor({ thankYou, globalColors, onChange, tr }) {
             onChange={(v) => update({ mode: v })}
           />
           <Select
+            label={tr("thankyou.layout.label", "Layout")}
+            value={ty.layout || "image-top"}
+            options={THANKYOU_LAYOUT_OPTIONS}
+            onChange={(v) => update({ layout: v })}
+          />
+          <Select
             label={tr("thankyou.size.label", "Popup size")}
             value={ty.size || "md"}
             options={THANKYOU_SIZE_OPTIONS}
             onChange={(v) => update({ size: v })}
-            disabled={ty.mode !== "popup"}
-          />
-          <TextField
-            type="number"
-            label={tr("thankyou.delay.label", "Auto open delay (ms)")}
-            value={String(clampInt(ty.autoOpenDelayMs, 0, 5000, 250))}
-            onChange={(v) => update({ autoOpenDelayMs: clampInt(v, 0, 5000, 250) })}
             disabled={ty.mode !== "popup"}
           />
         </div>
@@ -1676,6 +1597,13 @@ function ThankYouEditor({ thankYou, globalColors, onChange, tr }) {
         <Divider />
 
         <div className="tf-ty-minirow3">
+          <TextField
+            type="number"
+            label={tr("thankyou.delay.label", "Auto open delay (ms)")}
+            value={String(clampInt(ty.autoOpenDelayMs, 0, 5000, 250))}
+            onChange={(v) => update({ autoOpenDelayMs: clampInt(v, 0, 5000, 250) })}
+            disabled={ty.mode !== "popup"}
+          />
           <TextField
             type="number"
             label={tr("thankyou.layout.radius", "Border radius")}
@@ -1688,7 +1616,6 @@ function ThankYouEditor({ thankYou, globalColors, onChange, tr }) {
             value={String(clampInt(ty.imageHeight, 120, 240, 160))}
             onChange={(v) => update({ imageHeight: clampInt(v, 120, 240, 160) })}
           />
-          <div />
         </div>
 
         <Divider />
@@ -1887,7 +1814,7 @@ function ThankYouEditor({ thankYou, globalColors, onChange, tr }) {
 
   return (
     <div className="tf-ty-builder">
-      <TopBar />
+      {/* ✅ TOP BAND REMOVED (as requested) */}
       <div className="tf-ty-body">
         <ToolRail />
 
