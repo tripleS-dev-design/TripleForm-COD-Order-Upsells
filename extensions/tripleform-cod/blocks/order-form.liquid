@@ -143,6 +143,17 @@ Lit la config OFFRES / UPSELL depuis:
       "successText": "Thanks! We'll contact you",
       "buttonIcon": "CartIcon"
     },
+      "thankyou": {
+      "enabled": true,
+      "mode": "popup",
+      "title": "Thank you!",
+      "text": "Your order has been received. We will contact you soon.",
+      "primaryLabel": "Continue shopping",
+      "primaryUrl": "/",
+      "secondaryLabel": "Close",
+      "secondaryAction": "close",
+      "autoCloseMs": 0
+    },
     "design": {
       "bg": "#FFFFFF",
       "text": "#0F172A",
@@ -353,8 +364,8 @@ Ces données sont écrites par /api/save-offers dans:
 <div
   id="tripleform-cod-{{ section.id }}"
   class="tripleform-cod"
-  data-settings='{{ tf_json | escape }}'
-  data-offers='{{ tf_offers_json | escape }}'
+  data-settings='{% if tf_prod_val and tf_prod_val != blank or tf_shop_val and tf_shop_val != blank %}{{ tf_json | json | escape }}{% else %}{{ tf_json | strip | escape }}{% endif %}'
+  data-offers='{% if tf_offers_prod_val and tf_offers_prod_val != blank or tf_offers_shop_val and tf_offers_shop_val != blank %}{{ tf_offers_json | json | escape }}{% else %}{{ tf_offers_json | strip | escape }}{% endif %}'
   data-product-id='{{ product.id }}'
   data-variant-id='{{ current_variant.id }}'
   data-currency='{{ cart.currency.iso_code | default: shop.currency }}'
