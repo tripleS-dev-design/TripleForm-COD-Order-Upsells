@@ -767,22 +767,7 @@ function SingleVideoPreview() {
   );
 }
 
-/* ======================= CSS injection ======================= */
-function useInjectCss() {
-  useEffect(() => {
-    if (typeof document === "undefined") return;
-    if (document.getElementById("tf-layout-css")) return;
-    const t = document.createElement("style");
-    t.id = "tf-layout-css";
-    t.appendChild(document.createTextNode(LAYOUT_CSS));
-    document.head.appendChild(t);
-    return () => {
-      try {
-        t.remove();
-      } catch {}
-    };
-  }, []);
-}
+
 
 /* ============================== Contenu Section0 ============================== */
 function Section0Inner() {
