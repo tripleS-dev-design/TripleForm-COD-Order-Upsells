@@ -1090,6 +1090,7 @@ window.TripleformCOD = (function () {
   }
 
 
+
   /* ------------------------------------------------------------------ */
   /* Overlay / effect shadows / sizes                                   */
   /* ------------------------------------------------------------------ */
@@ -1155,11 +1156,27 @@ window.TripleformCOD = (function () {
   /* ------------------------------------------------------------------ */
   /* ✅ THANK YOU (FIXED)                                               */
   /* ------------------------------------------------------------------ */
-  function getThankYouConfig(cfg) {
-    const a = pick(cfg, "section2.thankyou", null);
-    const b = pick(cfg, "thankyou", null);
-    const ty = (isObj(a) ? a : null) || (isObj(b) ? b : null) || null;
-    return ty || null;
+  function getThankYouConfig(cfg, offersCfg) {
+    // from settings (data-settings)
+    const a1 = pick(cfg, "section2.thankyou", null);
+    const a2 = pick(cfg, "section2.thankYou", null);
+    const b1 = pick(cfg, "thankyou", null);
+    const b2 = pick(cfg, "thankYou", null);
+
+    // from offers (data-offers)
+    const o1 = pick(offersCfg, "thankyou", null);
+    const o2 = pick(offersCfg, "thankYou", null);
+
+    const ty =
+      (isObj(a1) ? a1 : null) ||
+      (isObj(a2) ? a2 : null) ||
+      (isObj(b1) ? b1 : null) ||
+      (isObj(b2) ? b2 : null) ||
+      (isObj(o1) ? o1 : null) ||
+      (isObj(o2) ? o2 : null) ||
+      null;
+
+    return ty;
   }
 
   function ensureThankYouDOMOnce(root, cfg) {
@@ -1220,7 +1237,9 @@ window.TripleformCOD = (function () {
     if (!body) return;
 
     const title = css(ty?.title || "Thank you!");
-    const text = css(ty?.text || "Your order has been received. We will contact you soon.");
+    const text = css(
+      ty?.text || "Your order has been received. We will contact you soon."
+    );
     const imageUrl = String(ty?.imageUrl || "").trim();
 
     const btnBg = ty?.buttonBg || cfg?.design?.btnBg || "#111827";
@@ -1228,8 +1247,11 @@ window.TripleformCOD = (function () {
     const btnBorder = ty?.buttonBorder || cfg?.design?.btnBorder || btnBg;
 
     const secondaryBg = ty?.secondaryButtonBg || "transparent";
-    const secondaryText = ty?.secondaryButtonText || cfg?.design?.text || "#0f172a";
-    const secondaryBorder = ty?.secondaryButtonBorder || (cfg?.design?.border || "rgba(2,6,23,.15)");
+    const secondaryText =
+      ty?.secondaryButtonText || cfg?.design?.text || "#0f172a";
+    const secondaryBorder =
+      ty?.secondaryButtonBorder ||
+      (cfg?.design?.border || "rgba(2,6,23,.15)");
 
     const primaryLabel = css(ty?.primaryLabel || "Continue shopping");
     const primaryUrl = String(ty?.primaryUrl || "/").trim() || "/";
@@ -1251,9 +1273,17 @@ window.TripleformCOD = (function () {
     }
 
     body.innerHTML = `
-      ${imageUrl ? `<img class="tf-ty-img" src="${css(imageUrl)}" alt="" onerror="this.remove();" />` : ""}
-      <div style="font-weight:950;font-size:18px;line-height:1.2;">${tpl(title)}</div>
-      <div style="opacity:.88;font-size:13px;line-height:1.45;">${tpl(text)}</div>
+      ${
+        imageUrl
+          ? `<img class="tf-ty-img" src="${css(imageUrl)}" alt="" onerror="this.remove();" />`
+          : ""
+      }
+      <div style="font-weight:950;font-size:18px;line-height:1.2;">${tpl(
+        title
+      )}</div>
+      <div style="opacity:.88;font-size:13px;line-height:1.45;">${tpl(
+        text
+      )}</div>
 
       <div class="tf-ty-actions">
         <button type="button" class="tf-ty-btn" data-tf-ty-primary style="
@@ -1282,7 +1312,8 @@ window.TripleformCOD = (function () {
     const secondaryBtn = overlay.querySelector("[data-tf-ty-secondary]");
     if (secondaryBtn) {
       secondaryBtn.onclick = () => {
-        if (secondaryAction === "url" && secondaryUrl) return (window.location.href = secondaryUrl);
+        if (secondaryAction === "url" && secondaryUrl)
+          return (window.location.href = secondaryUrl);
         if (secondaryAction === "gohome") return (window.location.href = "/");
         hideThankYou(root);
       };
@@ -1295,8 +1326,8 @@ window.TripleformCOD = (function () {
     document.body.style.overflow = "hidden";
   }
 
-  function handleThankYou(root, cfg, payload, json) {
-    const ty = getThankYouConfig(cfg);
+  function handleThankYou(root, cfg, offersCfg, payload, json) {
+    const ty = getThankYouConfig(cfg, offersCfg);
     if (!ty || ty.enabled === false) return;
 
     const mode = String(ty.mode || ty.type || "redirect").toLowerCase();
@@ -1320,10 +1351,14 @@ window.TripleformCOD = (function () {
   /* Variant & qty helpers                                              */
   /* ------------------------------------------------------------------ */
   function getSelectedVariantId() {
-    const sel = document.querySelector('form[action^="/cart/add"] select[name="id"]');
+    const sel = document.querySelector(
+      'form[action^="/cart/add"] select[name="id"]'
+    );
     if (sel && sel.value) return sel.value;
 
-    const radio = document.querySelector('form[action^="/cart/add"] input[name="id"]:checked');
+    const radio = document.querySelector(
+      'form[action^="/cart/add"] input[name="id"]:checked'
+    );
     if (radio && radio.value) return radio.value;
 
     const holder = document.querySelector(".tripleform-cod[data-variant-id]");
@@ -1331,13 +1366,17 @@ window.TripleformCOD = (function () {
   }
 
   function getQty() {
-    const q = document.querySelector('form[action^="/cart/add"] input[name="quantity"]');
+    const q = document.querySelector(
+      'form[action^="/cart/add"] input[name="quantity"]'
+    );
     const v = Number(q && q.value ? q.value : 1);
     return v > 0 ? v : 1;
   }
 
   function setQty(nextQty) {
-    const q = document.querySelector('form[action^="/cart/add"] input[name="quantity"]');
+    const q = document.querySelector(
+      'form[action^="/cart/add"] input[name="quantity"]'
+    );
     if (!q) return false;
     const n = Math.max(1, Number(nextQty || 1));
     q.value = String(n);
@@ -1348,7 +1387,8 @@ window.TripleformCOD = (function () {
 
   function watchVariantAndQty(onChange) {
     document.addEventListener("change", (e) => {
-      if (e.target && (e.target.name === "id" || e.target.name === "quantity")) onChange();
+      if (e.target && (e.target.name === "id" || e.target.name === "quantity"))
+        onChange();
     });
     document.addEventListener("input", (e) => {
       if (e.target && e.target.name === "quantity") onChange();
@@ -1361,7 +1401,9 @@ window.TripleformCOD = (function () {
   /* ------------------------------------------------------------------ */
   function setupSticky(root, cfg, openHandler, motionClass) {
     const stickyType = cfg?.behavior?.stickyType || "none";
-    const stickyLabel = css(cfg?.behavior?.stickyLabel || cfg?.uiTitles?.orderNow || "Order now");
+    const stickyLabel = css(
+      cfg?.behavior?.stickyLabel || cfg?.uiTitles?.orderNow || "Order now"
+    );
     const stickyIcon = cfg?.behavior?.stickyIcon || "AppsIcon";
 
     const prev = document.querySelector(`[data-tf-sticky-for="${root.id}"]`);
@@ -1410,10 +1452,11 @@ window.TripleformCOD = (function () {
     `;
 
     const btn = el.querySelector("[data-tf-sticky-cta]");
-    if (btn) btn.onclick = (e) => {
-      e.preventDefault();
-      if (typeof openHandler === "function") openHandler();
-    };
+    if (btn)
+      btn.onclick = (e) => {
+        e.preventDefault();
+        if (typeof openHandler === "function") openHandler();
+      };
 
     document.body.appendChild(el);
   }
@@ -1428,6 +1471,7 @@ window.TripleformCOD = (function () {
     const citySelect = root.querySelector('select[data-tf-role="city"]');
     if (!provSelect && !citySelect) return;
 
+    // ✅ No data => keep placeholders, do nothing
     if (!Array.isArray(provinces) || provinces.length === 0) return;
 
     function resetSelect(el, placeholder) {
@@ -1455,8 +1499,8 @@ window.TripleformCOD = (function () {
       resetSelect(
         citySelect,
         provinceName
-          ? (cfg.fields?.city?.ph || "Select city")
-          : (cfg.fields?.city?.ph || "Select province first")
+          ? cfg.fields?.city?.ph || "Select city"
+          : cfg.fields?.city?.ph || "Select province first"
       );
       if (!provinceName) return;
       const prov = provinces.find((p) => p.name === provinceName);
@@ -1491,14 +1535,20 @@ window.TripleformCOD = (function () {
 
       switch (format) {
         case "hh[h] mm[m]":
-          return `${h.toString().padStart(2, "0")}h ${m.toString().padStart(2, "0")}m`;
+          return `${h.toString().padStart(2, "0")}h ${m
+            .toString()
+            .padStart(2, "0")}m`;
         case "mm[m] ss[s]":
-          return `${m.toString().padStart(2, "0")}m ${s.toString().padStart(2, "0")}s`;
+          return `${m.toString().padStart(2, "0")}m ${s
+            .toString()
+            .padStart(2, "0")}s`;
         case "hh[h]":
           return `${h.toString().padStart(2, "0")}h`;
         case "mm:ss":
         default:
-          return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+          return `${m.toString().padStart(2, "0")}:${s
+            .toString()
+            .padStart(2, "0")}`;
       }
     }
 
@@ -1616,13 +1666,11 @@ window.TripleformCOD = (function () {
   }
 
   // ✅ Packs options helper:
-  // offer.packOptions can be [2,3,4] etc. If enabled, user can click x2/x3/x4
-  // If not provided and offer.enablePackOptions === true => default [2,3,4]
   function packOptionsForOffer(offer) {
     if (!offer) return [];
     const arr = Array.isArray(offer.packOptions) ? offer.packOptions : [];
     if (arr.length) return arr.map((n) => Number(n)).filter((n) => n > 1);
-    if (offer.enablePackOptions === true) return [2, 3, 4]; // ✅ default (x2 x3 x4)
+    if (offer.enablePackOptions === true) return [2, 3, 4];
     return [];
   }
 
@@ -1642,7 +1690,6 @@ window.TripleformCOD = (function () {
     if (!activeOffers.length && !activeUpsells.length) return "";
 
     const active = getActiveOfferData(rootId);
-
     let html = `<div class="tf-offers-container" data-tf-offers-block="1">`;
 
     activeOffers.forEach((offer, idx) => {
@@ -1794,8 +1841,7 @@ window.TripleformCOD = (function () {
       motion === "pulse" ? "tf-motion-pulse" :
       motion === "shake" ? "tf-motion-shake" : "";
 
-    const hpState = { startTime: Date.now(), mouseMoved: false };
-    window.addEventListener("mousemove", () => { hpState.mouseMoved = true; }, { once: true });
+    window.addEventListener("mousemove", () => {}, { once: true });
 
     const countryDef = getCountryDef(beh);
     const pageStart = Date.now();
@@ -2077,7 +2123,9 @@ window.TripleformCOD = (function () {
     }
 
     function cartSummaryHTML() {
-      const cartIconHtml = t.cartIcon ? getIconHtml(t.cartIcon, 18, css(d.cartTitleColor || "#111827")) : "";
+      const cartIconHtml = t.cartIcon
+        ? getIconHtml(t.cartIcon, 18, css(d.cartTitleColor || "#111827"))
+        : "";
       return `
         <div style="${cartBoxStyle}">
           <div style="${cartTitleStyle}">${cartIconHtml}${css(t.top || "Order summary")}</div>
@@ -2293,9 +2341,6 @@ window.TripleformCOD = (function () {
     setTimeout(() => initializeTimers(root, offersCfg), 80);
     setupLocationDropdowns(root, cfg, countryDef);
 
-    const provSelect = root.querySelector('select[data-tf-role="province"]');
-    const citySelect = root.querySelector('select[data-tf-role="city"]');
-
     /* --------------------- Field helpers --------------------------- */
     function getField(key) {
       return root.querySelector(`[data-tf-field="${key}"]`) || null;
@@ -2392,8 +2437,7 @@ window.TripleformCOD = (function () {
       return discount;
     }
 
-    // ✅ Optional: offer.bundleTotalPrice overrides subtotal (example: fixed price for pack)
-    // offer.bundleTotalPrice can be number in shop currency (e.g. 199.99)
+    // ✅ Optional: offer.bundleTotalPrice overrides subtotal
     function offerSubtotalOverrideCents() {
       const x = currentOffer();
       if (!x) return null;
@@ -2409,7 +2453,7 @@ window.TripleformCOD = (function () {
 
       const { priceCents, baseTotalCents, qty } = computeProductTotals();
 
-      const override = offerSubtotalOverrideCents(); // if configured
+      const override = offerSubtotalOverrideCents();
       const subtotalBeforeDiscount = override != null ? override : baseTotalCents;
 
       const discountCents = computeDiscountCents(subtotalBeforeDiscount, qty);
@@ -2641,7 +2685,7 @@ window.TripleformCOD = (function () {
 
         const json = await res.json().catch(() => ({}));
         if (res.ok && json?.ok) {
-          const ty = getThankYouConfig(cfg);
+          const ty = getThankYouConfig(cfg, offersCfg);
           const tyEnabled = !!ty && ty.enabled !== false;
 
           // ✅ Only show successText on button IF no thankyou behavior enabled
@@ -2655,7 +2699,7 @@ window.TripleformCOD = (function () {
           }
 
           try {
-            handleThankYou(root, cfg, payload, json);
+            handleThankYou(root, cfg, offersCfg, payload, json);
           } catch (e) {
             console.warn("[Tripleform COD] Thank you handler error:", e);
           }
