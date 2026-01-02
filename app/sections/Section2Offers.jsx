@@ -1,4 +1,3 @@
-// ======================= PART 1/2 =======================
 // ===== File: app/sections/Section2Offers.jsx =====
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -348,18 +347,18 @@ const LAYOUT_CSS = `
     gap:6px;
   }
 
+  /* ✅ Make popup preview more realistic */
   .tf-ty-modal-overlay{
     position:absolute;
     inset:0;
     display:flex;
     align-items:center;
     justify-content:center;
-    padding:14px;
+    padding:18px;
     background:rgba(2,6,23,.55);
   }
   .tf-ty-modal{
     width:100%;
-    max-width:420px;
     border-radius:16px;
     border:1px solid rgba(255,255,255,.12);
     overflow:hidden;
@@ -402,6 +401,8 @@ const LAYOUT_CSS = `
     background:rgba(255,255,255,0.10);
     color:#F9FAFB;
   }
+
+  /* ✅ TOPBAR controls are compact (ONLY 3 selects) */
   .tf-ty-topbar-controls{
     display:flex;
     align-items:center;
@@ -412,8 +413,8 @@ const LAYOUT_CSS = `
   /* ✅ LEFT tools + MIDDLE preview + RIGHT settings */
   .tf-ty-body{
     display:grid;
-    grid-template-columns: 240px minmax(0,1fr) 380px;
-    min-height: 560px;
+    grid-template-columns: 260px minmax(0,1fr) 420px;
+    min-height: 580px;
   }
 
   .tf-ty-rail{
@@ -429,13 +430,13 @@ const LAYOUT_CSS = `
     background:#FFFFFF;
     padding:14px;
     display:flex;
-    align-items:flex-start;
-    justify-content:center; /* ✅ preview centered */
+    align-items:stretch;      /* ✅ fill height */
+    justify-content:stretch;  /* ✅ no fake empty center */
     border-right:1px solid #E5E7EB;
   }
   .tf-ty-stage-inner{
-    width:100%;
-    max-width: 740px;
+    width:100%;              /* ✅ take full width */
+    max-width:none;          /* ✅ remove 740px limitation */
   }
 
   .tf-ty-settings{
@@ -473,12 +474,6 @@ const LAYOUT_CSS = `
     box-shadow:0 10px 22px rgba(15,23,42,0.05);
   }
 
-  .tf-ty-minirow{
-    display:grid;
-    grid-template-columns: 1fr 1fr;
-    gap:12px;
-    align-items:start;
-  }
   .tf-ty-minirow3{
     display:grid;
     grid-template-columns: 1fr 1fr 1fr;
@@ -496,7 +491,7 @@ const LAYOUT_CSS = `
     background:linear-gradient(90deg,rgba(11,59,130,.10),rgba(125,0,49,.08));
   }
 
-  @media (max-width: 1100px) {
+  @media (max-width: 1200px) {
     .tf-editor { grid-template-columns:1fr; }
     .tf-preview-col { position:static; max-height:none; }
 
@@ -976,9 +971,7 @@ function applyPaletteToGlobal(globalColors, paletteId) {
   return applyPalette(paletteId, globalColors);
 }
 
-// ======================= PART 2/2 =======================
-// (continue same file)
-
+/* ============================== Preview Card (offers/upsells) ============================== */
 function PreviewCard({ item, products, isOffer, globalColors, tr }) {
   const product = item.productId ? getProductById(products, item.productId) : null;
   const images = product ? getProductImages(product) : [];
@@ -1152,7 +1145,7 @@ function ThankYouPreview({ thankYou, globalColors, tr }) {
   const contentWrapStyle = {
     display: "grid",
     gap: 12,
-    gridTemplateColumns: isTop ? "1fr" : "140px 1fr",
+    gridTemplateColumns: isTop ? "1fr" : "160px 1fr",
     alignItems: "start",
   };
 
@@ -1161,12 +1154,12 @@ function ThankYouPreview({ thankYou, globalColors, tr }) {
     border: "1px solid rgba(0,0,0,.08)",
     background: "#F3F4F6",
     overflow: "hidden",
-    height: isTop ? imageHeight : 140,
+    height: isTop ? imageHeight : 160,
   };
 
   const iconStyle = {
-    width: 36,
-    height: 36,
+    width: 38,
+    height: 38,
     borderRadius: 12,
     display: "grid",
     placeItems: "center",
@@ -1212,7 +1205,7 @@ function ThankYouPreview({ thankYou, globalColors, tr }) {
           className="tf-ty-banner"
           style={{
             ...imageWrapStyle,
-            height: isTop ? imageHeight : 140,
+            height: isTop ? imageHeight : 160,
             order: isRight ? 2 : 0,
           }}
         >
@@ -1268,8 +1261,12 @@ function ThankYouPreview({ thankYou, globalColors, tr }) {
     </div>
   );
 
+  // ✅ popup size realism
+  const popupMaxWidth =
+    ty.size === "sm" ? 420 : ty.size === "lg" ? 720 : 560;
+
   return (
-    <div className="tf-ty-preview-wrap">
+    <div className="tf-ty-preview-wrap" style={{ minHeight: 420 }}>
       {ty.mode === "simple" ? (
         renderContent()
       ) : (
@@ -1311,6 +1308,7 @@ function ThankYouPreview({ thankYou, globalColors, tr }) {
             <div
               className="tf-ty-modal"
               style={{
+                maxWidth: popupMaxWidth,
                 background: cardBg,
                 borderRadius: radius,
                 border: `1px solid ${borderColor}`,
@@ -1522,7 +1520,7 @@ function UpsellEditor({ upsell, index, products, onChange, onRemove, canRemove, 
   );
 }
 
-/* ============================== Thank You Editor (Paint/Canva: preview CENTER) ============================== */
+/* ============================== Thank You Editor (Paint/Canva) ============================== */
 function ThankYouEditor({ thankYou, globalColors, onChange, tr }) {
   const ty = thankYou || DEFAULT_THANKYOU;
   const update = (patch) => onChange({ ...ty, ...patch });
@@ -1543,20 +1541,11 @@ function ThankYouEditor({ thankYou, globalColors, onChange, tr }) {
   const useGlobal = ty.useGlobalColors !== false;
   const colors = useGlobal ? globalColors : ty.colors || DEFAULT_THANKYOU_COLORS;
 
-  const topMode = ty.mode || "simple";
-  const topLayout = ty.layout || "image-top";
-  const topSize = ty.size || "md";
-
-  const topRadius = clampInt(ty.radius, 10, 28, 16);
-  const topImgH = clampInt(ty.imageHeight, 120, 240, 160);
-  const topDelay = clampInt(ty.autoOpenDelayMs, 0, 5000, 250);
-
   const applyTemplate = (templateId) => {
     const t = THANKYOU_TEMPLATES.find((x) => x.id === templateId);
     if (!t) return;
     update({
       ...t.data,
-      // keep your design settings as-is (colors/radius/imageHeight)
       colors: ty.colors,
       useGlobalColors: ty.useGlobalColors,
       radius: ty.radius,
@@ -1567,6 +1556,7 @@ function ThankYouEditor({ thankYou, globalColors, onChange, tr }) {
     });
   };
 
+  // ✅ TOPBAR compact: only 3 selects (no sliders here)
   const TopBar = () => (
     <div className="tf-ty-topbar">
       <div className="tf-ty-topbar-left">
@@ -1577,21 +1567,21 @@ function ThankYouEditor({ thankYou, globalColors, onChange, tr }) {
       </div>
 
       <div className="tf-ty-topbar-controls">
-        <div style={{ minWidth: 200 }}>
+        <div style={{ minWidth: 190 }}>
           <Select
             label={tr("thankyou.mode.label", "Thank you mode")}
             labelHidden
-            value={topMode}
+            value={ty.mode || "simple"}
             options={THANKYOU_MODE_OPTIONS}
             onChange={(v) => update({ mode: v })}
           />
         </div>
 
-        <div style={{ minWidth: 160 }}>
+        <div style={{ minWidth: 150 }}>
           <Select
             label={tr("thankyou.layout.label", "Layout")}
             labelHidden
-            value={topLayout}
+            value={ty.layout || "image-top"}
             options={THANKYOU_LAYOUT_OPTIONS}
             onChange={(v) => update({ layout: v })}
           />
@@ -1601,48 +1591,10 @@ function ThankYouEditor({ thankYou, globalColors, onChange, tr }) {
           <Select
             label={tr("thankyou.size.label", "Popup size")}
             labelHidden
-            value={topSize}
+            value={ty.size || "md"}
             options={THANKYOU_SIZE_OPTIONS}
             onChange={(v) => update({ size: v })}
             disabled={ty.mode !== "popup"}
-          />
-        </div>
-
-        <div style={{ width: 150 }}>
-          <RangeSlider
-            label={tr("thankyou.layout.radius", "Border radius")}
-            labelHidden
-            value={topRadius}
-            min={10}
-            max={28}
-            onChange={(v) => update({ radius: clampInt(v, 10, 28, 16) })}
-            output
-          />
-        </div>
-
-        <div style={{ width: 170 }}>
-          <RangeSlider
-            label={tr("thankyou.layout.imageHeight", "Image height (px)")}
-            labelHidden
-            value={topImgH}
-            min={120}
-            max={240}
-            onChange={(v) => update({ imageHeight: clampInt(v, 120, 240, 160) })}
-            output
-          />
-        </div>
-
-        <div style={{ width: 180 }}>
-          <RangeSlider
-            label={tr("thankyou.delay.label", "Auto open delay (ms)")}
-            labelHidden
-            value={topDelay}
-            min={0}
-            max={5000}
-            step={50}
-            onChange={(v) => update({ autoOpenDelayMs: clampInt(v, 0, 5000, 250) })}
-            disabled={ty.mode !== "popup"}
-            output
           />
         </div>
       </div>
@@ -1720,6 +1672,25 @@ function ThankYouEditor({ thankYou, globalColors, onChange, tr }) {
             disabled={ty.mode !== "popup"}
           />
         </div>
+
+        <Divider />
+
+        <div className="tf-ty-minirow3">
+          <TextField
+            type="number"
+            label={tr("thankyou.layout.radius", "Border radius")}
+            value={String(clampInt(ty.radius, 10, 28, 16))}
+            onChange={(v) => update({ radius: clampInt(v, 10, 28, 16) })}
+          />
+          <TextField
+            type="number"
+            label={tr("thankyou.layout.imageHeight", "Image height (px)")}
+            value={String(clampInt(ty.imageHeight, 120, 240, 160))}
+            onChange={(v) => update({ imageHeight: clampInt(v, 120, 240, 160) })}
+          />
+          <div />
+        </div>
+
         <Divider />
         <Text as="p" variant="bodySm" tone="subdued">
           {tr("thankyou.mode.note", "Storefront behavior needs the frontend script to show this popup after submit success.")}
@@ -1786,19 +1757,31 @@ function ThankYouEditor({ thankYou, globalColors, onChange, tr }) {
             placeholder="https://cdn.shopify.com/..."
             autoComplete="off"
           />
-          <div style={{ display: "grid", gap: 10, alignContent: "start" }}>
-            <Button onClick={() => update({ imageUrl: "", iconUrl: "" })} icon={PI.DeleteIcon} variant="secondary">
-              {tr("thankyou.media.clear", "Clear media")}
-            </Button>
-          </div>
+          <Button onClick={() => update({ imageUrl: "", iconUrl: "" })} icon={PI.DeleteIcon} variant="secondary">
+            {tr("thankyou.media.clear", "Clear media")}
+          </Button>
         </div>
 
         <Divider />
 
         <div className="tf-ty-minirow3">
           <Select label={tr("thankyou.layout.label", "Layout")} value={ty.layout || "image-top"} options={THANKYOU_LAYOUT_OPTIONS} onChange={(v) => update({ layout: v })} />
-          <TextField type="number" label={tr("thankyou.layout.imageHeight", "Image height (px)")} value={String(clampInt(ty.imageHeight, 120, 240, 160))} onChange={(v) => update({ imageHeight: clampInt(v, 120, 240, 160) })} />
-          <TextField type="number" label={tr("thankyou.layout.radius", "Border radius")} value={String(clampInt(ty.radius, 10, 28, 16))} onChange={(v) => update({ radius: clampInt(v, 10, 28, 16) })} />
+          <RangeSlider
+            label={tr("thankyou.layout.imageHeight", "Image height (px)")}
+            value={clampInt(ty.imageHeight, 120, 240, 160)}
+            min={120}
+            max={240}
+            onChange={(v) => update({ imageHeight: clampInt(v, 120, 240, 160) })}
+            output
+          />
+          <RangeSlider
+            label={tr("thankyou.layout.radius", "Border radius")}
+            value={clampInt(ty.radius, 10, 28, 16)}
+            min={10}
+            max={28}
+            onChange={(v) => update({ radius: clampInt(v, 10, 28, 16) })}
+            output
+          />
         </div>
       </BlockStack>
     </div>
@@ -1873,25 +1856,6 @@ function ThankYouEditor({ thankYou, globalColors, onChange, tr }) {
             {tr("thankyou.design.usingGlobalNote", "Using global palette from Offers. Disable it to customize separately.")}
           </Text>
         )}
-
-        <Divider />
-        <Text as="p" variant="bodySm" tone="subdued">
-          {tr("thankyou.design.current", "Current applied colors (preview):")}
-        </Text>
-        <div className="tf-ty-minirow3">
-          <div style={{ display: "grid", gap: 6 }}>
-            <Text as="p" variant="bodySm" fontWeight="bold">{tr("thankyou.colors.cardBg", "Card background")}</Text>
-            <div style={{ height: 34, borderRadius: 12, border: "1px solid rgba(0,0,0,.10)", background: colors.cardBg || "#fff" }} />
-          </div>
-          <div style={{ display: "grid", gap: 6 }}>
-            <Text as="p" variant="bodySm" fontWeight="bold">{tr("thankyou.colors.iconBg", "Icon background")}</Text>
-            <div style={{ height: 34, borderRadius: 12, border: "1px solid rgba(0,0,0,.10)", background: colors.iconBg || "#EEF2FF" }} />
-          </div>
-          <div style={{ display: "grid", gap: 6 }}>
-            <Text as="p" variant="bodySm" fontWeight="bold">{tr("thankyou.colors.buttonBg", "Button background")}</Text>
-            <div style={{ height: 34, borderRadius: 12, border: "1px solid rgba(0,0,0,.10)", background: colors.buttonBg || "#111827" }} />
-          </div>
-        </div>
       </BlockStack>
     </div>
   );
@@ -1927,10 +1891,10 @@ function ThankYouEditor({ thankYou, globalColors, onChange, tr }) {
       <div className="tf-ty-body">
         <ToolRail />
 
-        {/* ✅ PREVIEW LIVE AU MILIEU */}
+        {/* ✅ PREVIEW LIVE AU MILIEU (FULL WIDTH) */}
         <div className="tf-ty-stage">
           <div className="tf-ty-stage-inner">
-            <ThankYouPreview thankYou={ty} globalColors={globalColors} tr={tr} />
+            <ThankYouPreview thankYou={ty} globalColors={colors} tr={tr} />
           </div>
         </div>
 
@@ -2374,7 +2338,7 @@ function Section2OffersInner({ products = [] }) {
         </div>
 
         {/* ✅ RIGHT PREVIEW ONLY for non-thankyou tabs */}
-        {!isThankYouTab && (
+        {tab !== "thankyou" && (
           <div className="tf-preview-col">
             <div className="tf-preview-card">
               <BlockStack gap="300">
