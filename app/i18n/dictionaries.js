@@ -1699,8 +1699,7 @@ const FR = {
 
   "section0.header.title": "TripleForm COD · Dashboard",
   "section0.header.subtitle": "Vue d'ensemble, support et abonnement",
-  "section0.header.pill":
-    "Formulaire COD · Google Sheets · Pixels · Anti-bot",
+  "section0.header.pill":"Formulaire COD · Google Sheets · Pixels · Anti-bot",
 
   "section0.nav.forms": "Section 1 — Formulaires COD",
   "section0.nav.offers": "Section 2 — Offers (upsell/bundles)",
