@@ -1,18 +1,8 @@
 // ===== File: app/sections/Section0Home.jsx =====
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import CountryFlagsBar from "../components/CountryFlagsBar";
 
-import {
-  Card,
-  InlineStack,
-  Button,
-  Text,
-  List,
-  Icon,
-  Banner,
-  Badge,
-  Spinner,
-} from "@shopify/polaris";
+import { Card, InlineStack, Button, Text, List, Icon, Banner, Badge, Spinner } from "@shopify/polaris";
 import * as PI from "@shopify/polaris-icons";
 import { useNavigate } from "@remix-run/react";
 import SmartSupportPanel from "../components/SmartSupportPanel";
@@ -30,66 +20,76 @@ const LAYOUT_CSS = `
   }
   .Polaris-TextField, .Polaris-Select, .Polaris-Labelled__LabelWrapper { min-width:0; }
 
-  /* ✅ HEADER SLIM */
-  .tf-header {
+  /* ✅ HEADER SLIM (same feeling as Section Form) */
+  .tf-header{
     background:linear-gradient(90deg,#0B3B82,#7D0031);
     border-bottom:none;
-    padding:8px 12px;             /* ✅ plus slim */
+    padding:6px 10px;             /* ✅ slimmer */
     position:sticky;
     top:0;
     z-index:40;
     box-shadow:0 10px 28px rgba(11,59,130,0.35);
   }
 
-  .tf-shell { padding:16px; }
-
-  /* 3 colonnes : gauche | milieu | droite */
-  .tf-editor {
+  /* ✅ force 1 slim row: left | center | right */
+  .tf-header-row{
     display:grid;
-    grid-template-columns: 340px 3fr 1.35fr;
-    gap:16px;
-    align-items:start;
+    grid-template-columns: auto 1fr auto;
+    align-items:center;
+    gap:10px;
+    min-height:44px;              /* ✅ slim band height */
   }
 
-  /* colonne gauche (sticky) */
-  .tf-rail {
-    position:sticky;
-    top:58px; /* ✅ header slim */
-    max-height:calc(100vh - 74px);
-    overflow:auto;
+  .tf-brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    min-width:0;
   }
-
-  /* colonne milieu */
-  .tf-right-col { display:grid; gap:16px; }
-  .tf-panel   { background:#fff; border:1px solid #E5E7EB; border-radius:10px; padding:12px; }
-
-  /* colonne droite (preview) */
-  .tf-preview-col {
-    position:sticky;
-    top:58px; /* ✅ header slim */
-    max-height:calc(100vh - 74px);
-    overflow:auto;
-    display:grid;
-    gap:12px;
+  .tf-brand-text{
+    display:flex;
+    flex-direction:column;
+    min-width:0;
+    line-height:1.05;
   }
-  .tf-preview-card {
-    background:#fff;
-    border:1px solid #E5E7EB;
-    border-radius:10px;
-    padding:12px;
-  }
-
-  /* titres de groupe */
-  .tf-group-title {
-    padding:10px 12px;
-    background:linear-gradient(90deg,#0B3B82,#7D0031);
-    border:1px solid rgba(0,167,163,0.85);
+  .tf-brand-title{
+    font-weight:900;
     color:#F9FAFB;
-    border-radius:10px;
+    font-size:13px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .tf-brand-sub{
+    font-size:11px;
+    color:rgba(249,250,251,0.78);
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+
+  /* ✅ small video pill (NOT under title -> keeps header slim) */
+  .tf-video-btn{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:6px 10px;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,0.22);
+    background:rgba(255,255,255,0.10);
+    color:#F9FAFB;
+    cursor:pointer;
+    box-shadow:0 6px 16px rgba(0,0,0,0.18);
+    transition:all .15s ease-out;
+    font-size:12px;
     font-weight:800;
-    letter-spacing:.2px;
-    margin-bottom:10px;
-    box-shadow:0 6px 18px rgba(205, 211, 218, 0.35);
+    white-space:nowrap;
+    line-height:1;
+  }
+  .tf-video-btn:hover{
+    transform:translateY(-1px);
+    background:rgba(255,255,255,0.14);
+    border-color:rgba(255,255,255,0.30);
   }
 
   /* =================== FLAGS BAR (clean) =================== */
@@ -116,12 +116,13 @@ const LAYOUT_CSS = `
   }
   .tf-flags::-webkit-scrollbar{ display:none; }
 
-  /* =================== RIGHT CONTROLS (extreme right) =================== */
+  /* =================== RIGHT CONTROLS (EXTREME RIGHT) =================== */
   .tf-header-right{
     display:flex;
     align-items:center;
     justify-content:flex-end;
     gap:10px;
+    min-width:0;
   }
   .tf-pill{
     font-size:12px;
@@ -131,36 +132,67 @@ const LAYOUT_CSS = `
     color:rgba(248,250,251,0.92);
     background:linear-gradient(90deg,rgba(15,23,42,0.30),rgba(15,23,42,0.08));
     white-space:nowrap;
+    line-height:1;
   }
 
-  /* ✅ left single button in header */
-  .tf-video-btn{
-    display:inline-flex;
-    align-items:center;
-    gap:8px;
-    padding:6px 10px;
-    border-radius:999px;
-    border:1px solid rgba(255,255,255,0.22);
-    background:rgba(255,255,255,0.10);
-    color:#F9FAFB;
-    cursor:pointer;
-    box-shadow:0 6px 16px rgba(0,0,0,0.18);
-    transition:all .15s ease-out;
-    font-size:12px;
-    font-weight:700;
-    white-space:nowrap;
+  .tf-shell { padding:16px; }
+
+  /* 3 colonnes : gauche | milieu | droite */
+  .tf-editor {
+    display:grid;
+    grid-template-columns: 340px 3fr 1.35fr;
+    gap:16px;
+    align-items:start;
   }
-  .tf-video-btn:hover{
-    transform:translateY(-1px);
-    background:rgba(255,255,255,0.14);
-    border-color:rgba(255,255,255,0.30);
+
+  /* colonne gauche (sticky) */
+  .tf-rail {
+    position:sticky;
+    top:56px; /* ✅ header slim */
+    max-height:calc(100vh - 72px);
+    overflow:auto;
+  }
+
+  /* colonne milieu */
+  .tf-right-col { display:grid; gap:16px; }
+  .tf-panel   { background:#fff; border:1px solid #E5E7EB; border-radius:10px; padding:12px; }
+
+  /* colonne droite (preview) */
+  .tf-preview-col {
+    position:sticky;
+    top:56px; /* ✅ header slim */
+    max-height:calc(100vh - 72px);
+    overflow:auto;
+    display:grid;
+    gap:12px;
+  }
+  .tf-preview-card {
+    background:#fff;
+    border:1px solid #E5E7EB;
+    border-radius:10px;
+    padding:12px;
+  }
+
+  /* titres de groupe */
+  .tf-group-title {
+    padding:10px 12px;
+    background:linear-gradient(90deg,#0B3B82,#7D0031);
+    border:1px solid rgba(0,167,163,0.85);
+    color:#F9FAFB;
+    border-radius:10px;
+    font-weight:800;
+    letter-spacing:.2px;
+    margin-bottom:10px;
+    box-shadow:0 6px 18px rgba(205, 211, 218, 0.35);
   }
 
   @media (max-width: 980px) {
     .tf-editor { grid-template-columns: 1fr; }
     .tf-rail, .tf-preview-col { position:static; max-height:none; }
-    .tf-flags{ max-width:260px; gap:8px; padding:6px 10px; }
-    .tf-pill{ display:none; } /* ✅ header slim on mobile */
+
+    .tf-flags{ max-width:240px; gap:8px; padding:6px 10px; }
+    .tf-pill{ display:none; }
+    .tf-brand-sub{ display:none; }  /* ✅ keep header slim on mobile */
   }
 
   /* =================== PLANS (design) =================== */
@@ -484,7 +516,9 @@ function useInjectCss() {
     t.appendChild(document.createTextNode(LAYOUT_CSS));
     document.head.appendChild(t);
     return () => {
-      try { t.remove(); } catch {}
+      try {
+        t.remove();
+      } catch {}
     };
   }, []);
 }
@@ -634,14 +668,12 @@ function WhatsAppMonitorPanel({ stats, wa, loading }) {
             <div className="wa-meta">
               <div className="k">{connected ? "Connected number" : "WhatsApp status"}</div>
               <div className="s">
-                {loading ? "Loading live status..." : connected ? (phoneNumber || "—") : "Scan QR from WhatsApp settings"}
+                {loading ? "Loading live status..." : connected ? phoneNumber || "—" : "Scan QR from WhatsApp settings"}
               </div>
             </div>
           </div>
 
-          {loading ? (
-            <Spinner size="small" />
-          ) : connected ? (
+          {loading ? <Spinner size="small" /> : connected ? (
             <span style={{ fontWeight: 900, color: "#16A34A" }}>●</span>
           ) : (
             <span style={{ fontWeight: 900, color: "#EF4444" }}>●</span>
@@ -767,15 +799,12 @@ function SingleVideoPreview() {
   );
 }
 
-
-
 /* ============================== Contenu Section0 ============================== */
 function Section0Inner() {
   useInjectCss();
   const navigate = useNavigate();
   const { t } = useI18n();
 
-  // ✅ Par défaut: Plans & billing
   const [activeTab, setActiveTab] = useState("billing");
 
   const [billing, setBilling] = useState({ loading: true, active: false, plan: null });
@@ -784,12 +813,7 @@ function Section0Inner() {
 
   const [planUsage, setPlanUsage] = useState({ loading: true, ordersUsed: 0, sinceLabel: null });
 
-  const [waStats, setWaStats] = useState({
-    loading: true,
-    orders: 0,
-    abandoned: 0,
-    recovered: 0,
-  });
+  const [waStats, setWaStats] = useState({ loading: true, orders: 0, abandoned: 0, recovered: 0 });
 
   const [waLive, setWaLive] = useState({
     loading: true,
@@ -837,12 +861,7 @@ function Section0Inner() {
       const abandoned = j?.abandoned?.count ?? 0;
       const recovered = j?.recovered?.count ?? 0;
 
-      setWaStats({
-        loading: false,
-        orders: used,
-        abandoned,
-        recovered,
-      });
+      setWaStats({ loading: false, orders: used, abandoned, recovered });
     } catch (e) {
       console.error("orders.dashboard error", e);
       setPlanUsage((prev) => ({ ...prev, loading: false }));
@@ -859,7 +878,8 @@ function Section0Inner() {
       if (!r.ok || !data) throw new Error(data?.error || "WhatsApp status error");
 
       const connected = !!data.connected;
-      const phoneNumber = data.phoneNumber || data?.whatsappStatus?.phoneNumber || data?.config?.phoneNumber || "";
+      const phoneNumber =
+        data.phoneNumber || data?.whatsappStatus?.phoneNumber || data?.config?.phoneNumber || "";
 
       setWaLive({
         loading: false,
@@ -889,7 +909,6 @@ function Section0Inner() {
 
   const isSubscribed = billing.active;
 
-  // Billing functions
   async function openBilling(plan, term) {
     try {
       const u = new URL("/api/billing/request", window.location.origin);
@@ -928,9 +947,9 @@ function Section0Inner() {
     <>
       {/* ===== Header (SLIM) ===== */}
       <div className="tf-header">
-        <InlineStack align="space-between" blockAlign="center">
-          {/* Left: logo + title + ONE video button */}
-          <InlineStack gap="300" blockAlign="center">
+        <div className="tf-header-row">
+          {/* LEFT: logo + title/sub + video button INLINE (keeps band slim) */}
+          <div className="tf-brand">
             <div
               style={{
                 width: 40,
@@ -940,6 +959,7 @@ function Section0Inner() {
                 boxShadow: "0 10px 28px rgba(11,59,130,0.55)",
                 border: "1px solid rgba(255,255,255,0.35)",
                 background: "linear-gradient(135deg,#0B3B82,#7D0031)",
+                flex: "0 0 auto",
               }}
             >
               <img
@@ -949,50 +969,44 @@ function Section0Inner() {
               />
             </div>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-              <div style={{ fontWeight: 800, color: "#F9FAFB", lineHeight: 1.05 }}>
-                {t("section0.header.title")}
-              </div>
-              <div style={{ fontSize: 12, color: "rgba(249,250,251,0.78)" }}>
-                {t("section0.header.subtitle")}
-              </div>
-
-              {/* ✅ ONE button only */}
-              <button
-                type="button"
-                className="tf-video-btn"
-                onClick={() => {
-                  // optional: open your global video page or youtube
-                  // navigate("/app/help/video");  // if you have it
-                }}
-              >
-                <span style={{ display: "inline-flex" }}>
-                  <Icon source={PI.PlayIcon} />
-                </span>
-                <span>Video guide</span>
-              </button>
+            <div className="tf-brand-text">
+              <div className="tf-brand-title">{t("section0.header.title")}</div>
+              <div className="tf-brand-sub">{t("section0.header.subtitle")}</div>
             </div>
-          </InlineStack>
 
-          {/* Center flags */}
+            <button
+              type="button"
+              className="tf-video-btn"
+              onClick={() => {
+                // navigate("/app/help/video");
+              }}
+            >
+              <span style={{ display: "inline-flex" }}>
+                <Icon source={PI.PlayIcon} />
+              </span>
+              <span>Video guide</span>
+            </button>
+          </div>
+
+          {/* CENTER: flags */}
           <div className="tf-flags-wrap">
             <div className="tf-flags">
               <CountryFlagsBar />
             </div>
           </div>
 
-          {/* Right: pill + language (extreme right) */}
+          {/* RIGHT: pill + language (EXTREME RIGHT) */}
           <div className="tf-header-right">
             <span className="tf-pill">{t("section0.header.pill")}</span>
             <LanguageSelector />
           </div>
-        </InlineStack>
+        </div>
       </div>
 
       {/* ===== Grille 3 colonnes ===== */}
       <div className="tf-shell">
         <div className="tf-editor">
-          {/* ✅ Colonne gauche: WhatsApp ONLY */}
+          {/* Colonne gauche: WhatsApp ONLY */}
           <div className="tf-rail">
             <WhatsAppMonitorPanel stats={waStats} wa={waLive} loading={waLive.loading} />
           </div>
@@ -1045,7 +1059,9 @@ function Section0Inner() {
                           </Text>
                         </>
                       ) : (
-                        <Text as="p" tone="subdued">{t("section0.billing.none")}</Text>
+                        <Text as="p" tone="subdued">
+                          {t("section0.billing.none")}
+                        </Text>
                       )}
                     </div>
                   </Card>
@@ -1066,8 +1082,14 @@ function Section0Inner() {
                       yearlyPercent={16}
                       ordersLabel={t("section0.plans.starter.orders")}
                       features={[
-                        "section0.features.1","section0.features.2","section0.features.3","section0.features.4",
-                        "section0.features.5","section0.features.6","section0.features.7","section0.features.8",
+                        "section0.features.1",
+                        "section0.features.2",
+                        "section0.features.3",
+                        "section0.features.4",
+                        "section0.features.5",
+                        "section0.features.6",
+                        "section0.features.7",
+                        "section0.features.8",
                       ]}
                       planKey="starter"
                       onChooseMonthly={handleBuyMonthly}
@@ -1108,7 +1130,7 @@ function Section0Inner() {
             </div>
           </div>
 
-          {/* ✅ Colonne droite: PlanUsage TOP + Video BELOW */}
+          {/* Colonne droite: PlanUsage TOP + Video BELOW */}
           <div className="tf-preview-col">
             <div className="tf-preview-card">
               <PlanUsageWidget
