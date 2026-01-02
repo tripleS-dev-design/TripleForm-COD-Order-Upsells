@@ -4,7 +4,6 @@ import CountryFlagsBar from "../components/CountryFlagsBar";
 
 import {
   Card,
-  BlockStack,
   InlineStack,
   Button,
   Text,
@@ -210,34 +209,9 @@ const LAYOUT_CSS = `
     box-shadow:0 6px 16px rgba(11,59,130,0.35);
   }
 
-  /* Flags bar (header center) */
-  .tf-flags{
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    gap:8px;
-    padding:6px 10px;
-    max-width:720px;
-    overflow-x:auto;
-    white-space:nowrap;
-    scrollbar-width:none;
-    -webkit-overflow-scrolling: touch;
-  }
-  .tf-flags::-webkit-scrollbar{ display:none; }
-  .tf-flag-item{
-    flex:0 0 auto;
-    display:flex;
-    align-items:center;
-  }
-  .tf-flags span{ font-size:18px; line-height:1; }
-  .tf-flags img{ width:22px; height:16px; border-radius:3px; display:block; }
-
   @media (max-width: 980px) {
     .tf-editor { grid-template-columns: 1fr; }
     .tf-rail, .tf-preview-col { position:static; max-height:none; }
-    .tf-flags{ max-width:240px; gap:6px; }
-    .tf-flags span{ font-size:16px; }
-    .tf-flags img{ width:20px; height:14px; }
   }
 
   /* ===== WhatsApp Monitor (LIVE + compact) ===== */
@@ -274,20 +248,6 @@ const LAYOUT_CSS = `
     position:relative;
     flex:0 0 auto;
   }
-  .wa-dot{
-    position:absolute;
-    top:-6px; right:-6px;
-    width:18px; height:18px;
-    border-radius:999px;
-    background:#EF4444;
-    color:#fff;
-    border:2px solid #fff;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-size:10px;
-    font-weight:900;
-  }
   .wa-title{
     display:flex;
     flex-direction:column;
@@ -295,7 +255,6 @@ const LAYOUT_CSS = `
     gap:2px;
   }
   .wa-title b{ font-size:13px; color:#0F172A; }
-  /* ✅ SUPPRIMÉ : plus de sous-titre ici */
 
   .wa-body{
     padding:10px 12px 12px;
@@ -504,29 +463,16 @@ function PlanCard({
 }
 
 /* ====================== WhatsApp Monitor (LIVE) ====================== */
-function WhatsAppMonitorPanel({
-  stats,
-  wa,
-  loading,
-  onGoSheets,
-  onGoWhatsappSettings,
-}) {
+function WhatsAppMonitorPanel({ stats, wa, loading }) {
   const orders = Number(stats?.orders || 0);
   const abandoned = Number(stats?.abandoned || 0);
   const recovered = Number(stats?.recovered || 0);
-  const subtotal = Number(stats?.subtotal || 0);
-  const shipping = stats?.shipping ?? "Free";
-  const total = Number(stats?.total || 0);
-  const currency = stats?.currency || "MAD";
 
   // status live from /api/whatsapp/status
   const connected = !!wa?.connected;
   const phoneNumber = wa?.phoneNumber || "";
   const lastConnected = wa?.lastConnected ? new Date(wa.lastConnected).toLocaleString() : null;
 
-  // If your API returns users array (optional), we show it:
-  // expected example:
-  // data.users = [{ name:"Agent 1", phone:"+2126...", connected:true }, ...]
   const users = Array.isArray(wa?.users) ? wa.users : null;
 
   return (
@@ -550,7 +496,6 @@ function WhatsAppMonitorPanel({
 
           <div className="wa-title">
             <b>WhatsApp Monitor</b>
-            {/* ✅ plus de sous-titre ici */}
           </div>
 
           <div style={{ marginLeft: 6 }}>
@@ -564,26 +509,10 @@ function WhatsAppMonitorPanel({
           </div>
         </div>
 
-        <InlineStack gap="200">
-          <Button
-            icon={PI.SettingsIcon}
-            onClick={onGoWhatsappSettings}
-            accessibilityLabel="Open WhatsApp settings"
-          >
-            Settings
-          </Button>
-          <Button
-            icon={PI.FolderIcon || PI.FolderDownIcon || PI.FolderAddIcon}
-            onClick={onGoSheets}
-            accessibilityLabel="Open Google Sheets"
-          >
-            Sheets
-          </Button>
-        </InlineStack>
+        {/* ✅ SUPPRIMÉ : les boutons en haut (Settings + Sheets) */}
       </div>
 
       <div className="wa-body">
-        {/* LIVE connection line */}
         <div className="wa-row" style={{ alignItems: "center" }}>
           <div className="wa-row-left">
             <div className="wa-ico">
@@ -615,7 +544,6 @@ function WhatsAppMonitorPanel({
           </div>
         )}
 
-        {/* Orders stats (still live from dashboard endpoint) */}
         <div className="wa-row">
           <div className="wa-row-left">
             <div className="wa-ico">
@@ -655,32 +583,12 @@ function WhatsAppMonitorPanel({
           <div className="wa-val">{recovered}</div>
         </div>
 
-        <div className="wa-mini">
-          <div className="wa-mini-line">
-            <span>Subtotal</span>
-            <b>
-              {currency} {subtotal.toFixed(2)}
-            </b>
-          </div>
-          <div className="wa-mini-line">
-            <span>Shipping</span>
-            <b>{shipping}</b>
-          </div>
-          <div className="wa-mini-line">
-            <span>Total</span>
-            <b>
-              {currency} {total.toFixed(2)}
-            </b>
-          </div>
-        </div>
+        {/* ✅ SUPPRIMÉ : le bloc Subtotal/Shipping/Total */}
 
-        {/* Users list (if provided by API), else show 1 "main session" */}
         <div className="wa-users">
           <div className="wa-users-head">
             <span>WhatsApp sessions</span>
-            <span style={{ color: "#6B7280", fontWeight: 700, fontSize: 11 }}>
-              LIVE
-            </span>
+            <span style={{ color: "#6B7280", fontWeight: 700, fontSize: 11 }}>LIVE</span>
           </div>
 
           {users && users.length ? (
@@ -770,7 +678,8 @@ function Section0Inner() {
   const navigate = useNavigate();
   const { t } = useI18n();
 
-  const [activeTab, setActiveTab] = useState("support");
+  // ✅ Par défaut: Plans & billing
+  const [activeTab, setActiveTab] = useState("billing");
 
   const [billing, setBilling] = useState({ loading: true, active: false, plan: null });
   const [currentKey, setCurrentKey] = useState(null);
@@ -783,10 +692,6 @@ function Section0Inner() {
     orders: 0,
     abandoned: 0,
     recovered: 0,
-    subtotal: 0,
-    shipping: "Free",
-    total: 0,
-    currency: "MAD",
   });
 
   const [waLive, setWaLive] = useState({
@@ -797,7 +702,7 @@ function Section0Inner() {
     users: null,
   });
 
-  // navigation helpers
+  // navigation helpers (kept, even if buttons removed)
   const sameOrigin = (p) => {
     try {
       return new URL(p, window.location.origin).origin === window.location.origin;
@@ -826,13 +731,8 @@ function Section0Inner() {
 
   const PATHS = useMemo(
     () => ({
-      forms: ["/app/sections/1", "/app/forms", "/forms", "/sections/1"],
-      offers: ["/app/sections/2", "/app/offers", "/offers", "/sections/2"],
       sheets: ["/app/sections/3", "/app/google-sheets", "/google-sheets", "/sections/3"],
       whatsapp: ["/app/sections/3?tab=whatsapp", "/app/sections/3", "/sections/3"],
-      pixels: ["/app/sections/4", "/app/pixels", "/pixels", "/sections/4"],
-      antibot: ["/app/sections/5", "/app/anti-bot", "/anti-bot", "/sections/5"],
-      locations: ["/app/sections/6", "/app/locations", "/locations", "/sections/6"],
     }),
     []
   );
@@ -874,19 +774,12 @@ function Section0Inner() {
 
       const abandoned = j?.abandoned?.count ?? 0;
       const recovered = j?.recovered?.count ?? 0;
-      const subtotal = j?.totals?.subtotal ?? 0;
-      const total = j?.totals?.total ?? subtotal;
-      const currency = j?.totals?.currency ?? "MAD";
 
       setWaStats({
         loading: false,
         orders: used,
         abandoned,
         recovered,
-        subtotal: Number(subtotal || 0),
-        total: Number(total || 0),
-        currency,
-        shipping: "Free",
       });
     } catch (e) {
       console.error("orders.dashboard error", e);
@@ -903,7 +796,6 @@ function Section0Inner() {
       const data = await r.json().catch(() => null);
       if (!r.ok || !data) throw new Error(data?.error || "WhatsApp status error");
 
-      // Prefer real "connected" returned by API
       const connected = !!data.connected;
       const phoneNumber = data.phoneNumber || data?.whatsappStatus?.phoneNumber || data?.config?.phoneNumber || "";
 
@@ -912,7 +804,7 @@ function Section0Inner() {
         connected,
         phoneNumber,
         lastConnected: data.lastConnected || data?.whatsappStatus?.connectedAt || null,
-        users: data.users || null, // optional
+        users: data.users || null,
       });
     } catch (e) {
       console.error("wa status error", e);
@@ -931,7 +823,6 @@ function Section0Inner() {
       clearInterval(t1);
       clearInterval(t2);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const isSubscribed = billing.active;
@@ -1027,13 +918,7 @@ function Section0Inner() {
         <div className="tf-editor">
           {/* Colonne gauche */}
           <div className="tf-rail">
-            <WhatsAppMonitorPanel
-              stats={waStats}
-              wa={waLive}
-              loading={waLive.loading}
-              onGoSheets={() => smartGo(PATHS.sheets)}
-              onGoWhatsappSettings={() => smartGo(PATHS.whatsapp)}
-            />
+            <WhatsAppMonitorPanel stats={waStats} wa={waLive} loading={waLive.loading} />
 
             <PlanUsageWidget
               isSubscribed={isSubscribed}
