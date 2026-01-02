@@ -1,5 +1,5 @@
 // ===== File: app/sections/Section0Home.jsx =====
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import CountryFlagsBar from "../components/CountryFlagsBar";
 
 import {
@@ -159,15 +159,8 @@ const LAYOUT_CSS = `
     flex-direction:column;
     gap:2px;
   }
-  .tf-video-title {
-    font-size:13px;
-    font-weight:600;
-    color:#0F172A;
-  }
-  .tf-video-sub {
-    font-size:11px;
-    color:#6B7280;
-  }
+  .tf-video-title { font-size:13px; font-weight:600; color:#0F172A; }
+  .tf-video-sub { font-size:11px; color:#6B7280; }
   .tf-video-footer {
     margin-top:2px;
     display:flex;
@@ -183,10 +176,7 @@ const LAYOUT_CSS = `
     background:#ffffff;
     color:#0F172A;
   }
-  .tf-video-duration {
-    opacity:.75;
-    color:#6B7280;
-  }
+  .tf-video-duration { opacity:.75; color:#6B7280; }
 
   /* grille pricing */
   .pricing-grid {
@@ -194,9 +184,7 @@ const LAYOUT_CSS = `
     grid-template-columns: repeat(3, minmax(260px, 1fr));
     gap:16px;
   }
-  @media (max-width: 1100px) {
-    .pricing-grid { grid-template-columns: 1fr; }
-  }
+  @media (max-width: 1100px) { .pricing-grid { grid-template-columns: 1fr; } }
 
   /* tabs Section0 */
   .tf-tabs {
@@ -220,236 +208,150 @@ const LAYOUT_CSS = `
     box-shadow:0 6px 16px rgba(11,59,130,0.35);
   }
 
-  /* cartes plan design "bande" */
-  .plan-card {
-    border-radius:16px;
-    overflow:hidden;
-    background:#ffffff;
-    border:1px solid #e5e7eb;
-    box-shadow:0 16px 40px rgba(15,23,42,0.16);
-    display:flex;
-    flex-direction:column;
-    min-height:230px;
-  }
-  .plan-header {
-    padding:8px 12px;
-    background:linear-gradient(90deg,#0B3B82,#7D0031);
-    color:#F9FAFB;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-  }
-  .plan-header-title {
-    font-weight:700;
-    letter-spacing:.02em;
-  }
-  .plan-header-badges {
-    display:flex;
-    gap:6px;
-    font-size:11px;
-  }
-  .plan-header-pill {
-    padding:3px 8px;
-    border-radius:999px;
-    border:1px solid rgba(248,250,252,0.7);
-    background:rgba(15,23,42,0.18);
-  }
-  .plan-body {
-    padding:12px 14px 14px;
-    display:grid;
-    gap:10px;
-    background:#f9fafb;
-  }
-  .plan-price-row {
-    display:flex;
-    align-items:flex-end;
-    gap:10px;
-    flex-wrap:wrap;
-  }
-  .plan-price-main {
-    font-size:22px;
-    font-weight:800;
-    color:#0f172a;
-  }
-  .plan-price-sub {
-    font-size:12px;
-    color:#6b7280;
-  }
-  .plan-price-alt {
-    font-size:13px;
-    color:#111827;
-  }
-  .plan-footer-btns {
-    display:flex;
-    gap:8px;
-    margin-top:6px;
-  }
-
-  @media (max-width: 1200px) {
-    .tf-editor { grid-template-columns: 300px 2.2fr 1.4fr; }
-  }
-  @media (max-width: 980px) {
-    .tf-editor { grid-template-columns: 1fr; }
-    .tf-rail, .tf-preview-col { position:static; max-height:none; }
-  }
-
-  /* Flags bar (header center) */
+  /* Flags bar (header center) - FIX */
   .tf-flags{
     display:flex;
     align-items:center;
     justify-content:center;
-    gap:12px;
-    padding:8px 12px;
-    max-width:520px;
+    gap:8px;
+    padding:6px 10px;
+    max-width:720px;
     overflow-x:auto;
+    white-space:nowrap;
     scrollbar-width:none;
+    -webkit-overflow-scrolling: touch;
   }
   .tf-flags::-webkit-scrollbar{ display:none; }
-  .tf-flag-item{ display:flex; align-items:center; }
+  .tf-flag-item{
+    flex:0 0 auto;
+    display:flex;
+    align-items:center;
+  }
+  /* si ton CountryFlagsBar utilise des spans/emoji */
+  .tf-flags span{ font-size:18px; line-height:1; }
+  /* si ton CountryFlagsBar utilise des images */
+  .tf-flags img{ width:22px; height:16px; border-radius:3px; display:block; }
+
   @media (max-width: 980px) {
-    .tf-flags{ max-width:240px; gap:8px; }
+    .tf-editor { grid-template-columns: 1fr; }
+    .tf-rail, .tf-preview-col { position:static; max-height:none; }
+    .tf-flags{ max-width:240px; gap:6px; }
+    .tf-flags span{ font-size:16px; }
+    .tf-flags img{ width:20px; height:14px; }
   }
 
-  /* ===== WhatsApp Monitor (left top) ===== */
-  .wa-monitor {
-    border-radius:14px;
+  /* ===== WhatsApp Monitor (new: same style as plan widget) ===== */
+  .wa-card{
+    margin-bottom:14px;
+    background:#ffffff;
+    border-radius:10px;
+    border:1px solid #E5E7EB;
+    box-shadow:0 10px 24px rgba(15,23,42,0.12);
     overflow:hidden;
-    border:1px solid rgba(229,231,235,1);
-    background:
-      radial-gradient(circle at 15% 25%, rgba(255,255,255,0.20), transparent 55%),
-      linear-gradient(135deg, rgba(124,5,54,0.18), rgba(11,59,130,0.18)),
-      linear-gradient(180deg, #0B0F1A, #141A2A);
-    box-shadow:0 18px 46px rgba(15,23,42,0.22);
-    position:"relative";
-    padding:12px;
-    color:#F9FAFB;
   }
-  .wa-top {
+  .wa-head{
+    padding:10px 12px;
     display:flex;
     align-items:center;
     justify-content:space-between;
     gap:10px;
-    margin-bottom:10px;
+    border-bottom:1px solid #E5E7EB;
   }
-  .wa-title {
-    display:flex;
-    flex-direction:column;
-    gap:2px;
-    min-width:0;
-  }
-  .wa-title b { font-size:13px; letter-spacing:.2px; }
-  .wa-title span { font-size:11px; opacity:.85; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .wa-badge {
-    font-size:11px;
-    padding:3px 10px;
-    border-radius:999px;
-    border:1px solid rgba(255,255,255,0.18);
-    background:rgba(255,255,255,0.06);
-    white-space:nowrap;
-  }
-  .wa-grid {
-    display:grid;
-    grid-template-columns: 1fr;
-    gap:10px;
-  }
-  .wa-stat {
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:10px;
-    background:rgba(255,255,255,0.06);
-    border:1px solid rgba(255,255,255,0.10);
-    border-radius:12px;
-    padding:10px 10px;
-  }
-  .wa-left {
+  .wa-head-left{
     display:flex;
     align-items:center;
     gap:10px;
     min-width:0;
   }
-  .wa-ico {
-    width:34px;
-    height:34px;
+  .wa-logo{
+    width:34px; height:34px;
     border-radius:12px;
     display:flex;
     align-items:center;
     justify-content:center;
-    background:rgba(255,255,255,0.12);
-    border:1px solid rgba(255,255,255,0.12);
+    background:rgba(37,211,102,0.12);
+    border:1px solid rgba(37,211,102,0.30);
+    position:relative;
+    flex:0 0 auto;
   }
-  .wa-meta {
-    display:flex;
-    flex-direction:column;
-    gap:2px;
-    min-width:0;
-  }
-  .wa-meta .k {
-    font-size:12px;
-    font-weight:700;
-  }
-  .wa-meta .s {
-    font-size:11px;
-    opacity:.82;
-    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-  }
-  .wa-val {
-    font-size:20px;
-    font-weight:900;
-    letter-spacing:.3px;
-  }
-  .wa-mini {
-    margin-top:10px;
-    background:rgba(255,255,255,0.06);
-    border:1px solid rgba(255,255,255,0.10);
-    border-radius:12px;
-    padding:10px;
-  }
-  .wa-mini-row{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:10px;
-    font-size:12px;
-    opacity:.9;
-    padding:4px 0;
-    border-bottom:1px dashed rgba(255,255,255,0.12);
-  }
-  .wa-mini-row:last-child{ border-bottom:none; }
-  .wa-mini-row b{ opacity:1; }
-
-  .wa-floating {
+  .wa-dot{
     position:absolute;
-    right:10px;
-    top:10px;
-    width:54px;
-    height:54px;
-    border-radius:999px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.35), transparent 60%),
-                linear-gradient(135deg,#25D366,#128C7E);
-    box-shadow:0 14px 36px rgba(0,0,0,0.35);
-    border:3px solid rgba(255,255,255,0.22);
-  }
-  .wa-dot {
-    position:absolute;
-    top:6px;
-    right:6px;
-    width:18px;
-    height:18px;
+    top:-6px; right:-6px;
+    width:18px; height:18px;
     border-radius:999px;
     background:#EF4444;
-    border:2px solid rgba(255,255,255,0.85);
+    color:#fff;
+    border:2px solid #fff;
     display:flex;
     align-items:center;
     justify-content:center;
     font-size:10px;
     font-weight:900;
-    color:#fff;
-    line-height:1;
   }
+  .wa-title{
+    display:flex;
+    flex-direction:column;
+    min-width:0;
+    gap:2px;
+  }
+  .wa-title b{ font-size:13px; color:#0F172A; }
+  .wa-title span{ font-size:11px; color:#6B7280; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+  .wa-body{
+    padding:10px 12px 12px;
+    display:grid;
+    gap:8px;
+  }
+
+  .wa-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    background:#F9FAFB;
+    border:1px solid #E5E7EB;
+    border-radius:12px;
+    padding:8px 10px;
+  }
+  .wa-row-left{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    min-width:0;
+  }
+  .wa-ico{
+    width:30px; height:30px;
+    border-radius:10px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:#ffffff;
+    border:1px solid rgba(148,163,184,0.35);
+    flex:0 0 auto;
+  }
+  .wa-meta{ display:flex; flex-direction:column; gap:2px; min-width:0; }
+  .wa-meta .k{ font-size:12px; font-weight:800; color:#0F172A; }
+  .wa-meta .s{ font-size:11px; color:#6B7280; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .wa-val{ font-size:18px; font-weight:900; color:#0F172A; }
+
+  .wa-mini{
+    margin-top:4px;
+    background:#F9FAFB;
+    border:1px solid #E5E7EB;
+    border-radius:12px;
+    padding:8px 10px;
+    display:grid;
+    gap:6px;
+  }
+  .wa-mini-line{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    font-size:12px;
+    color:#374151;
+  }
+  .wa-mini-line b{ color:#0F172A; }
 `;
 
 function useInjectCss() {
@@ -543,9 +445,7 @@ function PlanCard({
         <div className="plan-price-row">
           <div>
             <div className="plan-price-main">${monthly}</div>
-            <div className="plan-price-sub">
-              {t("section0.plans.price.perMonth")}
-            </div>
+            <div className="plan-price-sub">{t("section0.plans.price.perMonth")}</div>
           </div>
           <div>
             <div className="plan-price-alt">${yearly}</div>
@@ -576,11 +476,7 @@ function PlanCard({
               ? t("section0.plans.btn.alreadyMonthly")
               : t("section0.plans.btn.chooseMonthly")}
           </Button>
-          <Button
-            onClick={() => onChooseAnnual(planKey)}
-            fullWidth
-            disabled={annualDisabled}
-          >
+          <Button onClick={() => onChooseAnnual(planKey)} fullWidth disabled={annualDisabled}>
             {annualDisabled
               ? t("section0.plans.btn.alreadyAnnual")
               : t("section0.plans.btn.chooseAnnual")}
@@ -591,9 +487,8 @@ function PlanCard({
   );
 }
 
-/* ====================== WhatsApp Monitor Preview (Left Top) ====================== */
-function WhatsAppMonitorPanel({ stats, currency = "USD" }) {
-  // stats: { orders, abandoned, recovered, subtotal, shipping, total, waUnread }
+/* ====================== WhatsApp Monitor (compact + pro) ====================== */
+function WhatsAppMonitorPanel({ stats, onGoSheets }) {
   const orders = Number(stats?.orders || 0);
   const abandoned = Number(stats?.abandoned || 0);
   const recovered = Number(stats?.recovered || 0);
@@ -601,40 +496,47 @@ function WhatsAppMonitorPanel({ stats, currency = "USD" }) {
   const shipping = stats?.shipping ?? "Free";
   const total = Number(stats?.total || 0);
   const waUnread = Number(stats?.waUnread || 6);
+  const currency = stats?.currency || "MAD";
 
   return (
-    <div className="wa-monitor">
-      <div className="wa-floating" aria-hidden="true" title="WhatsApp">
-        {/* WhatsApp simple icon (SVG) */}
-        <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
-          <path
-            d="M16 4C9.373 4 4 9.149 4 15.5c0 2.39.786 4.61 2.13 6.42L5 28l6.41-1.99A12.5 12.5 0 0 0 16 27c6.627 0 12-5.149 12-11.5S22.627 4 16 4Z"
-            fill="rgba(255,255,255,0.28)"
-          />
-          <path
-            d="M16 6.2c5.44 0 9.85 4.22 9.85 9.3S21.44 24.8 16 24.8c-1.7 0-3.3-.4-4.7-1.1l-3.75 1.16 1.2-3.55a8.95 8.95 0 0 1-1.9-5.81c0-5.08 4.41-9.3 9.15-9.3Z"
-            fill="#fff"
-            opacity="0.18"
-          />
-          <path
-            d="M20.9 18.7c-.2-.1-1.3-.6-1.5-.7-.2-.1-.4-.1-.5.1-.1.2-.6.7-.7.8-.1.1-.3.2-.5.1-.2-.1-.9-.3-1.7-1-.6-.5-1-1.2-1.1-1.4-.1-.2 0-.4.1-.5.1-.1.2-.3.3-.4.1-.1.1-.2.2-.4.1-.2 0-.3 0-.4 0-.1-.5-1.2-.7-1.6-.2-.4-.4-.3-.5-.3h-.4c-.1 0-.4 0-.6.3-.2.3-.8.8-.8 2s.9 2.3 1 2.5c.1.2 1.8 2.8 4.4 3.9.6.3 1.1.4 1.5.5.6.2 1.2.2 1.6.1.5-.1 1.3-.5 1.5-1 .2-.5.2-.9.1-1 0-.1-.2-.2-.4-.3Z"
-            fill="#fff"
-          />
-        </svg>
-        <div className="wa-dot">{waUnread}</div>
-      </div>
+    <div className="wa-card">
+      <div className="wa-head">
+        <div className="wa-head-left">
+          <div className="wa-logo" title="WhatsApp">
+            {/* WhatsApp icon green */}
+            <svg width="18" height="18" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+              <path
+                d="M16 4C9.373 4 4 9.149 4 15.5c0 2.39.786 4.61 2.13 6.42L5 28l6.41-1.99A12.5 12.5 0 0 0 16 27c6.627 0 12-5.149 12-11.5S22.627 4 16 4Z"
+                fill="#25D366"
+                opacity="0.95"
+              />
+              <path
+                d="M20.9 18.7c-.2-.1-1.3-.6-1.5-.7-.2-.1-.4-.1-.5.1-.1.2-.6.7-.7.8-.1.1-.3.2-.5.1-.2-.1-.9-.3-1.7-1-.6-.5-1-1.2-1.1-1.4-.1-.2 0-.4.1-.5.1-.1.2-.3.3-.4.1-.1.1-.2.2-.4.1-.2 0-.3 0-.4 0-.1-.5-1.2-.7-1.6-.2-.4-.4-.3-.5-.3h-.4c-.1 0-.4 0-.6.3-.2.3-.8.8-.8 2s.9 2.3 1 2.5c.1.2 1.8 2.8 4.4 3.9.6.3 1.1.4 1.5.5.6.2 1.2.2 1.6.1.5-.1 1.3-.5 1.5-1 .2-.5.2-.9.1-1 0-.1-.2-.2-.4-.3Z"
+                fill="#fff"
+              />
+            </svg>
+            <div className="wa-dot">{waUnread}</div>
+          </div>
 
-      <div className="wa-top">
-        <div className="wa-title">
-          <b>WhatsApp Monitor</b>
-          <span>Orders, carts & recovery overview</span>
+          <div className="wa-title">
+            <b>WhatsApp Monitor</b>
+            <span>Orders, carts & recovery</span>
+          </div>
         </div>
-        <span className="wa-badge">Live</span>
+
+        {/* Button settings -> Sheets */}
+        <Button
+          icon={PI.SettingsIcon}
+          onClick={onGoSheets}
+          accessibilityLabel="Open Google Sheets settings"
+        >
+          Sheets
+        </Button>
       </div>
 
-      <div className="wa-grid">
-        <div className="wa-stat">
-          <div className="wa-left">
+      <div className="wa-body">
+        <div className="wa-row">
+          <div className="wa-row-left">
             <div className="wa-ico">
               <SafeIcon name="OrdersIcon" fallback="CartIcon" />
             </div>
@@ -646,21 +548,21 @@ function WhatsAppMonitorPanel({ stats, currency = "USD" }) {
           <div className="wa-val">{orders}</div>
         </div>
 
-        <div className="wa-stat">
-          <div className="wa-left">
+        <div className="wa-row">
+          <div className="wa-row-left">
             <div className="wa-ico">
               <SafeIcon name="CartIcon" fallback="CartIcon" />
             </div>
             <div className="wa-meta">
-              <div className="k">Abandoned carts</div>
+              <div className="k">Abandoned</div>
               <div className="s">Left without checkout</div>
             </div>
           </div>
           <div className="wa-val">{abandoned}</div>
         </div>
 
-        <div className="wa-stat">
-          <div className="wa-left">
+        <div className="wa-row">
+          <div className="wa-row-left">
             <div className="wa-ico">
               <SafeIcon name="ArrowRightIcon" fallback="ArrowRightIcon" />
             </div>
@@ -673,17 +575,17 @@ function WhatsAppMonitorPanel({ stats, currency = "USD" }) {
         </div>
 
         <div className="wa-mini">
-          <div className="wa-mini-row">
+          <div className="wa-mini-line">
             <span>Subtotal</span>
             <b>
               {currency} {subtotal.toFixed(2)}
             </b>
           </div>
-          <div className="wa-mini-row">
+          <div className="wa-mini-line">
             <span>Shipping</span>
             <b>{shipping}</b>
           </div>
-          <div className="wa-mini-row">
+          <div className="wa-mini-line">
             <span>Total</span>
             <b>
               {currency} {total.toFixed(2)}
@@ -700,55 +602,13 @@ function OverviewPreview() {
   const { t } = useI18n();
 
   const videos = [
-    {
-      key: "intro",
-      title: t("section0.videos.item.intro.title"),
-      sub: t("section0.videos.item.intro.sub"),
-      tag: "Dashboard",
-      duration: "2 min",
-    },
-    {
-      key: "forms",
-      title: t("section0.videos.item.forms.title"),
-      sub: t("section0.videos.item.forms.sub"),
-      tag: "Forms",
-      duration: "4 min",
-    },
-    {
-      key: "offers",
-      title: t("section0.videos.item.offers.title"),
-      sub: t("section0.videos.item.offers.sub"),
-      tag: "Offers",
-      duration: "3 min",
-    },
-    {
-      key: "sheets",
-      title: t("section0.videos.item.sheets.title"),
-      sub: t("section0.videos.item.sheets.sub"),
-      tag: "Sheets",
-      duration: "3 min",
-    },
-    {
-      key: "pixels",
-      title: t("section0.videos.item.pixels.title"),
-      sub: t("section0.videos.item.pixels.sub"),
-      tag: "Pixels",
-      duration: "3 min",
-    },
-    {
-      key: "antibot",
-      title: t("section0.videos.item.antibot.title"),
-      sub: t("section0.videos.item.antibot.sub"),
-      tag: "Anti-bot",
-      duration: "2 min",
-    },
-    {
-      key: "locations",
-      title: t("section0.videos.item.locations.title"),
-      sub: t("section0.videos.item.locations.sub"),
-      tag: "Geo",
-      duration: "3 min",
-    },
+    { key: "intro", title: t("section0.videos.item.intro.title"), sub: t("section0.videos.item.intro.sub"), tag: "Dashboard", duration: "2 min" },
+    { key: "forms", title: t("section0.videos.item.forms.title"), sub: t("section0.videos.item.forms.sub"), tag: "Forms", duration: "4 min" },
+    { key: "offers", title: t("section0.videos.item.offers.title"), sub: t("section0.videos.item.offers.sub"), tag: "Offers", duration: "3 min" },
+    { key: "sheets", title: t("section0.videos.item.sheets.title"), sub: t("section0.videos.item.sheets.sub"), tag: "Sheets", duration: "3 min" },
+    { key: "pixels", title: t("section0.videos.item.pixels.title"), sub: t("section0.videos.item.pixels.sub"), tag: "Pixels", duration: "3 min" },
+    { key: "antibot", title: t("section0.videos.item.antibot.title"), sub: t("section0.videos.item.antibot.sub"), tag: "Anti-bot", duration: "2 min" },
+    { key: "locations", title: t("section0.videos.item.locations.title"), sub: t("section0.videos.item.locations.sub"), tag: "Geo", duration: "3 min" },
   ];
 
   return (
@@ -758,26 +618,14 @@ function OverviewPreview() {
         <span>{t("section0.videos.pill")}</span>
       </div>
 
-      <Text as="h3" variant="headingMd">
-        {t("section0.videos.title")}
-      </Text>
-      <Text
-        as="p"
-        tone="subdued"
-        style={{ marginTop: 4, fontSize: 12, color: "#6B7280" }}
-      >
+      <Text as="h3" variant="headingMd">{t("section0.videos.title")}</Text>
+      <Text as="p" tone="subdued" style={{ marginTop: 4, fontSize: 12, color: "#6B7280" }}>
         {t("section0.videos.subtitle")}
       </Text>
 
       <div className="tf-video-list">
         {videos.map((v) => (
-          <button
-            key={v.key}
-            type="button"
-            className="tf-video-item"
-            data-video-key={v.key}
-            onClick={() => {}}
-          >
+          <button key={v.key} type="button" className="tf-video-item" onClick={() => {}}>
             <div className="tf-video-thumb">▶</div>
             <div className="tf-video-meta">
               <div className="tf-video-title">{v.title}</div>
@@ -794,7 +642,7 @@ function OverviewPreview() {
   );
 }
 
-/* ============================== Contenu Section0 avec i18n ============================== */
+/* ============================== Contenu Section0 ============================== */
 function Section0Inner() {
   useInjectCss();
   const navigate = useNavigate();
@@ -802,23 +650,12 @@ function Section0Inner() {
 
   const [activeTab, setActiveTab] = useState("support");
 
-  // État billing (récupéré via /api/billing/guard)
-  const [billing, setBilling] = useState({
-    loading: true,
-    active: false,
-    plan: null,
-  });
+  const [billing, setBilling] = useState({ loading: true, active: false, plan: null });
   const [currentKey, setCurrentKey] = useState(null);
   const [currentTerm, setCurrentTerm] = useState(null);
 
-  // Suivi du nombre de commandes utilisées sur le plan (widget cercle)
-  const [planUsage, setPlanUsage] = useState({
-    loading: true,
-    ordersUsed: 0,
-    sinceLabel: null,
-  });
+  const [planUsage, setPlanUsage] = useState({ loading: true, ordersUsed: 0, sinceLabel: null });
 
-  // WhatsApp preview stats (left top)
   const [waStats, setWaStats] = useState({
     loading: true,
     orders: 0,
@@ -827,16 +664,14 @@ function Section0Inner() {
     subtotal: 9.99,
     shipping: "Free",
     total: 9.99,
-    currency: "USD",
+    currency: "MAD",
     waUnread: 6,
   });
 
   useEffect(() => {
     (async () => {
       try {
-        const r = await fetch("/api/billing/guard", {
-          credentials: "include",
-        });
+        const r = await fetch("/api/billing/guard", { credentials: "include" });
         const j = await r.json();
         const active = !!j.active;
         const plan = j.plan || null;
@@ -853,29 +688,25 @@ function Section0Inner() {
     })();
   }, []);
 
-  // Stats commandes
   useEffect(() => {
     (async () => {
       try {
-        const r = await fetch("/api/orders/dashboard?days=30&codOnly=1", {
-          credentials: "include",
-        });
+        const r = await fetch("/api/orders/dashboard?days=30&codOnly=1", { credentials: "include" });
         if (!r.ok) throw new Error("bad status");
         const j = await r.json();
-        const used = j?.totals?.count ?? 0;
 
+        const used = j?.totals?.count ?? 0;
         setPlanUsage({
           loading: false,
           ordersUsed: used,
           sinceLabel: "30 derniers jours (approx. période d'abonnement)",
         });
 
-        // Feed WhatsApp preview if backend has more fields, else fallback
-        const abandoned = j?.abandoned?.count ?? 42; // fallback like the image
-        const recovered = j?.recovered?.count ?? 12; // fallback
+        const abandoned = j?.abandoned?.count ?? 42;
+        const recovered = j?.recovered?.count ?? 12;
         const subtotal = j?.totals?.subtotal ?? 9.99;
         const total = j?.totals?.total ?? subtotal;
-        const currency = j?.totals?.currency ?? "USD";
+        const currency = j?.totals?.currency ?? "MAD";
 
         setWaStats((prev) => ({
           ...prev,
@@ -888,7 +719,7 @@ function Section0Inner() {
           currency,
         }));
       } catch (e) {
-        console.error("plan-usage (orders.dashboard) error", e);
+        console.error("orders.dashboard error", e);
         setPlanUsage((prev) => ({ ...prev, loading: false }));
         setWaStats((prev) => ({ ...prev, loading: false }));
       }
@@ -921,35 +752,6 @@ function Section0Inner() {
     navigate(candidates[0]);
   };
 
-  // Appels billing côté client
-  async function openBilling(plan, term) {
-    try {
-      const u = new URL("/api/billing/request", window.location.origin);
-      u.searchParams.set("plan", plan);
-      u.searchParams.set("term", term);
-
-      const res = await fetch(u.toString(), {
-        method: "GET",
-        credentials: "include",
-      });
-      const data = await res.json();
-
-      if (!res.ok || !data?.ok) {
-        console.error("Billing request failed:", data);
-        alert("Erreur lors de la création de l'abonnement. Regarde la console.");
-        return;
-      }
-
-      window.top.location.href = data.confirmationUrl;
-    } catch (e) {
-      console.error(e);
-      alert("Erreur réseau pendant la création du plan d'abonnement.");
-    }
-  }
-
-  const handleBuyMonthly = (plan) => openBilling(plan, "monthly");
-  const handleBuyAnnual = (plan) => openBilling(plan, "annual");
-
   const PATHS = {
     forms: ["/app/sections/1", "/app/forms", "/forms", "/sections/1"],
     offers: ["/app/sections/2", "/app/offers", "/offers", "/sections/2"],
@@ -972,6 +774,30 @@ function Section0Inner() {
 
   const isSubscribed = billing.active;
 
+  // Billing functions conservées (pas touchées)
+  async function openBilling(plan, term) {
+    try {
+      const u = new URL("/api/billing/request", window.location.origin);
+      u.searchParams.set("plan", plan);
+      u.searchParams.set("term", term);
+
+      const res = await fetch(u.toString(), { method: "GET", credentials: "include" });
+      const data = await res.json();
+
+      if (!res.ok || !data?.ok) {
+        console.error("Billing request failed:", data);
+        alert("Erreur lors de la création de l'abonnement. Regarde la console.");
+        return;
+      }
+      window.top.location.href = data.confirmationUrl;
+    } catch (e) {
+      console.error(e);
+      alert("Erreur réseau pendant la création du plan d'abonnement.");
+    }
+  }
+  const handleBuyMonthly = (plan) => openBilling(plan, "monthly");
+  const handleBuyAnnual = (plan) => openBilling(plan, "annual");
+
   return (
     <>
       {/* ===== Header ===== */}
@@ -992,21 +818,12 @@ function Section0Inner() {
               <img
                 src="/tripleform-cod-icon.png"
                 alt="TripleForm COD"
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  display: "block",
-                  objectFit: "cover",
-                }}
+                style={{ width: "100%", height: "100%", display: "block", objectFit: "cover" }}
               />
             </div>
             <div>
-              <div style={{ fontWeight: 700, color: "#F9FAFB" }}>
-                {t("section0.header.title")}
-              </div>
-              <div style={{ fontSize: 12, color: "rgba(249,250,251,0.8)" }}>
-                {t("section0.header.subtitle")}
-              </div>
+              <div style={{ fontWeight: 700, color: "#F9FAFB" }}>{t("section0.header.title")}</div>
+              <div style={{ fontSize: 12, color: "rgba(249,250,251,0.8)" }}>{t("section0.header.subtitle")}</div>
             </div>
           </InlineStack>
 
@@ -1022,8 +839,7 @@ function Section0Inner() {
                 borderRadius: 999,
                 border: "1px solid rgba(248,250,252,0.45)",
                 color: "rgba(248,250,251,0.9)",
-                background:
-                  "linear-gradient(90deg,rgba(15,23,42,0.35),rgba(15,23,42,0.1))",
+                background: "linear-gradient(90deg,rgba(15,23,42,0.35),rgba(15,23,42,0.1))",
               }}
             >
               {t("section0.header.pill")}
@@ -1036,66 +852,26 @@ function Section0Inner() {
       {/* ===== Grille 3 colonnes ===== */}
       <div className="tf-shell">
         <div className="tf-editor">
-          {/* Colonne gauche : WhatsApp Preview + widget plan */}
+          {/* Colonne gauche */}
           <div className="tf-rail">
-            {/* ✅ Remplace "Navigation" par le preview WhatsApp */}
             <WhatsAppMonitorPanel
               stats={waStats}
-              currency={waStats.currency || "USD"}
+              onGoSheets={() => smartGo(PATHS.sheets)}
             />
 
-            {/* (optionnel) si tu veux garder navigation, tu peux remettre une card ici
-                mais tu as demandé de supprimer, donc je l’ai enlevée.
-                Si tu veux je te mets des mini boutons en dessous du panel WhatsApp. */}
-
-            {/* Widget cercle de suivi du plan */}
             <PlanUsageWidget
               isSubscribed={isSubscribed}
               planKey={currentKey}
               currentTerm={currentTerm}
               usage={planUsage}
             />
-
-            {/* 👉 Bonus: boutons rapides (si tu veux, je peux les enlever aussi) */}
-            <div style={{ marginTop: 14 }}>
-              <Card>
-                <div style={{ padding: 12 }}>
-                  <Text as="p" variant="headingSm">
-                    Quick access
-                  </Text>
-                  <div style={{ marginTop: 10, display: "grid", gap: 8 }}>
-                    <NavBtn
-                      label={t("section0.nav.forms")}
-                      iconKey="AppsIcon"
-                      onClick={() => smartGo(PATHS.forms)}
-                    />
-                    <NavBtn
-                      label={t("section0.nav.offers")}
-                      iconKey="DiscountIcon"
-                      onClick={() => smartGo(PATHS.offers)}
-                    />
-                    <NavBtn
-                      label={t("section0.nav.sheets")}
-                      iconKey="AnalyticsIcon"
-                      onClick={() => smartGo(PATHS.sheets)}
-                    />
-                    <NavBtn
-                      label={t("section0.nav.pixels")}
-                      iconKey="TargetIcon"
-                      onClick={() => smartGo(PATHS.pixels)}
-                    />
-                  </div>
-                </div>
-              </Card>
-            </div>
           </div>
 
-          {/* Colonne milieu : Support / Billing tabs */}
+          {/* Colonne milieu */}
           <div className="tf-right-col">
             <div className="tf-panel">
               <div className="tf-group-title">{t("section0.group.main")}</div>
 
-              {/* Tabs */}
               <div className="tf-tabs">
                 <button
                   type="button"
@@ -1135,25 +911,18 @@ function Section0Inner() {
                               ? t("section0.billing.planAnnual")
                               : t("section0.billing.planMonthly")}{" "}
                             — {billing.plan?.amount} {billing.plan?.currency}
-                            {billing.plan?.test
-                              ? " " + t("section0.billing.testMode")
-                              : ""}
+                            {billing.plan?.test ? " " + t("section0.billing.testMode") : ""}
                           </Text>
                         </>
                       ) : (
-                        <Text as="p" tone="subdued">
-                          {t("section0.billing.none")}
-                        </Text>
+                        <Text as="p" tone="subdued">{t("section0.billing.none")}</Text>
                       )}
                     </div>
                   </Card>
 
                   {isSubscribed && (
                     <div style={{ marginTop: 12 }}>
-                      <Banner
-                        tone="success"
-                        title={t("section0.banner.alreadySubscribed.title")}
-                      >
+                      <Banner tone="success" title={t("section0.banner.alreadySubscribed.title")}>
                         <p>{t("section0.banner.alreadySubscribed.body")}</p>
                       </Banner>
                     </div>
@@ -1166,7 +935,10 @@ function Section0Inner() {
                       yearly="9.99"
                       yearlyPercent={16}
                       ordersLabel={t("section0.plans.starter.orders")}
-                      features={commonFeatureKeys}
+                      features={[
+                        "section0.features.1","section0.features.2","section0.features.3","section0.features.4",
+                        "section0.features.5","section0.features.6","section0.features.7","section0.features.8",
+                      ]}
                       planKey="starter"
                       onChooseMonthly={handleBuyMonthly}
                       onChooseAnnual={handleBuyAnnual}
@@ -1201,29 +973,12 @@ function Section0Inner() {
                       currentTerm={currentTerm}
                     />
                   </div>
-
-                  <BlockStack gap="200" style={{ marginTop: 16 }}>
-                    <Card>
-                      <div style={{ padding: 12 }}>
-                        <InlineStack align="space-between" blockAlign="center">
-                          <Text as="h3" variant="headingSm">
-                            {t("section0.quickstart.title")}
-                          </Text>
-                        </InlineStack>
-                        <BlockStack gap="100" style={{ marginTop: 8 }}>
-                          <Text as="p">{t("section0.quickstart.step1")}</Text>
-                          <Text as="p">{t("section0.quickstart.step2")}</Text>
-                          <Text as="p">{t("section0.quickstart.step3")}</Text>
-                        </BlockStack>
-                      </div>
-                    </Card>
-                  </BlockStack>
                 </>
               )}
             </div>
           </div>
 
-          {/* Colonne droite : centre vidéos */}
+          {/* Colonne droite */}
           <div className="tf-preview-col">
             <div className="tf-preview-card">
               <OverviewPreview />
@@ -1235,7 +990,6 @@ function Section0Inner() {
   );
 }
 
-/* ============================== Section0Home ============================== */
 export default function Section0Home() {
   return <Section0Inner />;
 }
