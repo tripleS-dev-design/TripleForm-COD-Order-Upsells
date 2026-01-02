@@ -20,10 +20,11 @@ export default function CountryFlagsBar() {
             svg
             countryCode={code}
             style={{
-              width: "22px",
-              height: "22px",
-              borderRadius: "6px",
-              boxShadow: "0 6px 14px rgba(0,0,0,0.18)",
+              width: "30px",
+              height: "30px",
+              borderRadius: "8px",
+              boxShadow: "0 10px 22px rgba(0,0,0,0.22)",
+
             }}
           />
         </span>
