@@ -88,104 +88,144 @@ const LAYOUT_CSS = `
     box-shadow:0 6px 18px rgba(205, 211, 218, 0.35);
   }
 
-  /* hero preview à droite */
-  .tf-hero {
-    position:relative;
-    border-radius:12px;
-    padding:12px 12px 14px;
-    background:#ffffff;
-    color:#0F172A;
-    border:1px solid #E5E7EB;
-    box-shadow:0 10px 24px rgba(15,23,42,0.10);
-  }
-  .tf-hero-pill {
-    display:inline-flex;
+  /* =================== FLAGS BAR (FIXED) =================== */
+  .tf-flags-wrap{
+    display:flex;
+    justify-content:center;
     align-items:center;
-    gap:6px;
-    padding:4px 10px;
-    border-radius:999px;
-    font-size:11px;
-    background:linear-gradient(90deg,#0B3B82,#7D0031);
-    border:none;
-    color:#F9FAFB;
-    margin-bottom:10px;
-    box-shadow:0 6px 16px rgba(11,59,130,0.35);
-  }
-
-  /* Liste vidéos */
-  .tf-video-list {
-    margin-top:10px;
-    display:flex;
-    flex-direction:column;
-    gap:8px;
-  }
-  .tf-video-item {
     width:100%;
-    border-radius:12px;
-    border:1px solid #E5E7EB;
-    padding:8px 10px;
+  }
+  .tf-flags{
     display:flex;
-    gap:10px;
-    background:#F9FAFB;
-    color:#0F172A;
-    cursor:pointer;
-    text-align:left;
-    box-shadow:0 8px 18px rgba(15,23,42,0.07);
-    transition:all .16s ease-out;
+    align-items:center;
+    gap:10px;               /* ✅ spacing */
+    padding:6px 12px;       /* ✅ breathing */
+    max-width:820px;
+    overflow-x:auto;
+    white-space:nowrap;
+    scrollbar-width:none;
+    -webkit-overflow-scrolling: touch;
+    border-radius:999px;
+    background:rgba(255,255,255,0.08);
+    border:1px solid rgba(255,255,255,0.18);
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05);
   }
-  .tf-video-item:hover {
-    background:#ffffff;
-    transform:translateY(-1px);
-    border-color:rgba(11,59,130,0.3);
-    box-shadow:0 12px 26px rgba(15,23,42,0.14);
-  }
-  .tf-video-thumb {
-    width:46px;
-    height:32px;
-    border-radius:10px;
-    background:radial-gradient(circle at 30% 30%,rgba(255,255,255,0.25),transparent 55%),
-               linear-gradient(135deg,#EF4444,#7F1D1D);
+  .tf-flags::-webkit-scrollbar{ display:none; }
+  .tf-flag-item{
+    flex:0 0 auto;
     display:flex;
     align-items:center;
     justify-content:center;
-    box-shadow:0 6px 18px rgba(15,23,42,0.35);
-    color:#F9FAFB;
-    font-size:18px;
-    font-weight:700;
+    padding:2px 4px;
+    border-radius:8px;
   }
-  .tf-video-meta {
-    flex:1;
-    min-width:0;
-    display:flex;
-    flex-direction:column;
-    gap:2px;
+  .tf-flags span{ font-size:18px; line-height:1; }
+  .tf-flags img{ width:22px; height:16px; border-radius:3px; display:block; }
+
+  @media (max-width: 980px) {
+    .tf-editor { grid-template-columns: 1fr; }
+    .tf-rail, .tf-preview-col { position:static; max-height:none; }
+    .tf-flags{ max-width:260px; gap:8px; padding:6px 10px; }
+    .tf-flags span{ font-size:16px; }
+    .tf-flags img{ width:20px; height:14px; }
   }
-  .tf-video-title { font-size:13px; font-weight:600; color:#0F172A; }
-  .tf-video-sub { font-size:11px; color:#6B7280; }
-  .tf-video-footer {
-    margin-top:2px;
+
+  /* =================== PLANS (RESTORED DESIGN) =================== */
+  .pricing-grid{
+    display:grid;
+    grid-template-columns: repeat(3, minmax(280px, 1fr));
+    gap:14px;
+    margin-top:12px;
+  }
+  @media (max-width: 1100px) {
+    .pricing-grid{ grid-template-columns:1fr; }
+  }
+
+  .plan-card{
+    border-radius:14px;
+    background:#ffffff;
+    border:1px solid #E5E7EB;
+    box-shadow:0 10px 24px rgba(15,23,42,0.08);
+    overflow:hidden;
+  }
+
+  .plan-header{
+    padding:12px 12px 10px;
+    background:linear-gradient(90deg, rgba(11,59,130,0.10), rgba(125,0,49,0.10));
+    border-bottom:1px solid #E5E7EB;
     display:flex;
     justify-content:space-between;
-    align-items:center;
-    gap:6px;
-    font-size:10px;
+    align-items:flex-start;
+    gap:10px;
   }
-  .tf-video-tag {
-    padding:2px 8px;
-    border-radius:999px;
-    border:1px solid rgba(148,163,184,0.9);
-    background:#ffffff;
+  .plan-header-title{
+    font-weight:900;
     color:#0F172A;
+    font-size:14px;
+    letter-spacing:.2px;
   }
-  .tf-video-duration { opacity:.75; color:#6B7280; }
+  .plan-header-badges{
+    display:flex;
+    gap:6px;
+    flex-wrap:wrap;
+    justify-content:flex-end;
+  }
+  .plan-header-pill{
+    font-size:11px;
+    font-weight:800;
+    padding:4px 10px;
+    border-radius:999px;
+    background:linear-gradient(90deg,#0B3B82,#7D0031);
+    color:#F9FAFB;
+    border:1px solid rgba(0,167,163,0.55);
+    box-shadow:0 6px 16px rgba(11,59,130,0.22);
+    white-space:nowrap;
+  }
 
-  /* grille pricing */
-  .pricing-grid {
+  .plan-body{
+    padding:12px;
     display:grid;
-    grid-template-columns: repeat(3, minmax(260px, 1fr));
-    gap:16px;
+    gap:10px;
   }
-  @media (max-width: 1100px) { .pricing-grid { grid-template-columns: 1fr; } }
+
+  .plan-price-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    gap:10px;
+    padding:10px 10px;
+    background:#F9FAFB;
+    border:1px solid #E5E7EB;
+    border-radius:12px;
+  }
+  .plan-price-main{
+    font-size:22px;
+    font-weight:950;
+    color:#0F172A;
+    line-height:1.1;
+  }
+  .plan-price-alt{
+    font-size:16px;
+    font-weight:900;
+    color:#0F172A;
+    line-height:1.1;
+    text-align:right;
+  }
+  .plan-price-sub{
+    font-size:11px;
+    color:#6B7280;
+    margin-top:2px;
+  }
+
+  .plan-footer-btns{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap:10px;
+    margin-top:2px;
+  }
+  @media (max-width: 520px){
+    .plan-footer-btns{ grid-template-columns:1fr; }
+  }
 
   /* tabs Section0 */
   .tf-tabs {
@@ -209,12 +249,7 @@ const LAYOUT_CSS = `
     box-shadow:0 6px 16px rgba(11,59,130,0.35);
   }
 
-  @media (max-width: 980px) {
-    .tf-editor { grid-template-columns: 1fr; }
-    .tf-rail, .tf-preview-col { position:static; max-height:none; }
-  }
-
-  /* ===== WhatsApp Monitor (LIVE + compact) ===== */
+  /* =================== WHATSAPP MONITOR =================== */
   .wa-card{
     margin-bottom:14px;
     background:#ffffff;
@@ -422,6 +457,7 @@ function PlanCard({
           {isCurrent && <span className="plan-header-pill">{t("section0.plans.badge.current")}</span>}
         </div>
       </div>
+
       <div className="plan-body">
         <div className="plan-price-row">
           <div>
@@ -468,11 +504,9 @@ function WhatsAppMonitorPanel({ stats, wa, loading }) {
   const abandoned = Number(stats?.abandoned || 0);
   const recovered = Number(stats?.recovered || 0);
 
-  // status live from /api/whatsapp/status
   const connected = !!wa?.connected;
   const phoneNumber = wa?.phoneNumber || "";
   const lastConnected = wa?.lastConnected ? new Date(wa.lastConnected).toLocaleString() : null;
-
   const users = Array.isArray(wa?.users) ? wa.users : null;
 
   return (
@@ -480,7 +514,6 @@ function WhatsAppMonitorPanel({ stats, wa, loading }) {
       <div className="wa-head">
         <div className="wa-head-left">
           <div className="wa-logo" title="WhatsApp">
-            {/* WhatsApp icon */}
             <svg width="18" height="18" viewBox="0 0 32 32" fill="none" aria-hidden="true">
               <path
                 d="M16 4C9.373 4 4 9.149 4 15.5c0 2.39.786 4.61 2.13 6.42L5 28l6.41-1.99A12.5 12.5 0 0 0 16 27c6.627 0 12-5.149 12-11.5S22.627 4 16 4Z"
@@ -508,8 +541,6 @@ function WhatsAppMonitorPanel({ stats, wa, loading }) {
             )}
           </div>
         </div>
-
-        {/* ✅ SUPPRIMÉ : les boutons en haut (Settings + Sheets) */}
       </div>
 
       <div className="wa-body">
@@ -582,8 +613,6 @@ function WhatsAppMonitorPanel({ stats, wa, loading }) {
           </div>
           <div className="wa-val">{recovered}</div>
         </div>
-
-        {/* ✅ SUPPRIMÉ : le bloc Subtotal/Shipping/Total */}
 
         <div className="wa-users">
           <div className="wa-users-head">
@@ -702,7 +731,7 @@ function Section0Inner() {
     users: null,
   });
 
-  // navigation helpers (kept, even if buttons removed)
+  // Keep helpers (even if not used now)
   const sameOrigin = (p) => {
     try {
       return new URL(p, window.location.origin).origin === window.location.origin;
@@ -891,8 +920,11 @@ function Section0Inner() {
             </div>
           </InlineStack>
 
-          <div style={{ flex: 1, display: "flex", justifyContent: "center" }}>
-            <CountryFlagsBar />
+          {/* ✅ FLAGS : wrap + spacing */}
+          <div className="tf-flags-wrap">
+            <div className="tf-flags">
+              <CountryFlagsBar />
+            </div>
           </div>
 
           <InlineStack gap="200" blockAlign="center">
@@ -989,7 +1021,8 @@ function Section0Inner() {
                     </div>
                   )}
 
-                  <div className="pricing-grid" style={{ marginTop: 12 }}>
+                  {/* ✅ Plans restored */}
+                  <div className="pricing-grid">
                     <PlanCard
                       title={t("section0.plans.starter.title")}
                       monthly="0.99"
