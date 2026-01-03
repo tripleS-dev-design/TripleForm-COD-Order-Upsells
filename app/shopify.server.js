@@ -23,49 +23,51 @@ const shopify = shopifyApp({
   },
 
   // ---------- Billing : 3 plans (starter / basic / premium) ----------
-  billing: {
-    // Starter
-    "starter-monthly": {
-      amount: 0.99,
-      currencyCode: "USD",
-      interval: "EVERY_30_DAYS",
-      trialDays: 3,
-    },
-    "starter-annual": {
-      amount: 9.99,
-      currencyCode: "USD",
-      interval: "ANNUAL",
-      trialDays: 3,
-    },
-
-    // Basic
-    "basic-monthly": {
-      amount: 4.99,
-      currencyCode: "USD",
-      interval: "EVERY_30_DAYS",
-      trialDays: 3,
-    },
-    "basic-annual": {
-      amount: 49,
-      currencyCode: "USD",
-      interval: "ANNUAL",
-      trialDays: 3,
-    },
-
-    // Premium
-    "premium-monthly": {
-      amount: 9.99,
-      currencyCode: "USD",
-      interval: "EVERY_30_DAYS",
-      trialDays: 3,
-    },
-    "premium-annual": {
-      amount: 99,
-      currencyCode: "USD",
-      interval: "ANNUAL",
-      trialDays: 3,
-    },
+  // ---------- Billing : 3 plans (starter / basic / premium) ----------
+billing: {
+  // Starter
+  "starter-monthly": {
+    amount: 0.99,
+    currencyCode: "USD",
+    interval: "EVERY_30_DAYS",
+    trialDays: 7,
   },
+  "starter-annual": {
+    amount: 9.99,
+    currencyCode: "USD",
+    interval: "ANNUAL",
+    trialDays: 7,
+  },
+
+  // Basic
+  "basic-monthly": {
+    amount: 9.99,
+    currencyCode: "USD",
+    interval: "EVERY_30_DAYS",
+    trialDays: 7,
+  },
+  "basic-annual": {
+    amount: 83.99,
+    currencyCode: "USD",
+    interval: "ANNUAL",
+    trialDays: 7,
+  },
+
+  // Premium
+  "premium-monthly": {
+    amount: 19.99,
+    currencyCode: "USD",
+    interval: "EVERY_30_DAYS",
+    trialDays: 7,
+  },
+  "premium-annual": {
+    amount: 167.99,
+    currencyCode: "USD",
+    interval: "ANNUAL",
+    trialDays: 7,
+  },
+},
+
   // ---------- SUPPRIMER la configuration webhooks ----------
 
   ...(process.env.SHOP_CUSTOM_DOMAIN

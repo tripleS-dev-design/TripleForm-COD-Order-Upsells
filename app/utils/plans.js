@@ -2,8 +2,8 @@
 
 /**
  * Plans et limites (USD)
- * - Les prix doivent correspondre à l’UI (Section0Home)
- * - Les limites commandes/mois servent à bloquer selon ton compteur (ex: Google Sheets)
+ * ✅ Doit matcher Shopify Partners (public plans) + ton UI (Section0Home)
+ * ✅ orderLimit sert à bloquer selon ton compteur (ex: Google Sheets)
  */
 export const PLANS = /** @type {const} */ ({
   starter: {
@@ -12,20 +12,23 @@ export const PLANS = /** @type {const} */ ({
     monthly: 0.99,
     annual: 9.99,
     orderLimit: 100,
+    note: "No additional fees. SMS/WhatsApp messages are optional and billed separately.",
   },
   basic: {
     key: "basic",
     name: "Basic",
-    monthly: 4.99,
-    annual: 49,
-    orderLimit: 400,
+    monthly: 9.99,
+    annual: 83.99,
+    orderLimit: 500,
+    note: "$0.05 for each additional order. SMS/WhatsApp messages are optional and billed separately.",
   },
   premium: {
     key: "premium",
     name: "Premium",
-    monthly: 9.99,
-    annual: 99,
+    monthly: 19.99,
+    annual: 167.99,
     orderLimit: Infinity, // illimité
+    note: "No additional fees. SMS/WhatsApp messages are optional and billed separately.",
   },
 });
 
@@ -111,12 +114,12 @@ export function humanPlan(shopRow) {
 }
 
 /**
- * Spécification de l’abonnement récurrent pour Shopify Billing (sans essai).
+ * Spécification de l’abonnement récurrent pour Shopify Billing.
  * Utilisable dans /api/billing/request pour créer la souscription.
  *
  * @param {string} planKey - 'starter' | 'basic' | 'premium'
  * @param {'monthly'|'annual'} term
- * @param {{ currency?: string }} [opts]
+ * @param {{ currency?: string, trialDays?: number }} [opts]
  * @returns {{
  *   name: string,
  *   price: number,
@@ -132,11 +135,22 @@ export function getRecurringChargeSpec(planKey, term, opts = {}) {
   const { plan, term: t, amount } = norm;
   const currencyCode = (opts.currency || "USD").toUpperCase();
 
+  // ✅ 7 days trial (selon tes plans récents)
+  const trialDays = Number.isFinite(opts.trialDays) ? opts.trialDays : 7;
+
   return {
     name: `TripleForm COD — ${plan.name} (${t === "annual" ? "annual" : "monthly"})`,
     price: amount ?? 0,
-    currencyCode,                 // Ex: 'USD'
+    currencyCode,
     interval: t === "annual" ? "ANNUAL" : "EVERY_30_DAYS",
-    trialDays: 0,                 // 🚫 pas d’essai
+    trialDays,
   };
+}
+
+/**
+ * (Optionnel) Récupérer le "note" marketing du plan
+ * utile si tu veux l’afficher dans ta UI (Section0Home).
+ */
+export function getPlanNote(planKey) {
+  return getPlan(planKey)?.note || "";
 }

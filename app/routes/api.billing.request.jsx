@@ -42,7 +42,7 @@ export async function loader({ request }) {
   const amount = Number(norm.amount); // ex: 0.99
   const name = `TripleForm COD – ${norm.plan.name} (${norm.term})`;
   const test = isDevStore || process.env.BILLING_TEST === "1";
-  const trialDays = 3; // 🆓 3 jours d'essai
+  const trialDays = 7; 
 
   const MUTATION = `
     mutation CreateSub(

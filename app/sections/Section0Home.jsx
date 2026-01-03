@@ -532,9 +532,10 @@ function SafeIcon({ name, fallback = "AppsIcon", tone }) {
 
 /* -------- Plan courant: mapping interval+amount -> planKey -------- */
 const PLAN_MAP = {
-  EVERY_30_DAYS: { 0.99: "starter", 4.99: "basic", 9.99: "premium" },
-  ANNUAL: { 9.99: "starter", 49: "basic", 99: "premium" },
+  EVERY_30_DAYS: { 0.99: "starter", 9.99: "basic", 19.99: "premium" },
+  ANNUAL: { 9.99: "starter", 83.99: "basic", 167.99: "premium" },
 };
+
 function resolveCurrentPlan(billingPlan) {
   if (!billingPlan) return { currentKey: null, currentTerm: null };
   const interval = billingPlan.interval || "EVERY_30_DAYS";
