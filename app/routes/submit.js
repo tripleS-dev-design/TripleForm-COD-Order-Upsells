@@ -10,6 +10,60 @@ import { decryptSecret } from "../utils/crypto.server";
 const TF_TAG = "TripleForm COD"; // 👈 tag unique pour reconnaître les commandes de l'app
 
 /* ------------------------------------------------------------------ */
+/* ✅ SAFE BODY PARSER (App Proxy JSON / urlencoded / form-data)        */
+/* ------------------------------------------------------------------ */
+async function readBodySafe(request) {
+  const contentType = (request.headers.get("content-type") || "").toLowerCase();
+
+  // JSON
+  if (contentType.includes("application/json")) {
+    try {
+      const j = await request.json();
+      return j && typeof j === "object" ? j : {};
+    } catch {
+      // fallthrough -> try text
+    }
+  }
+
+  // urlencoded
+  if (contentType.includes("application/x-www-form-urlencoded")) {
+    try {
+      const text = await request.text();
+      const params = new URLSearchParams(text);
+      const obj = Object.fromEntries(params.entries());
+      return obj && typeof obj === "object" ? obj : {};
+    } catch {
+      return {};
+    }
+  }
+
+  // multipart/form-data (ou fallback)
+  try {
+    // Remix supporte request.formData() côté node
+    const fd = await request.formData();
+    const obj = {};
+    for (const [k, v] of fd.entries()) obj[k] = v;
+    return obj;
+  } catch {
+    // last fallback: text -> JSON or urlencoded
+    try {
+      const text = await request.text();
+      if (!text) return {};
+      try {
+        const j = JSON.parse(text);
+        return j && typeof j === "object" ? j : {};
+      } catch {
+        const params = new URLSearchParams(text);
+        const obj = Object.fromEntries(params.entries());
+        return obj && typeof obj === "object" ? obj : {};
+      }
+    } catch {
+      return {};
+    }
+  }
+}
+
+/* ------------------------------------------------------------------ */
 /* Utils Phone / Country / Address                                    */
 /* ------------------------------------------------------------------ */
 
@@ -212,7 +266,8 @@ async function verifyRecaptchaV3({
 
   const data = await resp.json().catch(() => ({}));
 
-  const score = typeof data?.score === "number" ? data.score : Number(data?.score ?? 0);
+  const score =
+    typeof data?.score === "number" ? data.score : Number(data?.score ?? 0);
   const action = String(data?.action || "");
   const success = data?.success === true;
 
@@ -223,7 +278,9 @@ async function verifyRecaptchaV3({
 
   let reason = "ok";
   if (!success) {
-    reason = (data?.["error-codes"] && data["error-codes"].join(",")) || "google_failed";
+    reason =
+      (data?.["error-codes"] && data["error-codes"].join(",")) ||
+      "google_failed";
   } else if (!actionOk) {
     reason = `action_mismatch:${action || "empty"}`;
   } else if (!scoreOk) {
@@ -460,10 +517,14 @@ export const action = async ({ request }) => {
       );
     }
 
-    const body = await request.json().catch(() => null);
+    // ✅ FIX: App Proxy body can be JSON or urlencoded -> use safe parser
+    const body = await readBodySafe(request);
 
     if (!body || typeof body !== "object") {
-      return json({ ok: false, error: "Missing or invalid JSON body." }, { status: 400 });
+      return json(
+        { ok: false, error: "Missing or invalid body." },
+        { status: 400 }
+      );
     }
 
     const rawVariantId = body.variantId;
@@ -518,7 +579,12 @@ export const action = async ({ request }) => {
     });
 
     if (antibotResult.blocked) {
-      console.warn("TripleForm COD — Anti-bot blocked request:", shop, clientIp, antibotResult.reasons);
+      console.warn(
+        "TripleForm COD — Anti-bot blocked request:",
+        shop,
+        clientIp,
+        antibotResult.reasons
+      );
       return json(
         {
           ok: false,
@@ -536,7 +602,8 @@ export const action = async ({ request }) => {
         antibotResult.recaptchaMinScore != null ? antibotResult.recaptchaMinScore : 0.5;
 
       // ✅ expectedAction = config anti-bot (source de vérité)
-      const expectedAction = String(antibotResult.recaptchaExpectedAction || "tf_submit").trim() || "tf_submit";
+      const expectedAction =
+        String(antibotResult.recaptchaExpectedAction || "tf_submit").trim() || "tf_submit";
 
       // 🔐 charger secret enc depuis DB
       const row = await prisma.shopAntibotSettings.findUnique({
