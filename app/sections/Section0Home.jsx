@@ -1100,9 +1100,9 @@ function Section0Inner() {
                     />
                     <PlanCard
                       title={t("section0.plans.basic.title")}
-                      monthly="4.99"
-                      yearly="49"
-                      yearlyPercent={18}
+                      monthly="9.99"
+                      yearly="83.99"
+                      yearlyPercent={30}
                       ordersLabel={t("section0.plans.basic.orders")}
                       features={commonFeatureKeys}
                       planKey="basic"
@@ -1114,9 +1114,9 @@ function Section0Inner() {
                     />
                     <PlanCard
                       title={t("section0.plans.premium.title")}
-                      monthly="9.99"
-                      yearly="99"
-                      yearlyPercent={17}
+                      monthly="19.99"
+                      yearly="167.99"
+                      yearlyPercent={30}
                       ordersLabel={t("section0.plans.premium.orders")}
                       features={commonFeatureKeys}
                       planKey="premium"
