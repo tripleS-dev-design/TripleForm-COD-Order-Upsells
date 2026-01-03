@@ -1,20 +1,23 @@
-// ===== File: app/routes/api.antibot.load.jsx =====
 import { json } from "@remix-run/node";
 import { authenticate } from "../shopify.server";
+import prisma from "../db.server"; 
 
 /**
  * GET /api/antibot/load
- * Lit le metafield de boutique tripleform_cod.antibot (type JSON)
+ * - Lit metafield tripleform_cod.antibot (config publique)
+ * - Ajoute hasRecaptchaSecret (depuis DB), sans renvoyer la secret
  */
 export const loader = async ({ request }) => {
   try {
-    const { admin } = await authenticate.admin(request);
+    const { admin, session } = await authenticate.admin(request);
 
     if (!admin) {
-      return json(
-        { ok: false, error: "Unauthorized: no admin session" },
-        { status: 401 }
-      );
+      return json({ ok: false, error: "Unauthorized: no admin session" }, { status: 401 });
+    }
+
+    const shopDomain = session?.shop;
+    if (!shopDomain) {
+      return json({ ok: false, error: "Missing shopDomain in session" }, { status: 400 });
     }
 
     const QUERY = `
@@ -31,7 +34,6 @@ export const loader = async ({ request }) => {
 
     const resp = await admin.graphql(QUERY);
     const data = await resp.json();
-
     const mf = data?.data?.shop?.metafield || null;
 
     let antibot = null;
@@ -39,15 +41,23 @@ export const loader = async ({ request }) => {
       try {
         antibot = JSON.parse(mf.value);
       } catch {
-        // si la valeur est cassée, on renvoie null pour repartir d'une config par défaut côté UI
         antibot = null;
       }
     }
 
-    return json({ ok: true, antibot });
+    // DB: est-ce qu'on a une secret key sauvegardée ?
+    const row = await prisma.shopAntibotSettings.findUnique({
+      where: { shopDomain },
+      select: { recaptchaSecretEnc: true },
+    });
+
+    return json({
+      ok: true,
+      antibot,
+      hasRecaptchaSecret: !!row?.recaptchaSecretEnc,
+    });
   } catch (e) {
     console.error("api.antibot.load error:", e);
-    const msg = e?.message || String(e);
-    return json({ ok: false, error: msg }, { status: 500 });
+    return json({ ok: false, error: e?.message || String(e) }, { status: 500 });
   }
 };

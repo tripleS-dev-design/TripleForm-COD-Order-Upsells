@@ -4,21 +4,18 @@ import { authenticate } from "../shopify.server";
 import { appendOrderToSheet } from "../utils/googleSheets.server";
 import { trackOrderWithPixels } from "../utils/pixels.server";
 
+import prisma from "../db.server";
+import { decryptSecret } from "../utils/crypto.server";
+
 const TF_TAG = "TripleForm COD"; // 👈 tag unique pour reconnaître les commandes de l'app
 
 /* ------------------------------------------------------------------ */
 /* Utils Phone / Country / Address                                    */
 /* ------------------------------------------------------------------ */
 
-/**
- * Essaie de reconstruire un numéro complet à partir de tous les champs.
- * - Cherche d'abord un champ déjà complet (fullPhone, phoneFull, whatsapp…)
- * - Sinon, combine un préfixe (+212, +213, etc.) avec le champ numéro.
- */
 function buildFullPhone(fields = {}) {
   const f = fields || {};
 
-  // 1) champs "évidents" déjà complets
   const directCandidates = [
     f.fullPhone,
     f.phoneFull,
@@ -32,7 +29,6 @@ function buildFullPhone(fields = {}) {
     if (s.length >= 6) return s;
   }
 
-  // 2) préfixe + numéro (on essaie d'être large sur les noms)
   const prefix =
     (f.phonePrefix ||
       f.prefix ||
@@ -54,7 +50,6 @@ function buildFullPhone(fields = {}) {
 
   if (!prefixTrim && !phoneTrim) return "";
 
-  // si phone contient déjà le préfixe, on renvoie tel quel
   if (phoneTrim && prefixTrim && phoneTrim.startsWith(prefixTrim)) {
     return phoneTrim;
   }
@@ -64,26 +59,17 @@ function buildFullPhone(fields = {}) {
   return prefixTrim;
 }
 
-/**
- * Devine le code pays (ISO2) à partir du body / des champs / du shop.
- */
 async function resolveCountryCode(admin, fields = {}, body = {}) {
   const pick = (v) => (v == null ? "" : String(v)).trim();
 
-  // 1) D'abord ce que le front envoie explicitement
   const fromBody = pick(body.countryCode || body.country || body.codCountry);
   if (fromBody) return fromBody.toUpperCase();
 
-  // 2) Ensuite ce qui peut venir des champs du formulaire
   const fromFields = pick(
-    fields.country ||
-      fields.countryCode ||
-      fields.codCountry ||
-      fields.pays
+    fields.country || fields.countryCode || fields.codCountry || fields.pays
   );
   if (fromFields) return fromFields.toUpperCase();
 
-  // 3) Sinon, fallback via Admin API
   if (admin) {
     try {
       const QUERY = `
@@ -100,13 +86,9 @@ async function resolveCountryCode(admin, fields = {}, body = {}) {
     }
   }
 
-  // 4) Vieux fallback par défaut
   return "DZ";
 }
 
-/**
- * Construit l'adresse de livraison à partir des champs du formulaire
- */
 function buildShippingAddress(fields = {}, fullPhone = "", countryCode = "DZ") {
   const country =
     (fields.country ||
@@ -129,9 +111,6 @@ function buildShippingAddress(fields = {}, fullPhone = "", countryCode = "DZ") {
 /* Anti-bot config loader + IP                                         */
 /* ------------------------------------------------------------------ */
 
-/**
- * Charge la config anti-bot depuis shop.metafields (namespace tripleform_cod, key antibot)
- */
 async function loadAntibotConfig(admin) {
   try {
     const QUERY = `
@@ -161,9 +140,6 @@ async function loadAntibotConfig(admin) {
   }
 }
 
-/**
- * Récupère l'IP client en respectant la config ipBlock.clientIpHeader si présent.
- */
 function getClientIpFromRequest(request, antibot) {
   const headers = request.headers;
   const ipBlock = antibot?.ipBlock || {};
@@ -196,9 +172,6 @@ function normalizeDigits(str) {
   return (str || "").replace(/\D+/g, "");
 }
 
-/**
- * Vérifie si une chaîne matche une liste de patterns RegExp simples.
- */
 function matchesPatterns(str, patterns = []) {
   if (!str) return false;
   const s = String(str);
@@ -207,9 +180,7 @@ function matchesPatterns(str, patterns = []) {
     try {
       const re = new RegExp(p);
       if (re.test(s)) return true;
-    } catch {
-      // ignore pattern invalide
-    }
+    } catch {}
   }
   return false;
 }
@@ -218,22 +189,13 @@ function matchesPatterns(str, patterns = []) {
 /* reCAPTCHA v3 (backend verification)                                 */
 /* ------------------------------------------------------------------ */
 
-/**
- * Vérifie un token reCAPTCHA v3 côté serveur.
- * Attendu: body.recaptchaToken (ou recaptcha.token) + action (optionnel)
- */
 async function verifyRecaptchaV3({
   token,
   remoteip,
   expectedAction,
   minScore = 0.5,
+  secret, // ✅ secret PAR SHOP (décryptée DB)
 }) {
-  const secret =
-    process.env.RECAPTCHA_SECRET_KEY ||
-    process.env.RECAPTCHA_SECRET ||
-    process.env.GOOGLE_RECAPTCHA_SECRET ||
-    "";
-
   if (!secret) return { ok: false, reason: "missing_secret" };
   if (!token) return { ok: false, reason: "missing_token" };
 
@@ -250,7 +212,7 @@ async function verifyRecaptchaV3({
 
   const data = await resp.json().catch(() => ({}));
 
-  const score = Number(data?.score ?? 0);
+  const score = typeof data?.score === "number" ? data.score : Number(data?.score ?? 0);
   const action = String(data?.action || "");
   const success = data?.success === true;
 
@@ -262,23 +224,17 @@ async function verifyRecaptchaV3({
   return { ok, success, score, action, data };
 }
 
-/**
- * Applique les règles Anti-bot de base (IP, téléphone, pays + honeypot).
- * + recaptcha "challenge" synchronisé avec config (si activé)
- */
-function evaluateAntibot({
-  config,
-  clientIp,
-  countryCode,
-  fullPhone,
-  honeypot,
-}) {
+/* ------------------------------------------------------------------ */
+/* Anti-bot evaluation                                                 */
+/* ------------------------------------------------------------------ */
+
+function evaluateAntibot({ config, clientIp, countryCode, fullPhone, honeypot }) {
   const res = {
     blocked: false,
     reasons: [],
-    needsRecaptcha: false, // 👈 NEW
-    recaptchaExpectedAction: "tf_submit", // 👈 NEW
-    recaptchaMinScore: 0.5, // 👈 NEW
+    needsRecaptcha: false,
+    recaptchaExpectedAction: "tf_submit",
+    recaptchaMinScore: 0.5,
   };
 
   if (!config || typeof config !== "object") return res;
@@ -287,10 +243,9 @@ function evaluateAntibot({
   const phoneBlock = config.phoneBlock || {};
   const countryBlock = config.countryBlock || {};
   const honeypotCfg = config.honeypot || {};
-  const recaptchaCfg = config.recaptcha || config.googleRecaptcha || {}; // 👈 compatible
+  const recaptchaCfg = config.recaptcha || config.googleRecaptcha || {};
   const hp = honeypot || {};
 
-  // reCAPTCHA settings (depuis section antibot)
   res.recaptchaExpectedAction =
     recaptchaCfg.action || recaptchaCfg.expectedAction || "tf_submit";
   res.recaptchaMinScore = Number(
@@ -305,17 +260,14 @@ function evaluateAntibot({
     const denyList = ipBlock.denyList || [];
     const cidrList = ipBlock.cidrList || [];
 
-    // allowList prioritaire : si dedans -> jamais bloqué par IP
     if (!allowList.includes(ip)) {
-      // deny exact
       if (denyList.includes(ip)) {
         res.blocked = true;
         res.reasons.push(`IP ${ip} dans denyList`);
       }
 
-      // TODO: gérer CIDR plus tard
       if (!res.blocked && Array.isArray(cidrList) && cidrList.length > 0) {
-        // pas de bloc CIDR pour éviter faux positifs
+        // TODO CIDR
       }
     }
   }
@@ -384,16 +336,13 @@ function evaluateAntibot({
         res.reasons.push(`Pays ${code} non autorisé (mode block)`);
       }
     } else if (mode === "challenge") {
-      // ✅ Synchronisé : en "challenge" on demande reCAPTCHA au lieu de bloquer direct
       res.needsRecaptcha = true;
 
-      // si denyList -> block direct
       if (denyList.includes(code)) {
         res.blocked = true;
         res.reasons.push(`Pays ${code} bloqué (challenge + denyList)`);
       }
 
-      // si allowList existe et code pas dedans -> on garde "challenge" (recaptcha)
       if (!res.blocked && allowList.length > 0 && !allowList.includes(code)) {
         res.needsRecaptcha = true;
         res.reasons.push(`Pays ${code} en challenge (pas dans allowList)`);
@@ -401,7 +350,7 @@ function evaluateAntibot({
     }
   }
 
-  /* --- Honeypot / temps / souris --- */
+  /* --- Honeypot --- */
   if (honeypotCfg.enabled) {
     const fieldVal = (hp.fieldValue || "").trim();
     const timeMs = Number(hp.timeOnPageMs || 0);
@@ -421,7 +370,6 @@ function evaluateAntibot({
       }
     }
 
-    // ⚠️ mobile: pas de souris → si tu actives ça, tu peux bloquer mobile
     if (!res.blocked && honeypotCfg.checkMouseMove) {
       if (!mouseMoved) {
         res.blocked = true;
@@ -431,7 +379,6 @@ function evaluateAntibot({
   }
 
   /* --- reCAPTCHA global enable --- */
-  // si recaptcha.enabled => toujours vérifier
   if (recaptchaCfg?.enabled) {
     res.needsRecaptcha = true;
   }
@@ -477,7 +424,6 @@ async function fetchProductInfo(admin, variantGid) {
 
 export const action = async ({ request }) => {
   try {
-    // 1) Authentifier la requête App Proxy
     const { admin, session } = await authenticate.public.appProxy(request);
 
     const shop = session?.shop;
@@ -504,7 +450,6 @@ export const action = async ({ request }) => {
       );
     }
 
-    // 2) Lire le JSON envoyé par le formulaire COD
     const body = await request.json().catch(() => null);
 
     if (!body || typeof body !== "object") {
@@ -514,7 +459,6 @@ export const action = async ({ request }) => {
       );
     }
 
-    // ---- variantId → GID Shopify obligatoire ----
     const rawVariantId = body.variantId;
     let variantGid = null;
 
@@ -528,30 +472,22 @@ export const action = async ({ request }) => {
     const qty = Number(body.qty || 1);
 
     if (!variantGid || !(qty > 0)) {
-      return json(
-        { ok: false, error: "variantId/qty invalid." },
-        { status: 400 }
-      );
+      return json({ ok: false, error: "variantId/qty invalid." }, { status: 400 });
     }
-    // ---------------------------------------------
 
-    // ⚙️ Récupérer infos produit / variante
     const productInfo = await fetchProductInfo(admin, variantGid);
 
-    // 3) Téléphone complet + pays + config Anti-bot
     const fields = body.fields || {};
     const fullPhone = buildFullPhone(fields);
     const countryCode = await resolveCountryCode(admin, fields, body);
 
-    // 🔐 Infos Honeypot venant du front
     const honeypotInfo = body.honeypot || {};
 
-    // 🔐 reCAPTCHA token venant du front
     const recaptchaToken =
       body.recaptchaToken ||
       body.recaptcha_token ||
       body?.recaptcha?.token ||
-      body?.recaptcha ||
+      (typeof body?.recaptcha === "string" ? body.recaptcha : null) ||
       null;
 
     const recaptchaAction =
@@ -560,14 +496,11 @@ export const action = async ({ request }) => {
       body?.recaptcha?.action ||
       "tf_submit";
 
-    // Chargement de la config anti-bot
     const antibotCfg = await loadAntibotConfig(admin);
 
-    // IP & user-agent
     const clientIp = getClientIpFromRequest(request, antibotCfg);
     const userAgent = request.headers.get("user-agent") || null;
 
-    // Vérification Anti-bot (IP / téléphone / pays / honeypot)
     const antibotResult = evaluateAntibot({
       config: antibotCfg,
       clientIp,
@@ -576,7 +509,6 @@ export const action = async ({ request }) => {
       honeypot: honeypotInfo,
     });
 
-    // Si anti-bot bloque direct
     if (antibotResult.blocked) {
       console.warn(
         "TripleForm COD — Anti-bot blocked request:",
@@ -595,23 +527,36 @@ export const action = async ({ request }) => {
       );
     }
 
-    // ✅ Synchronisation reCAPTCHA avec section AntiBot :
-    // - si config.recaptcha.enabled => toujours vérifier
-    // - ou si countryBlock.defaultAction === "challenge" => vérifier
+    // ✅ reCAPTCHA check (v3) — secret par shop depuis DB
     if (antibotResult.needsRecaptcha) {
       const minScore =
-        antibotResult.recaptchaMinScore != null
-          ? antibotResult.recaptchaMinScore
-          : 0.5;
+        antibotResult.recaptchaMinScore != null ? antibotResult.recaptchaMinScore : 0.5;
 
       const expectedAction =
-        antibotResult.recaptchaExpectedAction || "tf_submit";
+        (antibotResult.recaptchaExpectedAction || recaptchaAction || "tf_submit").trim();
+
+      // 🔐 charger secret enc depuis DB
+      const row = await prisma.shopAntibotSettings.findUnique({
+        where: { shopDomain: shop },
+        select: { recaptchaSecretEnc: true },
+      });
+
+      let secret = "";
+      if (row?.recaptchaSecretEnc) {
+        try {
+          secret = decryptSecret(row.recaptchaSecretEnc) || "";
+        } catch (e) {
+          console.error("Decrypt recaptcha secret failed:", e);
+          secret = "";
+        }
+      }
 
       const check = await verifyRecaptchaV3({
         token: recaptchaToken,
         remoteip: clientIp,
-        expectedAction: expectedAction || recaptchaAction, // priorité config
+        expectedAction,
         minScore,
+        secret,
       });
 
       if (!check.ok) {
@@ -622,6 +567,7 @@ export const action = async ({ request }) => {
           gotAction: check.action,
           score: check.score,
           success: check.success,
+          reason: check?.data?.["error-codes"] || check.reason,
         });
 
         return json(
@@ -630,6 +576,7 @@ export const action = async ({ request }) => {
             code: "RECAPTCHA_FAILED",
             error: "Recaptcha verification failed.",
             details: {
+              reason: check.reason,
               success: check.success,
               score: check.score,
               action: check.action,
@@ -641,16 +588,13 @@ export const action = async ({ request }) => {
       }
     }
 
-    // Adresse de livraison
     const shippingAddress = buildShippingAddress(fields, fullPhone, countryCode);
 
-    // Totaux (pour Sheets + pixels)
     const currency = body?.currency || null;
     const totals = {
       priceCents: body?.priceCents != null ? Number(body.priceCents) : null,
       totalCents: body?.totalCents != null ? Number(body.totalCents) : null,
-      discountCents:
-        body?.discountCents != null ? Number(body.discountCents) : null,
+      discountCents: body?.discountCents != null ? Number(body.discountCents) : null,
       qty,
       currency,
       productId: body?.productId || null,
@@ -684,7 +628,6 @@ export const action = async ({ request }) => {
       ],
     };
 
-    // 4) draftOrderCreate
     const CREATE = `
       mutation draftOrderCreate($input: DraftOrderInput!) {
         draftOrderCreate(input: $input) {
@@ -715,7 +658,6 @@ export const action = async ({ request }) => {
       return json({ ok: false, error: "No draft order id returned." }, { status: 500 });
     }
 
-    // 5) draftOrderComplete
     const COMPLETE = `
       mutation draftOrderComplete($id: ID!, $paymentPending: Boolean) {
         draftOrderComplete(id: $id, paymentPending: $paymentPending) {
@@ -786,12 +728,9 @@ export const action = async ({ request }) => {
             body?.variant_title ||
             "",
           quantity: qty,
-          subtotal:
-            totals.priceCents != null ? Number(totals.priceCents) / 100 : null,
-          shipping:
-            body?.shippingAmount != null ? Number(body.shippingAmount) : null,
-          total:
-            totals.totalCents != null ? Number(totals.totalCents) / 100 : null,
+          subtotal: totals.priceCents != null ? Number(totals.priceCents) / 100 : null,
+          shipping: body?.shippingAmount != null ? Number(body.shippingAmount) : null,
+          total: totals.totalCents != null ? Number(totals.totalCents) / 100 : null,
           totalCents: totals.totalCents != null ? Number(totals.totalCents) : null,
           currency,
         },
@@ -835,5 +774,4 @@ export const action = async ({ request }) => {
   }
 };
 
-// Optionnel pour tester vite fait dans le navigateur
 export const loader = () => json({ ok: true, where: "proxy.submit" });

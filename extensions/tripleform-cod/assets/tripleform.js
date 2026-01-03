@@ -3319,7 +3319,8 @@ const COUNTRY_DATA = {
         try {
           await ensureRecaptchaScript(recaptchaCfg);
           if (window.grecaptcha && window.grecaptcha.execute) {
-            recaptchaToken = await window.grecaptcha.execute(recaptchaCfg.siteKey, { action: "submit_cod" });
+          const recaptchaAction = recaptchaCfg?.expectedAction || recaptchaCfg?.action || "tf_submit";
+          recaptchaToken = await window.grecaptcha.execute(recaptchaCfg.siteKey, { action: recaptchaAction });
           }
         } catch (e) {
           console.warn("[Tripleform COD] reCAPTCHA v3 error:", e);
@@ -3344,6 +3345,8 @@ const COUNTRY_DATA = {
         offer: activeOfferData || null,
         recaptchaToken,
         recaptchaVersion,
+        recaptchaAction: recaptchaCfg?.expectedAction || recaptchaCfg?.action || "tf_submit",
+
       };
 
       const formCard = root.querySelector('[data-tf-role="form-card"]');

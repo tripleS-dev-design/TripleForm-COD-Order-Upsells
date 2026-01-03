@@ -1,56 +1,83 @@
-// ===== File: app/routes/api.antibot.save.jsx =====
 import { json } from "@remix-run/node";
 import { authenticate } from "../shopify.server";
+import prisma from "../db.server"; // adapte si ton chemin est différent
+import { encryptSecret } from "../utils/crypto.server";
 
 /**
  * POST /api/antibot/save
  * Body JSON: { antibot: { ...config... } }
- * Sauvegarde dans shop.metafields (namespace tripleform_cod, key antibot, type json)
+ *
+ * - Metafield tripleform_cod.antibot = config publique (SANS secretKey)
+ * - DB ShopAntibotSettings = secretKey chiffrée (recaptchaSecretEnc)
  */
 export const action = async ({ request }) => {
   try {
-    const { admin } = await authenticate.admin(request);
+    const { admin, session } = await authenticate.admin(request);
 
     if (!admin) {
-      return json(
-        { ok: false, error: "Unauthorized: no admin session" },
-        { status: 401 }
-      );
+      return json({ ok: false, error: "Unauthorized: no admin session" }, { status: 401 });
     }
 
     const body = await request.json().catch(() => null);
-
     if (!body || typeof body !== "object") {
-      return json(
-        { ok: false, error: "Missing or invalid JSON body" },
-        { status: 400 }
-      );
+      return json({ ok: false, error: "Missing or invalid JSON body" }, { status: 400 });
     }
 
     const antibot = body.antibot;
     if (!antibot || typeof antibot !== "object") {
-      return json(
-        { ok: false, error: "Missing 'antibot' object in body" },
-        { status: 400 }
-      );
+      return json({ ok: false, error: "Missing 'antibot' object in body" }, { status: 400 });
     }
 
-    // petit garde-fou : si meta/version absent, on l'ajoute
+    // shopDomain depuis session Shopify (le plus fiable)
+    const shopDomain = session?.shop;
+    if (!shopDomain) {
+      return json({ ok: false, error: "Missing shopDomain in session" }, { status: 400 });
+    }
+
+    // Normalisation + defaults
     const normalized = {
-      meta: {
-        version: Number(antibot?.meta?.version || 4),
-      },
+      meta: { version: Number(antibot?.meta?.version || 4) },
       ...antibot,
     };
 
-    const value = JSON.stringify(normalized);
+    // ==== 1) Secret -> DB (chiffré) ====
+    const secretKey = normalized?.recaptcha?.secretKey?.trim() || "";
+    const recaptchaEnabled = normalized?.recaptcha?.enabled === true;
+    const recaptchaVersion = normalized?.recaptcha?.version || "v3";
+    const recaptchaSiteKey = normalized?.recaptcha?.siteKey?.trim() || "";
+    const recaptchaExpectedAction =
+      normalized?.recaptcha?.expectedAction?.trim() || "tf_submit";
 
-    // === 1) Récupérer l'ID du shop pour ownerId ===
+    // upsert DB (on n’écrase pas le secret si vide)
+    await prisma.shopAntibotSettings.upsert({
+      where: { shopDomain },
+      create: {
+        shopDomain,
+        recaptchaEnabled,
+        recaptchaVersion,
+        recaptchaSiteKey: recaptchaSiteKey || null,
+        recaptchaSecretEnc: secretKey ? encryptSecret(secretKey) : null,
+        recaptchaExpectedAction,
+      },
+      update: {
+        recaptchaEnabled,
+        recaptchaVersion,
+        recaptchaSiteKey: recaptchaSiteKey || null,
+        ...(secretKey ? { recaptchaSecretEnc: encryptSecret(secretKey) } : {}),
+        recaptchaExpectedAction,
+      },
+    });
+
+    // ==== 2) Metafield -> config publique (SANS secretKey) ====
+    const sanitized = structuredClone(normalized);
+    if (sanitized?.recaptcha) delete sanitized.recaptcha.secretKey;
+
+    const value = JSON.stringify(sanitized);
+
+    // récupérer shop.id
     const SHOP_ID_QUERY = `
       query GetShopIdForAntibot {
-        shop {
-          id
-        }
+        shop { id }
       }
     `;
     const shopResp = await admin.graphql(SHOP_ID_QUERY);
@@ -60,33 +87,15 @@ export const action = async ({ request }) => {
     if (!shopId) {
       console.error("api.antibot.save — impossible de récupérer shop.id", shopJson);
       return json(
-        {
-          ok: false,
-          error: "Unable to resolve shop.id for metafieldsSet (ownerId is required).",
-        },
+        { ok: false, error: "Unable to resolve shop.id for metafieldsSet." },
         { status: 500 }
       );
     }
 
-    // === 2) Mutation metafieldsSet avec ownerId obligatoire ===
     const MUTATION = `
       mutation antibotMetafieldSave($metafields: [MetafieldsSetInput!]!) {
         metafieldsSet(metafields: $metafields) {
-          metafields {
-            id
-            namespace
-            key
-            type
-            owner {
-              ... on Shop {
-                id
-              }
-            }
-          }
-          userErrors {
-            field
-            message
-          }
+          userErrors { field message }
         }
       }
     `;
@@ -95,7 +104,7 @@ export const action = async ({ request }) => {
       variables: {
         metafields: [
           {
-            ownerId: shopId,          // <<<<<< OBLIGATOIRE MAINTENANT
+            ownerId: shopId,
             namespace: "tripleform_cod",
             key: "antibot",
             type: "json",
@@ -106,17 +115,11 @@ export const action = async ({ request }) => {
     });
 
     const data = await resp.json();
-    const mfSet = data?.data?.metafieldsSet;
-    const errs = mfSet?.userErrors || [];
-
+    const errs = data?.data?.metafieldsSet?.userErrors || [];
     if (errs.length > 0) {
       console.error("api.antibot.save metafieldsSet userErrors:", errs);
       return json(
-        {
-          ok: false,
-          error: errs[0]?.message || "metafieldsSet error",
-          details: errs,
-        },
+        { ok: false, error: errs[0]?.message || "metafieldsSet error", details: errs },
         { status: 400 }
       );
     }
@@ -124,10 +127,6 @@ export const action = async ({ request }) => {
     return json({ ok: true });
   } catch (e) {
     console.error("api.antibot.save error:", e);
-    const msg =
-      e?.message ||
-      (e?.response?.errors && JSON.stringify(e.response.errors)) ||
-      String(e);
-    return json({ ok: false, error: msg }, { status: 500 });
+    return json({ ok: false, error: e?.message || String(e) }, { status: 500 });
   }
 };

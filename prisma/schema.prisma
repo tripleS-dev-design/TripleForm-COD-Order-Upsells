@@ -238,6 +238,29 @@ model OrderSync {
   @@index([syncedToSheets])
 }
 
+model ShopAntibotSettings {
+  id              Int      @id @default(autoincrement())
+  shopDomain      String   @unique
+
+  recaptchaEnabled Boolean @default(false)
+
+  // v2 ou v3 (toi tu utilises v3 côté token, mais tu peux garder le champ)
+  recaptchaVersion String? // "v2" | "v3"
+
+  recaptchaSiteKey String? // PUBLIC (ok)
+  // SECRET: stocké chiffré en DB
+  recaptchaSecretEnc String? @db.Text
+
+  // optionnel: action attendue
+  recaptchaExpectedAction String? @default("tf_submit")
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("shop_antibot_settings")
+}
+
+
 model PlanUsage {
   id            Int       @id @default(autoincrement())
   shopDomain    String    @unique
