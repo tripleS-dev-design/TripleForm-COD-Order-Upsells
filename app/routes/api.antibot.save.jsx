@@ -45,8 +45,13 @@ export const action = async ({ request }) => {
     const recaptchaEnabled = normalized?.recaptcha?.enabled === true;
     const recaptchaVersion = normalized?.recaptcha?.version || "v3";
     const recaptchaSiteKey = normalized?.recaptcha?.siteKey?.trim() || "";
-    const recaptchaExpectedAction =
-      normalized?.recaptcha?.expectedAction?.trim() || "tf_submit";
+
+    // ✅ FIX: supporter expectedAction OU action
+    const recaptchaExpectedAction = (
+      normalized?.recaptcha?.expectedAction ||
+      normalized?.recaptcha?.action ||
+      "tf_submit"
+    ).trim();
 
     // upsert DB (on n’écrase pas le secret si vide)
     await prisma.shopAntibotSettings.upsert({
@@ -70,7 +75,18 @@ export const action = async ({ request }) => {
 
     // ==== 2) Metafield -> config publique (SANS secretKey) ====
     const sanitized = structuredClone(normalized);
-    if (sanitized?.recaptcha) delete sanitized.recaptcha.secretKey;
+
+    // ✅ FIX: forcer expectedAction dans la config publique (source de vérité pour le front)
+    if (sanitized?.recaptcha && typeof sanitized.recaptcha === "object") {
+      sanitized.recaptcha.expectedAction = (
+        sanitized.recaptcha.expectedAction ||
+        sanitized.recaptcha.action ||
+        "tf_submit"
+      ).trim();
+
+      // ne jamais envoyer le secret dans le metafield public
+      delete sanitized.recaptcha.secretKey;
+    }
 
     const value = JSON.stringify(sanitized);
 

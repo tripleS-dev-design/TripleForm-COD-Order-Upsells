@@ -44,6 +44,28 @@ window.TripleformCOD = (function () {
     return recaptchaScriptPromise;
   }
 
+  async function getRecaptchaToken(cfg) {
+    if (!cfg || !cfg.enabled || cfg.version !== "v3" || !cfg.siteKey) return null;
+    try {
+      await ensureRecaptchaScript(cfg);
+      const gre = window.grecaptcha;
+      if (!gre || !gre.execute) return null;
+
+      // ✅ important: wait until reCAPTCHA is ready
+      await new Promise((resolve) => {
+        if (typeof gre.ready === "function") gre.ready(resolve);
+        else resolve();
+      });
+
+      const action = cfg.expectedAction || cfg.action || "tf_submit";
+      const token = await gre.execute(cfg.siteKey, { action });
+      return token || null;
+    } catch (e) {
+      console.warn("[Tripleform COD] reCAPTCHA token error:", e);
+      return null;
+    }
+  }
+
   /* ------------------------------------------------------------------ */
   /* Helpers                                                            */
   /* ------------------------------------------------------------------ */
@@ -3315,17 +3337,8 @@ const COUNTRY_DATA = {
       let recaptchaToken = null;
       let recaptchaVersion = recaptchaCfg?.version || null;
 
-      if (recaptchaCfg?.enabled && recaptchaCfg.version === "v3" && recaptchaCfg.siteKey) {
-        try {
-          await ensureRecaptchaScript(recaptchaCfg);
-          if (window.grecaptcha && window.grecaptcha.execute) {
-          const recaptchaAction = recaptchaCfg?.expectedAction || recaptchaCfg?.action || "tf_submit";
-          recaptchaToken = await window.grecaptcha.execute(recaptchaCfg.siteKey, { action: recaptchaAction });
-          }
-        } catch (e) {
-          console.warn("[Tripleform COD] reCAPTCHA v3 error:", e);
-        }
-      }
+      recaptchaToken = await getRecaptchaToken(recaptchaCfg);
+
 
       const activeOfferData = getActiveOfferData(root.id);
 
@@ -3577,12 +3590,17 @@ const COUNTRY_DATA = {
     const recaptchaVersion = holder.getAttribute("data-recaptcha-version") || "";
     const recaptchaSiteKey = holder.getAttribute("data-recaptcha-site-key") || "";
     const recaptchaMinScoreAttr = holder.getAttribute("data-recaptcha-min-score");
+    const recaptchaExpectedActionAttr =
+      holder.getAttribute("data-recaptcha-expected-action") ||
+      holder.getAttribute("data-recaptcha-action") ||
+      "";
     const recaptchaMinScore = recaptchaMinScoreAttr ? Number(recaptchaMinScoreAttr) : 0.5;
 
     const recaptchaCfg = {
       enabled: recaptchaEnabled && !!recaptchaSiteKey,
       version: recaptchaVersion || "v3",
       siteKey: recaptchaSiteKey,
+      expectedAction: recaptchaExpectedActionAttr || "tf_submit",
       minScore: isNaN(recaptchaMinScore) ? 0.5 : recaptchaMinScore,
     };
 

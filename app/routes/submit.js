@@ -196,8 +196,8 @@ async function verifyRecaptchaV3({
   minScore = 0.5,
   secret, // ✅ secret PAR SHOP (décryptée DB)
 }) {
-  if (!secret) return { ok: false, reason: "missing_secret" };
-  if (!token) return { ok: false, reason: "missing_token" };
+  if (!secret) return { ok: false, reason: "missing_secret", success: false };
+  if (!token) return { ok: false, reason: "missing_token", success: false };
 
   const form = new URLSearchParams();
   form.set("secret", secret);
@@ -221,7 +221,16 @@ async function verifyRecaptchaV3({
 
   const ok = success && actionOk && scoreOk;
 
-  return { ok, success, score, action, data };
+  let reason = "ok";
+  if (!success) {
+    reason = (data?.["error-codes"] && data["error-codes"].join(",")) || "google_failed";
+  } else if (!actionOk) {
+    reason = `action_mismatch:${action || "empty"}`;
+  } else if (!scoreOk) {
+    reason = `low_score:${score}`;
+  }
+
+  return { ok, success, score, action, reason, data };
 }
 
 /* ------------------------------------------------------------------ */
@@ -246,8 +255,10 @@ function evaluateAntibot({ config, clientIp, countryCode, fullPhone, honeypot })
   const recaptchaCfg = config.recaptcha || config.googleRecaptcha || {};
   const hp = honeypot || {};
 
+  // ✅ expectedAction / minScore viennent de ta config (pas du client)
   res.recaptchaExpectedAction =
-    recaptchaCfg.action || recaptchaCfg.expectedAction || "tf_submit";
+    (recaptchaCfg.expectedAction || recaptchaCfg.action || "tf_submit").trim();
+
   res.recaptchaMinScore = Number(
     recaptchaCfg.minScore != null ? recaptchaCfg.minScore : 0.5
   );
@@ -443,8 +454,7 @@ export const action = async ({ request }) => {
       return json(
         {
           ok: false,
-          error:
-            "Admin API client unavailable for this shop (no offline session).",
+          error: "Admin API client unavailable for this shop (no offline session).",
         },
         { status: 401 }
       );
@@ -453,10 +463,7 @@ export const action = async ({ request }) => {
     const body = await request.json().catch(() => null);
 
     if (!body || typeof body !== "object") {
-      return json(
-        { ok: false, error: "Missing or invalid JSON body." },
-        { status: 400 }
-      );
+      return json({ ok: false, error: "Missing or invalid JSON body." }, { status: 400 });
     }
 
     const rawVariantId = body.variantId;
@@ -464,9 +471,7 @@ export const action = async ({ request }) => {
 
     if (rawVariantId) {
       const s = String(rawVariantId);
-      variantGid = s.startsWith("gid://")
-        ? s
-        : `gid://shopify/ProductVariant/${s}`;
+      variantGid = s.startsWith("gid://") ? s : `gid://shopify/ProductVariant/${s}`;
     }
 
     const qty = Number(body.qty || 1);
@@ -483,18 +488,21 @@ export const action = async ({ request }) => {
 
     const honeypotInfo = body.honeypot || {};
 
-    const recaptchaToken =
+    // ✅ token: accepter plusieurs noms (selon front)
+    const recaptchaTokenRaw =
       body.recaptchaToken ||
       body.recaptcha_token ||
+      body["g-recaptcha-response"] ||
       body?.recaptcha?.token ||
-      (typeof body?.recaptcha === "string" ? body.recaptcha : null) ||
-      null;
+      (typeof body?.recaptcha === "string" ? body.recaptcha : "") ||
+      "";
 
-    const recaptchaAction =
-      body.recaptchaAction ||
-      body.recaptcha_action ||
-      body?.recaptcha?.action ||
-      "tf_submit";
+    const recaptchaToken = String(recaptchaTokenRaw || "").trim();
+
+    // ⚠️ action envoyée par le client: utile pour debug seulement
+    const clientRecaptchaAction = String(
+      body.recaptchaAction || body.recaptcha_action || body?.recaptcha?.action || ""
+    ).trim();
 
     const antibotCfg = await loadAntibotConfig(admin);
 
@@ -510,12 +518,7 @@ export const action = async ({ request }) => {
     });
 
     if (antibotResult.blocked) {
-      console.warn(
-        "TripleForm COD — Anti-bot blocked request:",
-        shop,
-        clientIp,
-        antibotResult.reasons
-      );
+      console.warn("TripleForm COD — Anti-bot blocked request:", shop, clientIp, antibotResult.reasons);
       return json(
         {
           ok: false,
@@ -532,8 +535,8 @@ export const action = async ({ request }) => {
       const minScore =
         antibotResult.recaptchaMinScore != null ? antibotResult.recaptchaMinScore : 0.5;
 
-      const expectedAction =
-        (antibotResult.recaptchaExpectedAction || recaptchaAction || "tf_submit").trim();
+      // ✅ expectedAction = config anti-bot (source de vérité)
+      const expectedAction = String(antibotResult.recaptchaExpectedAction || "tf_submit").trim() || "tf_submit";
 
       // 🔐 charger secret enc depuis DB
       const row = await prisma.shopAntibotSettings.findUnique({
@@ -551,6 +554,18 @@ export const action = async ({ request }) => {
         }
       }
 
+      // si recaptcha activé mais pas de secret => configuration cassée
+      if (!secret) {
+        return json(
+          {
+            ok: false,
+            code: "RECAPTCHA_MISCONFIG",
+            error: "reCAPTCHA enabled but secret key is missing for this shop.",
+          },
+          { status: 403 }
+        );
+      }
+
       const check = await verifyRecaptchaV3({
         token: recaptchaToken,
         remoteip: clientIp,
@@ -564,10 +579,11 @@ export const action = async ({ request }) => {
           shop,
           clientIp,
           expectedAction,
+          clientAction: clientRecaptchaAction || null,
           gotAction: check.action,
           score: check.score,
           success: check.success,
-          reason: check?.data?.["error-codes"] || check.reason,
+          reason: check.reason,
         });
 
         return json(

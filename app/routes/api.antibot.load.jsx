@@ -1,11 +1,14 @@
 import { json } from "@remix-run/node";
 import { authenticate } from "../shopify.server";
-import prisma from "../db.server"; 
+import prisma from "../db.server";
 
 /**
  * GET /api/antibot/load
  * - Lit metafield tripleform_cod.antibot (config publique)
  * - Ajoute hasRecaptchaSecret (depuis DB), sans renvoyer la secret
+ *
+ * ✅ FIX: normalise recaptcha (enabled/siteKey/expectedAction/minScore)
+ * pour que le FRONT ait toujours les infos correctes.
  */
 export const loader = async ({ request }) => {
   try {
@@ -45,15 +48,54 @@ export const loader = async ({ request }) => {
       }
     }
 
-    // DB: est-ce qu'on a une secret key sauvegardée ?
+    // DB: est-ce qu'on a une secret key sauvegardée ? + infos recaptcha (fallback)
     const row = await prisma.shopAntibotSettings.findUnique({
       where: { shopDomain },
-      select: { recaptchaSecretEnc: true },
+      select: {
+        recaptchaSecretEnc: true,
+        recaptchaEnabled: true,
+        recaptchaVersion: true,
+        recaptchaSiteKey: true,
+        recaptchaExpectedAction: true,
+      },
     });
+
+    // ✅ Normaliser antibot + recaptcha pour que le front ait toujours expectedAction
+    const safe = antibot && typeof antibot === "object" ? antibot : {};
+
+    const mfRecaptcha =
+      safe.recaptcha && typeof safe.recaptcha === "object" ? safe.recaptcha : {};
+
+    const expectedAction = (
+      mfRecaptcha.expectedAction ||
+      mfRecaptcha.action ||
+      row?.recaptchaExpectedAction ||
+      "tf_submit"
+    ).trim();
+
+    const recaptchaSiteKey = (mfRecaptcha.siteKey || row?.recaptchaSiteKey || "").trim();
+
+    const recaptchaEnabled =
+      mfRecaptcha.enabled === true || row?.recaptchaEnabled === true;
+
+    const recaptchaVersion = mfRecaptcha.version || row?.recaptchaVersion || "v3";
+
+    const minScore =
+      mfRecaptcha.minScore != null ? Number(mfRecaptcha.minScore) : 0.5;
+
+    safe.recaptcha = {
+      ...mfRecaptcha,
+      enabled: recaptchaEnabled,
+      version: recaptchaVersion,
+      siteKey: recaptchaSiteKey,
+      expectedAction,
+      minScore,
+      // ⚠️ jamais renvoyer secret
+    };
 
     return json({
       ok: true,
-      antibot,
+      antibot: safe,
       hasRecaptchaSecret: !!row?.recaptchaSecretEnc,
     });
   } catch (e) {
