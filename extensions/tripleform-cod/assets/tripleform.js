@@ -7,6 +7,7 @@
    ✅ Discount logic: % or fixed (once OR per item) + capped
    ✅ Offer can override total price (bundleTotal) OR force qty
    ✅ Thank you: popup/redirect WITHOUT keeping "Thanks..." on CTA
+   ✅ Anti-bot: honeypot + minimum time on page (configurable)
    ========================================================================= */
 
 window.TripleformCOD = (function () {
@@ -54,62 +55,60 @@ window.TripleformCOD = (function () {
     return String(s ?? "");
   }
 
+  function hexToRgba(hex, alpha) {
+    const h = String(hex || "").trim();
+    let a = Number(alpha);
+    if (!Number.isFinite(a)) a = 1;
+    a = Math.max(0, Math.min(1, a));
 
-function hexToRgba(hex, alpha) {
-  const h = String(hex || "").trim();
-  let a = Number(alpha);
-  if (!Number.isFinite(a)) a = 1;
-  a = Math.max(0, Math.min(1, a));
+    let x = h.replace("#", "");
+    if (x.length === 3) x = x.split("").map((ch) => ch + ch).join("");
+    if (x.length !== 6) return `rgba(2,6,23,${a})`;
 
-  let x = h.replace("#", "");
-  if (x.length === 3) x = x.split("").map(ch => ch + ch).join("");
-  if (x.length !== 6) return `rgba(2,6,23,${a})`;
+    const r = parseInt(x.slice(0, 2), 16);
+    const g = parseInt(x.slice(2, 4), 16);
+    const b = parseInt(x.slice(4, 6), 16);
+    return `rgba(${r},${g},${b},${a})`;
+  }
 
-  const r = parseInt(x.slice(0, 2), 16);
-  const g = parseInt(x.slice(2, 4), 16);
-  const b = parseInt(x.slice(4, 6), 16);
-  return `rgba(${r},${g},${b},${a})`;
-}
+  function shadowFromEffect(cfg, baseGlow) {
+    const d = (cfg && cfg.design) || {};
+    const shadowOn = d.shadow !== false;
+    if (!shadowOn) return "none";
 
-function shadowFromEffect(cfg, baseGlow) {
-  const d = (cfg && cfg.design) || {};
-  const shadowOn = d.shadow !== false;
-  if (!shadowOn) return "none";
+    const base = "0 18px 40px rgba(15,23,42,0.10)";
+    const glowOn = d.glow === true;
+    if (!glowOn) return base;
 
-  const base = "0 18px 40px rgba(15,23,42,0.10)";
-  const glowOn = d.glow === true;
-  if (!glowOn) return base;
+    const px = Math.max(0, Number(d.glowPx || 18));
+    const glowColor = hexToRgba(baseGlow || d.btnBg || "#2563EB", 0.3);
+    return `${base}, 0 0 ${px}px ${glowColor}`;
+  }
 
-  const px = Math.max(0, Number(d.glowPx || 18));
-  const glowColor = hexToRgba(baseGlow || d.btnBg || "#2563EB", 0.30);
-  return `${base}, 0 0 ${px}px ${glowColor}`;
-}
+  function overlayBackground(beh) {
+    const b = beh || {};
+    const col = String(b.overlayColor || "#020617");
+    let op = Number(b.overlayOpacity);
+    if (!Number.isFinite(op)) op = 70;
+    op = Math.max(0, Math.min(100, op));
+    return hexToRgba(col, op / 100);
+  }
 
-function overlayBackground(beh) {
-  const b = beh || {};
-  const col = String(b.overlayColor || "#020617");
-  let op = Number(b.overlayOpacity);
-  if (!Number.isFinite(op)) op = 70;
-  op = Math.max(0, Math.min(100, op));
-  return hexToRgba(col, op / 100);
-}
+  function popupSizeConfig(beh) {
+    const size = String((beh && (beh.popupSize || beh.size)) || "md").toLowerCase();
+    if (size === "sm") return { maxWidth: "520px", maxHeight: "92vh" };
+    if (size === "lg") return { maxWidth: "760px", maxHeight: "92vh" };
+    return { maxWidth: "640px", maxHeight: "92vh" };
+  }
 
-function popupSizeConfig(beh) {
-  const size = String((beh && (beh.popupSize || beh.size)) || "md").toLowerCase();
-  if (size === "sm") return { maxWidth: "520px", maxHeight: "92vh" };
-  if (size === "lg") return { maxWidth: "760px", maxHeight: "92vh" };
-  return { maxWidth: "640px", maxHeight: "92vh" };
-}
+  function drawerSizeConfig(beh) {
+    const size = String((beh && (beh.drawerSize || beh.size)) || "md").toLowerCase();
+    if (size === "sm") return { sideWidth: "360px" };
+    if (size === "lg") return { sideWidth: "520px" };
+    return { sideWidth: "420px" };
+  }
 
-function drawerSizeConfig(beh) {
-  const size = String((beh && (beh.drawerSize || beh.size)) || "md").toLowerCase();
-  if (size === "sm") return { sideWidth: "360px" };
-  if (size === "lg") return { sideWidth: "520px" };
-  return { sideWidth: "420px" };
-}
-
-  
-function resolveButtonBackground(design) {
+  function resolveButtonBackground(design) {
     const d = design || {};
     const mode = String(d.btnBgMode || "").toLowerCase();
     const c1 = String(d.btnBg || "").trim();
@@ -125,11 +124,16 @@ function resolveButtonBackground(design) {
     if (mode === "gradient" && d.btnBg) return String(d.btnBg);
     return resolvedBg || "#111827";
   }
-function safeJsonParse(raw, fallback = {}) {
+
+  function safeJsonParse(raw, fallback = {}) {
     if (!raw) return fallback;
 
     function tryParse(v) {
-      try { return JSON.parse(v); } catch { return undefined; }
+      try {
+        return JSON.parse(v);
+      } catch {
+        return undefined;
+      }
     }
 
     let out = tryParse(raw);
@@ -137,7 +141,7 @@ function safeJsonParse(raw, fallback = {}) {
       out = tryParse(String(raw).replace(/=>/g, ":"));
     }
 
-    // handle double-encoded JSON (ex: "{\"a\":1}" => string => parse again)
+    // handle double-encoded JSON
     if (typeof out === "string") {
       const trimmed = out.trim();
       if (
@@ -172,33 +176,6 @@ function safeJsonParse(raw, fallback = {}) {
     return (cents) => nf.format(Number(cents || 0) / 100);
   }
 
-  function clamp01(x) {
-    let v = Number(x);
-    if (!Number.isFinite(v)) v = 0;
-    if (v > 1) v = v / 100;
-    if (v < 0) v = 0;
-    if (v > 1) v = 1;
-    return v;
-  }
-
-  function isObj(x) {
-    return x && typeof x === "object" && !Array.isArray(x);
-  }
-
-  function pick(obj, path, fallback) {
-    try {
-      const parts = String(path || "").split(".").filter(Boolean);
-      let cur = obj;
-      for (const p of parts) {
-        if (!cur || typeof cur !== "object") return fallback;
-        cur = cur[p];
-      }
-      return cur === undefined ? fallback : cur;
-    } catch {
-      return fallback;
-    }
-  }
-
   /* ------------------------------------------------------------------ */
   /* ✅ Real / Simple SVG Icons (always visible)                         */
   /* ------------------------------------------------------------------ */
@@ -210,23 +187,19 @@ function safeJsonParse(raw, fallback = {}) {
       <path d="M5 3.5h4v4H5v-4Zm6 0h4v4h-4v-4ZM5 9.5h4v4H5v-4Zm6 0h4v4h-4v-4ZM5 15.5h4v1H5v-1Zm6 0h4v1h-4v-1Z"
         fill="currentColor" opacity=".95"/>
     </svg>`,
-
     CirclePlusIcon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" aria-hidden="true">
       <circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="1.6"/>
       <path d="M10 6v8M6 10h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
     </svg>`,
-
     CheckCircleIcon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" aria-hidden="true">
       <circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="1.6"/>
       <path d="m6.5 10.2 2.2 2.2 4.8-5.1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>`,
-
     DiscountIcon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" aria-hidden="true">
       <path d="M4 10.2 10.2 4h5.8v5.8L9.8 16 4 10.2Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
       <path d="M13.6 6.6h.01" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/>
       <path d="M6.2 14.2l8-8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
     </svg>`,
-
     GiftCardIcon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" aria-hidden="true">
       <path d="M3.5 8h13V17a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1V8Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
       <path d="M3.5 8V6.5a1 1 0 0 1 1-1h11a1 1 0 0 1 1 1V8" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
@@ -234,60 +207,48 @@ function safeJsonParse(raw, fallback = {}) {
       <path d="M7.2 5.2c0-1.2 1-2.2 2.2-2.2.6 0 1.2.2 1.6.6.4-.4 1-.6 1.6-.6 1.2 0 2.2 1 2.2 2.2 0 1-1 1.8-2.2 1.8H9.4c-1.2 0-2.2-.8-2.2-1.8Z"
         stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
     </svg>`,
-
     UserIcon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" aria-hidden="true">
       <path d="M10 10.2c2.2 0 4-1.8 4-4s-1.8-4-4-4-4 1.8-4 4 1.8 4 4 4Z" stroke="currentColor" stroke-width="1.7"/>
       <path d="M3.5 18c.9-3 3.4-5 6.5-5s5.6 2 6.5 5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
     </svg>`,
-
     PhoneIcon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" aria-hidden="true">
       <path d="M6.2 3.6 4.9 5c-.7.7-.9 1.7-.5 2.6 1.4 3.2 4 5.8 7.2 7.2.9.4 2 .2 2.6-.5l1.4-1.3c.5-.5.6-1.3.1-1.9l-1.4-1.7c-.5-.6-1.3-.7-1.9-.3l-1 .6c-.6.3-1.3.2-1.8-.2l-2.5-2.5c-.5-.5-.6-1.2-.2-1.8l.6-1c.4-.6.3-1.4-.3-1.9L8.1 3.5c-.6-.5-1.4-.4-1.9.1Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
     </svg>`,
-
     PhoneOffIcon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" aria-hidden="true">
       <path d="M3 3l14 14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
       <path d="M6.2 3.6 4.9 5c-.7.7-.9 1.7-.5 2.6 1.4 3.2 4 5.8 7.2 7.2.9.4 2 .2 2.6-.5l1.4-1.3c.5-.5.6-1.3.1-1.9l-1.4-1.7c-.5-.6-1.3-.7-1.9-.3l-1 .6c-.6.3-1.3.2-1.8-.2l-2.5-2.5c-.5-.5-.6-1.2-.2-1.8l.6-1c.4-.6.3-1.4-.3-1.9L8.1 3.5c-.6-.5-1.4-.4-1.9.1Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
     </svg>`,
-
     HomeIcon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" aria-hidden="true">
       <path d="M3.5 9.2 10 3.8l6.5 5.4V17a1 1 0 0 1-1 1h-3.5v-5H8v5H4.5a1 1 0 0 1-1-1V9.2Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
     </svg>`,
-
     MapPinIcon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" aria-hidden="true">
       <path d="M10 18s5-4.7 5-9a5 5 0 1 0-10 0c0 4.3 5 9 5 9Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
       <circle cx="10" cy="9" r="1.7" stroke="currentColor" stroke-width="1.6"/>
     </svg>`,
-
     NoteIcon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" aria-hidden="true">
       <path d="M6 3.5h8.5a1 1 0 0 1 1 1V16a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4.5a1 1 0 0 1 1-1Z" stroke="currentColor" stroke-width="1.6"/>
       <path d="M7.2 7h5.6M7.2 10h5.6M7.2 13h4.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
     </svg>`,
-
     GlobeIcon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" aria-hidden="true">
       <circle cx="10" cy="10" r="7.5" stroke="currentColor" stroke-width="1.6"/>
       <path d="M2.7 10h14.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
       <path d="M10 2.5c2.2 2.3 2.2 12.7 0 15" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
       <path d="M10 2.5c-2.2 2.3-2.2 12.7 0 15" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
     </svg>`,
-
-EmailIcon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-  <path d="M3.5 5.5h13a1.5 1.5 0 0 1 1.5 1.5v8a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 2 15V7A1.5 1.5 0 0 1 3.5 5.5Z"
-    stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
-  <path d="M3 7l7 5 7-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-</svg>`,
-
-CartIcon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-  <path d="M3 4h2l1.3 8.2a1.5 1.5 0 0 0 1.5 1.3h7.1a1.5 1.5 0 0 0 1.5-1.2l1-5.3H6.2"
-    stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-  <circle cx="8" cy="16.2" r="1.1" fill="currentColor"/>
-  <circle cx="14.5" cy="16.2" r="1.1" fill="currentColor"/>
-</svg>`,
+    EmailIcon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <path d="M3.5 5.5h13a1.5 1.5 0 0 1 1.5 1.5v8a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 2 15V7A1.5 1.5 0 0 1 3.5 5.5Z"
+        stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+      <path d="M3 7l7 5 7-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`,
+    CartIcon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <path d="M3 4h2l1.3 8.2a1.5 1.5 0 0 0 1.5 1.3h7.1a1.5 1.5 0 0 0 1.5-1.2l1-5.3H6.2"
+        stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="8" cy="16.2" r="1.1" fill="currentColor"/>
+      <circle cx="14.5" cy="16.2" r="1.1" fill="currentColor"/>
+    </svg>`,
   };
 
-  // ✅ Map Polaris/legacy icon names -> our inline SVG icons
   const ICON_ALIASES = {
-    
-    // FR / AR / misc names used in admin
     PanierIcon: "CartIcon",
     Panier: "CartIcon",
     Cart: "CartIcon",
@@ -302,7 +263,6 @@ CartIcon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="non
     TelephoneIcon: "PhoneIcon",
     TelIcon: "PhoneIcon",
     WhatsAppIcon: "PhoneIcon",
-// People / name
     PersonIcon: "UserIcon",
     ProfileIcon: "UserIcon",
     CustomerIcon: "UserIcon",
@@ -310,8 +270,6 @@ CartIcon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="non
     Person: "UserIcon",
     PersonMajor: "UserIcon",
     PersonMinor: "UserIcon",
-
-    // Phone
     MobileIcon: "PhoneIcon",
     PhoneIcon: "PhoneIcon",
     PhoneMajor: "PhoneIcon",
@@ -319,15 +277,11 @@ CartIcon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="non
     PhoneOffIcon: "PhoneOffIcon",
     PhoneOffMajor: "PhoneOffIcon",
     PhoneOffMinor: "PhoneOffIcon",
-
-    // Location
     LocationIcon: "MapPinIcon",
     LocationMajor: "MapPinIcon",
     LocationMinor: "MapPinIcon",
     PinIcon: "MapPinIcon",
     MapPinIcon: "MapPinIcon",
-
-    // Notes / clipboard
     ClipboardIcon: "NoteIcon",
     ClipboardMajor: "NoteIcon",
     ClipboardMinor: "NoteIcon",
@@ -335,112 +289,92 @@ CartIcon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="non
     NoteMajor: "NoteIcon",
     NoteMinor: "NoteIcon",
     OrdersIcon: "NoteIcon",
-
-    // Country / globe
     WorldIcon: "GlobeIcon",
     GlobeIcon: "GlobeIcon",
-// Cart / bag
-CartIcon: "CartIcon",
-CartMajor: "CartIcon",
-CartMinor: "CartIcon",
-Cart: "CartIcon",
-BagIcon: "CartIcon",
-BagMajor: "CartIcon",
-BagMinor: "CartIcon",
-ShoppingBagIcon: "CartIcon",
-ShoppingCartIcon: "CartIcon",
-
-// Email / mail
-EmailIcon: "EmailIcon",
-EmailMajor: "EmailIcon",
-EmailMinor: "EmailIcon",
-MailIcon: "EmailIcon",
-MailMajor: "EmailIcon",
-MailMinor: "EmailIcon",
-EnvelopeIcon: "EmailIcon",
-EnvelopeMajor: "EmailIcon",
-EnvelopeMinor: "EmailIcon",
-
-    // ✅ Custom/translated names (your admin labels)
+    CartIcon: "CartIcon",
+    CartMajor: "CartIcon",
+    CartMinor: "CartIcon",
+    BagIcon: "CartIcon",
+    BagMajor: "CartIcon",
+    BagMinor: "CartIcon",
+    ShoppingCartIcon: "CartIcon",
+    EmailIcon: "EmailIcon",
+    EmailMajor: "EmailIcon",
+    EmailMinor: "EmailIcon",
+    MailIcon: "EmailIcon",
+    MailMajor: "EmailIcon",
+    MailMinor: "EmailIcon",
+    EnvelopeIcon: "EmailIcon",
+    EnvelopeMajor: "EmailIcon",
+    EnvelopeMinor: "EmailIcon",
     iconpanier: "CartIcon",
     Iconpanier: "CartIcon",
-    Panier: "CartIcon",
-    PanierIcon: "CartIcon",
     panier: "CartIcon",
-
     email: "EmailIcon",
-    Email: "EmailIcon",
     mail: "EmailIcon",
-    Mail: "EmailIcon",
     gmail: "EmailIcon",
-
     telephone: "PhoneIcon",
-    Telephone: "PhoneIcon",
     tel: "PhoneIcon",
-    Tel: "PhoneIcon",
     phone: "PhoneIcon",
-    Phone: "PhoneIcon",
   };
 
   function normalizeIconName(name) {
-  const raw0 = String(name || "").trim();
-  if (!raw0) return "AppsIcon";
+    const raw0 = String(name || "").trim();
+    if (!raw0) return "AppsIcon";
 
-  // allow things like "iconpanier", "icon-email", "cart", "email", etc.
-  let raw = raw0
-    .replace(/^icon[\s_-]*/i, "")      // leading "icon"
-    .replace(/[\s_-]+/g, "")           // separators
-    .trim();
+    let raw = raw0
+      .replace(/^icon[\s_-]*/i, "")
+      .replace(/[\s_-]+/g, "")
+      .trim();
 
-  const lower = raw.toLowerCase();
+    const lower = raw.toLowerCase();
 
-  const quick = {
-    panier: "CartIcon",
-    cart: "CartIcon",
-    basket: "CartIcon",
-    bag: "CartIcon",
-    shoppingcart: "CartIcon",
-    mail: "EmailIcon",
-    email: "EmailIcon",
-    envelope: "EmailIcon",
-    telephone: "PhoneIcon",
-    tel: "PhoneIcon",
-    phone: "PhoneIcon",
-    whatsapp: "PhoneIcon",
-    location: "MapPinIcon",
-    map: "MapPinIcon",
-    pin: "MapPinIcon",
-    note: "NoteIcon",
-    clipboard: "NoteIcon",
-    world: "GlobeIcon",
-    globe: "GlobeIcon",
-    user: "UserIcon",
-    person: "UserIcon",
-    profile: "UserIcon",
-    discount: "DiscountIcon",
-    gift: "GiftCardIcon",
-    plus: "CirclePlusIcon",
-    check: "CheckCircleIcon",
-    apps: "AppsIcon",
-  };
-  if (quick[lower]) return quick[lower];
+    const quick = {
+      panier: "CartIcon",
+      cart: "CartIcon",
+      basket: "CartIcon",
+      bag: "CartIcon",
+      shoppingcart: "CartIcon",
+      mail: "EmailIcon",
+      email: "EmailIcon",
+      envelope: "EmailIcon",
+      telephone: "PhoneIcon",
+      tel: "PhoneIcon",
+      phone: "PhoneIcon",
+      whatsapp: "PhoneIcon",
+      location: "MapPinIcon",
+      map: "MapPinIcon",
+      pin: "MapPinIcon",
+      note: "NoteIcon",
+      clipboard: "NoteIcon",
+      world: "GlobeIcon",
+      globe: "GlobeIcon",
+      user: "UserIcon",
+      person: "UserIcon",
+      profile: "UserIcon",
+      discount: "DiscountIcon",
+      gift: "GiftCardIcon",
+      plus: "CirclePlusIcon",
+      check: "CheckCircleIcon",
+      apps: "AppsIcon",
+    };
+    if (quick[lower]) return quick[lower];
 
-  // Ensure Icon suffix and PascalCase
-  let n = raw0.trim();
-  n = n.replace(/Major$/i, "").replace(/Minor$/i, "");
-  if (!/Icon$/i.test(n)) n = n + "Icon";
-  n = n.replace(/[\s_-]+/g, "");
-  n = n[0].toUpperCase() + n.slice(1);
+    let n = raw0.trim();
+    n = n.replace(/Major$/i, "").replace(/Minor$/i, "");
+    if (!/Icon$/i.test(n)) n = n + "Icon";
+    n = n.replace(/[\s_-]+/g, "");
+    n = n[0].toUpperCase() + n.slice(1);
 
-  const aliased =
-    ICON_ALIASES[n] ||
-    ICON_ALIASES[raw0] ||
-    ICON_ALIASES[n.replace(/Icon$/i, "")] ||
-    ICON_ALIASES[raw0.replace(/Icon$/i, "")] ||
-    "";
+    const aliased =
+      ICON_ALIASES[n] ||
+      ICON_ALIASES[raw0] ||
+      ICON_ALIASES[n.replace(/Icon$/i, "")] ||
+      ICON_ALIASES[raw0.replace(/Icon$/i, "")] ||
+      "";
 
-  return aliased || n;
-}
+    return aliased || n;
+  }
 
   function getIconHtml(iconName, size = 18, color = "currentColor") {
     const key = normalizeIconName(iconName);
@@ -466,7 +400,6 @@ EnvelopeMinor: "EmailIcon",
       .tripleform-cod *{box-sizing:border-box;}
       .tf-ic{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;line-height:0}
       .tf-ic svg{width:100%;height:100%;display:block}
-
       .tf-shell{width:100%;max-width:none;margin:0;padding:0;border:0;background:transparent;box-shadow:none}
 
       .tf-motion-x{animation:tfMoveX 1.2s ease-in-out infinite}
@@ -483,7 +416,6 @@ EnvelopeMinor: "EmailIcon",
       }
 
       .tf-offers-container{display:grid;gap:10px;margin-bottom:14px}
-
       .tf-offer-card{
         border-radius:14px;
         border:1px solid var(--tf-offer-border,#E5E7EB);
@@ -492,9 +424,7 @@ EnvelopeMinor: "EmailIcon",
         background:var(--tf-offer-bg,#fff);
         overflow:hidden;
       }
-
       .tf-offer-row{display:flex;gap:12px;align-items:center}
-
       .tf-offer-icon{
         width:34px;height:34px;border-radius:12px;
         display:grid;place-items:center;flex:none;overflow:hidden;
@@ -507,18 +437,15 @@ EnvelopeMinor: "EmailIcon",
         position:absolute; inset:0; display:grid; place-items:center; z-index:1;
         color:var(--tf-icon-color,#111827);
       }
-
       .tf-offer-main{min-width:0;flex:1;display:flex;flex-direction:column;gap:4px}
       .tf-offer-title{font-weight:900;font-size:13px;color:var(--tf-title,#0F172A);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2;}
       .tf-offer-desc{font-size:12px;color:var(--tf-muted,#64748B);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2;}
       .tf-offer-sub{font-size:11px;color:var(--tf-muted2,#94A3B8);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-
       .tf-offer-img{
         width:86px;height:86px;border-radius:16px;overflow:hidden;flex:none;
         border:1px solid rgba(0,0,0,.08);background:#F3F4F6;
       }
       .tf-offer-img img{width:100%;height:100%;object-fit:cover;display:block}
-
       .tf-offer-btn{
         margin-top:8px;border-radius:12px;padding:9px 10px;
         font-size:12px;font-weight:900;cursor:pointer;border:1px solid transparent;
@@ -587,9 +514,9 @@ EnvelopeMinor: "EmailIcon",
     document.head.appendChild(style);
   }
 
-   /* ------------------------------------------------------------------ */
-/* Pays / wilayas / villes                                            */
-/* ------------------------------------------------------------------ */
+  /* ------------------------------------------------------------------ */
+  /* ✅ NO COUNTRY_DATA HERE (paste manually if you want)                */
+  /* ------------------------------------------------------------------ */
 const COUNTRY_DATA = {
     ma: {
       label: "Maroc",
@@ -1320,155 +1247,178 @@ const COUNTRY_DATA = {
       ]
     }
   };
+  
+  function getCountryDef(beh) {
+    const raw =
+      beh && (beh.country || beh.codCountry)
+        ? beh.country || beh.codCountry
+        : "MA";
 
+    const code = String(raw).toLowerCase();
+    const def = COUNTRY_DATA[code] || {
+      label: code.toUpperCase(),
+      phonePrefix: "",
+      provinces: [],
+    };
 
-function getCountryDef(beh) {
-  const raw =
-    beh && (beh.country || beh.codCountry)
-      ? beh.country || beh.codCountry
-      : "MA";
+    return { ...def, code: (code || "ma").toUpperCase() };
+  }
 
-  const code = String(raw).toLowerCase();
-  const def = COUNTRY_DATA[code] || {
-    label: code.toUpperCase(),
-    phonePrefix: "",
-    provinces: [],
-  };
+  /* ------------------------------------------------------------------ */
+  /* Thank you (popup / redirect / inline)                               */
+  /* ------------------------------------------------------------------ */
+  function getThankYouConfig(cfg, offersCfg) {
+    const a =
+      (cfg && (cfg.thankYou || cfg.thankyou || cfg.thank_you)) ||
+      (cfg && cfg.behavior && (cfg.behavior.thankYou || cfg.behavior.thankyou)) ||
+      (cfg && cfg.form && (cfg.form.thankYou || cfg.form.thankyou)) ||
+      (offersCfg && (offersCfg.thankYou || offersCfg.thankyou)) ||
+      (offersCfg && offersCfg.global && (offersCfg.global.thankYou || offersCfg.global.thankyou)) ||
+      null;
 
-  return { ...def, code: (code || "ma").toUpperCase() };
-}
+    if (!a || typeof a !== "object") return null;
 
-/* ------------------------------------------------------------------ */
-/* Thank you (popup / redirect / inline)                               */
-/* ------------------------------------------------------------------ */
-function getThankYouConfig(cfg, offersCfg) {
-  const a =
-    (cfg && (cfg.thankYou || cfg.thankyou || cfg.thank_you)) ||
-    (cfg && cfg.behavior && (cfg.behavior.thankYou || cfg.behavior.thankyou)) ||
-    (cfg && cfg.form && (cfg.form.thankYou || cfg.form.thankyou)) ||
-    (offersCfg && (offersCfg.thankYou || offersCfg.thankyou)) ||
-    (offersCfg && offersCfg.global && (offersCfg.global.thankYou || offersCfg.global.thankyou)) ||
-    null;
+    const ty = { ...a };
+    if (ty.enabled === undefined) ty.enabled = true;
+    if (!ty.mode && ty.type) ty.mode = ty.type;
 
-  if (!a || typeof a !== "object") return null;
+    return ty;
+  }
 
-  const ty = { ...a };
-  if (ty.enabled === undefined) ty.enabled = true;
-  if (!ty.mode && ty.type) ty.mode = ty.type;
+  function thankYouOverlayId(root) {
+    return `tf-ty-${root && root.id ? root.id : "root"}`;
+  }
 
-  return ty;
-}
+  function ensureThankYouOverlay(root) {
+    const id = thankYouOverlayId(root);
+    let overlay = document.getElementById(id);
+    if (overlay) return overlay;
 
-function thankYouOverlayId(root) {
-  return `tf-ty-${root && root.id ? root.id : "root"}`;
-}
+    overlay = document.createElement("div");
+    overlay.id = id;
+    overlay.className = "tf-ty-overlay";
+    overlay.innerHTML = `<div class="tf-ty-card" data-tf-ty-card="1"></div>`;
+    overlay.addEventListener("click", (e) => {
+      if (e.target === overlay) hideThankYou(root);
+    });
 
-function ensureThankYouOverlay(root) {
-  const id = thankYouOverlayId(root);
-  let overlay = document.getElementById(id);
-  if (overlay) return overlay;
+    document.body.appendChild(overlay);
+    return overlay;
+  }
 
-  overlay = document.createElement("div");
-  overlay.id = id;
-  overlay.className = "tf-ty-overlay";
-  overlay.innerHTML = `<div class="tf-ty-card" data-tf-ty-card="1"></div>`;
-  overlay.addEventListener("click", (e) => {
-    if (e.target === overlay) hideThankYou(root);
-  });
+  function hideThankYou(root) {
+    const overlay = document.getElementById(thankYouOverlayId(root));
+    if (overlay) overlay.style.display = "none";
+    document.body.style.overflow = "";
+  }
 
-  document.body.appendChild(overlay);
-  return overlay;
-}
+  function normalizeDesign(d0) {
+    const d = d0 && typeof d0 === "object" ? { ...d0 } : {};
+    if (!d.bg) d.bg = "#ffffff";
+    if (!d.text) d.text = "#111827";
+    if (!d.border) d.border = "rgba(2,6,23,.10)";
+    if (!d.inputBg) d.inputBg = "#FFFFFF";
+    if (!d.inputBorder) d.inputBorder = "rgba(2,6,23,.15)";
+    if (!d.btnBg) d.btnBg = "#111827";
+    if (!d.btnBg2) d.btnBg2 = "#2563EB";
+    if (!d.btnBgMode) d.btnBgMode = "solid";
+    if (!d.btnText) d.btnText = "#FFFFFF";
+    if (!d.cartBg) d.cartBg = "#FFFFFF";
+    if (!d.cartBorder) d.cartBorder = "rgba(2,6,23,.10)";
+    if (!d.cartRowBg) d.cartRowBg = "#F8FAFC";
+    if (!d.cartRowBorder) d.cartRowBorder = "rgba(2,6,23,.08)";
+    if (!d.cartTitleColor) d.cartTitleColor = d.text;
+    if (!d.cartTextColor) d.cartTextColor = d.text;
+    if (d.radius == null) d.radius = 12;
+    if (d.padding == null) d.padding = 16;
+    if (d.btnRadius == null) d.btnRadius = 10;
+    if (d.btnHeight == null) d.btnHeight = 46;
+    return d;
+  }
 
-function hideThankYou(root) {
-  const overlay = document.getElementById(thankYouOverlayId(root));
-  if (overlay) overlay.style.display = "none";
-  document.body.style.overflow = "";
-}
+  function showThankYouPopup(root, cfg, ty, ctx) {
+    const overlay = ensureThankYouOverlay(root);
+    const card = overlay.querySelector('[data-tf-ty-card="1"]');
+    if (!card) return;
 
-function showThankYouPopup(root, cfg, ty, ctx) {
-  const overlay = ensureThankYouOverlay(root);
-  const card = overlay.querySelector('[data-tf-ty-card="1"]');
-  if (!card) return;
+    const d = normalizeDesign((cfg && cfg.design) || {});
+    const bg = css(d.bg || "#ffffff");
+    const text = css(d.text || "#111827");
+    const border = css(d.border || "rgba(2,6,23,.10)");
+    const btnBg = resolveButtonBackground(d);
+    const btnBorder = resolveButtonBorder(d, btnBg);
+    const btnText = css(d.btnText || "#ffffff");
 
-  const d = normalizeDesign((cfg && cfg.design) || {});
-  const bg = css(d.bg || "#ffffff");
-  const text = css(d.text || "#111827");
-  const border = css(d.border || "rgba(2,6,23,.10)");
-  const btnBg = resolveButtonBackground(d);
-  const btnBorder = resolveButtonBorder(d, btnBg);
-  const btnText = css(d.btnText || "#ffffff");
+    const title = css(ty.title || ty.heading || "Thank you!");
+    const message = css(ty.text || ty.message || "We will contact you soon.");
+    const img = String(ty.imageUrl || ty.image || "").trim();
 
-  const title = css(ty.title || ty.heading || "Thank you!");
-  const message = css(ty.text || ty.message || "We will contact you soon.");
-  const img = String(ty.imageUrl || ty.image || "").trim();
+    const primaryText = css(ty.primaryText || ty.buttonText || "Close");
+    const secondaryText = css(ty.secondaryText || ty.secondaryButtonText || "Continue shopping");
 
-  const primaryText = css(ty.primaryText || ty.buttonText || "Close");
-  const secondaryText = css(ty.secondaryText || ty.secondaryButtonText || "Continue shopping");
-
-  card.innerHTML = `
-    <div style="
-      background:${bg};
-      color:${text};
-      border:1px solid ${border};
-      border-radius:18px;
-      padding:16px;
-      box-shadow:0 26px 60px rgba(15,23,42,.38);
-    ">
-      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
-        <div style="flex:1;min-width:0;">
-          <div style="font-weight:900;font-size:16px;line-height:1.2;margin-bottom:6px;">${title}</div>
-          <div style="opacity:.9;line-height:1.45;font-size:13px;">${message}</div>
+    card.innerHTML = `
+      <div style="
+        background:${bg};
+        color:${text};
+        border:1px solid ${border};
+        border-radius:18px;
+        padding:16px;
+        box-shadow:0 26px 60px rgba(15,23,42,.38);
+      ">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
+          <div style="flex:1;min-width:0;">
+            <div style="font-weight:900;font-size:16px;line-height:1.2;margin-bottom:6px;">${title}</div>
+            <div style="opacity:.9;line-height:1.45;font-size:13px;">${message}</div>
+          </div>
+          <button type="button" data-tf-ty-x="1" aria-label="Close" style="
+            width:36px;height:36px;border-radius:999px;
+            background:transparent;border:1px solid ${border};
+            color:${text};cursor:pointer;font-size:20px;
+            display:flex;align-items:center;justify-content:center;
+          ">&times;</button>
         </div>
-        <button type="button" data-tf-ty-x="1" aria-label="Close" style="
-          width:36px;height:36px;border-radius:999px;
-          background:transparent;border:1px solid ${border};
-          color:${text};cursor:pointer;font-size:20px;
-          display:flex;align-items:center;justify-content:center;
-        ">&times;</button>
+
+        ${img ? `<div style="margin-top:14px;"><img class="tf-ty-img" src="${css(img)}" alt="" /></div>` : ""}
+
+        <div class="tf-ty-actions">
+          <button type="button" data-tf-ty-primary="1" class="tf-ty-btn" style="
+            background:${btnBg};
+            border:1px solid ${btnBorder};
+            color:${btnText};
+          ">${primaryText}</button>
+
+          <button type="button" data-tf-ty-secondary="1" class="tf-ty-btn" style="
+            background:transparent;
+            border:1px solid ${border};
+            color:${text};
+          ">${secondaryText}</button>
+        </div>
       </div>
+    `;
 
-      ${img ? `<div style="margin-top:14px;"><img class="tf-ty-img" src="${css(img)}" alt="" /></div>` : ""}
+    const xBtn = overlay.querySelector('[data-tf-ty-x="1"]');
+    const primary = overlay.querySelector('[data-tf-ty-primary="1"]');
+    const secondary = overlay.querySelector('[data-tf-ty-secondary="1"]');
 
-      <div class="tf-ty-actions">
-        <button type="button" data-tf-ty-primary="1" class="tf-ty-btn" style="
-          background:${btnBg};
-          border:1px solid ${btnBorder};
-          color:${btnText};
-        ">${primaryText}</button>
+    const close = () => hideThankYou(root);
 
-        <button type="button" data-tf-ty-secondary="1" class="tf-ty-btn" style="
-          background:transparent;
-          border:1px solid ${border};
-          color:${text};
-        ">${secondaryText}</button>
-      </div>
-    </div>
-  `;
+    if (xBtn) xBtn.onclick = (e) => { e.preventDefault(); close(); };
+    if (primary) primary.onclick = (e) => { e.preventDefault(); close(); };
+    if (secondary) secondary.onclick = (e) => {
+      e.preventDefault();
+      const url = String(ty.secondaryUrl || ty.continueUrl || "").trim();
+      if (url) window.location.href = url;
+      else close();
+    };
 
-  const xBtn = overlay.querySelector('[data-tf-ty-x="1"]');
-  const primary = overlay.querySelector('[data-tf-ty-primary="1"]');
-  const secondary = overlay.querySelector('[data-tf-ty-secondary="1"]');
+    const autoCloseMs = Number(ty && ty.autoCloseMs ? ty.autoCloseMs : 0);
+    if (autoCloseMs > 0) setTimeout(() => hideThankYou(root), autoCloseMs);
 
-  const close = () => hideThankYou(root);
+    overlay.style.display = "flex";
+    document.body.style.overflow = "hidden";
+  }
 
-  if (xBtn) xBtn.onclick = (e) => { e.preventDefault(); close(); };
-  if (primary) primary.onclick = (e) => { e.preventDefault(); close(); };
-  if (secondary) secondary.onclick = (e) => {
-    e.preventDefault();
-    const url = String(ty.secondaryUrl || ty.continueUrl || "").trim();
-    if (url) window.location.href = url;
-    else close();
-  };
-
-  const autoCloseMs = Number(ty && ty.autoCloseMs ? ty.autoCloseMs : 0);
-  if (autoCloseMs > 0) setTimeout(() => hideThankYou(root), autoCloseMs);
-
-  overlay.style.display = "flex";
-  document.body.style.overflow = "hidden";
-}
-
-function handleThankYou(root, cfg, offersCfg, payload, json) {
+  function handleThankYou(root, cfg, offersCfg, payload, json) {
     const ty = getThankYouConfig(cfg, offersCfg);
     if (!ty || ty.enabled === false) return;
 
@@ -1493,50 +1443,44 @@ function handleThankYou(root, cfg, offersCfg, payload, json) {
   /* Variant & qty helpers                                              */
   /* ------------------------------------------------------------------ */
   function getSelectedVariantId() {
-    const sel = document.querySelector(
-      'form[action^="/cart/add"] select[name="id"]'
-    );
+    const sel = document.querySelector('form[action^="/cart/add"] select[name="id"]');
     if (sel && sel.value) return sel.value;
 
-    const radio = document.querySelector(
-      'form[action^="/cart/add"] input[name="id"]:checked'
-    );
+    const radio = document.querySelector('form[action^="/cart/add"] input[name="id"]:checked');
     if (radio && radio.value) return radio.value;
 
     const holder = document.querySelector(".tripleform-cod[data-variant-id]");
     return holder ? holder.getAttribute("data-variant-id") : null;
   }
 
-  // ✅ Qty helper (works even when theme has no quantity input)
-let __tfInternalQty = 1;
+  let __tfInternalQty = 1;
 
-function getQty() {
-  const q = document.querySelector('form[action^="/cart/add"] input[name="quantity"]');
-  const v = Number(q && q.value ? q.value : NaN);
-  if (v && v > 0) {
-    __tfInternalQty = v;
-    return v;
+  function getQty() {
+    const q = document.querySelector('form[action^="/cart/add"] input[name="quantity"]');
+    const v = Number(q && q.value ? q.value : NaN);
+    if (v && v > 0) {
+      __tfInternalQty = v;
+      return v;
+    }
+    return Math.max(1, Number(__tfInternalQty || 1));
   }
-  return Math.max(1, Number(__tfInternalQty || 1));
-}
 
-function setQty(nextQty) {
-  const n = Math.max(1, Number(nextQty || 1));
-  __tfInternalQty = n;
+  function setQty(nextQty) {
+    const n = Math.max(1, Number(nextQty || 1));
+    __tfInternalQty = n;
 
-  const q = document.querySelector('form[action^="/cart/add"] input[name="quantity"]');
-  if (q) {
-    q.value = String(n);
-    q.dispatchEvent(new Event("input", { bubbles: true }));
-    q.dispatchEvent(new Event("change", { bubbles: true }));
+    const q = document.querySelector('form[action^="/cart/add"] input[name="quantity"]');
+    if (q) {
+      q.value = String(n);
+      q.dispatchEvent(new Event("input", { bubbles: true }));
+      q.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+    return true;
   }
-  return true;
-}
 
   function watchVariantAndQty(onChange) {
     document.addEventListener("change", (e) => {
-      if (e.target && (e.target.name === "id" || e.target.name === "quantity"))
-        onChange();
+      if (e.target && (e.target.name === "id" || e.target.name === "quantity")) onChange();
     });
     document.addEventListener("input", (e) => {
       if (e.target && e.target.name === "quantity") onChange();
@@ -1549,9 +1493,7 @@ function setQty(nextQty) {
   /* ------------------------------------------------------------------ */
   function setupSticky(root, cfg, openHandler, motionClass) {
     const stickyType = cfg?.behavior?.stickyType || "none";
-    const stickyLabel = css(
-      cfg?.behavior?.stickyLabel || cfg?.uiTitles?.orderNow || "Order now"
-    );
+    const stickyLabel = css(cfg?.behavior?.stickyLabel || cfg?.uiTitles?.orderNow || "Order now");
     const stickyIcon = cfg?.behavior?.stickyIcon || "AppsIcon";
 
     const prev = document.querySelector(`[data-tf-sticky-for="${root.id}"]`);
@@ -1600,17 +1542,18 @@ function setQty(nextQty) {
     `;
 
     const btn = el.querySelector("[data-tf-sticky-cta]");
-    if (btn)
+    if (btn) {
       btn.onclick = (e) => {
         e.preventDefault();
         if (typeof openHandler === "function") openHandler();
       };
+    }
 
     document.body.appendChild(el);
   }
 
   /* ------------------------------------------------------------------ */
-  /* Dropdown province / city (no data => keeps placeholders)           */
+  /* Dropdown province / city (NO DATA => placeholders only)            */
   /* ------------------------------------------------------------------ */
   function setupLocationDropdowns(root, cfg, countryDef) {
     const provinces = (countryDef && countryDef.provinces) || [];
@@ -1619,7 +1562,7 @@ function setQty(nextQty) {
     const citySelect = root.querySelector('select[data-tf-role="city"]');
     if (!provSelect && !citySelect) return;
 
-    // ✅ No data => keep placeholders, do nothing
+    // ✅ no country data => keep placeholders, do nothing
     if (!Array.isArray(provinces) || provinces.length === 0) return;
 
     function resetSelect(el, placeholder) {
@@ -1683,20 +1626,14 @@ function setQty(nextQty) {
 
       switch (format) {
         case "hh[h] mm[m]":
-          return `${h.toString().padStart(2, "0")}h ${m
-            .toString()
-            .padStart(2, "0")}m`;
+          return `${h.toString().padStart(2, "0")}h ${m.toString().padStart(2, "0")}m`;
         case "mm[m] ss[s]":
-          return `${m.toString().padStart(2, "0")}m ${s
-            .toString()
-            .padStart(2, "0")}s`;
+          return `${m.toString().padStart(2, "0")}m ${s.toString().padStart(2, "0")}s`;
         case "hh[h]":
           return `${h.toString().padStart(2, "0")}h`;
         case "mm:ss":
         default:
-          return `${m.toString().padStart(2, "0")}:${s
-            .toString()
-            .padStart(2, "0")}`;
+          return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
       }
     }
 
@@ -1750,7 +1687,6 @@ function setQty(nextQty) {
     const rootId = root.id || "root";
     const isActive = button.classList.contains("active");
 
-    // one offer at a time
     const allButtons = root.querySelectorAll("[data-tf-offer-toggle]");
     allButtons.forEach((btn) => {
       btn.classList.remove("active");
@@ -1764,7 +1700,6 @@ function setQty(nextQty) {
     if (!isActive) {
       const offer = offersList[offerIndex] || {};
 
-      // force qty if defined
       const bundleQty = Number(offer.bundleQty || offer.minQty || offer.requiredQty || 0);
       if (bundleQty > 0) setQty(bundleQty);
 
@@ -1772,13 +1707,8 @@ function setQty(nextQty) {
       button.setAttribute("aria-pressed", "true");
       button.innerHTML = `${getIconHtml("CheckCircleIcon", 16, "currentColor")} Activée`;
 
-      // ✅ support pack option (x2/x3/x4...) stored too
       const selectedPackQty = Number(button.getAttribute("data-tf-pack-qty") || 0) || bundleQty || 0;
-
-      if (selectedPackQty > 0) {
-        // Pack buttons must update quantity, otherwise totals/discounts become wrong
-        setQty(selectedPackQty);
-      }
+      if (selectedPackQty > 0) setQty(selectedPackQty);
 
       setActiveOfferData(rootId, {
         index: offerIndex,
@@ -1786,23 +1716,15 @@ function setQty(nextQty) {
         title: offer.title || "",
         discountType: offer.discountType || null,
         discountValue: Number(offer.discountValue || 0),
-
-        // If user picked a pack (x2/x3...), that becomes the required qty
         minQty: Number(selectedPackQty || offer.requiredQty || offer.bundleQty || offer.minQty || 1),
-
-        // Discount behavior
         applyPerItem: offer.applyPerItem === true,
-        fixedMode: offer.fixedMode || null,               // "once" | "per_item" (optional)
-        capDiscount: offer.capDiscount !== false,         // default true
+        fixedMode: offer.fixedMode || null,
+        capDiscount: offer.capDiscount !== false,
         maxDiscountCents: Number(offer.maxDiscountCents || 0),
-
-        // Bundle / qty overrides
         forceQty: offer.forceQty === true || !!selectedPackQty || !!offer.requiredQty || !!offer.bundleQty,
         bundleQty: Number(selectedPackQty || offer.requiredQty || offer.bundleQty || 0),
         bundleTotal: offer.bundleTotal ?? null,
         bundleTotalCents: offer.bundleTotalCents ?? null,
-
-        // UI
         packQty: selectedPackQty || null,
       });
     }
@@ -1821,7 +1743,7 @@ function setQty(nextQty) {
 
   function pickColors(item, globalColors) {
     const useGlobal = item?.useGlobalColors !== false;
-    const c = useGlobal ? (globalColors || {}) : (item?.colors || {});
+    const c = useGlobal ? globalColors || {} : item?.colors || {};
     return {
       cardBg: c.cardBg || "var(--tf-offer-bg,#FFFFFF)",
       borderColor: c.borderColor || "var(--tf-offer-border,#E5E7EB)",
@@ -1833,7 +1755,6 @@ function setQty(nextQty) {
     };
   }
 
-  // ✅ Packs options helper:
   function packOptionsForOffer(offer) {
     if (!offer) return [];
     const arr = Array.isArray(offer.packOptions) ? offer.packOptions : [];
@@ -1871,10 +1792,10 @@ function setQty(nextQty) {
       const btnLabel = offer.buttonText || "Activer";
 
       const minQty = Number(offer.minQty || offer.requiredQty || offer.bundleQty || 1);
-      const packHint = minQty > 1 ? `Pack: ${minQty} pcs` : (offer.subText || "");
+      const packHint = minQty > 1 ? `Pack: ${minQty} pcs` : offer.subText || "";
 
       const packOptions = packOptionsForOffer(offer);
-      const activePack = (active && active.packQty && Number(active.index) === idx) ? Number(active.packQty) : 0;
+      const activePack = active && active.packQty && Number(active.index) === idx ? Number(active.packQty) : 0;
 
       html += `
         <div class="tf-offer-card" style="background:${css(c.cardBg)};border-color:${css(c.borderColor)}">
@@ -1994,57 +1915,31 @@ function setQty(nextQty) {
   /* ------------------------------------------------------------------ */
   /* Render                                                             */
   /* ------------------------------------------------------------------ */
-  function normalizeDesign(d0) {
-  const d = d0 && typeof d0 === "object" ? { ...d0 } : {};
-  if (!d.bg) d.bg = "#ffffff";
-  if (!d.text) d.text = "#111827";
-  if (!d.border) d.border = "rgba(2,6,23,.10)";
-  if (!d.inputBg) d.inputBg = "#FFFFFF";
-  if (!d.inputBorder) d.inputBorder = "rgba(2,6,23,.15)";
-  if (!d.btnBg) d.btnBg = "#111827";
-  if (!d.btnBg2) d.btnBg2 = "#2563EB";
-  if (!d.btnBgMode) d.btnBgMode = "solid";
-  if (!d.btnText) d.btnText = "#FFFFFF";
-  if (!d.cartBg) d.cartBg = "#FFFFFF";
-  if (!d.cartBorder) d.cartBorder = "rgba(2,6,23,.10)";
-  if (!d.cartRowBg) d.cartRowBg = "#F8FAFC";
-  if (!d.cartRowBorder) d.cartRowBorder = "rgba(2,6,23,.08)";
-  if (!d.cartTitleColor) d.cartTitleColor = d.text;
-  if (!d.cartTextColor) d.cartTextColor = d.text;
-  if (d.radius == null) d.radius = 12;
-  if (d.padding == null) d.padding = 16;
-  if (d.btnRadius == null) d.btnRadius = 10;
-  if (d.btnHeight == null) d.btnHeight = 46;
-  return d;
-}
+  function render(root, cfg, offersCfg, product, getVariant, moneyFmt, recaptchaCfg) {
+    const d0 = cfg.design || {};
+    const d = Object.assign(
+      {
+        bg: "#FFFFFF",
+        text: "#111827",
+        border: "rgba(2,6,23,.12)",
+        padding: 16,
+        radius: 12,
+        inputBg: "#FFFFFF",
+        inputBorder: "rgba(2,6,23,.15)",
+        btnText: "#FFFFFF",
+        btnRadius: 10,
+        btnHeight: 46,
+        btnBg: "#111827",
+        cartBg: "#FFFFFF",
+        cartBorder: "rgba(2,6,23,.12)",
+        cartTitleColor: "#111827",
+        cartRowBg: "#F9FAFB",
+        cartRowBorder: "rgba(2,6,23,.10)",
+        cartTextColor: "#111827",
+      },
+      d0
+    );
 
-function render(root, cfg, offersCfg, product, getVariant, moneyFmt, recaptchaCfg) {
-const d0 = cfg.design || {};
-const d = Object.assign(
-  {
-    bg: "#FFFFFF",
-    text: "#111827",
-    border: "rgba(2,6,23,.12)",
-    padding: 16,
-    radius: 12,
-
-    inputBg: "#FFFFFF",
-    inputBorder: "rgba(2,6,23,.15)",
-
-    btnText: "#FFFFFF",
-    btnRadius: 10,
-    btnHeight: 46,
-    btnBg: "#111827",
-
-    cartBg: "#FFFFFF",
-    cartBorder: "rgba(2,6,23,.12)",
-    cartTitleColor: "#111827",
-    cartRowBg: "#F9FAFB",
-    cartRowBorder: "rgba(2,6,23,.10)",
-    cartTextColor: "#111827",
-  },
-  d0
-);
     const ui = cfg.uiTitles || {};
     const t = cfg.cartTitles || {};
     const f = cfg.fields || {};
@@ -2057,8 +1952,6 @@ const d = Object.assign(
       motion === "y" ? "tf-motion-y" :
       motion === "pulse" ? "tf-motion-pulse" :
       motion === "shake" ? "tf-motion-shake" : "";
-
-    window.addEventListener("mousemove", () => {}, { once: true });
 
     const countryDef = getCountryDef(beh);
     const pageStart = Date.now();
@@ -2090,7 +1983,7 @@ const d = Object.assign(
     const smallFontSize = `${Math.max(inputFontSize - 2, 10)}px`;
     const tinyFontSize = `${Math.max(inputFontSize - 3, 9)}px`;
 
-    // ✅ unified vars (fix mixed palette)
+    // unified vars
     const shellBg = d.shellBg || d.sectionBg || "#F3F4F6";
     const shellBorder = d.shellBorder || "rgba(2,6,23,.08)";
     const iconColor = d.iconColor || d.text || "#111827";
@@ -2110,6 +2003,7 @@ const d = Object.assign(
     root.style.setProperty("--tf-title", titleColor);
     root.style.setProperty("--tf-muted", mutedColor);
     root.style.setProperty("--tf-muted2", muted2Color);
+
     const __btnBg = resolveButtonBackground(d);
     const __btnSolid = resolveButtonBorder(d, __btnBg);
     root.style.setProperty("--tf-btn-bg", __btnBg);
@@ -2143,7 +2037,6 @@ const d = Object.assign(
       box-sizing:border-box;
       line-height:normal;
     `;
-
     const selectStyle = inputStyle;
 
     const textareaStyle = `
@@ -2162,23 +2055,23 @@ const d = Object.assign(
     `;
 
     const btnStyle = `
-  width:100%;
-  height:${inputHeight};
-  border-radius:${+d.btnRadius || 10}px;
-  border:1px solid ${css(__btnSolid)};
-  color:${css(d.btnText)};
-  background:${css(__btnBg)};
-  font-weight:800;
-  letter-spacing:.2px;
-  box-shadow:${btnShadow};
-  font-size:${inputFontSize}px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:10px;
-  cursor:pointer;
-  box-sizing:border-box;
-`;
+      width:100%;
+      height:${inputHeight};
+      border-radius:${+d.btnRadius || 10}px;
+      border:1px solid ${css(__btnSolid)};
+      color:${css(d.btnText)};
+      background:${css(__btnBg)};
+      font-weight:800;
+      letter-spacing:.2px;
+      box-shadow:${btnShadow};
+      font-size:${inputFontSize}px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      cursor:pointer;
+      box-sizing:border-box;
+    `;
 
     const cartBoxStyle = `
       background:${css(d.cartBg)};
@@ -2385,11 +2278,6 @@ const d = Object.assign(
         ? getIconHtml(cfg.form.buttonIcon, 18, css(d.btnText || "#fff"))
         : "";
 
-      const honeypotInputHTML = `
-        <input type="text" name="tf_hp_token" data-tf-hp="1" autocomplete="off" tabindex="-1"
-          style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;opacity:0;" />
-      `;
-
       const formContainerStyle = isPopupOrDrawer
         ? `padding:0;background:transparent;border:none;box-shadow:none;border-radius:0;`
         : cardStyle;
@@ -2407,18 +2295,18 @@ const d = Object.assign(
           }
 
           <div style="position:relative;">
+            <!-- ✅ Honeypot -->
             <input type="text" data-tf-role="honeypot" name="tf_hp_token"
               style="position:absolute;left:-9999px;opacity:0;pointer-events:none;height:0;width:0;"
               tabindex="-1" autocomplete="off" />
 
             ${fieldsBlockHTML()}
-            ${honeypotInputHTML}
 
             ${
               beh?.requireGDPR
                 ? `
               <label style="display:flex; gap:8px; align-items:center; font-size:${smallFontSize}; color:#374151; margin:12px 0;">
-                <input type="checkbox" /> ${css(beh.gdprLabel || "I accept the privacy policy")}
+                <input type="checkbox" data-tf-gdpr="1" /> ${css(beh.gdprLabel || "I accept the privacy policy")}
               </label>`
                 : ""
             }
@@ -2427,7 +2315,7 @@ const d = Object.assign(
               beh?.whatsappOptIn
                 ? `
               <label style="display:flex; gap:8px; align-items:center; font-size:${smallFontSize}; color:#374151; margin:12px 0;">
-                <input type="checkbox" /> ${css(beh.whatsappLabel || "Receive confirmation on WhatsApp")}
+                <input type="checkbox" data-tf-wa-optin="1" /> ${css(beh.whatsappLabel || "Receive confirmation on WhatsApp")}
               </label>`
                 : ""
             }
@@ -2570,10 +2458,38 @@ const d = Object.assign(
       return el ? String(el.value || "").trim() : "";
     }
     function getPhone() {
-      const phone = getVal("phone");
-      const prefix = f.phone && f.phone.prefix ? String(f.phone.prefix) : "";
-      const fullPhone = prefix && phone ? `${prefix}${phone}` : phone || prefix || "";
-      return { prefix, number: phone, fullPhone };
+      const phoneField = f.phone || {};
+      const prefix = phoneField.prefix ? String(phoneField.prefix) : "";
+      const number = getVal("phone");
+      const fullPhone = prefix && number ? `${prefix}${number}` : number || prefix || "";
+      return { prefix, number, fullPhone };
+    }
+
+    function getCheckbox(sel) {
+      const el = root.querySelector(sel);
+      return !!(el && el.checked);
+    }
+
+    /* ✅ Build fields payload dynamically (so Sheets gets ALL fields) */
+    function buildFieldsPayload() {
+      const out = {};
+      const keys = orderedFieldKeys().filter((k) => f[k] && f[k].on !== false);
+
+      keys.forEach((k) => {
+        out[k] = getVal(k);
+      });
+
+      // normalize phone fields
+      const phone = getPhone();
+      if ("phone" in out) out.phone = phone.number || phone.fullPhone;
+      out.phonePrefix = phone.prefix;
+      out.fullPhone = phone.fullPhone;
+
+      // optional checkboxes
+      if (beh?.requireGDPR) out.gdprAccepted = getCheckbox('[data-tf-gdpr="1"]');
+      if (beh?.whatsappOptIn) out.whatsappOptIn = getCheckbox('[data-tf-wa-optin="1"]');
+
+      return out;
     }
 
     /* --------------------- Price parse (cents-safe) ----------------- */
@@ -2620,7 +2536,6 @@ const d = Object.assign(
       return offer ? { active, offer, idx } : null;
     }
 
-    // ✅ If offer has active.packQty => force quantity
     function applyOfferQtyIfNeeded() {
       const x = currentOffer();
       if (!x) return;
@@ -2628,7 +2543,6 @@ const d = Object.assign(
       if (q > 0 && getQty() !== q) setQty(q);
     }
 
-    /* --------------------- ✅ DISCOUNT + TOTAL (fixed) --------------- */
     function computeDiscountCents(baseTotalCents, qty) {
       const x = currentOffer();
       if (!x) return 0;
@@ -2657,7 +2571,6 @@ const d = Object.assign(
       return discount;
     }
 
-    // ✅ Optional: offer.bundleTotalPrice overrides subtotal
     function offerSubtotalOverrideCents() {
       const x = currentOffer();
       if (!x) return null;
@@ -2679,7 +2592,6 @@ const d = Object.assign(
       const discountCents = computeDiscountCents(subtotalBeforeDiscount, qty);
       const discountedSubtotalCents = Math.max(0, subtotalBeforeDiscount - discountCents);
 
-      // NOTE: shipping geo removed here (keep your geo if you need; you can re-merge)
       const shippingCents = 0;
       const grandTotalCents = discountedSubtotalCents + shippingCents;
 
@@ -2711,7 +2623,6 @@ const d = Object.assign(
       const mainCta = root.querySelector('[data-tf="launcher"]');
       if (mainCta) mainCta.innerHTML = `${buttonIconHtml}${label} · ${suffix} ${moneyFmt(grandTotalCents)}`;
 
-      // disable hint if qty < minQty
       const buttons = root.querySelectorAll("[data-tf-offer-toggle]");
       buttons.forEach((btn) => {
         const i = parseInt(btn.getAttribute("data-tf-offer-index") || "0", 10);
@@ -2727,7 +2638,6 @@ const d = Object.assign(
       });
     }
 
-    /* --------------------- Wire offer buttons + pack pills ----------- */
     setTimeout(() => {
       const buttons = root.querySelectorAll("[data-tf-offer-toggle]");
       buttons.forEach((btn) => {
@@ -2747,27 +2657,16 @@ const d = Object.assign(
           const q = Number(pill.getAttribute("data-tf-pack-qty") || 0);
           if (!(q > 1)) return;
 
-          // activate offer + store packQty
-          setActiveOfferData(root.id, {
-            index: idx,
-            type: "offer",
-            packQty: q,
-          });
-
-          // force qty now
+          setActiveOfferData(root.id, { index: idx, type: "offer", packQty: q });
           setQty(q);
-
-          // refresh UI
           updateMoney();
 
-          // highlight pill
           const row = root.querySelector(`[data-tf-pack-row="${idx}"]`);
           if (row) {
             row.querySelectorAll(".tf-pack-pill").forEach((p) => p.classList.remove("active"));
             pill.classList.add("active");
           }
 
-          // set "Activée" on main offer button
           const btn = root.querySelector(`[data-tf-offer-toggle][data-tf-offer-index="${idx}"]`);
           if (btn) {
             btn.classList.add("active");
@@ -2778,7 +2677,6 @@ const d = Object.assign(
       });
     }, 60);
 
-    /* --------------------- Required fields -------------------------- */
     function validateRequiredFields() {
       const requiredKeys = Object.keys(f || {}).filter((k) => f[k]?.on && f[k]?.required);
       if (!requiredKeys.length) return true;
@@ -2809,23 +2707,29 @@ const d = Object.assign(
       return true;
     }
 
+    /* ✅ Anti-bot (adapted) */
     function checkAntibotFront() {
-      const timeOnPageMs = Date.now() - pageStart;
+      const antibot = (cfg && cfg.behavior && (cfg.behavior.antibot || cfg.behavior.antiBot)) || {};
+      const minTimeMs = Number(antibot.minTimeMs ?? cfg?.behavior?.minTimeMs ?? 1500);
       const hpInput = root.querySelector('[data-tf-role="honeypot"]');
       const hpValue = hpInput ? String(hpInput.value || "").trim() : "";
+      const timeOnPageMs = Date.now() - pageStart;
 
+      // honeypot filled => bot
       if (hpInput && hpValue) {
-        alert("Votre commande n'a pas pu être envoyée. (anti-bot)");
+        alert(css(antibot.hpMessage || "Votre commande n'a pas pu être envoyée. (anti-bot)"));
         return { ok: false };
       }
-      if (timeOnPageMs < 1500) {
-        alert("Merci de prendre quelques secondes avant d'envoyer le formulaire.");
+
+      // too fast
+      if (Number.isFinite(minTimeMs) && minTimeMs > 0 && timeOnPageMs < minTimeMs) {
+        alert(css(antibot.timeMessage || "Merci de prendre quelques secondes avant d'envoyer le formulaire."));
         return { ok: false };
       }
+
       return { ok: true };
     }
 
-    /* --------------------- Submit + reCAPTCHA + Thank you FIX -------- */
     async function onSubmitClick() {
       if (!checkAntibotFront().ok) return;
       if (!validateRequiredFields()) return;
@@ -2838,8 +2742,6 @@ const d = Object.assign(
 
       const discountCents = computeDiscountCents(subtotalBeforeDiscount, qty);
       const discountedSubtotalCents = Math.max(0, subtotalBeforeDiscount - discountCents);
-
-      const phone = getPhone();
 
       let recaptchaToken = null;
       let recaptchaVersion = recaptchaCfg?.version || null;
@@ -2858,16 +2760,7 @@ const d = Object.assign(
       const activeOfferData = getActiveOfferData(root.id);
 
       const payload = {
-        fields: {
-          name: getVal("name"),
-          phone: phone.number || phone.fullPhone,
-          phonePrefix: phone.prefix,
-          fullPhone: phone.fullPhone,
-          address: getVal("address"),
-          city: getVal("city"),
-          province: getVal("province"),
-          notes: getVal("notes"),
-        },
+        fields: buildFieldsPayload(), // ✅ ALL fields
         productId: root.getAttribute("data-product-id") || null,
         variantId,
         qty,
@@ -2886,8 +2779,6 @@ const d = Object.assign(
 
       const formCard = root.querySelector('[data-tf-role="form-card"]');
       const btn = formCard ? formCard.querySelector('[data-tf-cta="1"]') : null;
-
-      // ✅ keep the CTA label (do NOT force "Thanks..." when thankyou popup/redirect is enabled)
       const originalHTML = btn ? btn.innerHTML : "";
 
       try {
@@ -2908,12 +2799,10 @@ const d = Object.assign(
           const ty = getThankYouConfig(cfg, offersCfg);
           const tyEnabled = !!ty && ty.enabled !== false;
 
-          // ✅ Only show successText on button IF no thankyou behavior enabled
           if (btn) {
             if (!tyEnabled) {
               btn.innerHTML = css(cfg.form?.successText || "Thanks! We'll contact you");
             } else {
-              // restore CTA label immediately (so no "Thanks..." stuck)
               btn.innerHTML = originalHTML;
             }
           }
@@ -2924,7 +2813,6 @@ const d = Object.assign(
             console.warn("[Tripleform COD] Thank you handler error:", e);
           }
 
-          // optional: re-enable after a delay to prevent double submit
           const reEnableMs = Number(ty?.reEnableMs || 1200);
           if (btn) setTimeout(() => { btn.disabled = false; }, Math.max(400, reEnableMs));
         } else {
@@ -2943,7 +2831,7 @@ const d = Object.assign(
       }
     }
 
-    /* --------------------- behaviors inline/popup/drawer ------------- */
+    /* behaviors inline/popup/drawer */
     let openHandler = null;
 
     if (styleType === "inline") {
@@ -3052,10 +2940,6 @@ const d = Object.assign(
   /* ------------------------------------------------------------------ */
   /* Boot                                                              */
   /* ------------------------------------------------------------------ */
-  /* ------------------------------------------------------------------ */
-  /* Boot                                                              */
-  /* ------------------------------------------------------------------ */
-
   function deriveSectionIdFromHolder(holder) {
     if (!holder) return "";
     const id = String(holder.id || "");
@@ -3066,7 +2950,6 @@ const d = Object.assign(
   }
 
   function findProductJsonEl(holder, sectionId) {
-    // prefer JSON inside the holder (best for multiple sections)
     if (holder) {
       const inside =
         holder.querySelector('script[id^="tf-product-json-"]') ||
@@ -3076,13 +2959,11 @@ const d = Object.assign(
       if (inside) return inside;
     }
 
-    // legacy id format
     if (sectionId) {
       const byLegacy = byId(`tf-product-json-${sectionId}`);
       if (byLegacy) return byLegacy;
     }
 
-    // last resort: first matching JSON on page
     return document.querySelector('script[id^="tf-product-json-"]') || null;
   }
 
@@ -3090,7 +2971,6 @@ const d = Object.assign(
     let holder = null;
     let sectionId = "";
 
-    // allow passing the holder element directly
     if (sectionIdOrEl && sectionIdOrEl.nodeType === 1) {
       holder = sectionIdOrEl;
       sectionId = deriveSectionIdFromHolder(holder);
@@ -3104,7 +2984,6 @@ const d = Object.assign(
 
     if (!holder) return;
 
-    // prevent double boot
     if (holder.getAttribute("data-tf-booted") === "1") return;
     holder.setAttribute("data-tf-booted", "1");
 
@@ -3143,23 +3022,13 @@ const d = Object.assign(
 
     const product = safeJsonParse(prodEl.textContent || "{}", { variants: [] });
 
-    const getVariant = () =>
-      getSelectedVariantId() || holder.getAttribute("data-variant-id");
+    const getVariant = () => getSelectedVariantId() || holder.getAttribute("data-variant-id");
 
-    const doUpdate = render(
-      holder,
-      cfg,
-      offersCfg,
-      product,
-      getVariant,
-      moneyFmt,
-      recaptchaCfg
-    );
+    const doUpdate = render(holder, cfg, offersCfg, product, getVariant, moneyFmt, recaptchaCfg);
 
     watchVariantAndQty(() => doUpdate());
   }
 
-  // ✅ Auto-boot (so the form shows even if Liquid forgot to call boot())
   function autoBootAll() {
     document.querySelectorAll(".tripleform-cod").forEach((el) => {
       try {
