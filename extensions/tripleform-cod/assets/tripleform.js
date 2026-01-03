@@ -528,7 +528,8 @@ const COUNTRY_DATA = {
           cities: [
             "Casablanca", "Mohammedia", "Settat", "Berrechid", "El Jadida",
             "Benslimane", "Nouaceur", "Médiouna", "Sidi Bennour", "Dar Bouazza",
-            "Lahraouyine", "Had Soualem", "Sidi Rahal", "Oulad Abbou"
+            "Lahraouyine", "Had Soualem", "Sidi Rahal", "Oulad Abbou", "El Borouj",
+            "Sidi Smail", "Oulad M'rah", "Sidi Hajjaj"
           ]
         },
         {
@@ -537,7 +538,8 @@ const COUNTRY_DATA = {
           cities: [
             "Rabat", "Salé", "Kénitra", "Témara", "Skhirat", "Khémisset",
             "Sidi Slimane", "Sidi Kacem", "Tiflet", "Ain Aouda", "Harhoura",
-            "Sidi Yahya Zaer", "Oulmès", "Sidi Allal El Bahraoui"
+            "Sidi Yahya Zaer", "Oulmès", "Sidi Allal El Bahraoui", "Souk El Arbaa",
+            "Mechra Bel Ksiri", "Sidi Taibi", "Moulay Bousselham"
           ]
         },
         {
@@ -546,7 +548,8 @@ const COUNTRY_DATA = {
           cities: [
             "Tanger", "Tétouan", "Al Hoceïma", "Larache", "Chefchaouen",
             "Ouazzane", "Fnideq", "M'diq", "Martil", "Ksar El Kebir", "Asilah",
-            "Bni Bouayach", "Imzouren", "Bni Hadifa"
+            "Bni Bouayach", "Imzouren", "Bni Hadifa", "Bni Darkoul", "Al Aaroui",
+            "Brikcha", "Zoumi"
           ]
         },
         {
@@ -555,7 +558,8 @@ const COUNTRY_DATA = {
           cities: [
             "Marrakech", "Safi", "El Kelâa des Sraghna", "Essaouira", "Rehamna",
             "Youssoufia", "Chichaoua", "Al Haouz", "Rhamna", "Benguerir",
-            "Sidi Bennour", "Smimou", "Tamanar", "Imintanoute"
+            "Sidi Bennour", "Smimou", "Tamanar", "Imintanoute", "Sidi Bou Othmane",
+            "Tahannaout", "Oulad Hassoune", "Sebt Gzoula"
           ]
         },
         {
@@ -564,7 +568,8 @@ const COUNTRY_DATA = {
           cities: [
             "Fès", "Meknès", "Ifrane", "Taza", "Sefrou", "Boulemane", "Taounate",
             "Guercif", "Moulay Yacoub", "El Hajeb", "Moulay Idriss Zerhoun",
-            "Ouazzane", "Bhalil", "Aïn Cheggag"
+            "Ouazzane", "Bhalil", "Aïn Cheggag", "Missour", "Aïn Taoujdate",
+            "Boudinar", "Matmata"
           ]
         },
         {
@@ -573,7 +578,8 @@ const COUNTRY_DATA = {
           cities: [
             "Oujda", "Nador", "Berkane", "Taourirt", "Jerada", "Figuig",
             "Bouarfa", "Ahfir", "Driouch", "Beni Ensar", "Selouane",
-            "Bouhdila", "Talsint", "Debdou"
+            "Bouhdila", "Talsint", "Debdou", "Zaio", "Tendrara", "Bni Chiker",
+            "Tafersit"
           ]
         },
         {
@@ -582,7 +588,8 @@ const COUNTRY_DATA = {
           cities: [
             "Agadir", "Inezgane", "Taroudant", "Tiznit", "Oulad Teima",
             "Biougra", "Ait Melloul", "Dcheira", "Temsia", "Ait Baha",
-            "Chtouka Ait Baha", "Tafraout", "Aoulouz", "El Guerdane"
+            "Chtouka Ait Baha", "Tafraout", "Aoulouz", "El Guerdane", "Ait Iaaza",
+            "Lqliaa", "Sidi Bibi", "Sidi Moussa"
           ]
         },
         {
@@ -591,7 +598,26 @@ const COUNTRY_DATA = {
           cities: [
             "Errachidia", "Ouarzazate", "Tinghir", "Midelt", "Zagora",
             "Rissani", "Alnif", "Boumalne Dades", "Kelaat M'Gouna", "Tinejdad",
-            "Goulmima", "Jorf", "M'semrir", "Aït Benhaddou"
+            "Goulmima", "Jorf", "M'semrir", "Aït Benhaddou", "Tazzarine",
+            "N'Kob", "Aoufous", "M'hayd"
+          ]
+        },
+        {
+          id: "LAAYOUNE",
+          name: "Laâyoune-Sakia El Hamra",
+          cities: [
+            "Laâyoune", "Boujdour", "Tarfaya", "El Marsa", "Dakhla", "Smara",
+            "Guelta Zemmur", "Bir Anzarane", "Aousserd", "Labouirat", "Mahbès",
+            "Jdiriya", "Foum El Oued", "Boucraa"
+          ]
+        },
+        {
+          id: "GUELMIM",
+          name: "Guelmim-Oued Noun",
+          cities: [
+            "Guelmim", "Sidi Ifni", "Tan-Tan", "Assa", "Foum Zguid", "Bouizakarne",
+            "Taghjijt", "Tata", "Akka", "Tizounine", "Lamsabih", "Sidi Ahmed",
+            "Tighirt", "Aït Herbil"
           ]
         }
       ]
@@ -607,7 +633,8 @@ const COUNTRY_DATA = {
           cities: [
             "Alger Centre", "Bab El Oued", "El Harrach", "Kouba", "Hussein Dey",
             "Bordj El Kiffan", "Dar El Beïda", "Bouzaréah", "Birkhadem", "Chéraga",
-            "Dellys", "Zeralda", "Staoueli", "Birtouta", "Ouled Fayet", "Draria", "Les Eucalyptus"
+            "Dellys", "Zeralda", "Staoueli", "Birtouta", "Ouled Fayet", "Draria",
+            "Les Eucalyptus", "Baraki", "Rouïba", "Reghaïa", "Aïn Taya", "Bordj El Bahri"
           ]
         },
         {
@@ -616,7 +643,8 @@ const COUNTRY_DATA = {
           cities: [
             "Oran", "Es-Sénia", "Bir El Djir", "Gdyel", "Aïn El Turck", "Arzew",
             "Mers El Kébir", "Boutlelis", "Oued Tlelat", "Bethioua", "El Ançor",
-            "Hassi Bounif", "Messerghin", "Boufatis", "Tafraoui"
+            "Hassi Bounif", "Messerghin", "Boufatis", "Tafraoui", "Aïn El Kerma",
+            "El Braya", "Hassi Ben Okba", "Sidi Chami", "Bousfer"
           ]
         },
         {
@@ -625,7 +653,8 @@ const COUNTRY_DATA = {
           cities: [
             "Constantine", "El Khroub", "Hamma Bouziane", "Aïn Smara",
             "Zighoud Youcef", "Didouche Mourad", "Ibn Ziad", "Messaoud Boudjeriou",
-            "Beni Hamidane", "Aïn Abid", "Ouled Rahmoun", "Ben Badis", "El Haria"
+            "Beni Hamidane", "Aïn Abid", "Ouled Rahmoun", "Ben Badis", "El Haria",
+            "Aïn Fakroun", "Oum El Bouaghi", "Sigus", "Meskiana", "Aïn Beida"
           ]
         },
         {
@@ -634,7 +663,8 @@ const COUNTRY_DATA = {
           cities: [
             "Blida", "Boufarik", "El Affroun", "Mouzaïa", "Ouled Yaïch",
             "Beni Mered", "Bouinan", "Soumaa", "Chebli", "Bougara",
-            "Guerrouaou", "Hammam Melouane", "Beni Tamou", "Ben Khlil"
+            "Guerrouaou", "Hammam Melouane", "Beni Tamou", "Ben Khlil",
+            "Oued El Alleug", "Chiffa", "Meftah", "Larbaa"
           ]
         },
         {
@@ -643,7 +673,7 @@ const COUNTRY_DATA = {
           cities: [
             "Sétif", "El Eulma", "Aïn Oulmene", "Bougaa", "Aïn Azel", "Amoucha",
             "Béni Aziz", "Guellal", "Hammam Soukhna", "Bouandas", "Taya", "Tella",
-            "Babor", "Maoklane"
+            "Babor", "Maoklane", "Hammam Guergour", "Aïn Arnat", "Aïn Lahdjar", "Aïn Roua"
           ]
         },
         {
@@ -651,7 +681,8 @@ const COUNTRY_DATA = {
           name: "Annaba",
           cities: [
             "Annaba", "El Bouni", "Sidi Amar", "Berrahal", "Treat", "Cheurfa",
-            "Oued El Aneb", "Seraidi", "Ain Berda", "Chaiba", "El Hadjar", "Chetaibi"
+            "Oued El Aneb", "Seraidi", "Ain Berda", "Chaiba", "El Hadjar", "Chetaibi",
+            "Aïn Charchar", "Bouchetata", "Sidi Salem", "El Tarf", "Bouhadjar", "Besbes"
           ]
         },
         {
@@ -660,7 +691,34 @@ const COUNTRY_DATA = {
           cities: [
             "Batna", "Barika", "Merouana", "Arris", "N'Gaous", "Tazoult",
             "Aïn Touta", "Ouled Si Slimane", "Fesdis", "Timgad", "Ras El Aioun",
-            "Maafa", "Lazrou", "Ouled Ammar"
+            "Maafa", "Lazrou", "Ouled Ammar", "Seriana", "Menaa", "Bouzina", "Ichmoul"
+          ]
+        },
+        {
+          id: "TLEMCEN",
+          name: "Tlemcen",
+          cities: [
+            "Tlemcen", "Maghnia", "Hennaya", "Remchi", "Sabra", "Ghazaouet",
+            "Souahlia", "Msirda", "Aïn Tallout", "Bensekrane", "Chetouane",
+            "Hammam Boughrara", "Ouled Mimoun", "Sidi Abdelli"
+          ]
+        },
+        {
+          id: "BEJAIA",
+          name: "Béjaïa",
+          cities: [
+            "Béjaïa", "Akbou", "Sidi Aïch", "El Kseur", "Tichy", "Amizour",
+            "Barbacha", "Darguina", "Aokas", "Timezrit", "Seddouk", "Tazmalt",
+            "Kherrata", "Boudjellil"
+          ]
+        },
+        {
+          id: "MOSTAGANEM",
+          name: "Mostaganem",
+          cities: [
+            "Mostaganem", "Mascara", "Relizane", "Aïn Tedeles", "Sidi Ali",
+            "Hassi Mameche", "Aïn Nouïssy", "Sour", "Stidia", "Kheireddine",
+            "Fornaka", "Sidi Lakhdar", "Aïn Boudinar", "Oued El Kheir"
           ]
         }
       ]
@@ -676,7 +734,8 @@ const COUNTRY_DATA = {
           cities: [
             "Tunis", "La Marsa", "Carthage", "Le Bardo", "Le Kram", "Sidi Bou Said",
             "Menzah", "Ariana", "El Menzah", "Mornaguia", "Mégrine", "Radès",
-            "Djedeida", "El Omrane", "Ettahrir", "El Kabaria"
+            "Djedeida", "El Omrane", "Ettahrir", "El Kabaria", "El Manar",
+            "El Ouardia", "Jebel Jelloud", "Sidi Hassine"
           ]
         },
         {
@@ -685,7 +744,8 @@ const COUNTRY_DATA = {
           cities: [
             "Ariana", "Raoued", "La Soukra", "Kalaat El Andalous", "Sidi Thabet",
             "Ettadhamen", "Mnihla", "Borj El Amri", "Kalâat el-Andalous",
-            "Sidi Amor", "El Battan", "Oued Ellil"
+            "Sidi Amor", "El Battan", "Oued Ellil", "Bir El Bey", "Sidi Daoud",
+            "Tebourba", "Grombalia"
           ]
         },
         {
@@ -694,7 +754,7 @@ const COUNTRY_DATA = {
           cities: [
             "Ben Arous", "Ezzahra", "Rades", "Mégrine", "Hammam Lif", "Mornag",
             "Fouchana", "Khalidia", "Mhamdia", "Hammam Chott", "Bou Mhel el-Bassatine",
-            "El Mida", "Mornaguia"
+            "El Mida", "Mornaguia", "Hammam Jedidi", "Sidi Rezig", "El Mourouj"
           ]
         },
         {
@@ -703,7 +763,8 @@ const COUNTRY_DATA = {
           cities: [
             "Sfax", "El Ain", "Agareb", "Mahres", "Sakiet Eddaïer", "Sakiet Ezzit",
             "Ghraiba", "Bir Ali Ben Khalifa", "Jebeniana", "Kerkennah", "Skhira",
-            "Menzel Chaker", "Gremda", "Thyna"
+            "Menzel Chaker", "Gremda", "Thyna", "Sakiet Sidi Youssef", "Menzel Chaker",
+            "Sidi Mansour", "El Hencha"
           ]
         },
         {
@@ -712,7 +773,8 @@ const COUNTRY_DATA = {
           cities: [
             "Sousse", "Hammam Sousse", "Kalaa Kebira", "Kalaa Sghira", "Akouda",
             "M'saken", "Enfidha", "Bouficha", "Hergla", "Kondar", "Zaouiet Sousse",
-            "Hammam Jedidi", "Sidi Bou Ali", "Messaadine"
+            "Hammam Jedidi", "Sidi Bou Ali", "Messaadine", "Chott Meriem",
+            "Kalâa Seghira", "Sidi El Hani", "Sousse Jawhara"
           ]
         },
         {
@@ -721,7 +783,44 @@ const COUNTRY_DATA = {
           cities: [
             "Bizerte", "Menzel Jemil", "Mateur", "Sejnane", "Ghar El Melh",
             "Ras Jebel", "Menzel Abderrahmane", "El Alia", "Tinja", "Utique",
-            "Menzel Bourguiba", "Joumine", "Aousja", "Metline"
+            "Menzel Bourguiba", "Joumine", "Aousja", "Metline", "Raf Raf",
+            "El Alya", "Ghar El Melh", "Menzel Salem"
+          ]
+        },
+        {
+          id: "GABES",
+          name: "Gabès",
+          cities: [
+            "Gabès", "Mareth", "Matmata", "Menzel Habib", "Ghannouch", "El Hamma",
+            "Métouia", "Oudhref", "Chenini Nahal", "Bou Chemma", "Zarat",
+            "Nouvelle Matmata", "Tataouine", "Remada"
+          ]
+        },
+        {
+          id: "MONASTIR",
+          name: "Monastir",
+          cities: [
+            "Monastir", "Moknine", "Jemmal", "Ksar Hellal", "Sahline", "Teboulba",
+            "Bekalta", "Bembla", "Menzel Kamel", "Zéramdine", "Sayada",
+            "Ksibet El Médiouni", "Beni Hassen", "Menzel Ennour"
+          ]
+        },
+        {
+          id: "KAIROUAN",
+          name: "Kairouan",
+          cities: [
+            "Kairouan", "Haffouz", "Sbikha", "Chebika", "Oueslatia", "Aïn Djeloula",
+            "Hajeb El Ayoun", "Nasrallah", "Bou Hajla", "El Alâa", "Cebbala",
+            "Menzel Mhiri", "Sidi Amor Bou Hajla", "Echrarda"
+          ]
+        },
+        {
+          id: "JENDOUBA",
+          name: "Jendouba",
+          cities: [
+            "Jendouba", "Bousalem", "Tabarka", "Aïn Draham", "Fernana", "Ghardimaou",
+            "Oued Meliz", "Bou Salem", "Balta Bou Aouane", "Jendouba Sud",
+            "Jendouba Nord", "Oued Zarga", "Ras Rajel", "Sidi Marzouk"
           ]
         }
       ]
@@ -737,7 +836,8 @@ const COUNTRY_DATA = {
           cities: [
             "Le Caire", "Nasr City", "Heliopolis", "Maadi", "Zamalek", "Dokki",
             "Giza", "Shubra", "Al Haram", "Al Mohandessin", "6 Octobre", "New Cairo",
-            "Madinet Nasr", "Helwan", "Qalyub", "Shubra El Kheima", "Badr City"
+            "Madinet Nasr", "Helwan", "Qalyub", "Shubra El Kheima", "Badr City",
+            "Obour City", "Katameya", "Rehab City", "Sheikh Zayed", "October Gardens"
           ]
         },
         {
@@ -746,7 +846,8 @@ const COUNTRY_DATA = {
           cities: [
             "Alexandrie", "Borg El Arab", "Abu Qir", "Al Amriya", "Al Agamy",
             "Montaza", "Al Mansheya", "Al Labban", "Kafr Abdo", "Sidi Gaber",
-            "Smouha", "Miami", "Stanley", "Laurent", "Gleem", "Camp Caesar"
+            "Smouha", "Miami", "Stanley", "Laurent", "Gleem", "Camp Caesar",
+            "Mandra", "El Max", "El Qabary", "El Saraya", "El Soyof", "Fleming"
           ]
         },
         {
@@ -755,7 +856,8 @@ const COUNTRY_DATA = {
           cities: [
             "Gizeh", "Sheikh Zayed City", "6th of October", "Al Haram",
             "Al Badrasheen", "Al Ayat", "Al Wahat Al Bahariya", "Al Saff",
-            "Atfih", "Al Ayyat", "Awashim", "Kerdasa", "El Hawamdeya", "Osim"
+            "Atfih", "Al Ayyat", "Awashim", "Kerdasa", "El Hawamdeya", "Osim",
+            "El Warraq", "Imbaba", "Boulak", "Kit Kat", "Moneeb", "Faisal"
           ]
         },
         {
@@ -764,7 +866,44 @@ const COUNTRY_DATA = {
           cities: [
             "Zagazig", "10th of Ramadan City", "Belbeis", "Minya Al Qamh",
             "Al Ibrahimiyah", "Diarb Negm", "Husseiniya", "Mashtool El Souk",
-            "Abu Hammad", "Abu Kebir", "Faqous", "El Salheya El Gedida"
+            "Abu Hammad", "Abu Kebir", "Faqous", "El Salheya El Gedida",
+            "Hehya", "Kafr Saqr", "Al Qurein", "Al Qanayat", "Awlad Saqr", "Bilbeis"
+          ]
+        },
+        {
+          id: "ASWAN",
+          name: "Aswan",
+          cities: [
+            "Aswan", "Kom Ombo", "Edfu", "Daraw", "Nasr Al Nuba", "Kalabsha",
+            "Abu Simbel", "Al Shallal", "Al Sad Al Ali", "Al Basiliya",
+            "Al Ridisiya", "Al Mahasna", "Al Khattan", "Al Khazan"
+          ]
+        },
+        {
+          id: "LUXOR",
+          name: "Luxor",
+          cities: [
+            "Luxor", "Armant", "Esna", "Tiba", "Al Qarna", "Al Bayadiya",
+            "Al Zayniya", "Al Madamud", "Al Tod", "Al Karnak", "Al Ramady",
+            "Al Shallal", "Al Dababiya", "Al Qusair"
+          ]
+        },
+        {
+          id: "ASYUT",
+          name: "Asyut",
+          cities: [
+            "Asyut", "Abnoub", "Abu Tig", "El Badari", "El Ghanayem", "Sahel Selim",
+            "El Qusiya", "Manfalut", "Dayrout", "Dairut", "Al Fath", "Al Rashda",
+            "Al Sanabawayn", "Al Shuhada"
+          ]
+        },
+        {
+          id: "MINYA",
+          name: "Minya",
+          cities: [
+            "Minya", "Beni Mazar", "Maghagha", "Mallawi", "Matay", "Samalut",
+            "Abu Qurqas", "Dir Mawas", "Al Idwa", "Al Madinah Al Fikriyah",
+            "Al Munira", "Al Shurafa", "Bani Mazar Al Jadidah", "Taha Al Amdid"
           ]
         }
       ]
@@ -781,7 +920,8 @@ const COUNTRY_DATA = {
             "Paris", "Boulogne-Billancourt", "Saint-Denis", "Versailles", "Nanterre",
             "Créteil", "Bobigny", "Montreuil", "Argenteuil", "Courbevoic",
             "Asnières-sur-Seine", "Colombes", "Aubervilliers", "Saint-Maur-des-Fossés",
-            "Issy-les-Moulineaux", "Levallois-Perret"
+            "Issy-les-Moulineaux", "Levallois-Perret", "Clichy", "Neuilly-sur-Seine",
+            "Suresnes", "Vincennes", "Fontenay-sous-Bois", "Champigny-sur-Marne"
           ]
         },
         {
@@ -790,7 +930,8 @@ const COUNTRY_DATA = {
           cities: [
             "Marseille", "Nice", "Toulon", "Avignon", "Aix-en-Provence", "Antibes",
             "Cannes", "La Seyne-sur-Mer", "Hyères", "Arles", "Martigues", "Grasse",
-            "Fréjus", "Antibes", "La Ciotat", "Cavaillon"
+            "Fréjus", "Antibes", "La Ciotat", "Cavaillon", "Draguignan", "Carros",
+            "Vence", "Mandelieu-la-Napoule", "Roquebrune-Cap-Martin", "Saint-Laurent-du-Var"
           ]
         },
         {
@@ -799,7 +940,9 @@ const COUNTRY_DATA = {
           cities: [
             "Lyon", "Grenoble", "Saint-Étienne", "Annecy", "Clermont-Ferrand",
             "Villeurbanne", "Valence", "Chambéry", "Roanne", "Bourg-en-Bresse",
-            "Vénissieux", "Saint-Priest", "Caluire-et-Cuire", "Vaulx-en-Velin", "Meyzieu"
+            "Vénissieux", "Saint-Priest", "Caluire-et-Cuire", "Vaulx-en-Velin", "Meyzieu",
+            "Bron", "Saint-Chamond", "Montélimar", "Annemasse", "Oullins",
+            "Tassin-la-Demi-Lune", "Rillieux-la-Pape"
           ]
         },
         {
@@ -808,7 +951,44 @@ const COUNTRY_DATA = {
           cities: [
             "Toulouse", "Montpellier", "Nîmes", "Perpignan", "Béziers", "Montauban",
             "Narbonne", "Carcassonne", "Albi", "Sète", "Lunel", "Agde", "Castres",
-            "Mende", "Millau", "Foix"
+            "Mende", "Millau", "Foix", "Auch", "Tarbes", "Lourdes", "Rodez",
+            "Pamiers", "Limoux"
+          ]
+        },
+        {
+          id: "NOUVELLE_AQUITAINE",
+          name: "Nouvelle-Aquitaine",
+          cities: [
+            "Bordeaux", "Limoges", "Poitiers", "Pau", "La Rochelle", "Bayonne",
+            "Angoulême", "Bergerac", "Périgueux", "Agen", "Brive-la-Gaillarde",
+            "Mont-de-Marsan", "Dax", "Villeneuve-sur-Lot"
+          ]
+        },
+        {
+          id: "HAUTS_DE_FRANCE",
+          name: "Hauts-de-France",
+          cities: [
+            "Lille", "Amiens", "Roubaix", "Tourcoing", "Dunkerque", "Calais",
+            "Boulogne-sur-Mer", "Arras", "Valenciennes", "Bethune", "Lens",
+            "Douai", "Maubeuge", "Compiègne"
+          ]
+        },
+        {
+          id: "NORMANDIE",
+          name: "Normandie",
+          cities: [
+            "Rouen", "Le Havre", "Caen", "Cherbourg", "Évreux", "Dieppe",
+            "Saint-Étienne-du-Rouvray", "Sotteville-lès-Rouen", "Vernon", "Lisieux",
+            "Fécamp", "Alençon", "Argentan", "Flers"
+          ]
+        },
+        {
+          id: "BRETAGNE",
+          name: "Bretagne",
+          cities: [
+            "Rennes", "Brest", "Quimper", "Lorient", "Vannes", "Saint-Malo",
+            "Saint-Brieuc", "Lanester", "Fougères", "Concarneau", "Morlaix",
+            "Vitré", "Douarnenez", "Plœmeur"
           ]
         }
       ]
@@ -825,7 +1005,8 @@ const COUNTRY_DATA = {
             "Madrid", "Alcalá de Henares", "Getafe", "Leganés", "Móstoles",
             "Fuenlabrada", "Alcorcón", "Parla", "Torrejón de Ardoz", "Coslada",
             "Las Rozas", "San Sebastián de los Reyes", "Alcobendas", "Pozuelo de Alarcón",
-            "Rivas-Vaciamadrid"
+            "Rivas-Vaciamadrid", "Collado Villalba", "Aranjuez", "Majadahonda",
+            "Boadilla del Monte", "San Fernando de Henares", "Tres Cantos", "Colmenar Viejo"
           ]
         },
         {
@@ -834,7 +1015,9 @@ const COUNTRY_DATA = {
           cities: [
             "Barcelona", "L'Hospitalet de Llobregat", "Badalona", "Tarragona",
             "Sabadell", "Lleida", "Mataró", "Santa Coloma de Gramenet", "Reus",
-            "Girona", "Sant Cugat", "Cornellà", "Sant Boi de Llobregat", "Rubí", "Manresa"
+            "Girona", "Sant Cugat", "Cornellà", "Sant Boi de Llobregat", "Rubí", "Manresa",
+            "Vilanova i la Geltrú", "Castelldefels", "Viladecans", "El Prat de Llobregat",
+            "Granollers", "Sitges", "Igualada"
           ]
         },
         {
@@ -843,7 +1026,9 @@ const COUNTRY_DATA = {
           cities: [
             "Sevilla", "Málaga", "Granada", "Córdoba", "Jerez de la Frontera",
             "Almería", "Huelva", "Marbella", "Dos Hermanas", "Algeciras",
-            "Cádiz", "Jaén", "Almería", "Mijas", "Fuengirola", "Chiclana de la Frontera"
+            "Cádiz", "Jaén", "Almería", "Mijas", "Fuengirola", "Chiclana de la Frontera",
+            "Écija", "Roquetas de Mar", "Sanlúcar de Barrameda", "Linares",
+            "Motril", "El Ejido"
           ]
         },
         {
@@ -852,7 +1037,45 @@ const COUNTRY_DATA = {
           cities: [
             "Valencia", "Alicante", "Castellón de la Plana", "Elche", "Torrevieja",
             "Orihuela", "Gandia", "Benidorm", "Paterna", "Sagunto", "Alcoy",
-            "Elda", "San Vicente del Raspeig", "Vila-real", "Burjassot"
+            "Elda", "San Vicente del Raspeig", "Vila-real", "Burjassot", "Ontinyent",
+            "Xàtiva", "Alzira", "Dénia", "La Vall d'Uixó", "Xirivella", "Cullera"
+          ]
+        },
+        {
+          id: "GALICIA",
+          name: "Galicia",
+          cities: [
+            "A Coruña", "Vigo", "Santiago de Compostela", "Lugo", "Ourense",
+            "Ferrol", "Pontevedra", "Oleiros", "Arteixo", "Ribeira", "Carballo",
+            "Narón", "Sanxenxo", "Cangas"
+          ]
+        },
+        {
+          id: "PAIS_VASCO",
+          name: "País Vasco",
+          cities: [
+            "Bilbao", "Donostia-San Sebastián", "Vitoria-Gasteiz", "Barakaldo",
+            "Getxo", "Irun", "Portugalete", "Santurtzi", "Basauri", "Errenteria",
+            "Leioa", "Galdakao", "Durango", "Eibar"
+          ]
+        },
+        {
+          id: "CANARIAS",
+          name: "Canarias",
+          cities: [
+            "Las Palmas de Gran Canaria", "Santa Cruz de Tenerife", "San Cristóbal de La Laguna",
+            "Telde", "Arona", "Santa Lucía de Tirajana", "Arrecife", "San Bartolomé de Tirajana",
+            "La Orotava", "Puerto del Rosario", "Los Llanos de Aridane", "Santa Cruz de La Palma",
+            "Tacoronte", "Guía de Isora"
+          ]
+        },
+        {
+          id: "BALEARES",
+          name: "Islas Baleares",
+          cities: [
+            "Palma de Mallorca", "Ibiza", "Mahón", "Ciutadella de Menorca", "Llucmajor",
+            "Inca", "Manacor", "Felanitx", "Pollensa", "Alcúdia", "Santanyí",
+            "Santa Eulalia del Río", "San José", "San Antonio Abad"
           ]
         }
       ]
@@ -868,7 +1091,9 @@ const COUNTRY_DATA = {
           cities: [
             "Riyadh", "Al Kharj", "Al Majma'ah", "Dhurma", "Al Duwadimi",
             "Al Quway'iyah", "Al Muzahmiyah", "Wadi ad-Dawasir", "Al Hariq",
-            "Al Sulayyil", "Al Aflaj", "Hotat Bani Tamim", "Al Diriyah", "Thadiq", "Huraymila"
+            "Al Sulayyil", "Al Aflaj", "Hotat Bani Tamim", "Al Diriyah", "Thadiq", "Huraymila",
+            "Al Hariq", "Al Ghat", "Zulfi", "Hawtat Bani Tamim", "Al Majma'ah",
+            "Al Muwayh", "Al Sulayyil"
           ]
         },
         {
@@ -877,7 +1102,8 @@ const COUNTRY_DATA = {
           cities: [
             "Makkah", "Jeddah", "Taif", "Al Qunfudhah", "Al Lith", "Al Jumum",
             "Khulais", "Rabigh", "Turubah", "Al Kamel", "Bahra", "Adham",
-            "Al Jumum", "Al Khurma", "Al Muwayh"
+            "Al Jumum", "Al Khurma", "Al Muwayh", "Al Khurmah", "Al Jumum",
+            "Al Khulais", "Al Qunfudhah", "Al Lith", "Taif", "Jeddah"
           ]
         },
         {
@@ -886,7 +1112,8 @@ const COUNTRY_DATA = {
           cities: [
             "Madinah", "Yanbu", "Al Ula", "Badr", "Mahd adh Dhahab", "Al Hinakiyah",
             "Wadi al-Fara'", "Al-Mahd", "Khaybar", "Al Henakiyah", "Al Suqiyah",
-            "Al-Mahd", "Al-Ais", "Hegrah"
+            "Al-Mahd", "Al-Ais", "Hegrah", "Al Henakiyah", "Badr", "Khaybar",
+            "Yanbu", "Al Ula", "Mahd adh Dhahab", "Al Hinakiyah", "Wadi al-Fara'"
           ]
         },
         {
@@ -895,7 +1122,44 @@ const COUNTRY_DATA = {
           cities: [
             "Dammam", "Khobar", "Dhahran", "Jubail", "Qatif", "Hafr al-Batin",
             "Al Khafji", "Ras Tanura", "Abqaiq", "Al-'Udayd", "Nu'ayriyah",
-            "Udhailiyah", "Al Qaryah", "Al Mubarraz", "Al Awamiyah"
+            "Udhailiyah", "Al Qaryah", "Al Mubarraz", "Al Awamiyah", "Al Khobar",
+            "Dhahran", "Jubail", "Qatif", "Hafr al-Batin", "Al Khafji", "Ras Tanura"
+          ]
+        },
+        {
+          id: "ASIR",
+          name: "Asir",
+          cities: [
+            "Abha", "Khamis Mushait", "Bisha", "Najran", "Jizan", "Sabya",
+            "Al Bahah", "Baljurashi", "Muhayil", "Tathlith", "Rijal Alma'",
+            "Al Namas", "Dhahran Al Janub", "Al Makhwah"
+          ]
+        },
+        {
+          id: "QASSIM",
+          name: "Al-Qassim",
+          cities: [
+            "Buraidah", "Unaizah", "Ar Rass", "Al Mithnab", "Al Bukayriyah",
+            "Al Badayi", "Al Asyah", "Uyun Al Jawa", "Riyadh Al Khabra",
+            "Al Shamas", "Dariyah", "Al Farah", "Al Mithnab", "Al Nabhaniyah"
+          ]
+        },
+        {
+          id: "HAIL",
+          name: "Hail",
+          cities: [
+            "Hail", "Al Ghazalah", "Al Sulaimi", "Baqaa", "Al Samira", "Al Shinan",
+            "Al Khutta", "Al Ama", "Al Muthalath", "Al Qalib", "Al Wasit",
+            "Al Far'", "Al Kharma", "Al Qarn"
+          ]
+        },
+        {
+          id: "JOUF",
+          name: "Al-Jawf",
+          cities: [
+            "Sakaka", "Qurayyat", "Dawmat Al Jandal", "Al Isawiyah", "Tabarjal",
+            "Al Qurayyat", "Al Haditha", "Al Nabhaniyah", "Al Qaryah", "Al Khutta",
+            "Al Wasit", "Al Far'", "Al Kharma", "Al Qarn"
           ]
         }
       ]
@@ -911,7 +1175,9 @@ const COUNTRY_DATA = {
           cities: [
             "Dubai", "Jebel Ali", "Hatta", "Al Awir", "Al Lusayli", "Margham",
             "Al Khawaneej", "Al Qusais", "Al Barsha", "Al Warqaa", "Mirdif",
-            "Nad Al Sheba", "Al Quoz", "Jumeirah", "Business Bay", "Dubai Marina"
+            "Nad Al Sheba", "Al Quoz", "Jumeirah", "Business Bay", "Dubai Marina",
+            "Downtown Dubai", "Al Satwa", "Al Nahda", "Al Twar", "International City",
+            "Dubai Silicon Oasis"
           ]
         },
         {
@@ -920,7 +1186,9 @@ const COUNTRY_DATA = {
           cities: [
             "Abu Dhabi", "Al Ain", "Madinat Zayed", "Gharbia", "Liwa Oasis",
             "Al Ruwais", "Al Mirfa", "Al Dhafra", "Al Samha", "Al Shawamekh",
-            "Bani Yas", "Khalifa City", "Mohammed Bin Zayed City", "Shahama", "Al Wathba"
+            "Bani Yas", "Khalifa City", "Mohammed Bin Zayed City", "Shahama", "Al Wathba",
+            "Yas Island", "Saadiyat Island", "Al Maryah Island", "Al Reem Island",
+            "Al Rahba", "Al Falah", "Al Shamkha"
           ]
         },
         {
@@ -929,7 +1197,8 @@ const COUNTRY_DATA = {
           cities: [
             "Sharjah", "Khor Fakkan", "Kalba", "Dhaid", "Al Dhaid", "Al Hamriyah",
             "Al Madam", "Al Batayeh", "Al Sajaa", "Al Ghail", "Wasit", "Mleiha",
-            "Al Nahda", "Al Qasimia", "Al Majaz"
+            "Al Nahda", "Al Qasimia", "Al Majaz", "Al Qasba", "Al Taawun",
+            "Al Khan", "Al Mamzar", "Abu Shagara", "Al Rolla", "University City"
           ]
         },
         {
@@ -937,7 +1206,36 @@ const COUNTRY_DATA = {
           name: "Ajman",
           cities: [
             "Ajman", "Masfout", "Manama", "Al Hamidiyah", "Al Zorah", "Al Mowaihat",
-            "Al Jurf", "Al Hamidiya", "Al Rawda", "Al Nuaimiya"
+            "Al Jurf", "Al Hamidiya", "Al Rawda", "Al Nuaimiya", "Al Rashidiya",
+            "Al Jurf Industrial", "Al Mwaihat", "Al Hamidiya", "Al Zahra", "Al Rumailah"
+          ]
+        },
+        {
+          id: "RAS_AL_KHAIMAH",
+          name: "Ras Al Khaimah",
+          cities: [
+            "Ras Al Khaimah", "Al Jazirah Al Hamra", "Al Rams", "Al Dhait",
+            "Al Huwaylat", "Al Marjan Island", "Al Hamra", "Al Mamourah",
+            "Al Mairid", "Al Nakheel", "Al Qusaidat", "Al Sall", "Al Shimal",
+            "Al Turfa"
+          ]
+        },
+        {
+          id: "FUJAIRAH",
+          name: "Fujairah",
+          cities: [
+            "Fujairah", "Dibba", "Dhadna", "Al Bithnah", "Al Faseel", "Al Hayl",
+            "Al Hala", "Al Gurfa", "Al Qurayyah", "Al Siji", "Al Tuwiyan",
+            "Mirbah", "Qidfa", "Sakamkam"
+          ]
+        },
+        {
+          id: "UMM_AL_QUWAIN",
+          name: "Umm Al Quwain",
+          cities: [
+            "Umm Al Quwain", "Al Sinniyah", "Al Raas", "Al Haditha", "Al Khor",
+            "Al Roudha", "Al Salamah", "Al Soor", "Al Humrah", "Al Dar Al Baidah",
+            "Falaj Al Mualla", "Al Riqqah", "Al Shabiyat", "Al Zorah"
           ]
         }
       ]
@@ -953,7 +1251,9 @@ const COUNTRY_DATA = {
           cities: [
             "Los Angeles", "San Francisco", "San Diego", "San Jose", "Sacramento",
             "Fresno", "Long Beach", "Oakland", "Bakersfield", "Anaheim",
-            "Santa Ana", "Riverside", "Stockton", "Chula Vista", "Irvine", "Modesto"
+            "Santa Ana", "Riverside", "Stockton", "Chula Vista", "Irvine", "Modesto",
+            "Santa Clarita", "Oxnard", "Fontana", "Moreno Valley", "Glendale",
+            "Huntington Beach"
           ]
         },
         {
@@ -962,7 +1262,9 @@ const COUNTRY_DATA = {
           cities: [
             "New York City", "Buffalo", "Rochester", "Yonkers", "Syracuse",
             "Albany", "New Rochelle", "Mount Vernon", "Schenectady", "Utica",
-            "White Plains", "Troy", "Niagara Falls", "Binghamton"
+            "White Plains", "Troy", "Niagara Falls", "Binghamton", "Rome",
+            "Ithaca", "Jamestown", "Poughkeepsie", "Plattsburgh", "Watertown",
+            "Auburn", "Elmira"
           ]
         },
         {
@@ -971,7 +1273,8 @@ const COUNTRY_DATA = {
           cities: [
             "Houston", "Dallas", "Austin", "San Antonio", "Fort Worth", "El Paso",
             "Arlington", "Corpus Christi", "Plano", "Laredo", "Lubbock", "Garland",
-            "Irving", "Amarillo", "Grand Prairie"
+            "Irving", "Amarillo", "Grand Prairie", "Brownsville", "McKinney",
+            "Frisco", "Pasadena", "Mesquite", "Killeen", "McAllen"
           ]
         },
         {
@@ -980,7 +1283,45 @@ const COUNTRY_DATA = {
           cities: [
             "Miami", "Orlando", "Tampa", "Jacksonville", "Tallahassee", "St. Petersburg",
             "Hialeah", "Port St. Lucie", "Cape Coral", "Fort Lauderdale",
-            "Pembroke Pines", "Hollywood", "Miramar", "Gainesville"
+            "Pembroke Pines", "Hollywood", "Miramar", "Gainesville", "Coral Springs",
+            "Clearwater", "Palm Bay", "Pompano Beach", "West Palm Beach", "Lakeland",
+            "Davie", "Miami Beach"
+          ]
+        },
+        {
+          id: "ILLINOIS",
+          name: "Illinois",
+          cities: [
+            "Chicago", "Aurora", "Naperville", "Joliet", "Rockford", "Springfield",
+            "Elgin", "Peoria", "Champaign", "Waukegan", "Cicero", "Bloomington",
+            "Decatur", "Arlington Heights"
+          ]
+        },
+        {
+          id: "PENNSYLVANIA",
+          name: "Pennsylvania",
+          cities: [
+            "Philadelphia", "Pittsburgh", "Allentown", "Erie", "Reading", "Scranton",
+            "Bethlehem", "Lancaster", "Harrisburg", "Altoona", "York", "State College",
+            "Wilkes-Barre", "Chester"
+          ]
+        },
+        {
+          id: "OHIO",
+          name: "Ohio",
+          cities: [
+            "Columbus", "Cleveland", "Cincinnati", "Toledo", "Akron", "Dayton",
+            "Parma", "Canton", "Youngstown", "Lorain", "Hamilton", "Springfield",
+            "Kettering", "Elyria"
+          ]
+        },
+        {
+          id: "GEORGIA",
+          name: "Georgia",
+          cities: [
+            "Atlanta", "Augusta", "Columbus", "Macon", "Savannah", "Athens",
+            "Sandy Springs", "Roswell", "Johns Creek", "Warner Robins", "Albany",
+            "Alpharetta", "Marietta", "Valdosta"
           ]
         }
       ]
@@ -996,7 +1337,8 @@ const COUNTRY_DATA = {
           cities: [
             "Lagos", "Ikeja", "Surulere", "Apapa", "Lekki", "Victoria Island",
             "Ajah", "Badagry", "Epe", "Ikorodu", "Agege", "Alimosho", "Kosofe",
-            "Mushin", "Oshodi", "Somolu"
+            "Mushin", "Oshodi", "Somolu", "Ifako-Ijaiye", "Amuwo-Odofin", "Ojo",
+            "Ibeju-Lekki", "Eti-Osa", "Lagos Mainland"
           ]
         },
         {
@@ -1004,7 +1346,8 @@ const COUNTRY_DATA = {
           name: "Abuja",
           cities: [
             "Abuja", "Garki", "Wuse", "Maitama", "Asokoro", "Gwarinpa", "Kubwa",
-            "Jahi", "Lugbe", "Karu", "Nyanya", "Bwari", "Kuje", "Gwagwalada", "Kwali"
+            "Jahi", "Lugbe", "Karu", "Nyanya", "Bwari", "Kuje", "Gwagwalada", "Kwali",
+            "Jabi", "Utako", "Durumi", "Gudu", "Lokogoma", "Galadimawa", "Karmo"
           ]
         },
         {
@@ -1013,7 +1356,8 @@ const COUNTRY_DATA = {
           cities: [
             "Kano", "Nassarawa", "Tarauni", "Dala", "Fagge", "Gwale", "Kumbotso",
             "Ungogo", "Dawakin Tofa", "Tofa", "Rimin Gado", "Bagwai", "Gezawa",
-            "Gabasawa", "Minjibir"
+            "Gabasawa", "Minjibir", "Kura", "Madobi", "Garun Mallam", "Bebeji",
+            "Rano", "Bunkure", "Kibiya"
           ]
         },
         {
@@ -1022,7 +1366,41 @@ const COUNTRY_DATA = {
           cities: [
             "Port Harcourt", "Obio-Akpor", "Ikwerre", "Eleme", "Oyigbo", "Etche",
             "Omuma", "Okrika", "Ogu–Bolo", "Bonny", "Degema", "Asari-Toru",
-            "Akuku-Toru", "Abua–Odual", "Ahoada"
+            "Akuku-Toru", "Abua–Odual", "Ahoada", "Andoni", "Emohua", "Khana",
+            "Ogba–Egbema–Ndoni", "Tai", "Opobo–Nkoro", "Gokana"
+          ]
+        },
+        {
+          id: "KADUNA",
+          name: "Kaduna",
+          cities: [
+            "Kaduna", "Zaria", "Kafanchan", "Makarfi", "Soba", "Ikara", "Kudan",
+            "Lere", "Kauru", "Kubau", "Kajuru", "Jaba", "Sanga", "Chikun"
+          ]
+        },
+        {
+          id: "OYO",
+          name: "Oyo",
+          cities: [
+            "Ibadan", "Ogbomoso", "Iseyin", "Oyo", "Saki", "Kishi", "Ibarapa",
+            "Okeho", "Eruwa", "Lanlate", "Igbo-Ora", "Ido", "Afijio", "Akinyele"
+          ]
+        },
+        {
+          id: "ENUGU",
+          name: "Enugu",
+          cities: [
+            "Enugu", "Nsukka", "Agbani", "Awgu", "Udi", "Ezeagu", "Igbo-Etiti",
+            "Nkanu", "Isi-Uzo", "Oji River", "Uzo-Uwani", "Enugu East",
+            "Enugu North", "Enugu South"
+          ]
+        },
+        {
+          id: "DELTA",
+          name: "Delta",
+          cities: [
+            "Asaba", "Warri", "Sapele", "Agbor", "Ughelli", "Oleh", "Burutu",
+            "Koko", "Ozoro", "Patani", "Akumazi", "Illah", "Ubulu-Uku", "Umunede"
           ]
         }
       ]
@@ -1038,7 +1416,8 @@ const COUNTRY_DATA = {
           cities: [
             "Lahore", "Faisalabad", "Rawalpindi", "Gujranwala", "Multan",
             "Sialkot", "Bahawalpur", "Sargodha", "Sheikhupura", "Jhelum",
-            "Gujrat", "Sahiwal", "Wah Cantonment", "Kasur", "Okara", "Chiniot"
+            "Gujrat", "Sahiwal", "Wah Cantonment", "Kasur", "Okara", "Chiniot",
+            "Kamoke", "Hafizabad", "Sadiqabad", "Burewala", "Khanewal", "Muzaffargarh"
           ]
         },
         {
@@ -1047,7 +1426,8 @@ const COUNTRY_DATA = {
           cities: [
             "Karachi", "Hyderabad", "Sukkur", "Larkana", "Nawabshah", "Mirpur Khas",
             "Jacobabad", "Shikarpur", "Khairpur", "Dadu", "Tando Allahyar",
-            "Tando Adam", "Badin", "Thatta", "Kotri"
+            "Tando Adam", "Badin", "Thatta", "Kotri", "Ghotki", "Daharki",
+            "Umerkot", "Tharparkar", "Matiari", "Tando Muhammad Khan", "Jamshoro"
           ]
         },
         {
@@ -1056,7 +1436,8 @@ const COUNTRY_DATA = {
           cities: [
             "Peshawar", "Mardan", "Abbottabad", "Mingora", "Kohat", "Bannu",
             "Swabi", "Dera Ismail Khan", "Charsadda", "Nowshera", "Mansehra",
-            "Haripur", "Timergara", "Tank", "Hangu"
+            "Haripur", "Timergara", "Tank", "Hangu", "Karak", "Battagram",
+            "Shangla", "Lower Dir", "Upper Dir", "Malakand", "Buner"
           ]
         },
         {
@@ -1065,7 +1446,34 @@ const COUNTRY_DATA = {
           cities: [
             "Quetta", "Turbat", "Khuzdar", "Chaman", "Gwadar", "Dera Murad Jamali",
             "Dera Allah Yar", "Usta Mohammad", "Sibi", "Loralai", "Zhob", "Pasni",
-            "Qila Saifullah", "Khost", "Hub"
+            "Qila Saifullah", "Khost", "Hub", "Panjgur", "Mastung", "Nushki",
+            "Kalat", "Kharan", "Awaran", "Washuk"
+          ]
+        },
+        {
+          id: "GILGIT",
+          name: "Gilgit-Baltistan",
+          cities: [
+            "Gilgit", "Skardu", "Chilas", "Ghizer", "Khaplu", "Astore", "Ghanche",
+            "Shigar", "Nagar", "Diamer", "Gultari", "Roundu", "Thowar", "Hushe"
+          ]
+        },
+        {
+          id: "AJK",
+          name: "Azad Jammu & Kashmir",
+          cities: [
+            "Muzaffarabad", "Mirpur", "Rawalakot", "Kotli", "Bhimber", "Bagh",
+            "Sudhnuti", "Neelum", "Hattian", "Haveli", "Pallandri", "Forward Kahuta",
+            "Jhelum Valley", "Samahni"
+          ]
+        },
+        {
+          id: "ISLAMABAD",
+          name: "Islamabad",
+          cities: [
+            "Islamabad", "Sector F-6", "Sector G-6", "Sector I-8", "Sector E-7",
+            "Sector F-7", "Sector G-7", "Sector H-8", "Sector I-9", "Sector D-12",
+            "Sector E-11", "Sector F-10", "Sector G-10", "Sector H-11"
           ]
         }
       ]
@@ -1081,7 +1489,9 @@ const COUNTRY_DATA = {
           cities: [
             "New Delhi", "Delhi", "Dwarka", "Karol Bagh", "Rohini", "Pitampura",
             "Janakpuri", "Laxmi Nagar", "Saket", "Hauz Khas", "Malviya Nagar",
-            "Patel Nagar", "Rajouri Garden", "Kalkaji", "Sarita Vihar", "Vasant Kunj"
+            "Patel Nagar", "Rajouri Garden", "Kalkaji", "Sarita Vihar", "Vasant Kunj",
+            "Greater Kailash", "Connaught Place", "Chanakyapuri", "Mayur Vihar",
+            "Preet Vihar", "Shahdara"
           ]
         },
         {
@@ -1090,7 +1500,8 @@ const COUNTRY_DATA = {
           cities: [
             "Mumbai", "Pune", "Nagpur", "Nashik", "Aurangabad", "Solapur",
             "Bhiwandi", "Amravati", "Nanded", "Kolhapur", "Ulhasnagar", "Sangli",
-            "Malegaon", "Jalgaon", "Akola", "Latur"
+            "Malegaon", "Jalgaon", "Akola", "Latur", "Thane", "Kalyan", "Vasai-Virar",
+            "Mira-Bhayandar", "Bhiwandi-Nizampur", "Jalna"
           ]
         },
         {
@@ -1099,7 +1510,8 @@ const COUNTRY_DATA = {
           cities: [
             "Bengaluru", "Mysuru", "Hubballi", "Mangaluru", "Belagavi", "Davanagere",
             "Ballari", "Tumakuru", "Shivamogga", "Raichur", "Bidar", "Hospet",
-            "Udupi", "Gadag-Betageri", "Robertson Pet", "Hassan"
+            "Udupi", "Gadag-Betageri", "Robertson Pet", "Hassan", "Mandya",
+            "Chitradurga", "Kolar", "Chikkaballapur", "Ramanagara", "Chikmagalur"
           ]
         },
         {
@@ -1108,7 +1520,43 @@ const COUNTRY_DATA = {
           cities: [
             "Chennai", "Coimbatore", "Madurai", "Tiruchirappalli", "Salem",
             "Tirunelveli", "Tiruppur", "Vellore", "Erode", "Thoothukudi",
-            "Dindigul", "Thanjavur", "Hosur", "Nagercoil", "Kanchipuram", "Kumarapalayam"
+            "Dindigul", "Thanjavur", "Hosur", "Nagercoil", "Kanchipuram", "Kumarapalayam",
+            "Kumbakonam", "Tiruvannamalai", "Pollachi", "Rajapalayam", "Sivakasi", "Ambur"
+          ]
+        },
+        {
+          id: "UTTAR_PRADESH",
+          name: "Uttar Pradesh",
+          cities: [
+            "Lucknow", "Kanpur", "Ghaziabad", "Agra", "Varanasi", "Meerut",
+            "Allahabad", "Bareilly", "Aligarh", "Moradabad", "Saharanpur",
+            "Gorakhpur", "Faizabad", "Jhansi"
+          ]
+        },
+        {
+          id: "WEST_BENGAL",
+          name: "West Bengal",
+          cities: [
+            "Kolkata", "Howrah", "Durgapur", "Asansol", "Siliguri", "Malda",
+            "Bardhaman", "Habra", "Kharagpur", "Shantipur", "Dankuni", "Dhulian",
+            "Ranaghat", "Haldia"
+          ]
+        },
+        {
+          id: "GUJARAT",
+          name: "Gujarat",
+          cities: [
+            "Ahmedabad", "Surat", "Vadodara", "Rajkot", "Bhavnagar", "Jamnagar",
+            "Junagadh", "Gandhinagar", "Anand", "Navsari", "Morbi", "Gandhidham",
+            "Bharuch", "Vapi"
+          ]
+        },
+        {
+          id: "RAJASTHAN",
+          name: "Rajasthan",
+          cities: [
+            "Jaipur", "Jodhpur", "Kota", "Bikaner", "Ajmer", "Udaipur", "Bhilwara",
+            "Alwar", "Bharatpur", "Sri Ganganagar", "Sikar", "Pali", "Tonk", "Jhunjhunu"
           ]
         }
       ]
@@ -1125,7 +1573,8 @@ const COUNTRY_DATA = {
             "Jakarta", "Central Jakarta", "South Jakarta", "West Jakarta",
             "East Jakarta", "North Jakarta", "Thousand Islands", "Kebayoran Baru",
             "Tebet", "Cilandak", "Pasar Minggu", "Mampang", "Cengkareng",
-            "Tanjung Priok", "Kelapa Gading"
+            "Tanjung Priok", "Kelapa Gading", "Kemayoran", "Gambir", "Tanah Abang",
+            "Menteng", "Senen", "Cempaka Putih", "Johar Baru"
           ]
         },
         {
@@ -1134,7 +1583,8 @@ const COUNTRY_DATA = {
           cities: [
             "Bandung", "Bekasi", "Depok", "Bogor", "Cimahi", "Sukabumi",
             "Cirebon", "Tasikmalaya", "Karawang", "Purwakarta", "Subang",
-            "Sumedang", "Garut", "Majalengka", "Cianjur", "Banjar"
+            "Sumedang", "Garut", "Majalengka", "Cianjur", "Banjar", "Soreang",
+            "Cileungsi", "Cibinong", "Cipanas", "Cisarua", "Lembang"
           ]
         },
         {
@@ -1143,7 +1593,8 @@ const COUNTRY_DATA = {
           cities: [
             "Semarang", "Surakarta", "Tegal", "Pekalongan", "Salatiga",
             "Magelang", "Kudus", "Jepara", "Rembang", "Blora", "Batang", "Pati",
-            "Wonosobo", "Temanggung", "Boyolali", "Klaten"
+            "Wonosobo", "Temanggung", "Boyolali", "Klaten", "Purwodadi", "Slawi",
+            "Pemalang", "Brebes", "Kendal", "Demak"
           ]
         },
         {
@@ -1152,7 +1603,44 @@ const COUNTRY_DATA = {
           cities: [
             "Surabaya", "Malang", "Kediri", "Mojokerto", "Jember", "Banyuwangi",
             "Madiun", "Pasuruan", "Probolinggo", "Blitar", "Lumajang", "Bondowoso",
-            "Situbondo", "Tulungagung", "Tuban", "Lamongan"
+            "Situbondo", "Tulungagung", "Tuban", "Lamongan", "Sidoarjo", "Gresik",
+            "Nganjuk", "Magetan", "Ponorogo", "Trenggalek"
+          ]
+        },
+        {
+          id: "BANTEN",
+          name: "Banten",
+          cities: [
+            "Serang", "Tangerang", "Cilegon", "South Tangerang", "Pandeglang",
+            "Lebak", "Rangkasbitung", "Ciputat", "Balaraja", "Tigaraksa", "Curug",
+            "Kresek", "Malingping", "Labuan"
+          ]
+        },
+        {
+          id: "BALI",
+          name: "Bali",
+          cities: [
+            "Denpasar", "Badung", "Gianyar", "Tabanan", "Singaraja", "Kuta",
+            "Ubud", "Sanur", "Nusa Dua", "Jimbaran", "Canggu", "Seminyak",
+            "Legian", "Kerobokan"
+          ]
+        },
+        {
+          id: "SUMATERA_UTARA",
+          name: "Sumatera Utara",
+          cities: [
+            "Medan", "Binjai", "Pematang Siantar", "Tebing Tinggi", "Tanjung Balai",
+            "Sibolga", "Padang Sidempuan", "Gunungsitoli", "Deli Serdang", "Langkat",
+            "Karo", "Simalungun", "Labuhan Batu", "Asahan"
+          ]
+        },
+        {
+          id: "SULAWESI_SELATAN",
+          name: "Sulawesi Selatan",
+          cities: [
+            "Makassar", "Parepare", "Palopo", "Maros", "Pangkajene", "Barru",
+            "Bone", "Soppeng", "Wajo", "Sidenreng Rappang", "Pinrang", "Enrekang",
+            "Luwu", "Tana Toraja"
           ]
         }
       ]
@@ -1168,7 +1656,8 @@ const COUNTRY_DATA = {
           cities: [
             "Istanbul", "Kadıköy", "Beşiktaş", "Şişli", "Fatih", "Üsküdar",
             "Bakırköy", "Esenler", "Küçükçekmece", "Beyoğlu", "Zeytinburnu",
-            "Maltepe", "Sarıyer", "Pendik", "Kartal", "Beylikdüzü"
+            "Maltepe", "Sarıyer", "Pendik", "Kartal", "Beylikdüzü", "Bağcılar",
+            "Kağıthane", "Güngören", "Esenyurt", "Avcılar", "Gaziosmanpaşa"
           ]
         },
         {
@@ -1177,7 +1666,8 @@ const COUNTRY_DATA = {
           cities: [
             "Ankara", "Çankaya", "Keçiören", "Yenimahalle", "Mamak", "Sincan",
             "Altındağ", "Etimesgut", "Polatlı", "Gölbaşı", "Pursaklar", "Akyurt",
-            "Kahramankazan", "Elmadağ", "Bala", "Ayaş"
+            "Kahramankazan", "Elmadağ", "Bala", "Ayaş", "Nallıhan", "Beypazarı",
+            "Kızılcahamam", "Çubuk", "Haymana", "Kalecik"
           ]
         },
         {
@@ -1186,7 +1676,8 @@ const COUNTRY_DATA = {
           cities: [
             "İzmir", "Bornova", "Karşıyaka", "Konak", "Buca", "Bayraklı",
             "Çiğli", "Balçova", "Narlıdere", "Gaziemir", "Güzelbahçe", "Urla",
-            "Seferihisar", "Menderes", "Torbalı", "Bergama"
+            "Seferihisar", "Menderes", "Torbalı", "Bergama", "Aliağa", "Kemalpaşa",
+            "Ödemiş", "Tire", "Bayındır", "Menemen"
           ]
         },
         {
@@ -1195,7 +1686,44 @@ const COUNTRY_DATA = {
           cities: [
             "Antalya", "Muratpaşa", "Kepez", "Konyaaltı", "Alanya", "Manavgat",
             "Serik", "Kumluca", "Kaş", "Korkuteli", "Finike", "Gazipaşa",
-            "Demre", "Akseki", "Elmalı", "Gündoğmuş"
+            "Demre", "Akseki", "Elmalı", "Gündoğmuş", "İbradı", "Kemer", "Aksu",
+            "Döşemealtı", "Korkuteli", "Kumluca"
+          ]
+        },
+        {
+          id: "BURSA",
+          name: "Bursa",
+          cities: [
+            "Bursa", "Osmangazi", "Yıldırım", "Nilüfer", "İnegöl", "Gemlik",
+            "Mustafakemalpaşa", "Mudanya", "Gürsu", "Kestel", "Karacabey",
+            "Orhangazi", "İznik", "Yenişehir"
+          ]
+        },
+        {
+          id: "ADANA",
+          name: "Adana",
+          cities: [
+            "Adana", "Seyhan", "Yüreğir", "Çukurova", "Sarıçam", "Ceyhan",
+            "Kozan", "İmamoğlu", "Karataş", "Pozantı", "Feke", "Saimbeyli",
+            "Aladağ", "Tufanbeyli"
+          ]
+        },
+        {
+          id: "KONYA",
+          name: "Konya",
+          cities: [
+            "Konya", "Selçuklu", "Meram", "Karatay", "Ereğli", "Akşehir",
+            "Beyşehir", "Çumra", "Seydişehir", "Ilgın", "Cihanbeyli", "Kadınhanı",
+            "Sarayönü", "Bozkır"
+          ]
+        },
+        {
+          id: "GAZIANTEP",
+          name: "Gaziantep",
+          cities: [
+            "Gaziantep", "Şahinbey", "Şehitkamil", "Nizip", "İslahiye", "Nurdağı",
+            "Araban", "Oğuzeli", "Yavuzeli", "Karkamış", "Nizip", "İslahiye",
+            "Nurdağı", "Araban"
           ]
         }
       ]
@@ -1211,7 +1739,8 @@ const COUNTRY_DATA = {
           cities: [
             "São Paulo", "Guarulhos", "Campinas", "São Bernardo do Campo",
             "Santo André", "Osasco", "Sorocaba", "Ribeirão Preto", "São José dos Campos",
-            "Santos", "Mauá", "Diadema", "Jundiaí", "Barueri", "São Vicente", "Carapicuíba"
+            "Santos", "Mauá", "Diadema", "Jundiaí", "Barueri", "São Vicente", "Carapicuíba",
+            "Itaquaquecetuba", "São Carlos", "Americana", "Araraquara", "Hortolândia", "Rio Claro"
           ]
         },
         {
@@ -1221,7 +1750,8 @@ const COUNTRY_DATA = {
             "Rio de Janeiro", "São Gonçalo", "Duque de Caxias", "Nova Iguaçu",
             "Niterói", "Belford Roxo", "Campos dos Goytacazes", "São João de Meriti",
             "Petrópolis", "Volta Redonda", "Magé", "Itaboraí", "Macaé", "Mesquita",
-            "Teresópolis", "Nilópolis"
+            "Teresópolis", "Nilópolis", "Queimados", "Maricá", "Resende", "Angra dos Reis",
+            "Paracambi", "Barra Mansa"
           ]
         },
         {
@@ -1231,7 +1761,8 @@ const COUNTRY_DATA = {
             "Belo Horizonte", "Uberlândia", "Contagem", "Juiz de Fora", "Betim",
             "Montes Claros", "Ribeirão das Neves", "Uberaba", "Governador Valadares",
             "Ipatinga", "Sete Lagoas", "Divinópolis", "Santa Luzia", "Ibirité",
-            "Poços de Caldas", "Patos de Minas"
+            "Poços de Caldas", "Patos de Minas", "Pouso Alegre", "Varginha",
+            "Conselheiro Lafaiete", "Sabará", "Ribeirão das Neves", "Itabira"
           ]
         },
         {
@@ -1241,13 +1772,51 @@ const COUNTRY_DATA = {
             "Salvador", "Feira de Santana", "Vitória da Conquista", "Camaçari",
             "Itabuna", "Juazeiro", "Lauro de Freitas", "Ilhéus", "Jequié",
             "Alagoinhas", "Teixeira de Freitas", "Barreiras", "Porto Seguro",
-            "Simões Filho", "Paulo Afonso", "Eunápolis"
+            "Simões Filho", "Paulo Afonso", "Eunápolis", "Lucas", "Santo Antônio de Jesus",
+            "Valença", "Guanambi", "Bom Jesus da Lapa", "Brumado"
+          ]
+        },
+        {
+          id: "RIO_GRANDE_DO_SUL",
+          name: "Rio Grande do Sul",
+          cities: [
+            "Porto Alegre", "Caxias do Sul", "Pelotas", "Canoas", "Santa Maria",
+            "Gravataí", "Viamão", "Novo Hamburgo", "São Leopoldo", "Rio Grande",
+            "Alvorada", "Passo Fundo", "Uruguaiana", "Bage"
+          ]
+        },
+        {
+          id: "PARANA",
+          name: "Paraná",
+          cities: [
+            "Curitiba", "Londrina", "Maringá", "Ponta Grossa", "Cascavel",
+            "São José dos Pinhais", "Foz do Iguaçu", "Colombo", "Guarapuava",
+            "Paranaguá", "Araucária", "Toledo", "Apucarana", "Pinhais"
+          ]
+        },
+        {
+          id: "CEARA",
+          name: "Ceará",
+          cities: [
+            "Fortaleza", "Caucaia", "Juazeiro do Norte", "Maracanaú", "Sobral",
+            "Crato", "Itapipoca", "Maranguape", "Iguatu", "Quixadá", "Pacatuba",
+            "Quixeramobim", "Aracati", "Canindé"
+          ]
+        },
+        {
+          id: "PERNAMBUCO",
+          name: "Pernambuco",
+          cities: [
+            "Recife", "Jaboatão dos Guararapes", "Olinda", "Caruaru", "Petrolina",
+            "Paulista", "Cabo de Santo Agostinho", "Camaragibe", "Garanhuns",
+            "Vitória de Santo Antão", "Ipojuca", "São Lourenço da Mata",
+            "Serra Talhada", "Arcoverde"
           ]
         }
       ]
     }
   };
-  
+
   function getCountryDef(beh) {
     const raw =
       beh && (beh.country || beh.codCountry)

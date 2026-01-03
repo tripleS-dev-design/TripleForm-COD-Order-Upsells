@@ -6,6 +6,10 @@ import { trackOrderWithPixels } from "../utils/pixels.server";
 
 const TF_TAG = "TripleForm COD"; // 👈 tag unique pour reconnaître les commandes de l'app
 
+/* ------------------------------------------------------------------ */
+/* Utils Phone / Country / Address                                    */
+/* ------------------------------------------------------------------ */
+
 /**
  * Essaie de reconstruire un numéro complet à partir de tous les champs.
  * - Cherche d'abord un champ déjà complet (fullPhone, phoneFull, whatsapp…)
@@ -22,6 +26,7 @@ function buildFullPhone(fields = {}) {
     f.whatsapp_phone,
     f.whatsappPhone,
   ].filter(Boolean);
+
   for (const c of directCandidates) {
     const s = String(c).trim();
     if (s.length >= 6) return s;
@@ -61,7 +66,6 @@ function buildFullPhone(fields = {}) {
 
 /**
  * Devine le code pays (ISO2) à partir du body / des champs / du shop.
- * On ne force plus "DZ" si le formulaire envoie autre chose.
  */
 async function resolveCountryCode(admin, fields = {}, body = {}) {
   const pick = (v) => (v == null ? "" : String(v)).trim();
@@ -79,24 +83,18 @@ async function resolveCountryCode(admin, fields = {}, body = {}) {
   );
   if (fromFields) return fromFields.toUpperCase();
 
-  // 3) Sinon, on essaie de lire le pays par défaut du shop via l'Admin API
+  // 3) Sinon, fallback via Admin API
   if (admin) {
     try {
       const QUERY = `
         query tfShopCountry {
-          shop {
-            billingAddress {
-              countryCode
-            }
-          }
+          shop { billingAddress { countryCode } }
         }
       `;
       const resp = await admin.graphql(QUERY);
       const data = await resp.json();
       const code = data?.data?.shop?.billingAddress?.countryCode;
-      if (code) {
-        return String(code).toUpperCase();
-      }
+      if (code) return String(code).toUpperCase();
     } catch (e) {
       console.error("resolveCountryCode shop fallback error:", e);
     }
@@ -127,7 +125,9 @@ function buildShippingAddress(fields = {}, fullPhone = "", countryCode = "DZ") {
   };
 }
 
-/* ====================== Anti-bot helpers ====================== */
+/* ------------------------------------------------------------------ */
+/* Anti-bot config loader + IP                                         */
+/* ------------------------------------------------------------------ */
 
 /**
  * Charge la config anti-bot depuis shop.metafields (namespace tripleform_cod, key antibot)
@@ -214,8 +214,57 @@ function matchesPatterns(str, patterns = []) {
   return false;
 }
 
+/* ------------------------------------------------------------------ */
+/* reCAPTCHA v3 (backend verification)                                 */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Vérifie un token reCAPTCHA v3 côté serveur.
+ * Attendu: body.recaptchaToken (ou recaptcha.token) + action (optionnel)
+ */
+async function verifyRecaptchaV3({
+  token,
+  remoteip,
+  expectedAction,
+  minScore = 0.5,
+}) {
+  const secret =
+    process.env.RECAPTCHA_SECRET_KEY ||
+    process.env.RECAPTCHA_SECRET ||
+    process.env.GOOGLE_RECAPTCHA_SECRET ||
+    "";
+
+  if (!secret) return { ok: false, reason: "missing_secret" };
+  if (!token) return { ok: false, reason: "missing_token" };
+
+  const form = new URLSearchParams();
+  form.set("secret", secret);
+  form.set("response", token);
+  if (remoteip) form.set("remoteip", remoteip);
+
+  const resp = await fetch("https://www.google.com/recaptcha/api/siteverify", {
+    method: "POST",
+    headers: { "content-type": "application/x-www-form-urlencoded" },
+    body: form.toString(),
+  });
+
+  const data = await resp.json().catch(() => ({}));
+
+  const score = Number(data?.score ?? 0);
+  const action = String(data?.action || "");
+  const success = data?.success === true;
+
+  const actionOk = expectedAction ? action === expectedAction : true;
+  const scoreOk = score >= Number(minScore);
+
+  const ok = success && actionOk && scoreOk;
+
+  return { ok, success, score, action, data };
+}
+
 /**
  * Applique les règles Anti-bot de base (IP, téléphone, pays + honeypot).
+ * + recaptcha "challenge" synchronisé avec config (si activé)
  */
 function evaluateAntibot({
   config,
@@ -227,6 +276,9 @@ function evaluateAntibot({
   const res = {
     blocked: false,
     reasons: [],
+    needsRecaptcha: false, // 👈 NEW
+    recaptchaExpectedAction: "tf_submit", // 👈 NEW
+    recaptchaMinScore: 0.5, // 👈 NEW
   };
 
   if (!config || typeof config !== "object") return res;
@@ -235,7 +287,15 @@ function evaluateAntibot({
   const phoneBlock = config.phoneBlock || {};
   const countryBlock = config.countryBlock || {};
   const honeypotCfg = config.honeypot || {};
+  const recaptchaCfg = config.recaptcha || config.googleRecaptcha || {}; // 👈 compatible
   const hp = honeypot || {};
+
+  // reCAPTCHA settings (depuis section antibot)
+  res.recaptchaExpectedAction =
+    recaptchaCfg.action || recaptchaCfg.expectedAction || "tf_submit";
+  res.recaptchaMinScore = Number(
+    recaptchaCfg.minScore != null ? recaptchaCfg.minScore : 0.5
+  );
 
   /* --- IP --- */
   if (ipBlock.enabled && clientIp) {
@@ -253,9 +313,9 @@ function evaluateAntibot({
         res.reasons.push(`IP ${ip} dans denyList`);
       }
 
-      // TODO: plus tard gérer les plages CIDR correctement
+      // TODO: gérer CIDR plus tard
       if (!res.blocked && Array.isArray(cidrList) && cidrList.length > 0) {
-        // pour l'instant, on ne bloque pas sur CIDR (éviter faux positifs)
+        // pas de bloc CIDR pour éviter faux positifs
       }
     }
   }
@@ -274,9 +334,7 @@ function evaluateAntibot({
 
     if (!res.blocked && phoneBlock.requirePrefix) {
       const allowed = phoneBlock.allowedPrefixes || [];
-      const ok = allowed.some((p) =>
-        phone.startsWith(String(p || "").trim())
-      );
+      const ok = allowed.some((p) => phone.startsWith(String(p || "").trim()));
       if (!ok && allowed.length > 0) {
         res.blocked = true;
         res.reasons.push(
@@ -306,8 +364,6 @@ function evaluateAntibot({
         res.reasons.push("Téléphone correspond à un pattern bloqué");
       }
     }
-
-    // TODO: plus tard => maxOrdersPerPhonePerDay (nécessite stockage)
   }
 
   /* --- Pays --- */
@@ -328,14 +384,19 @@ function evaluateAntibot({
         res.reasons.push(`Pays ${code} non autorisé (mode block)`);
       }
     } else if (mode === "challenge") {
-      // tant qu'on n'a pas branché reCAPTCHA, on traite "challenge" comme block
+      // ✅ Synchronisé : en "challenge" on demande reCAPTCHA au lieu de bloquer direct
+      res.needsRecaptcha = true;
+
+      // si denyList -> block direct
       if (denyList.includes(code)) {
         res.blocked = true;
         res.reasons.push(`Pays ${code} bloqué (challenge + denyList)`);
       }
-      if (!allowList.includes(code) && allowList.length > 0) {
-        res.blocked = true;
-        res.reasons.push(`Pays ${code} en challenge et pas dans allowList`);
+
+      // si allowList existe et code pas dedans -> on garde "challenge" (recaptcha)
+      if (!res.blocked && allowList.length > 0 && !allowList.includes(code)) {
+        res.needsRecaptcha = true;
+        res.reasons.push(`Pays ${code} en challenge (pas dans allowList)`);
       }
     }
   }
@@ -360,6 +421,7 @@ function evaluateAntibot({
       }
     }
 
+    // ⚠️ mobile: pas de souris → si tu actives ça, tu peux bloquer mobile
     if (!res.blocked && honeypotCfg.checkMouseMove) {
       if (!mouseMoved) {
         res.blocked = true;
@@ -368,10 +430,18 @@ function evaluateAntibot({
     }
   }
 
+  /* --- reCAPTCHA global enable --- */
+  // si recaptcha.enabled => toujours vérifier
+  if (recaptchaCfg?.enabled) {
+    res.needsRecaptcha = true;
+  }
+
   return res;
 }
 
-/* ====================== Fetch infos produit (Admin API) ====================== */
+/* ------------------------------------------------------------------ */
+/* Fetch infos produit (Admin API)                                     */
+/* ------------------------------------------------------------------ */
 
 async function fetchProductInfo(admin, variantGid) {
   if (!admin || !variantGid) return { productTitle: null, variantTitle: null };
@@ -382,18 +452,13 @@ async function fetchProductInfo(admin, variantGid) {
         productVariant(id: $id) {
           id
           title
-          product {
-            id
-            title
-          }
+          product { id title }
         }
       }
     `;
-    const resp = await admin.graphql(QUERY, {
-      variables: { id: variantGid },
-    });
-    const json = await resp.json();
-    const pv = json?.data?.productVariant;
+    const resp = await admin.graphql(QUERY, { variables: { id: variantGid } });
+    const j = await resp.json();
+    const pv = j?.data?.productVariant;
     if (!pv) return { productTitle: null, variantTitle: null };
 
     return {
@@ -406,14 +471,16 @@ async function fetchProductInfo(admin, variantGid) {
   }
 }
 
-/* ====================== ACTION (submit COD) ====================== */
+/* ------------------------------------------------------------------ */
+/* ACTION (submit COD)                                                 */
+/* ------------------------------------------------------------------ */
 
 export const action = async ({ request }) => {
   try {
     // 1) Authentifier la requête App Proxy
     const { admin, session } = await authenticate.public.appProxy(request);
 
-    const shop = session?.shop; // ex: "selyadev.myshopify.com"
+    const shop = session?.shop;
 
     if (!shop) {
       return json(
@@ -448,7 +515,7 @@ export const action = async ({ request }) => {
     }
 
     // ---- variantId → GID Shopify obligatoire ----
-    const rawVariantId = body.variantId; // "4636..." ou "gid://shopify/ProductVariant/4636..."
+    const rawVariantId = body.variantId;
     let variantGid = null;
 
     if (rawVariantId) {
@@ -479,7 +546,21 @@ export const action = async ({ request }) => {
     // 🔐 Infos Honeypot venant du front
     const honeypotInfo = body.honeypot || {};
 
-    // Chargement de la config anti-bot (si elle existe)
+    // 🔐 reCAPTCHA token venant du front
+    const recaptchaToken =
+      body.recaptchaToken ||
+      body.recaptcha_token ||
+      body?.recaptcha?.token ||
+      body?.recaptcha ||
+      null;
+
+    const recaptchaAction =
+      body.recaptchaAction ||
+      body.recaptcha_action ||
+      body?.recaptcha?.action ||
+      "tf_submit";
+
+    // Chargement de la config anti-bot
     const antibotCfg = await loadAntibotConfig(admin);
 
     // IP & user-agent
@@ -495,6 +576,7 @@ export const action = async ({ request }) => {
       honeypot: honeypotInfo,
     });
 
+    // Si anti-bot bloque direct
     if (antibotResult.blocked) {
       console.warn(
         "TripleForm COD — Anti-bot blocked request:",
@@ -513,20 +595,60 @@ export const action = async ({ request }) => {
       );
     }
 
+    // ✅ Synchronisation reCAPTCHA avec section AntiBot :
+    // - si config.recaptcha.enabled => toujours vérifier
+    // - ou si countryBlock.defaultAction === "challenge" => vérifier
+    if (antibotResult.needsRecaptcha) {
+      const minScore =
+        antibotResult.recaptchaMinScore != null
+          ? antibotResult.recaptchaMinScore
+          : 0.5;
+
+      const expectedAction =
+        antibotResult.recaptchaExpectedAction || "tf_submit";
+
+      const check = await verifyRecaptchaV3({
+        token: recaptchaToken,
+        remoteip: clientIp,
+        expectedAction: expectedAction || recaptchaAction, // priorité config
+        minScore,
+      });
+
+      if (!check.ok) {
+        console.warn("TripleForm COD — reCAPTCHA failed:", {
+          shop,
+          clientIp,
+          expectedAction,
+          gotAction: check.action,
+          score: check.score,
+          success: check.success,
+        });
+
+        return json(
+          {
+            ok: false,
+            code: "RECAPTCHA_FAILED",
+            error: "Recaptcha verification failed.",
+            details: {
+              success: check.success,
+              score: check.score,
+              action: check.action,
+              expectedAction,
+            },
+          },
+          { status: 403 }
+        );
+      }
+    }
+
     // Adresse de livraison
-    const shippingAddress = buildShippingAddress(
-      fields,
-      fullPhone,
-      countryCode
-    );
+    const shippingAddress = buildShippingAddress(fields, fullPhone, countryCode);
 
     // Totaux (pour Sheets + pixels)
     const currency = body?.currency || null;
     const totals = {
-      priceCents:
-        body?.priceCents != null ? Number(body.priceCents) : null,
-      totalCents:
-        body?.totalCents != null ? Number(body.totalCents) : null,
+      priceCents: body?.priceCents != null ? Number(body.priceCents) : null,
+      totalCents: body?.totalCents != null ? Number(body.totalCents) : null,
       discountCents:
         body?.discountCents != null ? Number(body.discountCents) : null,
       qty,
@@ -542,23 +664,15 @@ export const action = async ({ request }) => {
       fields.notes ? `Notes: ${fields.notes}` : null,
       countryCode ? `Country: ${countryCode}` : null,
       currency && totals.totalCents != null
-        ? `Total shown: ${(Number(totals.totalCents) / 100).toFixed(
-            2
-          )} ${currency}`
+        ? `Total shown: ${(Number(totals.totalCents) / 100).toFixed(2)} ${currency}`
         : null,
     ]
       .filter(Boolean)
       .join(" | ");
 
     const input = {
-      lineItems: [
-        {
-          variantId: variantGid,
-          quantity: qty,
-        },
-      ],
+      lineItems: [{ variantId: variantGid, quantity: qty }],
       shippingAddress,
-      // 👇 tag spécial pour reconnaître les commandes TripleForm dans les dashboards
       tags: [TF_TAG],
       note,
       customAttributes: [
@@ -580,9 +694,7 @@ export const action = async ({ request }) => {
       }
     `;
 
-    const createResp = await admin.graphql(CREATE, {
-      variables: { input },
-    });
+    const createResp = await admin.graphql(CREATE, { variables: { input } });
     const createJson = await createResp.json();
     const createData = createJson?.data?.draftOrderCreate;
     const userErrA = createData?.userErrors || [];
@@ -600,28 +712,19 @@ export const action = async ({ request }) => {
     }
 
     if (!draft?.id) {
-      return json(
-        { ok: false, error: "No draft order id returned." },
-        { status: 500 }
-      );
+      return json({ ok: false, error: "No draft order id returned." }, { status: 500 });
     }
 
-    // 5) draftOrderComplete → crée la vraie commande
+    // 5) draftOrderComplete
     const COMPLETE = `
       mutation draftOrderComplete($id: ID!, $paymentPending: Boolean) {
         draftOrderComplete(id: $id, paymentPending: $paymentPending) {
           draftOrder {
             id
             invoiceUrl
-            order {
-              id
-              name
-            }
+            order { id name }
           }
-          userErrors {
-            field
-            message
-          }
+          userErrors { field message }
         }
       }
     `;
@@ -629,6 +732,7 @@ export const action = async ({ request }) => {
     const compResp = await admin.graphql(COMPLETE, {
       variables: { id: draft.id, paymentPending: true },
     });
+
     const compJson = await compResp.json();
     const compData = compJson?.data?.draftOrderComplete;
     const userErrB = compData?.userErrors || [];
@@ -648,17 +752,15 @@ export const action = async ({ request }) => {
 
     const orderName = orderObj?.name || null;
 
-    // 6) Envoi vers Google Sheets (serveur -> Google)
+    // 6) Google Sheets
     try {
       const orderForSheet = {
         shop,
         createdAt: new Date().toISOString(),
-
         order: {
           id: orderObj?.id || completedDraft?.id || draft.id || null,
           name: orderName,
         },
-
         customer: {
           name: fields.name || "",
           phone: fullPhone,
@@ -668,9 +770,7 @@ export const action = async ({ request }) => {
           country: countryCode || "",
           notes: fields.notes || "",
         },
-
         cart: {
-          // ✅ vrai titre produit (Admin API, puis fallback éventuel sur le body)
           productTitle:
             productInfo.productTitle ||
             body?.productTitle ||
@@ -678,57 +778,32 @@ export const action = async ({ request }) => {
             body?.productName ||
             body?.product_name ||
             body?.title ||
-            (body?.product &&
-              (body.product.title || body.product.name)) ||
+            (body?.product && (body.product.title || body.product.name)) ||
             "",
-
-          // ✅ titre de la variante (si tu veux une colonne séparée)
           variantTitle:
             productInfo.variantTitle ||
             body?.variantTitle ||
             body?.variant_title ||
             "",
-
-          // quantité
           quantity: qty,
-
-          // montants (en money, pas en cents)
           subtotal:
-            totals.priceCents != null
-              ? Number(totals.priceCents) / 100
-              : null,
-
+            totals.priceCents != null ? Number(totals.priceCents) / 100 : null,
           shipping:
-            body?.shippingAmount != null
-              ? Number(body.shippingAmount)
-              : null,
-
+            body?.shippingAmount != null ? Number(body.shippingAmount) : null,
           total:
-            totals.totalCents != null
-              ? Number(totals.totalCents) / 100
-              : null,
-
-          totalCents:
-            totals.totalCents != null ? Number(totals.totalCents) : null,
+            totals.totalCents != null ? Number(totals.totalCents) / 100 : null,
+          totalCents: totals.totalCents != null ? Number(totals.totalCents) : null,
           currency,
         },
-
-        meta: {
-          source: "tripleform-cod",
-        },
+        meta: { source: "tripleform-cod" },
       };
 
-      // ✅ CORRECTION CRITIQUE : Appel sans le paramètre 'admin'
       await appendOrderToSheet({ shop, order: orderForSheet });
     } catch (err) {
-      console.error(
-        "Erreur lors de l'envoi de la commande vers Google Sheets :",
-        err
-      );
-      // on ne bloque pas la commande si Sheets échoue
+      console.error("Erreur lors de l'envoi de la commande vers Google Sheets :", err);
     }
 
-    // 7) Tracking Pixels (Facebook CAPI Purchase, etc.)
+    // 7) Pixels
     try {
       await trackOrderWithPixels({
         admin,
@@ -742,15 +817,12 @@ export const action = async ({ request }) => {
       });
     } catch (err) {
       console.error("Erreur tracking pixels Tripleform COD :", err);
-      // pareil : on ne bloque pas la commande si le tracking échoue
     }
 
-    // ✅ Succès : la commande est créée
     return json({
       ok: true,
       draftId: completedDraft?.id || draft.id,
-      draftInvoiceUrl:
-        completedDraft?.invoiceUrl || draft?.invoiceUrl || null,
+      draftInvoiceUrl: completedDraft?.invoiceUrl || draft?.invoiceUrl || null,
       orderName,
     });
   } catch (e) {
