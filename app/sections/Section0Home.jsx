@@ -870,7 +870,7 @@ function Section0Inner() {
     }
   };
 
-  // load WhatsApp LIVE status
+  // ✅ load WhatsApp LIVE status (SYNC like Section3Sheets)
   const loadWhatsAppLive = async () => {
     setWaLive((p) => ({ ...p, loading: true }));
     try {
@@ -878,16 +878,21 @@ function Section0Inner() {
       const data = await r.json().catch(() => null);
       if (!r.ok || !data) throw new Error(data?.error || "WhatsApp status error");
 
-      const connected = !!data.connected;
+      // ✅ IMPORTANT: same logic as Section3Sheets -> connected if config exists
+      const connected = !!(data?.config && data?.config?.phoneNumber);
+
       const phoneNumber =
-        data.phoneNumber || data?.whatsappStatus?.phoneNumber || data?.config?.phoneNumber || "";
+        data?.config?.phoneNumber ||
+        data?.phoneNumber ||
+        data?.whatsappStatus?.phoneNumber ||
+        "";
 
       setWaLive({
         loading: false,
         connected,
         phoneNumber,
-        lastConnected: data.lastConnected || data?.whatsappStatus?.connectedAt || null,
-        users: data.users || null,
+        lastConnected: data?.lastConnected || data?.whatsappStatus?.connectedAt || null,
+        users: data?.users || null,
       });
     } catch (e) {
       console.error("wa status error", e);
@@ -949,7 +954,7 @@ function Section0Inner() {
       {/* ===== Header (SLIM) ===== */}
       <div className="tf-header">
         <div className="tf-header-row">
-          {/* LEFT: logo + title/sub + video button INLINE (keeps band slim) */}
+          {/* LEFT */}
           <div className="tf-brand">
             <div
               style={{
@@ -989,14 +994,14 @@ function Section0Inner() {
             </button>
           </div>
 
-          {/* CENTER: flags */}
+          {/* CENTER */}
           <div className="tf-flags-wrap">
             <div className="tf-flags">
               <CountryFlagsBar />
             </div>
           </div>
 
-          {/* RIGHT: pill + language (EXTREME RIGHT) */}
+          {/* RIGHT */}
           <div className="tf-header-right">
             <span className="tf-pill">{t("section0.header.pill")}</span>
             <LanguageSelector />
@@ -1131,7 +1136,7 @@ function Section0Inner() {
             </div>
           </div>
 
-          {/* Colonne droite: PlanUsage TOP + Video BELOW */}
+          {/* Colonne droite */}
           <div className="tf-preview-col">
             <div className="tf-preview-card">
               <PlanUsageWidget
