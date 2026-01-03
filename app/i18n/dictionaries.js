@@ -52,7 +52,7 @@ const EN = {
   "section0.plans.btn.alreadyAnnual": "Already on annual",
 
   "section0.plans.starter.orders": "Up to 100 COD orders / month",
-  "section0.plans.basic.orders": "Up to 400 COD orders / month",
+  "section0.plans.basic.orders": "Up to 500 COD orders / month",
   "section0.plans.premium.orders": "Unlimited COD orders",
 
   /* -------- Features list -------- */
@@ -1738,12 +1738,9 @@ const FR = {
   "section0.plans.btn.alreadyMonthly": "Déjà sur mensuel",
   "section0.plans.btn.alreadyAnnual": "Déjà sur annuel",
 
-  "section0.plans.starter.orders":
-    "Jusqu'à 100 commandes COD / mois",
-  "section0.plans.basic.orders":
-    "Jusqu'à 400 commandes COD / mois",
-  "section0.plans.premium.orders":
-    "Commandes COD illimitées",
+  "section0.plans.starter.orders":"Jusqu'à 100 commandes COD / mois",
+  "section0.plans.basic.orders": "Jusqu'à 500 commandes COD / mois",
+  "section0.plans.premium.orders":"Commandes COD illimitées",
 
   "section0.features.1":
     "Formulaire COD en 1 clic sur les pages produit.",
@@ -3416,7 +3413,7 @@ const ES = {
   "section0.plans.starter.orders":
     "Hasta 100 pedidos COD / mes",
   "section0.plans.basic.orders":
-    "Hasta 400 pedidos COD / mes",
+    "Hasta 500 pedidos COD / mes",
   "section0.plans.premium.orders":
     "Pedidos COD ilimitados",
 
@@ -5084,7 +5081,7 @@ const AR = {
   "section0.plans.starter.orders":
     "حتى 100 طلب COD في الشهر",
   "section0.plans.basic.orders":
-    "حتى 400 طلب COD في الشهر",
+    "حتى 500 طلب COD في الشهر",
   "section0.plans.premium.orders":
     "طلبات COD غير محدودة",
 
