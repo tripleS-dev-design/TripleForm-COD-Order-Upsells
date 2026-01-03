@@ -327,14 +327,16 @@ function defaultCfg() {
       defaultAction: "allow",
       allowList: [],
       denyList: [],
-      geoRules: [], // ✅ NEW
+      geoRules: [],
     },
 
+    // ✅ FIX: reCAPTCHA v3 فقط
     recaptcha: {
       enabled: false,
-      version: "v2_checkbox",
+      version: "v3",
       siteKey: "",
       secretKey: "",
+      expectedAction: "tf_submit",
       minScore: 0.5,
     },
 
@@ -433,30 +435,61 @@ export default function Section5Antibot() {
   const [geoProvince, setGeoProvince] = useState("");
   const [geoCity, setGeoCity] = useState("");
 
+  // local fallback
   useEffect(() => {
     if (typeof window === "undefined") return;
     try {
       const raw = window.localStorage.getItem("tripleform_cod_antibot_min_v4");
       if (raw) {
         const parsed = JSON.parse(raw);
-        setCfg((prev) => ({ ...prev, ...parsed }));
+        const fixed = {
+          ...parsed,
+          recaptcha: {
+            ...(parsed.recaptcha || {}),
+            version: "v3",
+            expectedAction:
+              (parsed.recaptcha && parsed.recaptcha.expectedAction) || "tf_submit",
+            minScore:
+              parsed.recaptcha && parsed.recaptcha.minScore != null
+                ? parsed.recaptcha.minScore
+                : 0.5,
+          },
+        };
+        setCfg((prev) => ({ ...prev, ...fixed }));
       }
     } catch {}
   }, []);
 
+  // remote load
   useEffect(() => {
     if (typeof window === "undefined") return;
     (async () => {
       try {
         const res = await fetch("/api/antibot/load", { credentials: "include" });
         const j = await res.json().catch(() => null);
-        if (j && j.ok && j.antibot) setCfg((prev) => ({ ...prev, ...j.antibot }));
+        if (j && j.ok && j.antibot) {
+          const fixed = {
+            ...j.antibot,
+            recaptcha: {
+              ...(j.antibot.recaptcha || {}),
+              version: "v3", // ✅ FORCE V3 ALWAYS
+              expectedAction:
+                (j.antibot.recaptcha && j.antibot.recaptcha.expectedAction) || "tf_submit",
+              minScore:
+                j.antibot.recaptcha && j.antibot.recaptcha.minScore != null
+                  ? j.antibot.recaptcha.minScore
+                  : 0.5,
+            },
+          };
+          setCfg((prev) => ({ ...prev, ...fixed }));
+        }
       } catch (e) {
         console.error("Erreur load antibot (remote):", e);
       }
     })();
   }, []);
 
+  // persist local
   useEffect(() => {
     if (typeof window === "undefined") return;
     try {
@@ -467,11 +500,22 @@ export default function Section5Antibot() {
   const handleSaveRemote = async () => {
     try {
       setSaving(true);
+      // ✅ ensure v3 is always saved
+      const payload = {
+        ...cfg,
+        recaptcha: {
+          ...(cfg.recaptcha || {}),
+          version: "v3",
+          expectedAction: cfg.recaptcha?.expectedAction || "tf_submit",
+          minScore: cfg.recaptcha?.minScore != null ? cfg.recaptcha.minScore : 0.5,
+        },
+      };
+
       const res = await fetch("/api/antibot/save", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ antibot: cfg }),
+        body: JSON.stringify({ antibot: payload }),
       });
       const j = await res.json().catch(() => ({ ok: true }));
       if (!res.ok || (j && j.ok === false)) throw new Error((j && j.error) || "Save failed");
@@ -490,7 +534,15 @@ export default function Section5Antibot() {
   const setIP = (p) => setCfg((c) => ({ ...c, ipBlock: { ...c.ipBlock, ...p } }));
   const setTEL = (p) => setCfg((c) => ({ ...c, phoneBlock: { ...c.phoneBlock, ...p } }));
   const setCTRY = (p) => setCfg((c) => ({ ...c, countryBlock: { ...c.countryBlock, ...p } }));
-  const setRC = (p) => setCfg((c) => ({ ...c, recaptcha: { ...c.recaptcha, ...p } }));
+  const setRC = (p) =>
+    setCfg((c) => ({
+      ...c,
+      recaptcha: {
+        ...c.recaptcha,
+        ...p,
+        version: "v3", // ✅ LOCK
+      },
+    }));
   const setHP = (p) => setCfg((c) => ({ ...c, honeypot: { ...c.honeypot, ...p } }));
 
   const addItems = (arr, items) => {
@@ -829,7 +881,10 @@ export default function Section5Antibot() {
                   {(geoRulePills || []).map((label, idx) => (
                     <span className="token" key={label + "-" + idx}>
                       <span title={label}>{label}</span>
-                      <button aria-label={t("section5.buttons.remove")} onClick={() => removeGeoRuleAt(idx)}>
+                      <button
+                        aria-label={t("section5.buttons.remove")}
+                        onClick={() => removeGeoRuleAt(idx)}
+                      >
                         ×
                       </button>
                     </span>
@@ -870,6 +925,7 @@ export default function Section5Antibot() {
             </div>
           )}
 
+          {/* ✅ reCAPTCHA v3 ONLY UI */}
           {sel === "recap" && (
             <div className="tf-panel">
               <GroupCard title="section5.recaptcha.title" t={t}>
@@ -879,40 +935,45 @@ export default function Section5Antibot() {
                     checked={!!cfg.recaptcha.enabled}
                     onChange={(v) => setRC({ enabled: v })}
                   />
-                  <Select
-                    label={t("section5.recaptcha.version")}
-                    value={cfg.recaptcha.version}
-                    onChange={(v) => setRC({ version: v })}
-                    options={[
-                      { label: t("section5.recaptcha.versionOptions.v2_checkbox"), value: "v2_checkbox" },
-                      { label: t("section5.recaptcha.versionOptions.v2_invisible"), value: "v2_invisible" },
-                      { label: t("section5.recaptcha.versionOptions.v3"), value: "v3" },
-                    ]}
-                  />
+
+                  <div style={{ display: "grid", gap: 6 }}>
+                    <Text as="span" variant="bodySm" tone="subdued">
+                      {t("section5.recaptcha.version")}
+                    </Text>
+                    <Badge tone="success">v3 (fixed)</Badge>
+                  </div>
+
                   <TextField
                     label={t("section5.recaptcha.siteKey")}
                     value={cfg.recaptcha.siteKey}
                     onChange={(v) => setRC({ siteKey: v })}
                     autoComplete="off"
                   />
+
                   <TextField
                     label={t("section5.recaptcha.secretKey")}
                     value={cfg.recaptcha.secretKey}
                     onChange={(v) => setRC({ secretKey: v })}
                     autoComplete="off"
                   />
-                  {cfg.recaptcha.version === "v3" && (
-                    <TextField
-                      type="number"
-                      label={t("section5.recaptcha.minScore")}
-                      value={String(cfg.recaptcha.minScore)}
-                      onChange={(v) => setRC({ minScore: Number(v || 0.5) })}
-                    />
-                  )}
+
+                  <TextField
+                    label="Expected action"
+                    value={cfg.recaptcha.expectedAction || "tf_submit"}
+                    onChange={(v) => setRC({ expectedAction: v || "tf_submit" })}
+                    autoComplete="off"
+                  />
+
+                  <TextField
+                    type="number"
+                    label={t("section5.recaptcha.minScore")}
+                    value={String(cfg.recaptcha.minScore ?? 0.5)}
+                    onChange={(v) => setRC({ minScore: Number(v || 0.5) })}
+                  />
                 </Grid3>
 
                 <Text tone="subdued" as="p">
-                  {t("section5.recaptcha.helpText")}
+                  ✅ reCAPTCHA v3 only. Each shop must paste its own Site key + Secret key.
                 </Text>
               </GroupCard>
             </div>
