@@ -290,7 +290,7 @@ export default function PlanUsageWidget({
               height: "100%",
               borderRadius: 999,
               background: "linear-gradient(90deg, #0B3B82, #7D0031)",
-              position: relative,
+              position: "relative",
               transition: "width 0.35s ease-out",
             }}
           >
