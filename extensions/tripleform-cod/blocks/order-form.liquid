@@ -1,5 +1,6 @@
 {% comment %}
 Tripleform COD – App block (product template)
+
 Lit la config form depuis:
 - product.metafields.tripleform_cod.settings (prioritaire)
 - shop.metafields.tripleform_cod.settings (fallback)
@@ -7,10 +8,20 @@ Lit la config form depuis:
 Lit la config OFFRES / UPSELL depuis:
 - product.metafields.tripleform_cod.offers (prioritaire)
 - shop.metafields.tripleform_cod.offers (fallback)
+
+reCAPTCHA v3 (SCALABLE):
+- lit la Site Key depuis shop.metafields.tripleform_cod.recaptcha_site_key
+- injecte automatiquement:
+  - window.TF_RECAPTCHA_SITE_KEY
+  - script https://www.google.com/recaptcha/api.js?render=SITE_KEY
+- passe aussi la clé au JS via data-recaptcha-site-key
 {% endcomment %}
 
 {%- assign tf_prod_val = product.metafields.tripleform_cod.settings.value -%}
 {%- assign tf_shop_val = shop.metafields.tripleform_cod.settings.value -%}
+
+{%- comment -%} reCAPTCHA site key (public) depuis metafield shop {%- endcomment -%}
+{%- assign tf_recaptcha_site_key = shop.metafields.tripleform_cod.recaptcha_site_key.value -%}
 
 {%- if tf_prod_val and tf_prod_val != blank -%}
   {%- assign tf_json = tf_prod_val -%}
@@ -143,7 +154,7 @@ Lit la config OFFRES / UPSELL depuis:
       "successText": "Thanks! We'll contact you",
       "buttonIcon": "CartIcon"
     },
-      "thankyou": {
+    "thankyou": {
       "enabled": true,
       "mode": "popup",
       "title": "Thank you!",
@@ -177,7 +188,6 @@ Lit la config OFFRES / UPSELL depuis:
       "cartRowBorder": "#E5E7EB",
       "cartTitleColor": "#0F172A",
       "cartTextColor": "#0F172A",
-
       "direction": "ltr",
       "fontSize": 14,
       "titleAlign": "left",
@@ -191,9 +201,7 @@ Lit la config OFFRES / UPSELL depuis:
       "openDelayMs": 0,
       "closeOnOutside": true,
       "effect": "none",
-
       "buttonMotion": "none",
-
       "stickyType": "none",
       "stickyLabel": "Order now",
       "stickyIcon": "CartIcon",
@@ -201,7 +209,6 @@ Lit la config OFFRES / UPSELL depuis:
       "drawerSize": "md",
       "overlayColor": "#020617",
       "overlayOpacity": 70,
-
       "country": "{{ shop_country_code }}",
       "codCountry": "{{ shop_country_code }}",
       "provinceKey": "",
@@ -361,6 +368,18 @@ Ces données sont écrites par /api/save-offers dans:
 
 {%- assign current_variant = product.selected_or_first_available_variant -%}
 
+{%- comment -%}
+✅ reCAPTCHA auto-inject (SCALABLE)
+- Seulement si la Site Key existe dans le shop metafield
+- Pas besoin que l'utilisateur modifie le thème manuellement
+{%- endcomment -%}
+{% if tf_recaptcha_site_key != blank %}
+  <script>
+    window.TF_RECAPTCHA_SITE_KEY = {{ tf_recaptcha_site_key | json }};
+  </script>
+  <script src="https://www.google.com/recaptcha/api.js?render={{ tf_recaptcha_site_key }}"></script>
+{% endif %}
+
 <div
   id="tripleform-cod-{{ section.id }}"
   class="tripleform-cod"
@@ -370,6 +389,7 @@ Ces données sont écrites par /api/save-offers dans:
   data-variant-id='{{ current_variant.id }}'
   data-currency='{{ cart.currency.iso_code | default: shop.currency }}'
   data-locale='{{ request.locale.iso_code }}'
+  data-recaptcha-site-key='{{ tf_recaptcha_site_key | escape }}'
 
   {%- comment -%}
     GEO / SHIPPING
