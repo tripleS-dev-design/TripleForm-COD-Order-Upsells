@@ -18,7 +18,7 @@ import {
 } from "@shopify/polaris";
 import * as PI from "@shopify/polaris-icons";
 import { useI18n } from "../i18n/react";
-import CountryFlagsBar from "./components/CountryFlagsBar";
+import CountryFlagsBar from "../components/CountryFlagsBar";
 
 /* ======================= SAFE ICON helper ======================= */
 function SafeIcon({ name, fallback = "AppsIcon", tone }) {

@@ -11,8 +11,9 @@ import {
   Badge,
 } from "@shopify/polaris";
 import { useI18n } from "../i18n/react";
+import CountryFlagsBar from "../components/CountryFlagsBar";
 
-/* ======================= CSS / layout (same style as Sheets) ======================= */
+/* ======================= CSS / layout (match Section Form) ======================= */
 const LAYOUT_CSS = `
   html, body { margin:0; background:#F6F7F9; }
   .Polaris-Page, .Polaris-Page__Content {
@@ -22,93 +23,136 @@ const LAYOUT_CSS = `
   }
   .Polaris-TextField, .Polaris-Select, .Polaris-Labelled__LabelWrapper { min-width:0; }
 
-  /* HEADER — same style as Forms, Offers & Sheets */
-  .tf-header {
+  /* ✅ HEADER SLIM + FLAGS (same as Section Form) */
+  .tf-header{
     background:linear-gradient(90deg,#0B3B82,#7D0031);
     border-bottom:none;
-    padding:12px 16px;
+    padding:6px 10px;
     position:sticky;
     top:0;
     z-index:60;
     box-shadow:0 10px 28px rgba(11,59,130,0.45);
   }
-
-  .tf-shell { padding:16px; }
-
-  /* ===== Slim Save Bar (global) ===== */
-  .tf-savebar {
-    position:sticky;
-    top:64px; /* under header */
-    z-index:55;
-    margin:0;
-    padding:8px 12px;
-    border-bottom:1px solid rgba(0,0,0,0.06);
-    background:#0B1220;
-    color:#F9FAFB;
-    display:flex;
+  .tf-header-row{
+    display:grid;
+    grid-template-columns: auto 1fr auto;
     align-items:center;
-    justify-content:space-between;
-    gap:12px;
+    gap:10px;
+    min-height:44px;
   }
-  .tf-savebar-left {
+  .tf-brand{
     display:flex;
     align-items:center;
     gap:10px;
     min-width:0;
   }
-  .tf-savebar-dot {
-    width:10px;height:10px;border-radius:999px;flex:none;
-    background:#60A5FA;
-    box-shadow:0 0 0 6px rgba(96,165,250,.18);
+  .tf-brand-text{
+    display:flex;
+    flex-direction:column;
+    min-width:0;
+    line-height:1.05;
   }
-  .tf-savebar-msg {
+  .tf-brand-title{
+    font-weight:900;
+    color:#F9FAFB;
     font-size:13px;
-    line-height:1.2;
     white-space:nowrap;
     overflow:hidden;
     text-overflow:ellipsis;
-    opacity:.95;
   }
-  .tf-savebar-actions { display:flex; align-items:center; gap:8px; flex:none; }
-  .tf-savebar-ghost {
-    background:transparent;
-    border:1px solid rgba(255,255,255,0.22);
-    color:#fff;
-    border-radius:10px;
+  .tf-brand-sub{
+    font-size:11px;
+    color:rgba(249,250,251,0.78);
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .tf-flags-wrap{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    width:100%;
+    min-width:0;
+  }
+  .tf-header-right{
+    display:flex;
+    align-items:center;
+    justify-content:flex-end;
+    gap:10px;
+    min-width:0;
+  }
+
+  /* ✅ SAVE BAR (slim, pro) — same as Section Form */
+  .tf-savebar{
+    position:sticky;
+    top:56px;
+    z-index:55;
+    padding:8px 10px;
+    background:rgba(255,255,255,0.86);
+    backdrop-filter: blur(10px);
+    border-bottom:1px solid #E5E7EB;
+  }
+  .tf-savebar-inner{
+    max-width:1100px;
+    margin:0 auto;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    padding:10px 12px;
+    border-radius:14px;
+    border:1px solid #E5E7EB;
+    box-shadow:0 10px 24px rgba(15,23,42,.06);
+  }
+  .tf-savebar-left{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    min-width:0;
+  }
+  .tf-savebadge{
+    font-size:12px;
+    font-weight:900;
     padding:6px 10px;
-    font-size:12px;
-    cursor:pointer;
+    border-radius:999px;
+    border:1px solid #E5E7EB;
+    background:#F8FAFC;
+    white-space:nowrap;
   }
-  .tf-savebar-primary {
-    background:#2563EB;
-    border:1px solid rgba(255,255,255,0.16);
-    color:#fff;
-    border-radius:10px;
-    padding:6px 12px;
-    font-size:12px;
+  .tf-savebar-text{
+    display:flex;
+    flex-direction:column;
+    min-width:0;
+    line-height:1.15;
+  }
+  .tf-savemsg{
+    font-size:13px;
     font-weight:700;
-    cursor:pointer;
+    color:#0F172A;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
   }
-  .tf-savebar-primary[disabled] { opacity:.6; cursor:not-allowed; }
-
-  .tf-savebar[data-tone="success"] { background:linear-gradient(90deg,#064E3B,#065F46); }
-  .tf-savebar[data-tone="warning"] { background:linear-gradient(90deg,#111827,#0B1220); }
-  .tf-savebar[data-tone="error"] { background:linear-gradient(90deg,#7F1D1D,#450A0A); }
-
-  /* blink + subtle slide to catch attention when user switches panels without saving */
-  @keyframes tfBlink {
-    0%,100% { filter:brightness(1); }
-    50% { filter:brightness(1.18); }
-  }
-  @keyframes tfNudge {
-    0%,100% { transform:translateY(0); }
-    50% { transform:translateY(-1px); }
-  }
-  .tf-savebar[data-attn="1"] {
-    animation: tfBlink .9s ease-in-out infinite, tfNudge .9s ease-in-out infinite;
+  .tf-savesub{
+    font-size:12px;
+    color:#64748B;
+    font-weight:600;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
   }
 
-  /* ===== Grid: left nav | center content | right guide ===== */
+  @keyframes tfBarBlink { 0%,100%{filter:none} 50%{filter:brightness(1.15)} }
+  @keyframes tfBarSlide { 0%{transform:translateX(0)} 50%{transform:translateX(10px)} 100%{transform:translateX(0)} }
+  .tf-attention{
+    animation: tfBarBlink .9s ease-in-out 2, tfBarSlide .9s ease-in-out 2;
+    border-color:#F97316 !important;
+    box-shadow:0 10px 24px rgba(249,115,22,.18);
+  }
+
+  .tf-shell { padding:16px; }
+
+  /* ===== Grid: left rail | center content | right guide ===== */
   .tf-editor {
     display:grid;
     grid-template-columns: 260px minmax(0,1fr) 320px;
@@ -116,11 +160,10 @@ const LAYOUT_CSS = `
     align-items:start;
   }
 
-  /* left rail (menu + stats) */
   .tf-rail {
     position:sticky;
-    top:112px;
-    max-height:calc(100vh - 130px);
+    top:116px;
+    max-height:calc(100vh - 132px);
     overflow:auto;
   }
   .tf-rail-card {
@@ -152,7 +195,6 @@ const LAYOUT_CSS = `
     box-shadow:0 12px 26px rgba(37,99,235,.25);
   }
 
-  /* Center column (main content) */
   .tf-main-col {
     display:grid;
     gap:16px;
@@ -166,11 +208,10 @@ const LAYOUT_CSS = `
     min-width:0;
   }
 
-  /* Right column (guide) */
   .tf-side-col {
     position:sticky;
-    top:112px;
-    max-height:calc(100vh - 130px);
+    top:116px;
+    max-height:calc(100vh - 132px);
     overflow-y:auto;
     overflow-x:hidden;
     width:320px;
@@ -184,7 +225,7 @@ const LAYOUT_CSS = `
     margin-bottom:12px;
   }
 
-  /* TITLES — same banner as Sheets section */
+  /* TITLES */
   .tf-group-title {
     padding:10px 12px;
     background:linear-gradient(90deg,#0B3B82,#7D0031);
@@ -205,9 +246,9 @@ const LAYOUT_CSS = `
   }
 
   @media (max-width: 980px) {
-    .tf-savebar { top:64px; }
     .tf-editor { grid-template-columns: 1fr; }
     .tf-rail, .tf-side-col { position:static; max-height:none; width:auto; }
+    .tf-brand-sub{ display:none; }
   }
 `;
 
@@ -219,6 +260,11 @@ function useInjectCss() {
     s.id = "tf-pixels-css";
     s.appendChild(document.createTextNode(LAYOUT_CSS));
     document.head.appendChild(s);
+    return () => {
+      try {
+        s.remove();
+      } catch {}
+    };
   }, []);
 }
 
@@ -245,16 +291,7 @@ const Grid3 = ({ children }) => (
   </div>
 );
 
-function deepClone(obj) {
-  try {
-    return structuredClone(obj);
-  } catch {
-    return JSON.parse(JSON.stringify(obj));
-  }
-}
-
 function stableStringify(obj) {
-  // deterministic enough for configs (we keep keys stable in our objects)
   try {
     return JSON.stringify(obj);
   } catch {
@@ -268,8 +305,8 @@ const defaultCfg = () => ({
 
   google: {
     enabled: false,
-    measurementId: "", // G-XXXX
-    adsConversionId: "", // AW-XXXX
+    measurementId: "",
+    adsConversionId: "",
     adsConversionLabel: "",
     sendPageView: true,
     sendPurchase: true,
@@ -316,81 +353,108 @@ const defaultCfg = () => ({
   },
 });
 
-/* ============================== Slim Save Bar ============================== */
-function SlimSaveBar({ tone, attn, message, saving, onSave, onDismiss, t }) {
-  if (!message) return null;
+/* ============================== SaveBarSlim (same design as Section Form) ============================== */
+function SaveBarSlim({ show, dirty, saving, notice, attention, onSave, t }) {
+  if (!show) return null; // ✅ key: only show when user switches panel / save result
+  if (!dirty && !notice) return null;
+
+  const isError = notice?.type === "error";
+  const isSuccess = notice?.type === "success";
+
+  const badgeText = isError ? "Error" : isSuccess ? "Saved" : dirty ? "Unsaved" : "Info";
+  const badgeStyle = isError
+    ? { background: "#FEF2F2", borderColor: "#FCA5A5", color: "#991B1B" }
+    : isSuccess
+    ? { background: "#ECFDF5", borderColor: "#86EFAC", color: "#065F46" }
+    : dirty
+    ? { background: "#FFF7ED", borderColor: "#FDBA74", color: "#9A3412" }
+    : {};
+
+  const mainMsg =
+    notice?.msg ||
+    (dirty ? (t?.("common.unsavedChanges") || "You have unsaved changes.") : "");
+
+  const subMsg =
+    dirty
+      ? (t?.("common.unsavedSub") ||
+          "Save before leaving this section to avoid losing changes.")
+      : "";
 
   return (
-    <div className="tf-savebar" data-tone={tone} data-attn={attn ? 1 : 0}>
-      <div className="tf-savebar-left">
-        <span className="tf-savebar-dot" />
-        <div className="tf-savebar-msg">{message}</div>
-      </div>
-      <div className="tf-savebar-actions">
-        <button className="tf-savebar-ghost" onClick={onDismiss} type="button">
-          {t("common.dismiss") || "Dismiss"}
-        </button>
-        <button
-          className="tf-savebar-primary"
-          onClick={onSave}
-          disabled={!!saving}
-          type="button"
-        >
-          {saving ? (t("common.saving") || "Saving…") : (t("common.save") || "Save")}
-        </button>
+    <div className="tf-savebar">
+      <div className={`tf-savebar-inner ${attention ? "tf-attention" : ""}`}>
+        <div className="tf-savebar-left">
+          <span className="tf-savebadge" style={badgeStyle}>
+            {badgeText}
+          </span>
+
+          <div className="tf-savebar-text">
+            <div className="tf-savemsg">{mainMsg}</div>
+            {subMsg ? <div className="tf-savesub">{subMsg}</div> : null}
+          </div>
+        </div>
+
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          {dirty ? (
+            <Button variant="primary" onClick={onSave} loading={saving}>
+              {t?.("common.save") || "Save"}
+            </Button>
+          ) : null}
+        </div>
       </div>
     </div>
   );
 }
 
-/* ============================== HEADER SHELL ============================== */
+/* ============================== HEADER SHELL (with flags) ============================== */
 function PageShell({ children, t, onSave, saving }) {
   return (
     <>
       <div className="tf-header">
-        <InlineStack align="space-between" blockAlign="center">
-          <InlineStack gap="300" blockAlign="center">
+        <div className="tf-header-row">
+          {/* LEFT: brand */}
+          <div className="tf-brand">
             <div
               style={{
-                width: 40,
-                height: 40,
+                width: 38,
+                height: 38,
                 borderRadius: 12,
                 overflow: "hidden",
                 boxShadow: "0 10px 28px rgba(11,59,130,0.55)",
                 border: "1px solid rgba(255,255,255,0.35)",
                 background: "linear-gradient(135deg,#0B3B82,#7D0031)",
+                flex: "0 0 auto",
               }}
             >
               <img
                 src="/tripleform-cod-icon.png"
                 alt="TripleForm COD"
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  display: "block",
-                  objectFit: "cover",
-                }}
+                style={{ width: "100%", height: "100%", display: "block", objectFit: "cover" }}
               />
             </div>
-            <div>
-              <div style={{ fontWeight: 700, color: "#F9FAFB" }}>
-                {t("section4.header.appTitle")}
-              </div>
-              <div style={{ fontSize: 12, color: "rgba(249,250,251,0.8)" }}>
-                {t("section4.header.appSubtitle")}
-              </div>
-            </div>
-          </InlineStack>
 
-          <InlineStack gap="200" blockAlign="center">
-            <div style={{ fontSize: 12, color: "rgba(249,250,251,0.9)" }}>
-              {t("section4.header.pill")}
+            <div className="tf-brand-text">
+              <div className="tf-brand-title">
+                {t("section4.header.appTitle") || "TripleForm COD"}
+              </div>
+              <div className="tf-brand-sub">
+                {t("section4.header.appSubtitle") || "Pixels & Tracking"}
+              </div>
             </div>
+          </div>
+
+          {/* CENTER: flags */}
+          <div className="tf-flags-wrap">
+            <CountryFlagsBar />
+          </div>
+
+          {/* RIGHT: actions */}
+          <div className="tf-header-right">
             <Button variant="primary" size="slim" onClick={onSave} loading={saving}>
-              {t("section4.buttons.saveStore")}
+              {t("section4.buttons.saveStore") || "Save"}
             </Button>
-          </InlineStack>
-        </InlineStack>
+          </div>
+        </div>
       </div>
 
       <div className="tf-shell">{children}</div>
@@ -421,50 +485,67 @@ export default function Section4Pixels() {
 
   const [saving, setSaving] = useState(false);
 
-  // === unified save logic ===
-  const lastSavedRef = useRef(stableStringify(defaultCfg())); // snapshot of last saved remote
-  const lastViewRef = useRef(view);
-
+  // ✅ unified dirty snapshot
+  const lastSavedRef = useRef(stableStringify(defaultCfg()));
+  const cfgSig = useMemo(() => stableStringify(cfg), [cfg]);
   const [dirty, setDirty] = useState(false);
 
-  // SaveBar state (shown only when user switches panel without saving, or after save)
-  const [bar, setBar] = useState({
-    show: false,
-    tone: "warning", // warning | success | error
-    attn: false,
-    msg: "",
-  });
+  // ✅ SaveBar behavior (ONLY on panel switch OR save result)
+  const [showSaveBar, setShowSaveBar] = useState(false);
+  const [saveNotice, setSaveNotice] = useState(null); // {type,msg}
+  const [saveAttention, setSaveAttention] = useState(false);
+  const attentionTimerRef = useRef(null);
+  const noticeTimerRef = useRef(null);
 
-  const showBar = (patch) => setBar((b) => ({ ...b, show: true, ...patch }));
-  const hideBar = () => setBar((b) => ({ ...b, show: false, attn: false, msg: "" }));
+  const lastViewRef = useRef(view);
 
-  // Detect dirty when cfg changes (but DO NOT spam user here)
-  const cfgSig = useMemo(() => stableStringify(cfg), [cfg]);
+  const bumpAttention = () => {
+    setSaveAttention(true);
+    try {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch {}
+    if (attentionTimerRef.current) clearTimeout(attentionTimerRef.current);
+    attentionTimerRef.current = setTimeout(() => setSaveAttention(false), 1600);
+  };
+
+  const pushNotice = (type, msg) => {
+    setSaveNotice({ type, msg });
+    if (noticeTimerRef.current) clearTimeout(noticeTimerRef.current);
+    noticeTimerRef.current = setTimeout(() => setSaveNotice(null), 2600);
+  };
+
   useEffect(() => {
-    const isDirty = cfgSig !== lastSavedRef.current;
-    setDirty(isDirty);
-    // don't show bar on each keystroke
+    return () => {
+      if (attentionTimerRef.current) clearTimeout(attentionTimerRef.current);
+      if (noticeTimerRef.current) clearTimeout(noticeTimerRef.current);
+    };
+  }, []);
+
+  // ✅ Detect dirty (NO spam bar here)
+  useEffect(() => {
+    setDirty(cfgSig !== lastSavedRef.current);
   }, [cfgSig]);
 
-  // When user switches panel: if dirty => show attention bar (blink)
+  // ✅ When user switches panel: if dirty => SHOW save bar + attention
   useEffect(() => {
     const prev = lastViewRef.current;
     if (prev !== view) {
       if (dirty) {
-        showBar({
-          tone: "warning",
-          attn: true,
-          msg:
-            t("common.unsavedChanges") ||
-            t("section4.save.unsaved") ||
-            "You have unsaved changes. Save to apply them to your store.",
-        });
+        setShowSaveBar(true);
+        bumpAttention();
+        // optional message (keeps badge Unsaved)
+        pushNotice(
+          null,
+          t("common.unsavedChanges") ||
+            "You have unsaved changes. Save to apply them to your store."
+        );
       }
       lastViewRef.current = view;
     }
-  }, [view, dirty]); // eslint-disable-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [view]);
 
-  // ===== load from localStorage (frontend only) =====
+  // ===== load from localStorage =====
   useEffect(() => {
     if (typeof window === "undefined") return;
     try {
@@ -490,23 +571,22 @@ export default function Section4Pixels() {
         if (cancelled) return;
 
         if (j?.ok && j.pixels) {
-          const merged = (prev) => ({ ...prev, ...j.pixels });
           setCfg((prev) => {
-            const next = merged(prev);
-            // set last saved snapshot from server load
+            const next = { ...prev, ...j.pixels };
             lastSavedRef.current = stableStringify(next);
             return next;
           });
 
-          // keep localStorage in sync
           try {
-            window.localStorage.setItem("tripleform_cod_pixels_v1", JSON.stringify(j.pixels));
-          } catch {
-            /* ignore */
-          }
+            window.localStorage.setItem(
+              "tripleform_cod_pixels_v1",
+              JSON.stringify(j.pixels)
+            );
+          } catch {}
 
-          // clear any old bar
-          hideBar();
+          setShowSaveBar(false);
+          setSaveNotice(null);
+          setSaveAttention(false);
         }
       } catch (e) {
         console.error("Error loading pixels (remote):", e);
@@ -543,33 +623,34 @@ export default function Section4Pixels() {
       const j = await res.json().catch(() => ({ ok: true }));
       if (!res.ok || j?.ok === false) throw new Error(j?.error || "Save failed");
 
-      // Update "last saved" snapshot so dirty becomes false
       lastSavedRef.current = stableStringify(cfg);
+      setDirty(false);
 
-      showBar({
-        tone: "success",
-        attn: false,
-        msg: t("section4.save.success") || "Saved successfully. Your tracking settings are now applied.",
-      });
+      // ✅ show bar for feedback, then auto-hide
+      setShowSaveBar(true);
+      pushNotice(
+        "success",
+        t("section4.save.success") ||
+          "Saved successfully. Your tracking settings are now applied."
+      );
 
-      // auto-hide success after short delay
       setTimeout(() => {
-        hideBar();
+        setShowSaveBar(false);
       }, 1800);
     } catch (e) {
-      showBar({
-        tone: "error",
-        attn: true,
-        msg:
-          t("section4.save.error", { error: e?.message }) ||
-          `Save failed: ${e?.message || "Unknown error"}`,
-      });
+      setShowSaveBar(true);
+      bumpAttention();
+      pushNotice(
+        "error",
+        t("section4.save.error", { error: e?.message }) ||
+          `Save failed: ${e?.message || "Unknown error"}`
+      );
     } finally {
       setSaving(false);
     }
   };
 
-  /* === TEST backend button (CAPI / Events API / client config) === */
+  /* === TEST backend button === */
   const handleTestRemote = async () => {
     try {
       setTestLoading(true);
@@ -601,7 +682,7 @@ export default function Section4Pixels() {
   const setTT = (p) => setCfg((c) => ({ ...c, tiktok: { ...c.tiktok, ...p } }));
   const setTTAPI = (p) => setCfg((c) => ({ ...c, tiktok_api: { ...c.tiktok_api, ...p } }));
 
-  /* ===== rail (main menu) ===== */
+  /* ===== rail menu ===== */
   const panels = [
     { key: "overview", label: t("section4.rail.panels.overview") },
     { key: "google", label: t("section4.rail.panels.google") },
@@ -612,7 +693,6 @@ export default function Section4Pixels() {
     { key: "tests", label: t("section4.rail.panels.tests") },
   ];
 
-  /* ===== small status info for rail ===== */
   const statusBadge = (enabled) => (
     <Badge tone={enabled ? "success" : "critical"}>
       {enabled ? t("section4.status.on") : t("section4.status.off")}
@@ -625,27 +705,24 @@ export default function Section4Pixels() {
     </Badge>
   );
 
-  // optional: a tiny helper for navigation that respects the "show bar only on switching panel"
   const go = (nextKey) => setView(nextKey);
 
-  /* ===================== RENDER ===================== */
   return (
     <PageShell t={t} onSave={handleSaveRemote} saving={saving}>
-      {/* Slim Save Bar: appears ONLY when switching panel while dirty (or after save/error) */}
-      <SlimSaveBar
-        tone={bar.tone}
-        attn={bar.attn}
-        message={bar.show ? bar.msg : ""}
+      {/* ✅ SaveBarSlim — shows ONLY when switching panel while dirty OR after save/error */}
+      <SaveBarSlim
+        show={showSaveBar}
+        dirty={dirty}
         saving={saving}
+        notice={saveNotice}
+        attention={saveAttention}
         onSave={handleSaveRemote}
-        onDismiss={hideBar}
         t={t}
       />
 
       <div className="tf-editor">
         {/* ===== Left rail ===== */}
         <div className="tf-rail">
-          {/* Panel menu */}
           <div className="tf-rail-card">
             <div className="tf-rail-head">{t("section4.rail.title")}</div>
             <div className="tf-rail-list">
@@ -662,7 +739,6 @@ export default function Section4Pixels() {
             </div>
           </div>
 
-          {/* Quick status */}
           <div className="tf-rail-card">
             <div className="tf-rail-head">{t("section4.rail.statusTitle")}</div>
             <div style={{ padding: 10 }}>
@@ -688,16 +764,11 @@ export default function Section4Pixels() {
                   {statusBadge(cfg.tiktok_api.enabled)}
                 </InlineStack>
 
-                <Text tone="subdued" as="p">
-                  {t("section4.rail.statusNote")}
-                </Text>
-
-                {/* Optional tiny indicator (no alert spam) */}
-                {dirty && (
+                {dirty ? (
                   <Text as="p" tone="warning">
                     {t("common.unsavedShort") || "Unsaved changes"}
                   </Text>
-                )}
+                ) : null}
               </BlockStack>
             </div>
           </div>
@@ -705,7 +776,6 @@ export default function Section4Pixels() {
 
         {/* ===== Center column ===== */}
         <div className="tf-main-col">
-          {/* --- OVERVIEW --- */}
           {view === "overview" && (
             <div className="tf-panel">
               <GroupCard t={t} title="section4.overview.title">
@@ -733,7 +803,6 @@ export default function Section4Pixels() {
             </div>
           )}
 
-          {/* --- GOOGLE --- */}
           {view === "google" && (
             <div className="tf-panel">
               <BlockStack gap="300">
@@ -789,7 +858,6 @@ export default function Section4Pixels() {
             </div>
           )}
 
-          {/* --- FACEBOOK PIXEL --- */}
           {view === "fb" && (
             <div className="tf-panel">
               <BlockStack gap="300">
@@ -856,7 +924,6 @@ export default function Section4Pixels() {
             </div>
           )}
 
-          {/* --- FACEBOOK CAPI --- */}
           {view === "capi_fb" && (
             <div className="tf-panel">
               <BlockStack gap="300">
@@ -922,7 +989,6 @@ export default function Section4Pixels() {
             </div>
           )}
 
-          {/* --- TIKTOK PIXEL --- */}
           {view === "tiktok" && (
             <div className="tf-panel">
               <BlockStack gap="300">
@@ -979,7 +1045,6 @@ export default function Section4Pixels() {
             </div>
           )}
 
-          {/* --- TIKTOK EVENTS API --- */}
           {view === "tiktok_api" && (
             <div className="tf-panel">
               <BlockStack gap="300">
@@ -1024,7 +1089,6 @@ export default function Section4Pixels() {
             </div>
           )}
 
-          {/* --- TESTS & DEBUG --- */}
           {view === "tests" && (
             <div className="tf-panel">
               <BlockStack gap="300">
