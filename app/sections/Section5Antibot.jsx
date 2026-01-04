@@ -330,14 +330,14 @@ function defaultCfg() {
       geoRules: [],
     },
 
-    // ✅ FIX: reCAPTCHA v3 فقط
+    // ✅ reCAPTCHA V2 ONLY
     recaptcha: {
       enabled: false,
-      version: "v3",
+      version: "v2",
       siteKey: "",
       secretKey: "",
-      expectedAction: "tf_submit",
-      minScore: 0.5,
+      v2Size: "normal", // normal | compact | invisible
+      v2Theme: "light", // light | dark
     },
 
     honeypot: {
@@ -446,13 +446,9 @@ export default function Section5Antibot() {
           ...parsed,
           recaptcha: {
             ...(parsed.recaptcha || {}),
-            version: "v3",
-            expectedAction:
-              (parsed.recaptcha && parsed.recaptcha.expectedAction) || "tf_submit",
-            minScore:
-              parsed.recaptcha && parsed.recaptcha.minScore != null
-                ? parsed.recaptcha.minScore
-                : 0.5,
+            version: "v2",
+            v2Size: (parsed.recaptcha && parsed.recaptcha.v2Size) || "normal",
+            v2Theme: (parsed.recaptcha && parsed.recaptcha.v2Theme) || "light",
           },
         };
         setCfg((prev) => ({ ...prev, ...fixed }));
@@ -472,13 +468,9 @@ export default function Section5Antibot() {
             ...j.antibot,
             recaptcha: {
               ...(j.antibot.recaptcha || {}),
-              version: "v3", // ✅ FORCE V3 ALWAYS
-              expectedAction:
-                (j.antibot.recaptcha && j.antibot.recaptcha.expectedAction) || "tf_submit",
-              minScore:
-                j.antibot.recaptcha && j.antibot.recaptcha.minScore != null
-                  ? j.antibot.recaptcha.minScore
-                  : 0.5,
+              version: "v2",
+              v2Size: (j.antibot.recaptcha && j.antibot.recaptcha.v2Size) || "normal",
+              v2Theme: (j.antibot.recaptcha && j.antibot.recaptcha.v2Theme) || "light",
             },
           };
           setCfg((prev) => ({ ...prev, ...fixed }));
@@ -500,14 +492,15 @@ export default function Section5Antibot() {
   const handleSaveRemote = async () => {
     try {
       setSaving(true);
-      // ✅ ensure v3 is always saved
+
+      // ✅ V2 ONLY payload
       const payload = {
         ...cfg,
         recaptcha: {
           ...(cfg.recaptcha || {}),
-          version: "v3",
-          expectedAction: cfg.recaptcha?.expectedAction || "tf_submit",
-          minScore: cfg.recaptcha?.minScore != null ? cfg.recaptcha.minScore : 0.5,
+          version: "v2",
+          v2Size: cfg.recaptcha?.v2Size || "normal",
+          v2Theme: cfg.recaptcha?.v2Theme || "light",
         },
       };
 
@@ -540,7 +533,7 @@ export default function Section5Antibot() {
       recaptcha: {
         ...c.recaptcha,
         ...p,
-        version: "v3", // ✅ LOCK
+        version: "v2",
       },
     }));
   const setHP = (p) => setCfg((c) => ({ ...c, honeypot: { ...c.honeypot, ...p } }));
@@ -925,7 +918,7 @@ export default function Section5Antibot() {
             </div>
           )}
 
-          {/* ✅ reCAPTCHA v3 ONLY UI */}
+          {/* ✅ reCAPTCHA v2 ONLY UI */}
           {sel === "recap" && (
             <div className="tf-panel">
               <GroupCard title="section5.recaptcha.title" t={t}>
@@ -940,7 +933,7 @@ export default function Section5Antibot() {
                     <Text as="span" variant="bodySm" tone="subdued">
                       {t("section5.recaptcha.version")}
                     </Text>
-                    <Badge tone="success">v3 (fixed)</Badge>
+                    <Badge tone="info">v2</Badge>
                   </div>
 
                   <TextField
@@ -957,23 +950,30 @@ export default function Section5Antibot() {
                     autoComplete="off"
                   />
 
-                  <TextField
-                    label="Expected action"
-                    value={cfg.recaptcha.expectedAction || "tf_submit"}
-                    onChange={(v) => setRC({ expectedAction: v || "tf_submit" })}
-                    autoComplete="off"
+                  <Select
+                    label="V2 size"
+                    options={[
+                      { label: "normal", value: "normal" },
+                      { label: "compact", value: "compact" },
+                      { label: "invisible", value: "invisible" },
+                    ]}
+                    value={cfg.recaptcha.v2Size || "normal"}
+                    onChange={(v) => setRC({ v2Size: v })}
                   />
 
-                  <TextField
-                    type="number"
-                    label={t("section5.recaptcha.minScore")}
-                    value={String(cfg.recaptcha.minScore ?? 0.5)}
-                    onChange={(v) => setRC({ minScore: Number(v || 0.5) })}
+                  <Select
+                    label="V2 theme"
+                    options={[
+                      { label: "light", value: "light" },
+                      { label: "dark", value: "dark" },
+                    ]}
+                    value={cfg.recaptcha.v2Theme || "light"}
+                    onChange={(v) => setRC({ v2Theme: v })}
                   />
                 </Grid3>
 
                 <Text tone="subdued" as="p">
-                  ✅ reCAPTCHA v3 only. Each shop must paste its own Site key + Secret key.
+                  ✅ reCAPTCHA v2 only. Paste Site key + Secret key. (No score/action)
                 </Text>
               </GroupCard>
             </div>

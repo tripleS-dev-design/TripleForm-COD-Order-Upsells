@@ -1,6 +1,7 @@
+// ===== File: app/routes/api.antibot.save.jsx =====
 import { json } from "@remix-run/node";
 import { authenticate } from "../shopify.server";
-import prisma from "../db.server"; // adapte si ton chemin est différent
+import prisma from "../db.server";
 import { encryptSecret } from "../utils/crypto.server";
 
 /**
@@ -8,52 +9,61 @@ import { encryptSecret } from "../utils/crypto.server";
  * Body JSON: { antibot: { ...config... } }
  *
  * - Metafield tripleform_cod.antibot = config publique (SANS secretKey)
- * - DB ShopAntibotSettings = secretKey chiffrée (recaptchaSecretEnc)
+ * - DB shopAntibotSettings = secretKey chiffrée (recaptchaSecretEnc)
+ *
+ * ✅ V2 ONLY: pas de score/action
  */
 export const action = async ({ request }) => {
   try {
     const { admin, session } = await authenticate.admin(request);
 
     if (!admin) {
-      return json({ ok: false, error: "Unauthorized: no admin session" }, { status: 401 });
+      return json(
+        { ok: false, error: "Unauthorized: no admin session" },
+        { status: 401 }
+      );
     }
 
     const body = await request.json().catch(() => null);
     if (!body || typeof body !== "object") {
-      return json({ ok: false, error: "Missing or invalid JSON body" }, { status: 400 });
+      return json(
+        { ok: false, error: "Missing or invalid JSON body" },
+        { status: 400 }
+      );
     }
 
     const antibot = body.antibot;
     if (!antibot || typeof antibot !== "object") {
-      return json({ ok: false, error: "Missing 'antibot' object in body" }, { status: 400 });
+      return json(
+        { ok: false, error: "Missing 'antibot' object in body" },
+        { status: 400 }
+      );
     }
 
-    // shopDomain depuis session Shopify (le plus fiable)
     const shopDomain = session?.shop;
     if (!shopDomain) {
-      return json({ ok: false, error: "Missing shopDomain in session" }, { status: 400 });
+      return json(
+        { ok: false, error: "Missing shopDomain in session" },
+        { status: 400 }
+      );
     }
 
-    // Normalisation + defaults
+    // ✅ Normalisation + defaults
     const normalized = {
       meta: { version: Number(antibot?.meta?.version || 4) },
       ...antibot,
     };
 
     // ==== 1) Secret -> DB (chiffré) ====
-    const secretKey = normalized?.recaptcha?.secretKey?.trim() || "";
+    const secretKey = (normalized?.recaptcha?.secretKey || "").trim();
+
     const recaptchaEnabled = normalized?.recaptcha?.enabled === true;
-    const recaptchaVersion = normalized?.recaptcha?.version || "v3";
-    const recaptchaSiteKey = normalized?.recaptcha?.siteKey?.trim() || "";
 
-    // ✅ FIX: supporter expectedAction OU action
-    const recaptchaExpectedAction = (
-      normalized?.recaptcha?.expectedAction ||
-      normalized?.recaptcha?.action ||
-      "tf_submit"
-    ).trim();
+    // ✅ V2 ONLY
+    const recaptchaVersion = "v2";
 
-    // upsert DB (on n’écrase pas le secret si vide)
+    const recaptchaSiteKey = (normalized?.recaptcha?.siteKey || "").trim();
+
     await prisma.shopAntibotSettings.upsert({
       where: { shopDomain },
       create: {
@@ -62,35 +72,33 @@ export const action = async ({ request }) => {
         recaptchaVersion,
         recaptchaSiteKey: recaptchaSiteKey || null,
         recaptchaSecretEnc: secretKey ? encryptSecret(secretKey) : null,
-        recaptchaExpectedAction,
       },
       update: {
         recaptchaEnabled,
         recaptchaVersion,
         recaptchaSiteKey: recaptchaSiteKey || null,
         ...(secretKey ? { recaptchaSecretEnc: encryptSecret(secretKey) } : {}),
-        recaptchaExpectedAction,
       },
     });
 
     // ==== 2) Metafield -> config publique (SANS secretKey) ====
-    const sanitized = structuredClone(normalized);
+    // clone safe
+    const sanitized = JSON.parse(JSON.stringify(normalized));
 
-    // ✅ FIX: forcer expectedAction dans la config publique (source de vérité pour le front)
-    if (sanitized?.recaptcha && typeof sanitized.recaptcha === "object") {
-      sanitized.recaptcha.expectedAction = (
-        sanitized.recaptcha.expectedAction ||
-        sanitized.recaptcha.action ||
-        "tf_submit"
-      ).trim();
-
-      // ne jamais envoyer le secret dans le metafield public
+    // ✅ V2 ONLY: forcer version + enlever fields v3
+    if (!sanitized.recaptcha) sanitized.recaptcha = {};
+    sanitized.recaptcha.version = "v2";
+    if (sanitized?.recaptcha) {
       delete sanitized.recaptcha.secretKey;
+      delete sanitized.recaptcha.expectedAction;
+      delete sanitized.recaptcha.action;
+      delete sanitized.recaptcha.minScore;
+      delete sanitized.recaptcha.score;
     }
 
     const value = JSON.stringify(sanitized);
 
-    // récupérer shop.id
+    // Récupérer shop.id
     const SHOP_ID_QUERY = `
       query GetShopIdForAntibot {
         shop { id }

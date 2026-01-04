@@ -9,8 +9,8 @@ Lit la config OFFRES / UPSELL depuis:
 - product.metafields.tripleform_cod.offers (prioritaire)
 - shop.metafields.tripleform_cod.offers (fallback)
 
-reCAPTCHA v3 (SCALABLE):
-- lit la Site Key depuis shop.metafields.tripleform_cod.recaptcha_site_key
+reCAPTCHA v2 ONLY:
+- lit la Site Key depuis shop.metafields.tripleform_cod.antibot (recaptcha.siteKey)
 - NE PAS injecter <script google> dans le Liquid (theme-check RemoteAsset)
 - on passe la config au JS via data-*
 {% endcomment %}
@@ -18,8 +18,15 @@ reCAPTCHA v3 (SCALABLE):
 {%- assign tf_prod_val = product.metafields.tripleform_cod.settings.value -%}
 {%- assign tf_shop_val = shop.metafields.tripleform_cod.settings.value -%}
 
-{%- comment -%} reCAPTCHA site key (public) depuis metafield shop {%- endcomment -%}
-{%- assign tf_recaptcha_site_key = shop.metafields.tripleform_cod.recaptcha_site_key.value -%}
+{%- comment -%}
+✅ reCAPTCHA Site Key (PUBLIC) — source (2): metafield tripleform_cod.antibot (type json)
+بدون parse_json (theme-check)
+{%- endcomment -%}
+{%- assign tf_antibot_mf = shop.metafields.tripleform_cod.antibot -%}
+{%- assign tf_recaptcha_site_key = '' -%}
+{%- if tf_antibot_mf != blank and tf_antibot_mf.value != blank and tf_antibot_mf.value.recaptcha != blank -%}
+  {%- assign tf_recaptcha_site_key = tf_antibot_mf.value.recaptcha.siteKey | default: '' -%}
+{%- endif -%}
 
 {%- if tf_prod_val and tf_prod_val != blank -%}
   {%- assign tf_json = tf_prod_val -%}
@@ -367,9 +374,9 @@ Ces données sont écrites par /api/save-offers dans:
 {%- assign current_variant = product.selected_or_first_available_variant -%}
 
 {%- comment -%}
-✅ reCAPTCHA (FIX)
+✅ reCAPTCHA (V2 ONLY)
 On ne met PAS de <script google> dans le Liquid.
-Le JS (tripleform.js) charge le script tout seul via ensureRecaptchaScript() quand enabled=true.
+Le JS (tripleform.js) charge le script tout seul quand enabled=true.
 {%- endcomment -%}
 
 <div
@@ -382,27 +389,29 @@ Le JS (tripleform.js) charge le script tout seul via ensureRecaptchaScript() qua
   data-currency='{{ cart.currency.iso_code | default: shop.currency }}'
   data-locale='{{ request.locale.iso_code }}'
 
-  {%- comment -%} ✅ reCAPTCHA data (IMPORTANT) {%- endcomment -%}
   data-recaptcha-enabled="{% if tf_recaptcha_site_key != blank %}true{% else %}false{% endif %}"
-  data-recaptcha-version="v3"
+  data-recaptcha-version="v2"
   data-recaptcha-site-key="{{ tf_recaptcha_site_key | escape }}"
-  data-recaptcha-expected-action="tf_submit"
-  data-recaptcha-min-score="0.5"
+  data-recaptcha-v2-size="normal"
+  data-recaptcha-v2-theme="light"
+  data-recaptcha-v2-container="#tf-recaptcha-v2-{{ section.id }}"
 
-  {%- comment -%}
-    GEO / SHIPPING
-    - active le calcul de livraison via app proxy
-    - country = pays boutique (MA / DZ / TN…)
-    - endpoint = route proxy `proxy.api.geo.calc.jsx`
-  {%- endcomment -%}
   data-geo-enabled="true"
   data-geo-country="{{ shop.country_code | default: 'MA' }}"
   data-geo-endpoint="/apps/tripleform-cod/api/geo/calc"
 >
   <noscript>Enable JavaScript to use the COD form.</noscript>
+
   <div style="font:14px/1.4 system-ui, sans-serif; color:#6b7280">
     Loading COD form…
   </div>
+
+  <div
+    id="tf-recaptcha-v2-{{ section.id }}"
+    class="tf-recaptcha-v2"
+    style="margin-top:12px"
+    aria-label="reCAPTCHA"
+  ></div>
 </div>
 
 <script type="application/json" id="tf-product-json-{{ section.id }}">

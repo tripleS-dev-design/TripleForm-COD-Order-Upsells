@@ -1,3 +1,4 @@
+// ===== File: app/routes/api.antibot.load.jsx =====
 import { json } from "@remix-run/node";
 import { authenticate } from "../shopify.server";
 import prisma from "../db.server";
@@ -6,6 +7,8 @@ import prisma from "../db.server";
  * GET /api/antibot/load
  * - Lit metafield tripleform_cod.antibot (config publique)
  * - Ajoute hasRecaptchaSecret (depuis DB), sans renvoyer le secret
+ *
+ * ✅ V2 ONLY
  */
 export const loader = async ({ request }) => {
   try {
@@ -49,6 +52,17 @@ export const loader = async ({ request }) => {
       } catch {
         antibot = null;
       }
+    }
+
+    // ✅ V2 ONLY: normalize response
+    if (antibot && typeof antibot === "object") {
+      if (!antibot.recaptcha) antibot.recaptcha = {};
+      antibot.recaptcha.version = "v2";
+      delete antibot.recaptcha.expectedAction;
+      delete antibot.recaptcha.action;
+      delete antibot.recaptcha.minScore;
+      delete antibot.recaptcha.score;
+      delete antibot.recaptcha.secretKey;
     }
 
     const row = await prisma.shopAntibotSettings.findUnique({

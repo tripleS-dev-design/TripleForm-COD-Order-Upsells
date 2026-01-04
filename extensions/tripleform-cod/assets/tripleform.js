@@ -8,23 +8,27 @@
    ✅ Offer can override total price (bundleTotal) OR force qty
    ✅ Thank you: popup/redirect WITHOUT keeping "Thanks..." on CTA
    ✅ Anti-bot: honeypot + minimum time on page (configurable)
-   ✅ reCAPTCHA v3: robust loader (waits for grecaptcha ready)
+   ✅ reCAPTCHA v2: checkbox loader (explicit render)
    ========================================================================= */
 
 window.TripleformCOD = (function () {
   "use strict";
 
   /* ------------------------------------------------------------------ */
-  /* reCAPTCHA script loader (v3) — ROBUST FIX                          */
-  /* ------------------------------------------------------------------ */
+/* reCAPTCHA script loader (v2 checkbox)                               */
+/*  - Loads: https://www.google.com/recaptcha/api.js?render=explicit    */
+/*  - Renders widget via grecaptcha.render(container, { sitekey })      */
+/*  - Token via grecaptcha.getResponse(widgetId)                        */
+/* ------------------------------------------------------------------ */
   let recaptchaScriptPromise = null;
+  const recaptchaV2WidgetIds = new WeakMap(); // root -> widgetId
 
-  function waitForGrecaptcha({ timeoutMs = 8000, intervalMs = 80 } = {}) {
+  function waitForGrecaptcha({ timeoutMs = 10000, intervalMs = 80 } = {}) {
     return new Promise((resolve, reject) => {
       const start = Date.now();
       const timer = setInterval(() => {
         const g = window.grecaptcha;
-        if (g && typeof g.ready === "function" && typeof g.execute === "function") {
+        if (g && typeof g.render === "function" && typeof g.getResponse === "function") {
           clearInterval(timer);
           resolve(g);
           return;
@@ -41,7 +45,7 @@ window.TripleformCOD = (function () {
     if (!cfg || !cfg.enabled || !cfg.siteKey) return Promise.resolve(null);
 
     // already available
-    if (window.grecaptcha && typeof window.grecaptcha.ready === "function") {
+    if (window.grecaptcha && typeof window.grecaptcha.render === "function") {
       return Promise.resolve(window.grecaptcha);
     }
 
@@ -57,14 +61,12 @@ window.TripleformCOD = (function () {
       }
 
       const s = document.createElement("script");
-      s.src =
-        "https://www.google.com/recaptcha/api.js?render=" +
-        encodeURIComponent(cfg.siteKey);
+      // v2 checkbox uses explicit rendering
+      s.src = "https://www.google.com/recaptcha/api.js?render=explicit";
       s.async = true;
       s.defer = true;
       s.setAttribute("data-tf-recaptcha", "1");
 
-      // IMPORTANT: onload != grecaptcha ready => wait
       s.onload = () => {
         waitForGrecaptcha().then(resolve).catch(reject);
       };
@@ -75,18 +77,62 @@ window.TripleformCOD = (function () {
     return recaptchaScriptPromise;
   }
 
-  async function getRecaptchaToken(cfg) {
-    if (!cfg || !cfg.enabled || cfg.version !== "v3" || !cfg.siteKey) return null;
+  async function ensureRecaptchaV2Widget(root, cfg) {
+    if (!cfg || !cfg.enabled || !cfg.siteKey) return null;
+
     try {
       const g = await ensureRecaptchaScript(cfg);
       if (!g) return null;
 
-      const action = cfg.expectedAction || cfg.action || "tf_submit";
+      const existing = recaptchaV2WidgetIds.get(root);
+      if (typeof existing === "number") return existing;
 
-      // wait until ready
-      await new Promise((resolve) => g.ready(resolve));
+      const sel = cfg.v2Container || '[data-tf-recaptcha-v2="1"]';
+      let container =
+        (sel && root && root.querySelector ? root.querySelector(sel) : null) ||
+        (sel ? document.querySelector(sel) : null) ||
+        null;
 
-      const token = await g.execute(cfg.siteKey, { action });
+      if (!container) {
+        // fallback: create container near the CTA if missing
+        container = document.createElement("div");
+        container.className = "tf-recaptcha-v2";
+        container.style.marginTop = "12px";
+        root.appendChild(container);
+      }
+
+      const widgetId = g.render(container, {
+        sitekey: cfg.siteKey,
+        theme: cfg.v2Theme || "light",
+        size: cfg.v2Size || "normal",
+      });
+
+      recaptchaV2WidgetIds.set(root, widgetId);
+      return widgetId;
+    } catch (e) {
+      console.warn("[Tripleform COD] reCAPTCHA v2 render error:", e);
+      return null;
+    }
+  }
+
+  function resetRecaptchaV2(root) {
+    try {
+      const g = window.grecaptcha;
+      const id = recaptchaV2WidgetIds.get(root);
+      if (g && typeof g.reset === "function" && typeof id === "number") g.reset(id);
+    } catch {}
+  }
+
+  async function getRecaptchaToken(cfg, root) {
+    if (!cfg || !cfg.enabled || !cfg.siteKey) return null;
+    try {
+      const g = await ensureRecaptchaScript(cfg);
+      if (!g) return null;
+
+      const widgetId = await ensureRecaptchaV2Widget(root || document.body, cfg);
+      if (typeof widgetId !== "number") return null;
+
+      const token = g.getResponse(widgetId);
       return token || null;
     } catch (e) {
       console.warn("[Tripleform COD] reCAPTCHA token error:", e);
@@ -2939,6 +2985,13 @@ window.TripleformCOD = (function () {
                 : ""
             }
 
+            ${
+              recaptchaCfg && recaptchaCfg.enabled
+                ? `
+              <div data-tf-recaptcha-v2="1" style="margin-top:12px;"></div>`
+                : ""
+            }
+
             <button type="button" style="${btnStyle}; margin-top:16px;"
               class="${motionClass}"
               data-tf-cta="1" data-tf="${ctaKey}">
@@ -3064,6 +3117,11 @@ window.TripleformCOD = (function () {
     }
 
     root.innerHTML = html;
+
+    // ✅ reCAPTCHA v2: render checkbox widget if enabled
+    if (recaptchaCfg && recaptchaCfg.enabled) {
+      ensureRecaptchaV2Widget(root, recaptchaCfg);
+    }
 
     setTimeout(() => initializeTimers(root, offersCfg), 80);
     setupLocationDropdowns(root, cfg, countryDef);
@@ -3363,13 +3421,13 @@ window.TripleformCOD = (function () {
       const discountedSubtotalCents = Math.max(0, subtotalBeforeDiscount - discountCents);
 
       let recaptchaToken = null;
-      let recaptchaVersion = recaptchaCfg?.version || null;
+      let recaptchaVersion = "v2";
 
-      recaptchaToken = await getRecaptchaToken(recaptchaCfg);
+      recaptchaToken = await getRecaptchaToken(recaptchaCfg, root);
 
       // ✅ IMPORTANT: stop if enabled but token missing (avoid 403)
       if (recaptchaCfg?.enabled && !recaptchaToken) {
-        alert("Erreur reCAPTCHA. Rafraîchis la page et réessaie.");
+        alert("Veuillez cocher le reCAPTCHA (Je ne suis pas un robot).");
         return;
       }
 
@@ -3429,6 +3487,9 @@ window.TripleformCOD = (function () {
           } catch (e) {
             console.warn("[Tripleform COD] Thank you handler error:", e);
           }
+
+          // ✅ reCAPTCHA v2: reset checkbox after successful submit
+          if (recaptchaCfg && recaptchaCfg.enabled) resetRecaptchaV2(root);
 
           const reEnableMs = Number(ty?.reEnableMs || 1200);
           if (btn) setTimeout(() => { btn.disabled = false; }, Math.max(400, reEnableMs));
@@ -3619,21 +3680,20 @@ window.TripleformCOD = (function () {
       recaptchaEnabledAttr === "1" ||
       recaptchaEnabledAttr === "yes";
 
-    const recaptchaVersion = holder.getAttribute("data-recaptcha-version") || "";
     const recaptchaSiteKey = holder.getAttribute("data-recaptcha-site-key") || "";
-    const recaptchaMinScoreAttr = holder.getAttribute("data-recaptcha-min-score");
-    const recaptchaExpectedActionAttr =
-      holder.getAttribute("data-recaptcha-expected-action") ||
-      holder.getAttribute("data-recaptcha-action") ||
-      "";
-    const recaptchaMinScore = recaptchaMinScoreAttr ? Number(recaptchaMinScoreAttr) : 0.5;
+
+    const recaptchaV2Container =
+      holder.getAttribute("data-recaptcha-v2-container") || '[data-tf-recaptcha-v2="1"]';
+    const recaptchaV2Theme = holder.getAttribute("data-recaptcha-v2-theme") || "light";
+    const recaptchaV2Size = holder.getAttribute("data-recaptcha-v2-size") || "normal";
 
     const recaptchaCfg = {
       enabled: recaptchaEnabled && !!recaptchaSiteKey,
-      version: recaptchaVersion || "v3",
+      version: "v2",
       siteKey: recaptchaSiteKey,
-      expectedAction: recaptchaExpectedActionAttr || "tf_submit",
-      minScore: isNaN(recaptchaMinScore) ? 0.5 : recaptchaMinScore,
+      v2Container: recaptchaV2Container,
+      v2Theme: recaptchaV2Theme,
+      v2Size: recaptchaV2Size,
     };
 
     const prodEl = findProductJsonEl(holder, sectionId);

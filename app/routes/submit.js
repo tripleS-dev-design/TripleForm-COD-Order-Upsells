@@ -240,14 +240,12 @@ function matchesPatterns(str, patterns = []) {
 }
 
 /* ------------------------------------------------------------------ */
-/* reCAPTCHA v3 (backend verification)                                 */
+/* reCAPTCHA v2 (backend verification)                                 */
 /* ------------------------------------------------------------------ */
 
-async function verifyRecaptchaV3({
+async function verifyRecaptchaV2({
   token,
   remoteip,
-  expectedAction,
-  minScore = 0.5,
   secret, // ✅ secret PAR SHOP (décryptée DB)
 }) {
   if (!secret) return { ok: false, reason: "missing_secret", success: false };
@@ -266,28 +264,19 @@ async function verifyRecaptchaV3({
 
   const data = await resp.json().catch(() => ({}));
 
-  const score =
-    typeof data?.score === "number" ? data.score : Number(data?.score ?? 0);
-  const action = String(data?.action || "");
   const success = data?.success === true;
+  const errorCodes = Array.isArray(data?.["error-codes"]) ? data["error-codes"] : [];
+  const hostname = data?.hostname ? String(data.hostname) : "";
+  const challengeTs = data?.challenge_ts ? String(data.challenge_ts) : "";
 
-  const actionOk = expectedAction ? action === expectedAction : true;
-  const scoreOk = score >= Number(minScore);
-
-  const ok = success && actionOk && scoreOk;
+  const ok = success === true;
 
   let reason = "ok";
   if (!success) {
-    reason =
-      (data?.["error-codes"] && data["error-codes"].join(",")) ||
-      "google_failed";
-  } else if (!actionOk) {
-    reason = `action_mismatch:${action || "empty"}`;
-  } else if (!scoreOk) {
-    reason = `low_score:${score}`;
+    reason = errorCodes.length ? errorCodes.join(",") : "google_failed";
   }
 
-  return { ok, success, score, action, reason, data };
+  return { ok, success, reason, hostname, challengeTs, errorCodes, data };
 }
 
 /* ------------------------------------------------------------------ */
@@ -299,6 +288,9 @@ function evaluateAntibot({ config, clientIp, countryCode, fullPhone, honeypot })
     blocked: false,
     reasons: [],
     needsRecaptcha: false,
+
+    // (on garde ces champs pour ne rien casser ailleurs,
+    //  mais ils ne servent plus en v2)
     recaptchaExpectedAction: "tf_submit",
     recaptchaMinScore: 0.5,
   };
@@ -311,14 +303,6 @@ function evaluateAntibot({ config, clientIp, countryCode, fullPhone, honeypot })
   const honeypotCfg = config.honeypot || {};
   const recaptchaCfg = config.recaptcha || config.googleRecaptcha || {};
   const hp = honeypot || {};
-
-  // ✅ expectedAction / minScore viennent de ta config (pas du client)
-  res.recaptchaExpectedAction =
-    (recaptchaCfg.expectedAction || recaptchaCfg.action || "tf_submit").trim();
-
-  res.recaptchaMinScore = Number(
-    recaptchaCfg.minScore != null ? recaptchaCfg.minScore : 0.5
-  );
 
   /* --- IP --- */
   if (ipBlock.enabled && clientIp) {
@@ -596,15 +580,8 @@ export const action = async ({ request }) => {
       );
     }
 
-    // ✅ reCAPTCHA check (v3) — secret par shop depuis DB
+    // ✅ reCAPTCHA check (v2) — secret par shop depuis DB
     if (antibotResult.needsRecaptcha) {
-      const minScore =
-        antibotResult.recaptchaMinScore != null ? antibotResult.recaptchaMinScore : 0.5;
-
-      // ✅ expectedAction = config anti-bot (source de vérité)
-      const expectedAction =
-        String(antibotResult.recaptchaExpectedAction || "tf_submit").trim() || "tf_submit";
-
       // 🔐 charger secret enc depuis DB
       const row = await prisma.shopAntibotSettings.findUnique({
         where: { shopDomain: shop },
@@ -633,24 +610,21 @@ export const action = async ({ request }) => {
         );
       }
 
-      const check = await verifyRecaptchaV3({
+      const check = await verifyRecaptchaV2({
         token: recaptchaToken,
         remoteip: clientIp,
-        expectedAction,
-        minScore,
         secret,
       });
 
       if (!check.ok) {
-        console.warn("TripleForm COD — reCAPTCHA failed:", {
+        console.warn("TripleForm COD — reCAPTCHA v2 failed:", {
           shop,
           clientIp,
-          expectedAction,
           clientAction: clientRecaptchaAction || null,
-          gotAction: check.action,
-          score: check.score,
           success: check.success,
           reason: check.reason,
+          errorCodes: check.errorCodes,
+          hostname: check.hostname || null,
         });
 
         return json(
@@ -661,9 +635,9 @@ export const action = async ({ request }) => {
             details: {
               reason: check.reason,
               success: check.success,
-              score: check.score,
-              action: check.action,
-              expectedAction,
+              errorCodes: check.errorCodes,
+              hostname: check.hostname,
+              challengeTs: check.challengeTs,
             },
           },
           { status: 403 }
