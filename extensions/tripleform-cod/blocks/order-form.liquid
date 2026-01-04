@@ -377,11 +377,11 @@ Ces données sont écrites par /api/save-offers dans:
   <script>
     window.TF_RECAPTCHA_SITE_KEY = {{ tf_recaptcha_site_key | json }};
   </script>
-<script
-  src="https://www.google.com/recaptcha/api.js?render={{ tf_recaptcha_site_key }}"
-  async
-  defer
-></script>
+  <script
+    src="https://www.google.com/recaptcha/api.js?render={{ tf_recaptcha_site_key }}"
+    async
+    defer
+  ></script>
 {% endif %}
 
 <div
@@ -393,7 +393,11 @@ Ces données sont écrites par /api/save-offers dans:
   data-variant-id='{{ current_variant.id }}'
   data-currency='{{ cart.currency.iso_code | default: shop.currency }}'
   data-locale='{{ request.locale.iso_code }}'
+
   data-recaptcha-site-key='{{ tf_recaptcha_site_key | escape }}'
+  data-recaptcha-enabled="{% if tf_recaptcha_site_key != blank %}true{% else %}false{% endif %}"
+  data-recaptcha-version="v3"
+  data-recaptcha-expected-action="tf_submit"
 
   {%- comment -%}
     GEO / SHIPPING
