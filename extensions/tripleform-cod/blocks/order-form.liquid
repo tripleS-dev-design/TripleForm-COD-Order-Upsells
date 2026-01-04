@@ -377,7 +377,11 @@ Ces données sont écrites par /api/save-offers dans:
   <script>
     window.TF_RECAPTCHA_SITE_KEY = {{ tf_recaptcha_site_key | json }};
   </script>
-  <script src="https://www.google.com/recaptcha/api.js?render={{ tf_recaptcha_site_key }}"></script>
+<script
+  src="https://www.google.com/recaptcha/api.js?render={{ tf_recaptcha_site_key }}"
+  async
+  defer
+></script>
 {% endif %}
 
 <div
