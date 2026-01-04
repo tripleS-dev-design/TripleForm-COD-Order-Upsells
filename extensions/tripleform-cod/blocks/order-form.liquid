@@ -11,10 +11,8 @@ Lit la config OFFRES / UPSELL depuis:
 
 reCAPTCHA v3 (SCALABLE):
 - lit la Site Key depuis shop.metafields.tripleform_cod.recaptcha_site_key
-- injecte automatiquement:
-  - window.TF_RECAPTCHA_SITE_KEY
-  - script https://www.google.com/recaptcha/api.js?render=SITE_KEY
-- passe aussi la clé au JS via data-recaptcha-site-key
+- NE PAS injecter <script google> dans le Liquid (theme-check RemoteAsset)
+- on passe la config au JS via data-*
 {% endcomment %}
 
 {%- assign tf_prod_val = product.metafields.tripleform_cod.settings.value -%}
@@ -369,20 +367,10 @@ Ces données sont écrites par /api/save-offers dans:
 {%- assign current_variant = product.selected_or_first_available_variant -%}
 
 {%- comment -%}
-✅ reCAPTCHA auto-inject (SCALABLE)
-- Seulement si la Site Key existe dans le shop metafield
-- Pas besoin que l'utilisateur modifie le thème manuellement
+✅ reCAPTCHA (FIX)
+On ne met PAS de <script google> dans le Liquid.
+Le JS (tripleform.js) charge le script tout seul via ensureRecaptchaScript() quand enabled=true.
 {%- endcomment -%}
-{% if tf_recaptcha_site_key != blank %}
-  <script>
-    window.TF_RECAPTCHA_SITE_KEY = {{ tf_recaptcha_site_key | json }};
-  </script>
-  <script
-    src="https://www.google.com/recaptcha/api.js?render={{ tf_recaptcha_site_key }}"
-    async
-    defer
-  ></script>
-{% endif %}
 
 <div
   id="tripleform-cod-{{ section.id }}"
@@ -394,10 +382,12 @@ Ces données sont écrites par /api/save-offers dans:
   data-currency='{{ cart.currency.iso_code | default: shop.currency }}'
   data-locale='{{ request.locale.iso_code }}'
 
-  data-recaptcha-site-key='{{ tf_recaptcha_site_key | escape }}'
+  {%- comment -%} ✅ reCAPTCHA data (IMPORTANT) {%- endcomment -%}
   data-recaptcha-enabled="{% if tf_recaptcha_site_key != blank %}true{% else %}false{% endif %}"
   data-recaptcha-version="v3"
+  data-recaptcha-site-key="{{ tf_recaptcha_site_key | escape }}"
   data-recaptcha-expected-action="tf_submit"
+  data-recaptcha-min-score="0.5"
 
   {%- comment -%}
     GEO / SHIPPING
