@@ -7,7 +7,7 @@ import { trackOrderWithPixels } from "../utils/pixels.server";
 import prisma from "../db.server";
 import { decryptSecret } from "../utils/crypto.server";
 
-const TF_TAG = "TripleForm COD";
+const TF_TAG = "TripleForm COD"; // 👈 tag unique pour reconnaître les commandes de l'app
 
 /* ------------------------------------------------------------------ */
 /* ✅ SAFE BODY PARSER (App Proxy JSON / urlencoded / form-data)        */
@@ -15,13 +15,17 @@ const TF_TAG = "TripleForm COD";
 async function readBodySafe(request) {
   const contentType = (request.headers.get("content-type") || "").toLowerCase();
 
+  // JSON
   if (contentType.includes("application/json")) {
     try {
       const j = await request.json();
       return j && typeof j === "object" ? j : {};
-    } catch {}
+    } catch {
+      // fallthrough -> try text
+    }
   }
 
+  // urlencoded
   if (contentType.includes("application/x-www-form-urlencoded")) {
     try {
       const text = await request.text();
@@ -33,12 +37,15 @@ async function readBodySafe(request) {
     }
   }
 
+  // multipart/form-data (ou fallback)
   try {
+    // Remix supporte request.formData() côté node
     const fd = await request.formData();
     const obj = {};
     for (const [k, v] of fd.entries()) obj[k] = v;
     return obj;
   } catch {
+    // last fallback: text -> JSON or urlencoded
     try {
       const text = await request.text();
       if (!text) return {};
@@ -57,8 +64,9 @@ async function readBodySafe(request) {
 }
 
 /* ------------------------------------------------------------------ */
-/* Utils Phone / Country / Address                                     */
+/* Utils Phone / Country / Address                                    */
 /* ------------------------------------------------------------------ */
+
 function buildFullPhone(fields = {}) {
   const f = fields || {};
 
@@ -92,11 +100,14 @@ function buildFullPhone(fields = {}) {
       "") + "";
 
   const prefixTrim = prefix.trim();
-  const phoneTrim = String(phoneRaw).trim();
+  const phoneTrim = phoneRaw.trim();
 
   if (!prefixTrim && !phoneTrim) return "";
 
-  if (phoneTrim && prefixTrim && phoneTrim.startsWith(prefixTrim)) return phoneTrim;
+  if (phoneTrim && prefixTrim && phoneTrim.startsWith(prefixTrim)) {
+    return phoneTrim;
+  }
+
   if (prefixTrim && phoneTrim) return `${prefixTrim}${phoneTrim}`;
   if (phoneTrim) return phoneTrim;
   return prefixTrim;
@@ -134,7 +145,11 @@ async function resolveCountryCode(admin, fields = {}, body = {}) {
 
 function buildShippingAddress(fields = {}, fullPhone = "", countryCode = "DZ") {
   const country =
-    (fields.country || fields.countryCode || fields.codCountry || countryCode || "DZ") + "";
+    (fields.country ||
+      fields.countryCode ||
+      fields.codCountry ||
+      countryCode ||
+      "DZ") + "";
   return {
     firstName: (fields.name || "").trim(),
     address1: (fields.address || "").trim() || "—",
@@ -149,6 +164,7 @@ function buildShippingAddress(fields = {}, fullPhone = "", countryCode = "DZ") {
 /* ------------------------------------------------------------------ */
 /* Anti-bot config loader + IP                                         */
 /* ------------------------------------------------------------------ */
+
 async function loadAntibotConfig(admin) {
   try {
     const QUERY = `
@@ -181,6 +197,7 @@ async function loadAntibotConfig(admin) {
 function getClientIpFromRequest(request, antibot) {
   const headers = request.headers;
   const ipBlock = antibot?.ipBlock || {};
+
   let raw = "";
 
   if (ipBlock.clientIpHeader) {
@@ -223,87 +240,15 @@ function matchesPatterns(str, patterns = []) {
 }
 
 /* ------------------------------------------------------------------ */
-/* ✅ Rate limit: bloque si > 2 commandes par client (IP/Phone)         */
-/* ------------------------------------------------------------------ */
-function getRateLimitConfig(antibotCfg) {
-  // Tu peux le mettre dans metafield antibot.rateLimit
-  const cfg = antibotCfg?.rateLimit || antibotCfg?.submitLimit || {};
-
-  const enabled = cfg.enabled !== false; // default true
-  const max = Number(cfg.maxAttempts != null ? cfg.maxAttempts : 2); // default 2
-  const windowSec = Number(cfg.windowSec != null ? cfg.windowSec : 600); // default 10 min
-  const useIp = cfg.useIp !== false; // default true
-  const usePhone = cfg.usePhone !== false; // default true
-
-  return { enabled, max, windowSec, useIp, usePhone };
-}
-
-async function enforceRateLimit({ shop, clientIp, fullPhone, antibotCfg }) {
-  const rl = getRateLimitConfig(antibotCfg);
-  if (!rl.enabled) return { blocked: false };
-
-  const keys = [];
-  const phoneDigits = normalizeDigits(fullPhone);
-
-  if (rl.useIp && clientIp) keys.push({ keyType: "ip", keyValue: String(clientIp).trim() });
-  if (rl.usePhone && phoneDigits) keys.push({ keyType: "phone", keyValue: phoneDigits });
-
-  if (keys.length === 0) return { blocked: false };
-
-  const since = new Date(Date.now() - rl.windowSec * 1000);
-
-  // 1) check counts
-  for (const k of keys) {
-    const count = await prisma.tfSubmitAttempt.count({
-      where: {
-        shopDomain: shop,
-        keyType: k.keyType,
-        keyValue: k.keyValue,
-        createdAt: { gte: since },
-      },
-    });
-
-    // max=2 -> autorise 2, bloque à partir de 3
-    if (count >= rl.max) {
-      return {
-        blocked: true,
-        code: "RATE_LIMIT",
-        reason: `${k.keyType} limit exceeded`,
-        details: {
-          keyType: k.keyType,
-          windowSec: rl.windowSec,
-          maxAttempts: rl.max,
-        },
-      };
-    }
-  }
-
-  // 2) record attempt (on enregistre après check)
-  try {
-    await prisma.tfSubmitAttempt.createMany({
-      data: keys.map((k) => ({
-        shopDomain: shop,
-        keyType: k.keyType,
-        keyValue: k.keyValue,
-      })),
-    });
-  } catch (e) {
-    // Si erreur DB, on ne bloque pas l'achat (fail-open)
-    console.error("RateLimit create attempt error:", e);
-  }
-
-  return { blocked: false };
-}
-
-/* ------------------------------------------------------------------ */
 /* reCAPTCHA v3 (backend verification)                                 */
 /* ------------------------------------------------------------------ */
+
 async function verifyRecaptchaV3({
   token,
   remoteip,
   expectedAction,
   minScore = 0.5,
-  secret,
+  secret, // ✅ secret PAR SHOP (décryptée DB)
 }) {
   if (!secret) return { ok: false, reason: "missing_secret", success: false };
   if (!token) return { ok: false, reason: "missing_token", success: false };
@@ -334,7 +279,8 @@ async function verifyRecaptchaV3({
   let reason = "ok";
   if (!success) {
     reason =
-      (data?.["error-codes"] && data["error-codes"].join(",")) || "google_failed";
+      (data?.["error-codes"] && data["error-codes"].join(",")) ||
+      "google_failed";
   } else if (!actionOk) {
     reason = `action_mismatch:${action || "empty"}`;
   } else if (!scoreOk) {
@@ -345,8 +291,9 @@ async function verifyRecaptchaV3({
 }
 
 /* ------------------------------------------------------------------ */
-/* Anti-bot evaluation (tes règles)                                    */
+/* Anti-bot evaluation                                                 */
 /* ------------------------------------------------------------------ */
+
 function evaluateAntibot({ config, clientIp, countryCode, fullPhone, honeypot }) {
   const res = {
     blocked: false,
@@ -365,6 +312,7 @@ function evaluateAntibot({ config, clientIp, countryCode, fullPhone, honeypot })
   const recaptchaCfg = config.recaptcha || config.googleRecaptcha || {};
   const hp = honeypot || {};
 
+  // ✅ expectedAction / minScore viennent de ta config (pas du client)
   res.recaptchaExpectedAction =
     (recaptchaCfg.expectedAction || recaptchaCfg.action || "tf_submit").trim();
 
@@ -372,21 +320,27 @@ function evaluateAntibot({ config, clientIp, countryCode, fullPhone, honeypot })
     recaptchaCfg.minScore != null ? recaptchaCfg.minScore : 0.5
   );
 
-  // IP
+  /* --- IP --- */
   if (ipBlock.enabled && clientIp) {
     const ip = clientIp;
+
     const allowList = ipBlock.allowList || [];
     const denyList = ipBlock.denyList || [];
+    const cidrList = ipBlock.cidrList || [];
 
     if (!allowList.includes(ip)) {
       if (denyList.includes(ip)) {
         res.blocked = true;
         res.reasons.push(`IP ${ip} dans denyList`);
       }
+
+      if (!res.blocked && Array.isArray(cidrList) && cidrList.length > 0) {
+        // TODO CIDR
+      }
     }
   }
 
-  // Téléphone
+  /* --- Téléphone --- */
   if (phoneBlock.enabled && fullPhone) {
     const phone = String(fullPhone).trim();
     const digits = normalizeDigits(phone);
@@ -403,18 +357,28 @@ function evaluateAntibot({ config, clientIp, countryCode, fullPhone, honeypot })
       const ok = allowed.some((p) => phone.startsWith(String(p || "").trim()));
       if (!ok && allowed.length > 0) {
         res.blocked = true;
-        res.reasons.push(`Préfixe téléphone non autorisé (${allowed.join(", ")})`);
+        res.reasons.push(
+          `Préfixe téléphone non autorisé (attendu: ${allowed.join(", ")})`
+        );
       }
     }
 
-    if (!res.blocked && Array.isArray(phoneBlock.blockedNumbers)) {
+    if (
+      !res.blocked &&
+      Array.isArray(phoneBlock.blockedNumbers) &&
+      phoneBlock.blockedNumbers.length > 0
+    ) {
       if (phoneBlock.blockedNumbers.includes(phone)) {
         res.blocked = true;
         res.reasons.push("Téléphone dans la liste des numéros bloqués");
       }
     }
 
-    if (!res.blocked && Array.isArray(phoneBlock.blockedPatterns)) {
+    if (
+      !res.blocked &&
+      Array.isArray(phoneBlock.blockedPatterns) &&
+      phoneBlock.blockedPatterns.length > 0
+    ) {
       if (matchesPatterns(phone, phoneBlock.blockedPatterns)) {
         res.blocked = true;
         res.reasons.push("Téléphone correspond à un pattern bloqué");
@@ -422,7 +386,7 @@ function evaluateAntibot({ config, clientIp, countryCode, fullPhone, honeypot })
     }
   }
 
-  // Pays
+  /* --- Pays --- */
   if (countryBlock.enabled && countryCode) {
     const code = String(countryCode).trim().toUpperCase();
     const allowList = countryBlock.allowList || [];
@@ -441,10 +405,12 @@ function evaluateAntibot({ config, clientIp, countryCode, fullPhone, honeypot })
       }
     } else if (mode === "challenge") {
       res.needsRecaptcha = true;
+
       if (denyList.includes(code)) {
         res.blocked = true;
         res.reasons.push(`Pays ${code} bloqué (challenge + denyList)`);
       }
+
       if (!res.blocked && allowList.length > 0 && !allowList.includes(code)) {
         res.needsRecaptcha = true;
         res.reasons.push(`Pays ${code} en challenge (pas dans allowList)`);
@@ -452,7 +418,7 @@ function evaluateAntibot({ config, clientIp, countryCode, fullPhone, honeypot })
     }
   }
 
-  // Honeypot
+  /* --- Honeypot --- */
   if (honeypotCfg.enabled) {
     const fieldVal = (hp.fieldValue || "").trim();
     const timeMs = Number(hp.timeOnPageMs || 0);
@@ -466,7 +432,9 @@ function evaluateAntibot({ config, clientIp, countryCode, fullPhone, honeypot })
     if (!res.blocked && honeypotCfg.minFillTimeMs > 0) {
       if (timeMs > 0 && timeMs < Number(honeypotCfg.minFillTimeMs)) {
         res.blocked = true;
-        res.reasons.push(`Soumission trop rapide (${timeMs}ms)`);
+        res.reasons.push(
+          `Soumission trop rapide (${timeMs}ms < ${honeypotCfg.minFillTimeMs}ms)`
+        );
       }
     }
 
@@ -478,14 +446,18 @@ function evaluateAntibot({ config, clientIp, countryCode, fullPhone, honeypot })
     }
   }
 
-  if (recaptchaCfg?.enabled) res.needsRecaptcha = true;
+  /* --- reCAPTCHA global enable --- */
+  if (recaptchaCfg?.enabled) {
+    res.needsRecaptcha = true;
+  }
 
   return res;
 }
 
 /* ------------------------------------------------------------------ */
-/* Fetch product info                                                  */
+/* Fetch infos produit (Admin API)                                     */
 /* ------------------------------------------------------------------ */
+
 async function fetchProductInfo(admin, variantGid) {
   if (!admin || !variantGid) return { productTitle: null, variantTitle: null };
 
@@ -515,11 +487,13 @@ async function fetchProductInfo(admin, variantGid) {
 }
 
 /* ------------------------------------------------------------------ */
-/* ACTION                                                              */
+/* ACTION (submit COD)                                                 */
 /* ------------------------------------------------------------------ */
+
 export const action = async ({ request }) => {
   try {
     const { admin, session } = await authenticate.public.appProxy(request);
+
     const shop = session?.shop;
 
     if (!shop) {
@@ -527,7 +501,7 @@ export const action = async ({ request }) => {
         {
           ok: false,
           error:
-            "Aucune session pour cette boutique via App Proxy. Ouvrez l’application depuis l’admin Shopify puis réessayez.",
+            "No session for this shop via app proxy. Ouvre l'app depuis l'admin une fois puis réessaie.",
         },
         { status: 401 }
       );
@@ -537,25 +511,32 @@ export const action = async ({ request }) => {
       return json(
         {
           ok: false,
-          error: "Admin API indisponible pour cette boutique (offline session manquante).",
+          error: "Admin API client unavailable for this shop (no offline session).",
         },
         { status: 401 }
       );
     }
 
+    // ✅ FIX: App Proxy body can be JSON or urlencoded -> use safe parser
     const body = await readBodySafe(request);
+
     if (!body || typeof body !== "object") {
-      return json({ ok: false, error: "Body manquant ou invalide." }, { status: 400 });
+      return json(
+        { ok: false, error: "Missing or invalid body." },
+        { status: 400 }
+      );
     }
 
     const rawVariantId = body.variantId;
     let variantGid = null;
+
     if (rawVariantId) {
       const s = String(rawVariantId);
       variantGid = s.startsWith("gid://") ? s : `gid://shopify/ProductVariant/${s}`;
     }
 
     const qty = Number(body.qty || 1);
+
     if (!variantGid || !(qty > 0)) {
       return json({ ok: false, error: "variantId/qty invalid." }, { status: 400 });
     }
@@ -566,27 +547,9 @@ export const action = async ({ request }) => {
     const fullPhone = buildFullPhone(fields);
     const countryCode = await resolveCountryCode(admin, fields, body);
 
-    const antibotCfg = await loadAntibotConfig(admin);
-    const clientIp = getClientIpFromRequest(request, antibotCfg);
-    const userAgent = request.headers.get("user-agent") || null;
-
-    // ✅ 1) RATE LIMIT: bloque si > 2 commandes dans la fenêtre (par IP/phone)
-    const rl = await enforceRateLimit({ shop, clientIp, fullPhone, antibotCfg });
-    if (rl.blocked) {
-      return json(
-        {
-          ok: false,
-          code: rl.code,
-          error:
-            "Trop de tentatives de commande en peu de temps. Merci de patienter quelques minutes puis réessayer.",
-          details: rl.details,
-        },
-        { status: 429 }
-      );
-    }
-
     const honeypotInfo = body.honeypot || {};
 
+    // ✅ token: accepter plusieurs noms (selon front)
     const recaptchaTokenRaw =
       body.recaptchaToken ||
       body.recaptcha_token ||
@@ -597,11 +560,16 @@ export const action = async ({ request }) => {
 
     const recaptchaToken = String(recaptchaTokenRaw || "").trim();
 
+    // ⚠️ action envoyée par le client: utile pour debug seulement
     const clientRecaptchaAction = String(
       body.recaptchaAction || body.recaptcha_action || body?.recaptcha?.action || ""
     ).trim();
 
-    // ✅ 2) TES REGLES ANTIBOT (honeypot / phone / country / etc.)
+    const antibotCfg = await loadAntibotConfig(admin);
+
+    const clientIp = getClientIpFromRequest(request, antibotCfg);
+    const userAgent = request.headers.get("user-agent") || null;
+
     const antibotResult = evaluateAntibot({
       config: antibotCfg,
       clientIp,
@@ -611,26 +579,33 @@ export const action = async ({ request }) => {
     });
 
     if (antibotResult.blocked) {
+      console.warn(
+        "TripleForm COD — Anti-bot blocked request:",
+        shop,
+        clientIp,
+        antibotResult.reasons
+      );
       return json(
         {
           ok: false,
           code: "ANTIBOT_BLOCKED",
-          error:
-            "Commande bloquée (sécurité anti-bot). Vérifiez vos informations et réessayez.",
+          error: "Request blocked by Anti-bot rules.",
           reasons: antibotResult.reasons,
         },
         { status: 403 }
       );
     }
 
-    // ✅ 3) reCAPTCHA v3 (score)
+    // ✅ reCAPTCHA check (v3) — secret par shop depuis DB
     if (antibotResult.needsRecaptcha) {
       const minScore =
         antibotResult.recaptchaMinScore != null ? antibotResult.recaptchaMinScore : 0.5;
 
+      // ✅ expectedAction = config anti-bot (source de vérité)
       const expectedAction =
         String(antibotResult.recaptchaExpectedAction || "tf_submit").trim() || "tf_submit";
 
+      // 🔐 charger secret enc depuis DB
       const row = await prisma.shopAntibotSettings.findUnique({
         where: { shopDomain: shop },
         select: { recaptchaSecretEnc: true },
@@ -646,13 +621,13 @@ export const action = async ({ request }) => {
         }
       }
 
+      // si recaptcha activé mais pas de secret => configuration cassée
       if (!secret) {
         return json(
           {
             ok: false,
             code: "RECAPTCHA_MISCONFIG",
-            error:
-              "reCAPTCHA est activé mais la clé secrète n’est pas configurée. Ouvrez l’app et ajoutez la clé.",
+            error: "reCAPTCHA enabled but secret key is missing for this shop.",
           },
           { status: 403 }
         );
@@ -682,8 +657,7 @@ export const action = async ({ request }) => {
           {
             ok: false,
             code: "RECAPTCHA_FAILED",
-            error:
-              "Commande bloquée (vérification anti-robot). Réessayez ou vérifiez votre connexion.",
+            error: "Recaptcha verification failed.",
             details: {
               reason: check.reason,
               success: check.success,
@@ -754,7 +728,11 @@ export const action = async ({ request }) => {
 
     if (userErrA.length) {
       return json(
-        { ok: false, error: userErrA[0]?.message || "draftOrderCreate error", details: userErrA },
+        {
+          ok: false,
+          error: userErrA[0]?.message || "draftOrderCreate error",
+          details: userErrA,
+        },
         { status: 400 }
       );
     }
@@ -799,7 +777,7 @@ export const action = async ({ request }) => {
 
     const orderName = orderObj?.name || null;
 
-    // Google Sheets (fail-safe)
+    // 6) Google Sheets
     try {
       const orderForSheet = {
         shop,
@@ -827,7 +805,11 @@ export const action = async ({ request }) => {
             body?.title ||
             (body?.product && (body.product.title || body.product.name)) ||
             "",
-          variantTitle: productInfo.variantTitle || body?.variantTitle || body?.variant_title || "",
+          variantTitle:
+            productInfo.variantTitle ||
+            body?.variantTitle ||
+            body?.variant_title ||
+            "",
           quantity: qty,
           subtotal: totals.priceCents != null ? Number(totals.priceCents) / 100 : null,
           shipping: body?.shippingAmount != null ? Number(body.shippingAmount) : null,
@@ -840,10 +822,10 @@ export const action = async ({ request }) => {
 
       await appendOrderToSheet({ shop, order: orderForSheet });
     } catch (err) {
-      console.error("Erreur Google Sheets :", err);
+      console.error("Erreur lors de l'envoi de la commande vers Google Sheets :", err);
     }
 
-    // Pixels
+    // 7) Pixels
     try {
       await trackOrderWithPixels({
         admin,
