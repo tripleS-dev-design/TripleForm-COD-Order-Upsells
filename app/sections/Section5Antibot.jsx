@@ -1,5 +1,5 @@
 // ===== File: app/sections/Section5Antibot.jsx =====
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   Card,
   BlockStack,
@@ -11,143 +11,95 @@ import {
   Button,
   Badge,
   Divider,
+  Icon,
 } from "@shopify/polaris";
+import * as PI from "@shopify/polaris-icons";
 import { useI18n } from "../i18n/react";
-import { COUNTRY_DATA } from "../data/countryData"; // ✅ عدّل المسار إذا مختلف
+import { COUNTRY_DATA } from "../data/countryData";
+import CountryFlagsBar from "../components/CountryFlagsBar";
+
+/* ======================= SAFE ICON helper ======================= */
+function SafeIcon({ name, fallback = "AppsIcon", tone }) {
+  const src = PI?.[name] || PI?.[fallback];
+  if (!src) return null;
+  return <Icon source={src} tone={tone} />;
+}
+
+/* ======================= i18n fallback helper ======================= */
+function useT() {
+  const { t } = useI18n();
+
+  const tr = (key, fallback, vars) => {
+    try {
+      const v = t(key, vars);
+      if (typeof v === "string" && v.trim() && v !== key) return v;
+    } catch {}
+    return fallback || key;
+  };
+
+  return { t, tr };
+}
 
 /* ======================= CSS / layout (NO backticks) ======================= */
 const LAYOUT_CSS = [
   "html, body { margin:0; background:#F6F7F9; }",
-  ".Polaris-Page, .Polaris-Page__Content {",
-  "  max-width:none!important;",
-  "  padding-left:0!important;",
-  "  padding-right:0!important;",
-  "}",
+  ".Polaris-Page, .Polaris-Page__Content { max-width:none!important; padding-left:0!important; padding-right:0!important; }",
   ".Polaris-TextField, .Polaris-Select, .Polaris-Labelled__LabelWrapper { min-width:0; }",
 
-  "/* HEADER */",
-  ".tf-header {",
-  "  background:linear-gradient(90deg,#0B3B82,#7D0031);",
-  "  border-bottom:none;",
-  "  padding:12px 16px;",
-  "  position:sticky;",
-  "  top:0;",
-  "  z-index:40;",
-  "  box-shadow:0 10px 28px rgba(11,59,130,0.45);",
-  "}",
+  "/* ✅ HEADER (same spirit as Section1/2) */",
+  ".tf-header{ background:linear-gradient(90deg,#0B3B82,#7D0031); padding:6px 10px; position:sticky; top:0; z-index:60; box-shadow:0 10px 28px rgba(11,59,130,0.45); }",
+  ".tf-header-row{ display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:10px; min-height:44px; }",
+  ".tf-brand{ display:flex; align-items:center; gap:10px; min-width:0; }",
+  ".tf-brand-text{ display:flex; flex-direction:column; min-width:0; line-height:1.05; }",
+  ".tf-brand-title{ font-weight:950; color:#F9FAFB; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }",
+  ".tf-brand-sub{ font-size:11px; color:rgba(249,250,251,0.78); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }",
+  ".tf-flags-wrap{ display:flex; justify-content:center; align-items:center; width:100%; min-width:0; }",
+  ".tf-header-right{ display:flex; align-items:center; justify-content:flex-end; gap:10px; min-width:0; flex-wrap:wrap; }",
 
-  ".tf-shell { padding:16px; }",
+  "/* ✅ Slim SaveBar (shows only when leaving panel with unsaved changes OR notice) */",
+  ".tf-savebar{ position:sticky; top:56px; z-index:55; padding:8px 10px; background:rgba(255,255,255,0.86); backdrop-filter: blur(10px); border-bottom:1px solid #E5E7EB; }",
+  ".tf-savebar-inner{ max-width:1100px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 12px; border-radius:14px; border:1px solid #E5E7EB; box-shadow:0 10px 24px rgba(15,23,42,.06); }",
+  ".tf-savebar-left{ display:flex; align-items:center; gap:10px; min-width:0; }",
+  ".tf-savebadge{ font-size:12px; font-weight:900; padding:6px 10px; border-radius:999px; border:1px solid #E5E7EB; background:#F8FAFC; white-space:nowrap; }",
+  ".tf-savebar-text{ display:flex; flex-direction:column; min-width:0; line-height:1.15; }",
+  ".tf-savemsg{ font-size:13px; font-weight:800; color:#0F172A; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }",
+  ".tf-savesub{ font-size:12px; color:#64748B; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }",
 
-  "/* ===== Grid: left nav | center content | right guide ===== */",
-  ".tf-editor {",
-  "  display:grid;",
-  "  grid-template-columns: 260px minmax(0,1fr) 320px;",
-  "  gap:16px;",
-  "  align-items:start;",
-  "}",
+  "@keyframes tfBarBlink { 0%,100%{filter:none} 50%{filter:brightness(1.15)} }",
+  "@keyframes tfBarSlide { 0%{transform:translateX(0)} 50%{transform:translateX(10px)} 100%{transform:translateX(0)} }",
+  ".tf-attention{ animation: tfBarBlink .9s ease-in-out 2, tfBarSlide .9s ease-in-out 2; border-color:rgba(249,115,22,.70)!important; box-shadow:0 10px 24px rgba(249,115,22,.18); }",
 
-  "/* left rail */",
-  ".tf-rail {",
-  "  position:sticky;",
-  "  top:84px;",
-  "  max-height:calc(100vh - 100px);",
-  "  overflow:auto;",
-  "}",
-  ".tf-rail-card {",
-  "  background:#fff;",
-  "  border:1px solid #E5E7EB;",
-  "  border-radius:12px;",
-  "  margin-bottom:12px;",
-  "}",
-  ".tf-rail-head {",
-  "  padding:10px 12px;",
-  "  border-bottom:1px solid #E5E7EB;",
-  "  font-weight:700;",
-  "}",
-  ".tf-rail-list {",
-  "  padding:8px;",
-  "  display:grid;",
-  "  gap:8px;",
-  "}",
-  ".tf-rail-item {",
-  "  background:#fff;",
-  "  border:1px solid #E5E7EB;",
-  "  border-radius:10px;",
-  "  padding:8px 10px;",
-  "  cursor:pointer;",
-  "  font-size:13px;",
-  "}",
-  ".tf-rail-item[data-sel='1'] {",
-  "  outline:2px solid #2563EB;",
-  "  box-shadow:0 12px 26px rgba(37,99,235,.25);",
-  "}",
+  ".tf-shell{ padding:16px; }",
 
-  "/* Center column */",
-  ".tf-main-col {",
-  "  display:grid;",
-  "  gap:16px;",
-  "  min-width:0;",
-  "}",
-  ".tf-panel {",
-  "  background:#fff;",
-  "  border:1px solid #E5E7EB;",
-  "  border-radius:12px;",
-  "  padding:12px;",
-  "  min-width:0;",
-  "}",
+  "/* layout */",
+  ".tf-editor{ display:grid; grid-template-columns: 260px minmax(0,1fr) 320px; gap:16px; align-items:start; }",
 
-  "/* Right column */",
-  ".tf-side-col {",
-  "  position:sticky;",
-  "  top:84px;",
-  "  max-height:calc(100vh - 100px);",
-  "  overflow-y:auto;",
-  "  overflow-x:hidden;",
-  "  width:320px;",
-  "  flex:none;",
-  "}",
-  ".tf-side-card {",
-  "  background:#fff;",
-  "  border:1px solid #E5E7EB;",
-  "  border-radius:12px;",
-  "  padding:12px;",
-  "  margin-bottom:12px;",
-  "}",
+  ".tf-rail{ position:sticky; top:116px; max-height:calc(100vh - 132px); overflow:auto; }",
+  ".tf-rail-card{ background:#fff; border:1px solid #E5E7EB; border-radius:12px; margin-bottom:12px; }",
+  ".tf-rail-head{ padding:10px 12px; border-bottom:1px solid #E5E7EB; font-weight:800; }",
+  ".tf-rail-list{ padding:8px; display:grid; gap:8px; }",
+  ".tf-rail-item{ background:#fff; border:1px solid #E5E7EB; border-radius:12px; padding:10px 12px; cursor:pointer; font-size:13px; display:flex; align-items:center; justify-content:space-between; gap:10px; }",
+  ".tf-rail-item[data-sel='1']{ outline:2px solid #00A7A3; background:rgba(0,167,163,0.06); }",
 
-  "/* TITLES */",
-  ".tf-group-title {",
-  "  padding:10px 12px;",
-  "  background:linear-gradient(90deg,#0B3B82,#7D0031);",
-  "  border:1px solid rgba(0,167,163,0.85);",
-  "  color:#F9FAFB;",
-  "  border-radius:10px;",
-  "  font-weight:800;",
-  "  letter-spacing:.2px;",
-  "  margin-bottom:10px;",
-  "  box-shadow:0 6px 18px rgba(11,59,130,0.35);",
-  "}",
+  ".tf-main-col{ display:grid; gap:16px; min-width:0; }",
+  ".tf-panel{ background:#fff; border:1px solid #E5E7EB; border-radius:12px; padding:12px; min-width:0; box-shadow:0 8px 24px rgba(15,23,42,0.04); }",
 
-  ".token-wrap { display:flex; flex-wrap:wrap; gap:8px; }",
-  ".token {",
-  "  display:inline-flex; align-items:center; gap:6px;",
-  "  padding:6px 10px; border:1px solid #E5E7EB; border-radius:999px;",
-  "  background:#FFF; font-size:13px;",
-  "}",
-  ".token button {",
-  "  border:none; background:transparent; cursor:pointer; font-size:14px; line-height:1;",
-  "  color:#6B7280;",
-  "}",
+  ".tf-side-col{ position:sticky; top:116px; max-height:calc(100vh - 132px); overflow:auto; width:320px; }",
+  ".tf-side-card{ background:#fff; border:1px solid #E5E7EB; border-radius:12px; padding:12px; margin-bottom:12px; }",
 
-  ".tf-guide-text p {",
-  "  font-size:13px;",
-  "  line-height:1.5;",
-  "  margin:0 0 6px 0;",
-  "  white-space:normal;",
-  "}",
+  ".tf-group-title{ padding:10px 12px; background:linear-gradient(90deg,#0B3B82,#7D0031); border:1px solid rgba(0,167,163,0.85); color:#F9FAFB; border-radius:10px; font-weight:900; letter-spacing:.2px; margin-bottom:10px; box-shadow:0 6px 18px rgba(11,59,130,0.35); }",
+
+  ".token-wrap{ display:flex; flex-wrap:wrap; gap:8px; }",
+  ".token{ display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border:1px solid #E5E7EB; border-radius:999px; background:#FFF; font-size:13px; }",
+  ".token button{ border:none; background:transparent; cursor:pointer; font-size:14px; line-height:1; color:#6B7280; }",
+
+  ".tf-guide-text p{ font-size:13px; line-height:1.5; margin:0 0 6px 0; white-space:normal; }",
 
   "@media (max-width: 980px) {",
-  "  .tf-editor { grid-template-columns: 1fr; }",
-  "  .tf-rail, .tf-side-col { position:static; max-height:none; width:auto; }",
+  "  .tf-editor{ grid-template-columns: 1fr; }",
+  "  .tf-rail, .tf-side-col{ position:static; max-height:none; width:auto; }",
+  "  .tf-brand-sub{ display:none; }",
+  "  .tf-flags-wrap{ display:none; }",
   "}",
 ].join("\n");
 
@@ -162,11 +114,73 @@ function useInjectCss() {
   }, []);
 }
 
+/* ============================== SaveBarSlim ============================== */
+function SaveBarSlim({ dirty, saving, notice, attention, onSave, tr }) {
+  if (!dirty && !notice) return null;
+
+  const isError = notice?.type === "error";
+  const isSuccess = notice?.type === "success";
+
+  const badgeText = isError
+    ? tr("common.savebar.badgeError", "Error")
+    : isSuccess
+    ? tr("common.savebar.badgeSaved", "Saved")
+    : dirty
+    ? tr("common.savebar.badgeUnsaved", "Unsaved")
+    : tr("common.savebar.badgeInfo", "Info");
+
+  const badgeStyle = isError
+    ? { background: "#FEF2F2", borderColor: "#FCA5A5", color: "#991B1B" }
+    : isSuccess
+    ? { background: "#ECFDF5", borderColor: "#86EFAC", color: "#065F46" }
+    : dirty
+    ? { background: "#FFF7ED", borderColor: "#FDBA74", color: "#9A3412" }
+    : {};
+
+  const mainMsg =
+    notice?.msg ||
+    (dirty
+      ? tr("common.savebar.unsaved", "You have unsaved changes.")
+      : tr("common.savebar.info", "Info"));
+
+  const subMsg = dirty
+    ? tr(
+        "common.savebar.sub",
+        "Save before leaving this section to avoid losing changes."
+      )
+    : "";
+
+  return (
+    <div className="tf-savebar">
+      <div className={`tf-savebar-inner ${attention ? "tf-attention" : ""}`}>
+        <div className="tf-savebar-left">
+          <span className="tf-savebadge" style={badgeStyle}>
+            {badgeText}
+          </span>
+
+          <div className="tf-savebar-text">
+            <div className="tf-savemsg">{mainMsg}</div>
+            {subMsg ? <div className="tf-savesub">{subMsg}</div> : null}
+          </div>
+        </div>
+
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          {dirty ? (
+            <Button variant="primary" onClick={onSave} loading={saving}>
+              {tr("common.save", "Save")}
+            </Button>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ============================== UI helpers ============================== */
-function GroupCard({ title, children, t }) {
+function GroupCard({ title, children, tr }) {
   return (
     <Card>
-      <div className="tf-group-title">{t(title)}</div>
+      <div className="tf-group-title">{tr(title, title)}</div>
       <BlockStack gap="200">{children}</BlockStack>
     </Card>
   );
@@ -249,6 +263,7 @@ function TokenEditor({
       <Text as="span" variant="bodySm" tone="subdued">
         {label}
       </Text>
+
       <InlineStack gap="200" wrap blockAlign="center">
         <div style={{ flex: 1, minWidth: 220 }}>
           <TextField
@@ -265,17 +280,21 @@ function TokenEditor({
         </Button>
       </InlineStack>
 
-      {helpText && (
+      {helpText ? (
         <Text as="p" tone="subdued">
           {helpText}
         </Text>
-      )}
+      ) : null}
 
       <div className="token-wrap">
         {(items || []).map((it, idx) => (
           <span className="token" key={it + "-" + idx}>
             <span
-              style={{ maxWidth: 260, overflow: "hidden", textOverflow: "ellipsis" }}
+              style={{
+                maxWidth: 260,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
               title={it}
             >
               {it}
@@ -285,11 +304,11 @@ function TokenEditor({
             </button>
           </span>
         ))}
-        {(!items || items.length === 0) && (
+        {(!items || items.length === 0) ? (
           <Text tone="subdued" as="span">
             {emptyLabel}
           </Text>
-        )}
+        ) : null}
       </div>
     </div>
   );
@@ -336,8 +355,8 @@ function defaultCfg() {
       version: "v2",
       siteKey: "",
       secretKey: "",
-      v2Size: "normal", // normal | compact | invisible
-      v2Theme: "light", // light | dark
+      v2Size: "normal",
+      v2Theme: "light",
     },
 
     honeypot: {
@@ -350,57 +369,28 @@ function defaultCfg() {
   };
 }
 
-/* ============================== HEADER SHELL ============================== */
-function PageShell({ children, t, onSave, saving }) {
-  return (
-    <>
-      <div className="tf-header">
-        <InlineStack align="space-between" blockAlign="center">
-          <InlineStack gap="300" blockAlign="center">
-            <div
-              style={{
-                width: 40,
-                height: 40,
-                borderRadius: 12,
-                overflow: "hidden",
-                boxShadow: "0 10px 28px rgba(11,59,130,0.55)",
-                border: "1px solid rgba(255,255,255,0.35)",
-                background: "linear-gradient(135deg,#0B3B82,#7D0031)",
-              }}
-            >
-              <img
-                src="/tripleform-cod-icon.png"
-                alt="TripleForm COD"
-                style={{ width: "100%", height: "100%", display: "block", objectFit: "cover" }}
-              />
-            </div>
-            <div>
-              <div style={{ fontWeight: 700, color: "#F9FAFB" }}>
-                {t("section5.header.appTitle")}
-              </div>
-              <div style={{ fontSize: 12, color: "rgba(249,250,251,0.8)" }}>
-                {t("section5.header.appSubtitle")}
-              </div>
-            </div>
-          </InlineStack>
-
-          <InlineStack gap="200" blockAlign="center">
-            <div style={{ fontSize: 12, color: "rgba(249,250,251,0.9)" }}>
-              {t("section5.header.pill")}
-            </div>
-            <Button variant="primary" size="slim" onClick={onSave} loading={saving}>
-              {t("section5.buttons.saveStore")}
-            </Button>
-          </InlineStack>
-        </InlineStack>
-      </div>
-
-      <div className="tf-shell">{children}</div>
-    </>
-  );
+/* ============================== helpers ============================== */
+function stableStringify(obj) {
+  try {
+    return JSON.stringify(obj);
+  } catch {
+    return "";
+  }
+}
+function normalizeAntibotCfg(cfg) {
+  const x = cfg || defaultCfg();
+  return {
+    ...x,
+    recaptcha: {
+      ...(x.recaptcha || {}),
+      version: "v2",
+      v2Size: (x.recaptcha && x.recaptcha.v2Size) || "normal",
+      v2Theme: (x.recaptcha && x.recaptcha.v2Theme) || "light",
+    },
+  };
 }
 
-/* ============================== GEO helpers (NO backticks) ============================== */
+/* ============================== GEO helpers ============================== */
 function geoKey(r) {
   return (r?.country || "") + "|" + (r?.province || "") + "|" + (r?.city || "");
 }
@@ -416,93 +406,95 @@ function getProvinceLabel(cc, prov) {
 
 export default function Section5Antibot() {
   useInjectCss();
-  const { t: rawT } = useI18n();
+  const { tr } = useT();
 
-  const t = (key, vars) => {
-    try {
-      return rawT(key, vars);
-    } catch (e) {
-      console.error("i18n error in Section5Antibot for key:", key, e);
-      return key;
-    }
-  };
-
-  const [cfg, setCfg] = useState(defaultCfg);
+  const [cfg, setCfg] = useState(() => defaultCfg());
   const [sel, setSel] = useState("overview");
-  const [saving, setSaving] = useState(false);
 
+  const [saving, setSaving] = useState(false);
+  const [notice, setNotice] = useState(null); // {type:'success'|'error'|'info', msg}
+  const [attention, setAttention] = useState(false);
+
+  // ✅ last saved snapshot (for dirty comparison)
+  const lastSavedRef = useRef(stableStringify(normalizeAntibotCfg(defaultCfg())));
+
+  // GEO inputs
   const [geoCountry, setGeoCountry] = useState("MA");
   const [geoProvince, setGeoProvince] = useState("");
   const [geoCity, setGeoCity] = useState("");
 
-  // local fallback
+  const normalizedCfg = useMemo(() => normalizeAntibotCfg(cfg), [cfg]);
+  const dirty = useMemo(() => {
+    const now = stableStringify(normalizedCfg);
+    return now !== (lastSavedRef.current || "");
+  }, [normalizedCfg]);
+
+  const blinkAttention = () => {
+    setAttention(true);
+    setTimeout(() => setAttention(false), 950);
+  };
+
+  /* -------------------- local load (fallback) -------------------- */
   useEffect(() => {
     if (typeof window === "undefined") return;
     try {
-      const raw = window.localStorage.getItem("tripleform_cod_antibot_min_v4");
+      const raw = window.localStorage.getItem("tripleform_cod_antibot_min_v5");
       if (raw) {
         const parsed = JSON.parse(raw);
-        const fixed = {
-          ...parsed,
-          recaptcha: {
-            ...(parsed.recaptcha || {}),
-            version: "v2",
-            v2Size: (parsed.recaptcha && parsed.recaptcha.v2Size) || "normal",
-            v2Theme: (parsed.recaptcha && parsed.recaptcha.v2Theme) || "light",
-          },
-        };
-        setCfg((prev) => ({ ...prev, ...fixed }));
+        const fixed = normalizeAntibotCfg({ ...defaultCfg(), ...parsed });
+        setCfg(fixed);
+        lastSavedRef.current = stableStringify(fixed);
+      } else {
+        const init = normalizeAntibotCfg(defaultCfg());
+        lastSavedRef.current = stableStringify(init);
       }
-    } catch {}
+    } catch {
+      const init = normalizeAntibotCfg(defaultCfg());
+      lastSavedRef.current = stableStringify(init);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // remote load
+  /* -------------------- remote load -------------------- */
   useEffect(() => {
     if (typeof window === "undefined") return;
+
     (async () => {
       try {
         const res = await fetch("/api/antibot/load", { credentials: "include" });
         const j = await res.json().catch(() => null);
         if (j && j.ok && j.antibot) {
-          const fixed = {
-            ...j.antibot,
-            recaptcha: {
-              ...(j.antibot.recaptcha || {}),
-              version: "v2",
-              v2Size: (j.antibot.recaptcha && j.antibot.recaptcha.v2Size) || "normal",
-              v2Theme: (j.antibot.recaptcha && j.antibot.recaptcha.v2Theme) || "light",
-            },
-          };
-          setCfg((prev) => ({ ...prev, ...fixed }));
+          const fixed = normalizeAntibotCfg({ ...defaultCfg(), ...j.antibot });
+          setCfg(fixed);
+          lastSavedRef.current = stableStringify(fixed);
+          setNotice(null);
         }
       } catch (e) {
+        // no noisy alerts
         console.error("Erreur load antibot (remote):", e);
       }
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // persist local
+  /* -------------------- persist local (no alerts) -------------------- */
   useEffect(() => {
     if (typeof window === "undefined") return;
     try {
-      window.localStorage.setItem("tripleform_cod_antibot_min_v4", JSON.stringify(cfg));
+      window.localStorage.setItem(
+        "tripleform_cod_antibot_min_v5",
+        stableStringify(normalizedCfg)
+      );
     } catch {}
-  }, [cfg]);
+  }, [normalizedCfg]);
 
+  /* -------------------- save remote (same UX) -------------------- */
   const handleSaveRemote = async () => {
     try {
       setSaving(true);
+      setNotice(null);
 
-      // ✅ V2 ONLY payload
-      const payload = {
-        ...cfg,
-        recaptcha: {
-          ...(cfg.recaptcha || {}),
-          version: "v2",
-          v2Size: cfg.recaptcha?.v2Size || "normal",
-          v2Theme: cfg.recaptcha?.v2Theme || "light",
-        },
-      };
+      const payload = normalizeAntibotCfg(cfg);
 
       const res = await fetch("/api/antibot/save", {
         method: "POST",
@@ -510,33 +502,65 @@ export default function Section5Antibot() {
         credentials: "include",
         body: JSON.stringify({ antibot: payload }),
       });
+
       const j = await res.json().catch(() => ({ ok: true }));
-      if (!res.ok || (j && j.ok === false)) throw new Error((j && j.error) || "Save failed");
-      alert(t("section5.save.success"));
+      if (!res.ok || (j && j.ok === false)) {
+        throw new Error((j && j.error) || "Save failed");
+      }
+
+      lastSavedRef.current = stableStringify(payload);
+      setNotice({
+        type: "success",
+        msg: tr("section5.save.success", "Saved successfully."),
+      });
+
+      // auto hide success after a moment
+      setTimeout(() => setNotice(null), 2200);
     } catch (e) {
-      alert(
-        t("section5.save.error", {
-          error: (e && e.message) || t("section5.save.unknownError"),
-        })
-      );
+      setNotice({
+        type: "error",
+        msg: tr("section5.save.error", "Save failed: {{error}}", {
+          error: (e && e.message) || "Unknown",
+        }),
+      });
+      blinkAttention();
     } finally {
       setSaving(false);
     }
   };
 
+  /* -------------------- “leave panel” logic (NO alerts while editing) -------------------- */
+  const goPanel = (next) => {
+    if (next === sel) return;
+
+    // ✅ only warn when user tries to navigate away while dirty
+    if (dirty) {
+      setNotice({
+        type: "info",
+        msg: tr(
+          "common.savebar.leaveWarn",
+          "You have unsaved changes. Please save before leaving."
+        ),
+      });
+      blinkAttention();
+    }
+
+    setSel(next);
+  };
+
+  /* -------------------- setters -------------------- */
   const setIP = (p) => setCfg((c) => ({ ...c, ipBlock: { ...c.ipBlock, ...p } }));
-  const setTEL = (p) => setCfg((c) => ({ ...c, phoneBlock: { ...c.phoneBlock, ...p } }));
-  const setCTRY = (p) => setCfg((c) => ({ ...c, countryBlock: { ...c.countryBlock, ...p } }));
+  const setTEL = (p) =>
+    setCfg((c) => ({ ...c, phoneBlock: { ...c.phoneBlock, ...p } }));
+  const setCTRY = (p) =>
+    setCfg((c) => ({ ...c, countryBlock: { ...c.countryBlock, ...p } }));
   const setRC = (p) =>
     setCfg((c) => ({
       ...c,
-      recaptcha: {
-        ...c.recaptcha,
-        ...p,
-        version: "v2",
-      },
+      recaptcha: { ...c.recaptcha, ...p, version: "v2" },
     }));
-  const setHP = (p) => setCfg((c) => ({ ...c, honeypot: { ...c.honeypot, ...p } }));
+  const setHP = (p) =>
+    setCfg((c) => ({ ...c, honeypot: { ...c.honeypot, ...p } }));
 
   const addItems = (arr, items) => {
     const set = new Set(arr || []);
@@ -548,13 +572,14 @@ export default function Section5Antibot() {
   };
   const removeAt = (arr, idx) => (arr || []).filter((_, i) => i !== idx);
 
+  /* -------------------- left rail panels -------------------- */
   const panels = [
-    { key: "overview", label: t("section5.rail.panels.overview") },
-    { key: "ip", label: t("section5.rail.panels.ip") },
-    { key: "phone", label: t("section5.rail.panels.phone") },
-    { key: "country", label: t("section5.rail.panels.country") },
-    { key: "recap", label: t("section5.rail.panels.recap") },
-    { key: "honeypot", label: t("section5.rail.panels.honeypot") },
+    { key: "overview", label: tr("section5.rail.panels.overview", "Overview") },
+    { key: "ip", label: tr("section5.rail.panels.ip", "IP Block") },
+    { key: "phone", label: tr("section5.rail.panels.phone", "Phone Block") },
+    { key: "country", label: tr("section5.rail.panels.country", "Country / GEO") },
+    { key: "recap", label: tr("section5.rail.panels.recap", "reCAPTCHA") },
+    { key: "honeypot", label: tr("section5.rail.panels.honeypot", "Honeypot") },
   ];
 
   const countIPs =
@@ -566,7 +591,9 @@ export default function Section5Antibot() {
 
   const statusBadge = (enabled) => (
     <Badge tone={enabled ? "success" : "critical"}>
-      {enabled ? t("section5.status.on") : t("section5.status.off")}
+      {enabled
+        ? tr("section5.status.on", "On")
+        : tr("section5.status.off", "Off")}
     </Badge>
   );
 
@@ -585,16 +612,22 @@ export default function Section5Antibot() {
     const provinces = (c && c.provinces) || {};
     const keys = Object.keys(provinces);
     return [{ label: "Any province", value: "" }].concat(
-      keys.map((k) => ({ label: (provinces[k] && provinces[k].label) || k, value: k }))
+      keys.map((k) => ({
+        label: (provinces[k] && provinces[k].label) || k,
+        value: k,
+      }))
     );
   }, [geoCountry]);
 
   const cityOptions = useMemo(() => {
     const c = COUNTRY_DATA && COUNTRY_DATA[geoCountry];
     const provinces = (c && c.provinces) || {};
-    if (!geoProvince || !provinces[geoProvince]) return [{ label: "Any city", value: "" }];
+    if (!geoProvince || !provinces[geoProvince])
+      return [{ label: "Any city", value: "" }];
     const cities = provinces[geoProvince].cities || [];
-    return [{ label: "Any city", value: "" }].concat(cities.map((x) => ({ label: x, value: x })));
+    return [{ label: "Any city", value: "" }].concat(
+      cities.map((x) => ({ label: x, value: x }))
+    );
   }, [geoCountry, geoProvince]);
 
   const geoRulePills = useMemo(() => {
@@ -634,409 +667,524 @@ export default function Section5Antibot() {
   };
 
   return (
-    <PageShell t={t} onSave={handleSaveRemote} saving={saving}>
-      <div className="tf-editor">
-        {/* Rail */}
-        <div className="tf-rail">
-          <div className="tf-rail-card">
-            <div className="tf-rail-head">{t("section5.rail.title")}</div>
-            <div className="tf-rail-list">
-              {panels.map((it) => (
-                <div
-                  key={it.key}
-                  className="tf-rail-item"
-                  data-sel={sel === it.key ? 1 : 0}
-                  onClick={() => setSel(it.key)}
-                >
-                  {it.label}
-                </div>
-              ))}
+    <>
+      {/* ✅ HEADER */}
+      <div className="tf-header">
+        <div className="tf-header-row">
+          <div className="tf-brand">
+            <div
+              style={{
+                width: 38,
+                height: 38,
+                borderRadius: 12,
+                overflow: "hidden",
+                boxShadow: "0 10px 28px rgba(11,59,130,0.55)",
+                border: "1px solid rgba(255,255,255,0.35)",
+                background: "linear-gradient(135deg,#0B3B82,#7D0031)",
+                flex: "0 0 auto",
+              }}
+            >
+              <img
+                src="/tripleform-cod-icon.png"
+                alt="TripleForm COD"
+                style={{ width: "100%", height: "100%", display: "block", objectFit: "cover" }}
+              />
+            </div>
+
+            <div className="tf-brand-text">
+              <div className="tf-brand-title">
+                {tr("section5.header.appTitle", "TripleForm — AntiBot")}
+              </div>
+              <div className="tf-brand-sub">
+                {tr("section5.header.appSubtitle", "Protect your COD form from spam orders")}
+              </div>
             </div>
           </div>
 
-          <div className="tf-rail-card">
-            <div className="tf-rail-head">{t("section5.rail.statusTitle")}</div>
-            <div style={{ padding: 10 }}>
-              <BlockStack gap="100">
-                <InlineStack align="space-between">
-                  <Text as="span">IP</Text>
-                  {statusBadge(cfg.ipBlock.enabled)}
-                </InlineStack>
-                <InlineStack align="space-between">
-                  <Text as="span">{t("section5.rail.panels.phone")}</Text>
-                  {statusBadge(cfg.phoneBlock.enabled)}
-                </InlineStack>
-                <InlineStack align="space-between">
-                  <Text as="span">{t("section5.rail.panels.country")}</Text>
-                  {statusBadge(cfg.countryBlock.enabled)}
-                </InlineStack>
-                <InlineStack align="space-between">
-                  <Text as="span">{t("section5.rail.panels.recap")}</Text>
-                  {statusBadge(cfg.recaptcha.enabled)}
-                </InlineStack>
-                <InlineStack align="space-between">
-                  <Text as="span">{t("section5.rail.panels.honeypot")}</Text>
-                  {statusBadge(cfg.honeypot.enabled)}
-                </InlineStack>
-
-                <Text tone="subdued" as="p">
-                  {t("section5.rail.statusNote", { ips: countIPs, phones: countPhones })}
-                  {geoCount ? " • GEO: " + geoCount : ""}
-                </Text>
-              </BlockStack>
-            </div>
+          {/* ✅ FLAGS center */}
+          <div className="tf-flags-wrap">
+            <CountryFlagsBar />
           </div>
-        </div>
 
-        {/* Main */}
-        <div className="tf-main-col">
-          {sel === "overview" && (
-            <div className="tf-panel">
-              <GroupCard title="section5.overview.title" t={t}>
-                <BlockStack gap="200">
-                  <Text as="p">{t("section5.overview.description")}</Text>
-                  <Text tone="subdued" as="p">
-                    ✅ Smart GEO dropdown (Country/Province/City). ✅ IP/Phone UI clean.
-                  </Text>
-                </BlockStack>
-              </GroupCard>
+          {/* actions right */}
+          <div className="tf-header-right">
+            <div style={{ fontSize: 12, color: "rgba(249,250,251,0.9)", fontWeight: 800 }}>
+              {tr("section5.header.pill", "Security settings")}
             </div>
-          )}
 
-          {sel === "ip" && (
-            <div className="tf-panel">
-              <GroupCard title="section5.ipBlock.title" t={t}>
-                <Grid3>
-                  <Checkbox
-                    label={t("section5.ipBlock.enable")}
-                    checked={!!cfg.ipBlock.enabled}
-                    onChange={(v) => setIP({ enabled: v })}
-                  />
-                  <Checkbox
-                    label={t("section5.ipBlock.trustProxy")}
-                    checked={!!cfg.ipBlock.trustProxy}
-                    onChange={(v) => setIP({ trustProxy: v })}
-                  />
-                  <TextField
-                    label={t("section5.ipBlock.clientIpHeader")}
-                    value={cfg.ipBlock.clientIpHeader}
-                    onChange={(v) => setIP({ clientIpHeader: v })}
-                    autoComplete="off"
-                  />
-                </Grid3>
-
-                <Grid3>
-                  <TextField
-                    type="number"
-                    label={t("section5.ipBlock.maxOrdersPerDay")}
-                    value={String(cfg.ipBlock.maxOrdersPerIpPerDay)}
-                    onChange={(v) => setIP({ maxOrdersPerIpPerDay: Number(v || 0) })}
-                  />
-                </Grid3>
-
-                <Divider />
-
-                <TokenEditor
-                  label={t("section5.ipBlock.allowList")}
-                  items={cfg.ipBlock.allowList}
-                  placeholder={t("section5.ipBlock.allowListPlaceholder")}
-                  addLabel={t("section5.buttons.add")}
-                  addCSVLabel={t("section5.buttons.addCSV")}
-                  removeLabel={t("section5.buttons.remove")}
-                  emptyLabel={t("section5.empty")}
-                  onAddItems={(arr) => setIP({ allowList: addItems(cfg.ipBlock.allowList, arr) })}
-                  onRemoveAt={(i) => setIP({ allowList: removeAt(cfg.ipBlock.allowList, i) })}
-                />
-
-                <TokenEditor
-                  label={t("section5.ipBlock.denyList")}
-                  items={cfg.ipBlock.denyList}
-                  placeholder={t("section5.ipBlock.denyListPlaceholder")}
-                  addLabel={t("section5.buttons.add")}
-                  addCSVLabel={t("section5.buttons.addCSV")}
-                  removeLabel={t("section5.buttons.remove")}
-                  emptyLabel={t("section5.empty")}
-                  onAddItems={(arr) => setIP({ denyList: addItems(cfg.ipBlock.denyList, arr) })}
-                  onRemoveAt={(i) => setIP({ denyList: removeAt(cfg.ipBlock.denyList, i) })}
-                />
-              </GroupCard>
-            </div>
-          )}
-
-          {sel === "phone" && (
-            <div className="tf-panel">
-              <GroupCard title="section5.phoneBlock.title" t={t}>
-                <Grid3>
-                  <Checkbox
-                    label={t("section5.phoneBlock.enable")}
-                    checked={!!cfg.phoneBlock.enabled}
-                    onChange={(v) => setTEL({ enabled: v })}
-                  />
-                  <TextField
-                    type="number"
-                    label={t("section5.phoneBlock.minDigits")}
-                    value={String(cfg.phoneBlock.minDigits)}
-                    onChange={(v) => setTEL({ minDigits: Number(v || 0) })}
-                  />
-                  <TextField
-                    type="number"
-                    label={t("section5.phoneBlock.maxOrdersPerDay")}
-                    value={String(cfg.phoneBlock.maxOrdersPerPhonePerDay)}
-                    onChange={(v) => setTEL({ maxOrdersPerPhonePerDay: Number(v || 0) })}
-                  />
-                </Grid3>
-
-                <Divider />
-
-                <TokenEditor
-                  label={t("section5.phoneBlock.blockedNumbers")}
-                  items={cfg.phoneBlock.blockedNumbers}
-                  placeholder={t("section5.phoneBlock.blockedNumbersPlaceholder")}
-                  addLabel={t("section5.buttons.add")}
-                  addCSVLabel={t("section5.buttons.addCSV")}
-                  removeLabel={t("section5.buttons.remove")}
-                  emptyLabel={t("section5.empty")}
-                  onAddItems={(arr) =>
-                    setTEL({ blockedNumbers: addItems(cfg.phoneBlock.blockedNumbers, arr) })
-                  }
-                  onRemoveAt={(i) =>
-                    setTEL({ blockedNumbers: removeAt(cfg.phoneBlock.blockedNumbers, i) })
-                  }
-                />
-              </GroupCard>
-            </div>
-          )}
-
-          {sel === "country" && (
-            <div className="tf-panel">
-              <GroupCard title="section5.countryBlock.title" t={t}>
-                <Grid3>
-                  <Checkbox
-                    label={t("section5.countryBlock.enable")}
-                    checked={!!cfg.countryBlock.enabled}
-                    onChange={(v) => setCTRY({ enabled: v })}
-                  />
-                  <Select
-                    label={t("section5.countryBlock.defaultAction")}
-                    value={cfg.countryBlock.defaultAction}
-                    onChange={(v) => setCTRY({ defaultAction: v })}
-                    options={[
-                      { label: t("section5.countryBlock.defaultActionOptions.allow"), value: "allow" },
-                      { label: t("section5.countryBlock.defaultActionOptions.block"), value: "block" },
-                      { label: t("section5.countryBlock.defaultActionOptions.challenge"), value: "challenge" },
-                    ]}
-                  />
-                </Grid3>
-
-                <Divider />
-
-                <Text as="h3" variant="headingSm">
-                  Smart GEO (Country / Province / City)
-                </Text>
-
-                <Grid3>
-                  <Select
-                    label="Country"
-                    value={geoCountry}
-                    onChange={(v) => {
-                      setGeoCountry(v);
-                      setGeoProvince("");
-                      setGeoCity("");
-                    }}
-                    options={countryOptions}
-                  />
-                  <Select
-                    label="Province"
-                    value={geoProvince}
-                    onChange={(v) => {
-                      setGeoProvince(v);
-                      setGeoCity("");
-                    }}
-                    options={provinceOptions}
-                  />
-                  <Select
-                    label="City"
-                    value={geoCity}
-                    onChange={setGeoCity}
-                    options={cityOptions}
-                    disabled={!geoProvince}
-                  />
-                </Grid3>
-
-                <InlineStack gap="200" wrap>
-                  <Button onClick={addGeoRule}>{t("section5.buttons.add")}</Button>
-                  <Text tone="subdued" as="span">
-                    Country only = whole country. Province/City = precise rule.
-                  </Text>
-                </InlineStack>
-
-                <div className="token-wrap" style={{ marginTop: 10 }}>
-                  {(geoRulePills || []).map((label, idx) => (
-                    <span className="token" key={label + "-" + idx}>
-                      <span title={label}>{label}</span>
-                      <button
-                        aria-label={t("section5.buttons.remove")}
-                        onClick={() => removeGeoRuleAt(idx)}
-                      >
-                        ×
-                      </button>
-                    </span>
-                  ))}
-                  {(!geoRulePills || geoRulePills.length === 0) && (
-                    <Text tone="subdued" as="span">
-                      {t("section5.empty")}
-                    </Text>
-                  )}
-                </div>
-
-                <Divider />
-
-                <TokenEditor
-                  label={t("section5.countryBlock.allowList")}
-                  items={cfg.countryBlock.allowList}
-                  placeholder={t("section5.countryBlock.allowListPlaceholder")}
-                  addLabel={t("section5.buttons.add")}
-                  addCSVLabel={t("section5.buttons.addCSV")}
-                  removeLabel={t("section5.buttons.remove")}
-                  emptyLabel={t("section5.empty")}
-                  onAddItems={(arr) => setCTRY({ allowList: addItems(cfg.countryBlock.allowList, arr) })}
-                  onRemoveAt={(i) => setCTRY({ allowList: removeAt(cfg.countryBlock.allowList, i) })}
-                />
-
-                <TokenEditor
-                  label={t("section5.countryBlock.denyList")}
-                  items={cfg.countryBlock.denyList}
-                  placeholder={t("section5.countryBlock.denyListPlaceholder")}
-                  addLabel={t("section5.buttons.add")}
-                  addCSVLabel={t("section5.buttons.addCSV")}
-                  removeLabel={t("section5.buttons.remove")}
-                  emptyLabel={t("section5.empty")}
-                  onAddItems={(arr) => setCTRY({ denyList: addItems(cfg.countryBlock.denyList, arr) })}
-                  onRemoveAt={(i) => setCTRY({ denyList: removeAt(cfg.countryBlock.denyList, i) })}
-                />
-              </GroupCard>
-            </div>
-          )}
-
-          {/* ✅ reCAPTCHA v2 ONLY UI */}
-          {sel === "recap" && (
-            <div className="tf-panel">
-              <GroupCard title="section5.recaptcha.title" t={t}>
-                <Grid3>
-                  <Checkbox
-                    label={t("section5.recaptcha.enable")}
-                    checked={!!cfg.recaptcha.enabled}
-                    onChange={(v) => setRC({ enabled: v })}
-                  />
-
-                  <div style={{ display: "grid", gap: 6 }}>
-                    <Text as="span" variant="bodySm" tone="subdued">
-                      {t("section5.recaptcha.version")}
-                    </Text>
-                    <Badge tone="info">v2</Badge>
-                  </div>
-
-                  <TextField
-                    label={t("section5.recaptcha.siteKey")}
-                    value={cfg.recaptcha.siteKey}
-                    onChange={(v) => setRC({ siteKey: v })}
-                    autoComplete="off"
-                  />
-
-                  <TextField
-                    label={t("section5.recaptcha.secretKey")}
-                    value={cfg.recaptcha.secretKey}
-                    onChange={(v) => setRC({ secretKey: v })}
-                    autoComplete="off"
-                  />
-
-                  <Select
-                    label="V2 size"
-                    options={[
-                      { label: "normal", value: "normal" },
-                      { label: "compact", value: "compact" },
-                      { label: "invisible", value: "invisible" },
-                    ]}
-                    value={cfg.recaptcha.v2Size || "normal"}
-                    onChange={(v) => setRC({ v2Size: v })}
-                  />
-
-                  <Select
-                    label="V2 theme"
-                    options={[
-                      { label: "light", value: "light" },
-                      { label: "dark", value: "dark" },
-                    ]}
-                    value={cfg.recaptcha.v2Theme || "light"}
-                    onChange={(v) => setRC({ v2Theme: v })}
-                  />
-                </Grid3>
-
-                <Text tone="subdued" as="p">
-                  ✅ reCAPTCHA v2 only. Paste Site key + Secret key. (No score/action)
-                </Text>
-              </GroupCard>
-            </div>
-          )}
-
-          {sel === "honeypot" && (
-            <div className="tf-panel">
-              <GroupCard title="section5.honeypot.title" t={t}>
-                <Grid2>
-                  <Checkbox
-                    label={t("section5.honeypot.enable")}
-                    checked={!!cfg.honeypot.enabled}
-                    onChange={(v) => setHP({ enabled: v })}
-                  />
-                  <Checkbox
-                    label={t("section5.honeypot.blockIfFilled")}
-                    checked={!!cfg.honeypot.blockIfFilled}
-                    onChange={(v) => setHP({ blockIfFilled: v })}
-                  />
-                  <Checkbox
-                    label={t("section5.honeypot.checkMouseMove")}
-                    checked={!!cfg.honeypot.checkMouseMove}
-                    onChange={(v) => setHP({ checkMouseMove: v })}
-                  />
-                  <TextField
-                    label={t("section5.honeypot.fieldName")}
-                    value={cfg.honeypot.fieldName}
-                    onChange={(v) => setHP({ fieldName: v })}
-                    autoComplete="off"
-                  />
-                  <TextField
-                    type="number"
-                    label={t("section5.honeypot.minTime")}
-                    value={String(cfg.honeypot.minFillTimeMs)}
-                    onChange={(v) => setHP({ minFillTimeMs: Number(v || 0) })}
-                    helpText={t("section5.honeypot.timeHelp")}
-                  />
-                </Grid2>
-
-                <Text tone="subdued" as="p">
-                  {t("section5.honeypot.description")}
-                </Text>
-              </GroupCard>
-            </div>
-          )}
-        </div>
-
-        {/* Right guide */}
-        <div className="tf-side-col">
-          <div className="tf-side-card">
-            <Text as="h3" variant="headingSm">
-              {t("section5.guide.title")}
-            </Text>
-            <BlockStack gap="150" className="tf-guide-text" style={{ marginTop: 8 }}>
-              <p>{t("section5.guide.step1")}</p>
-              <p>{t("section5.guide.step2")}</p>
-              <p>{t("section5.guide.step3")}</p>
-              <p>{t("section5.guide.step4")}</p>
-              <p>{t("section5.guide.step5")}</p>
-            </BlockStack>
+            <Button variant="primary" size="slim" onClick={handleSaveRemote} loading={saving}>
+              {tr("common.save", "Save")}
+            </Button>
           </div>
         </div>
       </div>
-    </PageShell>
+
+      {/* ✅ Slim SaveBar (only on leave + notice) */}
+      <SaveBarSlim
+        dirty={dirty}
+        saving={saving}
+        notice={notice}
+        attention={attention}
+        onSave={handleSaveRemote}
+        tr={tr}
+      />
+
+      <div className="tf-shell">
+        <div className="tf-editor">
+          {/* Rail */}
+          <div className="tf-rail">
+            <div className="tf-rail-card">
+              <div className="tf-rail-head">{tr("section5.rail.title", "Panels")}</div>
+              <div className="tf-rail-list">
+                {panels.map((it) => (
+                  <div
+                    key={it.key}
+                    className="tf-rail-item"
+                    data-sel={sel === it.key ? 1 : 0}
+                    onClick={() => goPanel(it.key)}
+                  >
+                    <span style={{ fontWeight: 800 }}>{it.label}</span>
+                    <span style={{ opacity: 0.75 }}>
+                      <SafeIcon name="ChevronRightIcon" />
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="tf-rail-card">
+              <div className="tf-rail-head">{tr("section5.rail.statusTitle", "Status")}</div>
+              <div style={{ padding: 10 }}>
+                <BlockStack gap="100">
+                  <InlineStack align="space-between">
+                    <Text as="span">IP</Text>
+                    {statusBadge(cfg.ipBlock.enabled)}
+                  </InlineStack>
+                  <InlineStack align="space-between">
+                    <Text as="span">{tr("section5.rail.panels.phone", "Phone")}</Text>
+                    {statusBadge(cfg.phoneBlock.enabled)}
+                  </InlineStack>
+                  <InlineStack align="space-between">
+                    <Text as="span">{tr("section5.rail.panels.country", "Country")}</Text>
+                    {statusBadge(cfg.countryBlock.enabled)}
+                  </InlineStack>
+                  <InlineStack align="space-between">
+                    <Text as="span">{tr("section5.rail.panels.recap", "reCAPTCHA")}</Text>
+                    {statusBadge(cfg.recaptcha.enabled)}
+                  </InlineStack>
+                  <InlineStack align="space-between">
+                    <Text as="span">{tr("section5.rail.panels.honeypot", "Honeypot")}</Text>
+                    {statusBadge(cfg.honeypot.enabled)}
+                  </InlineStack>
+
+                  <Text tone="subdued" as="p">
+                    {tr("section5.rail.statusNote", "IPs: {{ips}} • Phones: {{phones}}", {
+                      ips: countIPs,
+                      phones: countPhones,
+                    })}
+                    {geoCount ? " • GEO: " + geoCount : ""}
+                  </Text>
+                </BlockStack>
+              </div>
+            </div>
+          </div>
+
+          {/* Main */}
+          <div className="tf-main-col">
+            {sel === "overview" && (
+              <div className="tf-panel">
+                <GroupCard title="section5.overview.title" tr={tr}>
+                  <BlockStack gap="200">
+                    <Text as="p">{tr("section5.overview.description", "Configure antibot protections.")}</Text>
+                    <Text tone="subdued" as="p">
+                      ✅ Smart GEO dropdown (Country/Province/City). ✅ IP/Phone UI clean. ✅ reCAPTCHA v2 only.
+                    </Text>
+                  </BlockStack>
+                </GroupCard>
+              </div>
+            )}
+
+            {sel === "ip" && (
+              <div className="tf-panel">
+                <GroupCard title="section5.ipBlock.title" tr={tr}>
+                  <Grid3>
+                    <Checkbox
+                      label={tr("section5.ipBlock.enable", "Enable")}
+                      checked={!!cfg.ipBlock.enabled}
+                      onChange={(v) => setIP({ enabled: v })}
+                    />
+                    <Checkbox
+                      label={tr("section5.ipBlock.trustProxy", "Trust proxy")}
+                      checked={!!cfg.ipBlock.trustProxy}
+                      onChange={(v) => setIP({ trustProxy: v })}
+                    />
+                    <TextField
+                      label={tr("section5.ipBlock.clientIpHeader", "Client IP header")}
+                      value={cfg.ipBlock.clientIpHeader}
+                      onChange={(v) => setIP({ clientIpHeader: v })}
+                      autoComplete="off"
+                    />
+                  </Grid3>
+
+                  <Grid3>
+                    <TextField
+                      type="number"
+                      label={tr("section5.ipBlock.maxOrdersPerDay", "Max orders per IP / day")}
+                      value={String(cfg.ipBlock.maxOrdersPerIpPerDay)}
+                      onChange={(v) => setIP({ maxOrdersPerIpPerDay: Number(v || 0) })}
+                    />
+                  </Grid3>
+
+                  <Divider />
+
+                  <TokenEditor
+                    label={tr("section5.ipBlock.allowList", "Allow list")}
+                    items={cfg.ipBlock.allowList}
+                    placeholder={tr("section5.ipBlock.allowListPlaceholder", "Add IP...")}
+                    addLabel={tr("section5.buttons.add", "Add")}
+                    addCSVLabel={tr("section5.buttons.addCSV", "Add CSV")}
+                    removeLabel={tr("section5.buttons.remove", "Remove")}
+                    emptyLabel={tr("section5.empty", "Empty")}
+                    onAddItems={(arr) => setIP({ allowList: addItems(cfg.ipBlock.allowList, arr) })}
+                    onRemoveAt={(i) => setIP({ allowList: removeAt(cfg.ipBlock.allowList, i) })}
+                  />
+
+                  <TokenEditor
+                    label={tr("section5.ipBlock.denyList", "Deny list")}
+                    items={cfg.ipBlock.denyList}
+                    placeholder={tr("section5.ipBlock.denyListPlaceholder", "Add IP...")}
+                    addLabel={tr("section5.buttons.add", "Add")}
+                    addCSVLabel={tr("section5.buttons.addCSV", "Add CSV")}
+                    removeLabel={tr("section5.buttons.remove", "Remove")}
+                    emptyLabel={tr("section5.empty", "Empty")}
+                    onAddItems={(arr) => setIP({ denyList: addItems(cfg.ipBlock.denyList, arr) })}
+                    onRemoveAt={(i) => setIP({ denyList: removeAt(cfg.ipBlock.denyList, i) })}
+                  />
+                </GroupCard>
+              </div>
+            )}
+
+            {sel === "phone" && (
+              <div className="tf-panel">
+                <GroupCard title="section5.phoneBlock.title" tr={tr}>
+                  <Grid3>
+                    <Checkbox
+                      label={tr("section5.phoneBlock.enable", "Enable")}
+                      checked={!!cfg.phoneBlock.enabled}
+                      onChange={(v) => setTEL({ enabled: v })}
+                    />
+                    <TextField
+                      type="number"
+                      label={tr("section5.phoneBlock.minDigits", "Min digits")}
+                      value={String(cfg.phoneBlock.minDigits)}
+                      onChange={(v) => setTEL({ minDigits: Number(v || 0) })}
+                    />
+                    <TextField
+                      type="number"
+                      label={tr("section5.phoneBlock.maxOrdersPerDay", "Max orders per phone / day")}
+                      value={String(cfg.phoneBlock.maxOrdersPerPhonePerDay)}
+                      onChange={(v) => setTEL({ maxOrdersPerPhonePerDay: Number(v || 0) })}
+                    />
+                  </Grid3>
+
+                  <Divider />
+
+                  <TokenEditor
+                    label={tr("section5.phoneBlock.blockedNumbers", "Blocked numbers")}
+                    items={cfg.phoneBlock.blockedNumbers}
+                    placeholder={tr("section5.phoneBlock.blockedNumbersPlaceholder", "+2126...")}
+                    addLabel={tr("section5.buttons.add", "Add")}
+                    addCSVLabel={tr("section5.buttons.addCSV", "Add CSV")}
+                    removeLabel={tr("section5.buttons.remove", "Remove")}
+                    emptyLabel={tr("section5.empty", "Empty")}
+                    onAddItems={(arr) =>
+                      setTEL({ blockedNumbers: addItems(cfg.phoneBlock.blockedNumbers, arr) })
+                    }
+                    onRemoveAt={(i) =>
+                      setTEL({ blockedNumbers: removeAt(cfg.phoneBlock.blockedNumbers, i) })
+                    }
+                  />
+                </GroupCard>
+              </div>
+            )}
+
+            {sel === "country" && (
+              <div className="tf-panel">
+                <GroupCard title="section5.countryBlock.title" tr={tr}>
+                  <Grid3>
+                    <Checkbox
+                      label={tr("section5.countryBlock.enable", "Enable")}
+                      checked={!!cfg.countryBlock.enabled}
+                      onChange={(v) => setCTRY({ enabled: v })}
+                    />
+                    <Select
+                      label={tr("section5.countryBlock.defaultAction", "Default action")}
+                      value={cfg.countryBlock.defaultAction}
+                      onChange={(v) => setCTRY({ defaultAction: v })}
+                      options={[
+                        {
+                          label: tr("section5.countryBlock.defaultActionOptions.allow", "Allow"),
+                          value: "allow",
+                        },
+                        {
+                          label: tr("section5.countryBlock.defaultActionOptions.block", "Block"),
+                          value: "block",
+                        },
+                        {
+                          label: tr(
+                            "section5.countryBlock.defaultActionOptions.challenge",
+                            "Challenge"
+                          ),
+                          value: "challenge",
+                        },
+                      ]}
+                    />
+                  </Grid3>
+
+                  <Divider />
+
+                  <Text as="h3" variant="headingSm">
+                    Smart GEO (Country / Province / City)
+                  </Text>
+
+                  <Grid3>
+                    <Select
+                      label="Country"
+                      value={geoCountry}
+                      onChange={(v) => {
+                        setGeoCountry(v);
+                        setGeoProvince("");
+                        setGeoCity("");
+                      }}
+                      options={countryOptions}
+                    />
+                    <Select
+                      label="Province"
+                      value={geoProvince}
+                      onChange={(v) => {
+                        setGeoProvince(v);
+                        setGeoCity("");
+                      }}
+                      options={provinceOptions}
+                    />
+                    <Select
+                      label="City"
+                      value={geoCity}
+                      onChange={setGeoCity}
+                      options={cityOptions}
+                      disabled={!geoProvince}
+                    />
+                  </Grid3>
+
+                  <InlineStack gap="200" wrap>
+                    <Button onClick={addGeoRule}>
+                      {tr("section5.buttons.add", "Add")}
+                    </Button>
+                    <Text tone="subdued" as="span">
+                      Country only = whole country. Province/City = precise rule.
+                    </Text>
+                  </InlineStack>
+
+                  <div className="token-wrap" style={{ marginTop: 10 }}>
+                    {(geoRulePills || []).map((label, idx) => (
+                      <span className="token" key={label + "-" + idx}>
+                        <span title={label}>{label}</span>
+                        <button
+                          aria-label={tr("section5.buttons.remove", "Remove")}
+                          onClick={() => removeGeoRuleAt(idx)}
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
+                    {(!geoRulePills || geoRulePills.length === 0) ? (
+                      <Text tone="subdued" as="span">
+                        {tr("section5.empty", "Empty")}
+                      </Text>
+                    ) : null}
+                  </div>
+
+                  <Divider />
+
+                  <TokenEditor
+                    label={tr("section5.countryBlock.allowList", "Allow list")}
+                    items={cfg.countryBlock.allowList}
+                    placeholder={tr("section5.countryBlock.allowListPlaceholder", "MA, DZ...")}
+                    addLabel={tr("section5.buttons.add", "Add")}
+                    addCSVLabel={tr("section5.buttons.addCSV", "Add CSV")}
+                    removeLabel={tr("section5.buttons.remove", "Remove")}
+                    emptyLabel={tr("section5.empty", "Empty")}
+                    onAddItems={(arr) =>
+                      setCTRY({ allowList: addItems(cfg.countryBlock.allowList, arr) })
+                    }
+                    onRemoveAt={(i) =>
+                      setCTRY({ allowList: removeAt(cfg.countryBlock.allowList, i) })
+                    }
+                  />
+
+                  <TokenEditor
+                    label={tr("section5.countryBlock.denyList", "Deny list")}
+                    items={cfg.countryBlock.denyList}
+                    placeholder={tr("section5.countryBlock.denyListPlaceholder", "XX, YY...")}
+                    addLabel={tr("section5.buttons.add", "Add")}
+                    addCSVLabel={tr("section5.buttons.addCSV", "Add CSV")}
+                    removeLabel={tr("section5.buttons.remove", "Remove")}
+                    emptyLabel={tr("section5.empty", "Empty")}
+                    onAddItems={(arr) =>
+                      setCTRY({ denyList: addItems(cfg.countryBlock.denyList, arr) })
+                    }
+                    onRemoveAt={(i) =>
+                      setCTRY({ denyList: removeAt(cfg.countryBlock.denyList, i) })
+                    }
+                  />
+                </GroupCard>
+              </div>
+            )}
+
+            {sel === "recap" && (
+              <div className="tf-panel">
+                <GroupCard title="section5.recaptcha.title" tr={tr}>
+                  <Grid3>
+                    <Checkbox
+                      label={tr("section5.recaptcha.enable", "Enable")}
+                      checked={!!cfg.recaptcha.enabled}
+                      onChange={(v) => setRC({ enabled: v })}
+                    />
+
+                    <div style={{ display: "grid", gap: 6 }}>
+                      <Text as="span" variant="bodySm" tone="subdued">
+                        {tr("section5.recaptcha.version", "Version")}
+                      </Text>
+                      <Badge tone="info">v2</Badge>
+                    </div>
+
+                    <TextField
+                      label={tr("section5.recaptcha.siteKey", "Site key")}
+                      value={cfg.recaptcha.siteKey}
+                      onChange={(v) => setRC({ siteKey: v })}
+                      autoComplete="off"
+                    />
+
+                    <TextField
+                      label={tr("section5.recaptcha.secretKey", "Secret key")}
+                      value={cfg.recaptcha.secretKey}
+                      onChange={(v) => setRC({ secretKey: v })}
+                      autoComplete="off"
+                    />
+
+                    <Select
+                      label="V2 size"
+                      options={[
+                        { label: "normal", value: "normal" },
+                        { label: "compact", value: "compact" },
+                        { label: "invisible", value: "invisible" },
+                      ]}
+                      value={cfg.recaptcha.v2Size || "normal"}
+                      onChange={(v) => setRC({ v2Size: v })}
+                    />
+
+                    <Select
+                      label="V2 theme"
+                      options={[
+                        { label: "light", value: "light" },
+                        { label: "dark", value: "dark" },
+                      ]}
+                      value={cfg.recaptcha.v2Theme || "light"}
+                      onChange={(v) => setRC({ v2Theme: v })}
+                    />
+                  </Grid3>
+
+                  <Text tone="subdued" as="p">
+                    ✅ reCAPTCHA v2 only. Paste Site key + Secret key. (No score/action)
+                  </Text>
+                </GroupCard>
+              </div>
+            )}
+
+            {sel === "honeypot" && (
+              <div className="tf-panel">
+                <GroupCard title="section5.honeypot.title" tr={tr}>
+                  <Grid2>
+                    <Checkbox
+                      label={tr("section5.honeypot.enable", "Enable")}
+                      checked={!!cfg.honeypot.enabled}
+                      onChange={(v) => setHP({ enabled: v })}
+                    />
+                    <Checkbox
+                      label={tr("section5.honeypot.blockIfFilled", "Block if filled")}
+                      checked={!!cfg.honeypot.blockIfFilled}
+                      onChange={(v) => setHP({ blockIfFilled: v })}
+                    />
+                    <Checkbox
+                      label={tr("section5.honeypot.checkMouseMove", "Check mouse move")}
+                      checked={!!cfg.honeypot.checkMouseMove}
+                      onChange={(v) => setHP({ checkMouseMove: v })}
+                    />
+                    <TextField
+                      label={tr("section5.honeypot.fieldName", "Field name")}
+                      value={cfg.honeypot.fieldName}
+                      onChange={(v) => setHP({ fieldName: v })}
+                      autoComplete="off"
+                    />
+                    <TextField
+                      type="number"
+                      label={tr("section5.honeypot.minTime", "Minimum fill time (ms)")}
+                      value={String(cfg.honeypot.minFillTimeMs)}
+                      onChange={(v) => setHP({ minFillTimeMs: Number(v || 0) })}
+                      helpText={tr(
+                        "section5.honeypot.timeHelp",
+                        "If user submits too fast, treat as bot."
+                      )}
+                    />
+                  </Grid2>
+
+                  <Text tone="subdued" as="p">
+                    {tr(
+                      "section5.honeypot.description",
+                      "Honeypot adds a hidden field and timing checks to block bots."
+                    )}
+                  </Text>
+                </GroupCard>
+              </div>
+            )}
+          </div>
+
+          {/* Right guide */}
+          <div className="tf-side-col">
+            <div className="tf-side-card">
+              <Text as="h3" variant="headingSm">
+                {tr("section5.guide.title", "Guide")}
+              </Text>
+
+              <BlockStack gap="150" className="tf-guide-text" style={{ marginTop: 8 }}>
+                <p>{tr("section5.guide.step1", "Enable the blocks you need.")}</p>
+                <p>{tr("section5.guide.step2", "Add allow/deny lists carefully.")}</p>
+                <p>{tr("section5.guide.step3", "Use GEO rules for precise targeting.")}</p>
+                <p>{tr("section5.guide.step4", "Use reCAPTCHA v2 only if necessary.")}</p>
+                <p>{tr("section5.guide.step5", "Always Save before leaving panels.")}</p>
+              </BlockStack>
+            </div>
+
+            {dirty ? (
+              <div className="tf-side-card">
+                <InlineStack gap="200" blockAlign="center">
+                  <Badge tone="warning">
+                    {tr("common.savebar.badgeUnsaved", "Unsaved")}
+                  </Badge>
+                  <Text as="span" fontWeight="bold">
+                    {tr("common.savebar.unsaved", "You have unsaved changes.")}
+                  </Text>
+                </InlineStack>
+                <div style={{ marginTop: 10 }}>
+                  <Button variant="primary" fullWidth onClick={handleSaveRemote} loading={saving}>
+                    {tr("common.save", "Save")}
+                  </Button>
+                </div>
+              </div>
+            ) : null}
+          </div>
+        </div>
+      </div>
+    </>
   );
 }

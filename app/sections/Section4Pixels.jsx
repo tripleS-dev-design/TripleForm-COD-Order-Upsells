@@ -1,5 +1,5 @@
 // ===== File: app/sections/Section4Pixels.jsx =====
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   Card,
   BlockStack,
@@ -29,11 +29,84 @@ const LAYOUT_CSS = `
     padding:12px 16px;
     position:sticky;
     top:0;
-    z-index:40;
+    z-index:60;
     box-shadow:0 10px 28px rgba(11,59,130,0.45);
   }
 
   .tf-shell { padding:16px; }
+
+  /* ===== Slim Save Bar (global) ===== */
+  .tf-savebar {
+    position:sticky;
+    top:64px; /* under header */
+    z-index:55;
+    margin:0;
+    padding:8px 12px;
+    border-bottom:1px solid rgba(0,0,0,0.06);
+    background:#0B1220;
+    color:#F9FAFB;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+  }
+  .tf-savebar-left {
+    display:flex;
+    align-items:center;
+    gap:10px;
+    min-width:0;
+  }
+  .tf-savebar-dot {
+    width:10px;height:10px;border-radius:999px;flex:none;
+    background:#60A5FA;
+    box-shadow:0 0 0 6px rgba(96,165,250,.18);
+  }
+  .tf-savebar-msg {
+    font-size:13px;
+    line-height:1.2;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    opacity:.95;
+  }
+  .tf-savebar-actions { display:flex; align-items:center; gap:8px; flex:none; }
+  .tf-savebar-ghost {
+    background:transparent;
+    border:1px solid rgba(255,255,255,0.22);
+    color:#fff;
+    border-radius:10px;
+    padding:6px 10px;
+    font-size:12px;
+    cursor:pointer;
+  }
+  .tf-savebar-primary {
+    background:#2563EB;
+    border:1px solid rgba(255,255,255,0.16);
+    color:#fff;
+    border-radius:10px;
+    padding:6px 12px;
+    font-size:12px;
+    font-weight:700;
+    cursor:pointer;
+  }
+  .tf-savebar-primary[disabled] { opacity:.6; cursor:not-allowed; }
+
+  .tf-savebar[data-tone="success"] { background:linear-gradient(90deg,#064E3B,#065F46); }
+  .tf-savebar[data-tone="warning"] { background:linear-gradient(90deg,#111827,#0B1220); }
+  .tf-savebar[data-tone="error"] { background:linear-gradient(90deg,#7F1D1D,#450A0A); }
+
+  /* blink + subtle slide to catch attention when user switches panels without saving */
+  @keyframes tfBlink {
+    0%,100% { filter:brightness(1); }
+    50% { filter:brightness(1.18); }
+  }
+  @keyframes tfNudge {
+    0%,100% { transform:translateY(0); }
+    50% { transform:translateY(-1px); }
+  }
+  .tf-savebar[data-attn="1"] {
+    animation: tfBlink .9s ease-in-out infinite, tfNudge .9s ease-in-out infinite;
+  }
 
   /* ===== Grid: left nav | center content | right guide ===== */
   .tf-editor {
@@ -46,8 +119,8 @@ const LAYOUT_CSS = `
   /* left rail (menu + stats) */
   .tf-rail {
     position:sticky;
-    top:84px;
-    max-height:calc(100vh - 100px);
+    top:112px;
+    max-height:calc(100vh - 130px);
     overflow:auto;
   }
   .tf-rail-card {
@@ -96,8 +169,8 @@ const LAYOUT_CSS = `
   /* Right column (guide) */
   .tf-side-col {
     position:sticky;
-    top:84px;
-    max-height:calc(100vh - 100px);
+    top:112px;
+    max-height:calc(100vh - 130px);
     overflow-y:auto;
     overflow-x:hidden;
     width:320px;
@@ -132,6 +205,7 @@ const LAYOUT_CSS = `
   }
 
   @media (max-width: 980px) {
+    .tf-savebar { top:64px; }
     .tf-editor { grid-template-columns: 1fr; }
     .tf-rail, .tf-side-col { position:static; max-height:none; width:auto; }
   }
@@ -170,6 +244,23 @@ const Grid3 = ({ children }) => (
     {children}
   </div>
 );
+
+function deepClone(obj) {
+  try {
+    return structuredClone(obj);
+  } catch {
+    return JSON.parse(JSON.stringify(obj));
+  }
+}
+
+function stableStringify(obj) {
+  // deterministic enough for configs (we keep keys stable in our objects)
+  try {
+    return JSON.stringify(obj);
+  } catch {
+    return String(obj);
+  }
+}
 
 /* ============================== default config ============================== */
 const defaultCfg = () => ({
@@ -225,6 +316,33 @@ const defaultCfg = () => ({
   },
 });
 
+/* ============================== Slim Save Bar ============================== */
+function SlimSaveBar({ tone, attn, message, saving, onSave, onDismiss, t }) {
+  if (!message) return null;
+
+  return (
+    <div className="tf-savebar" data-tone={tone} data-attn={attn ? 1 : 0}>
+      <div className="tf-savebar-left">
+        <span className="tf-savebar-dot" />
+        <div className="tf-savebar-msg">{message}</div>
+      </div>
+      <div className="tf-savebar-actions">
+        <button className="tf-savebar-ghost" onClick={onDismiss} type="button">
+          {t("common.dismiss") || "Dismiss"}
+        </button>
+        <button
+          className="tf-savebar-primary"
+          onClick={onSave}
+          disabled={!!saving}
+          type="button"
+        >
+          {saving ? (t("common.saving") || "Saving…") : (t("common.save") || "Save")}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 /* ============================== HEADER SHELL ============================== */
 function PageShell({ children, t, onSave, saving }) {
   return (
@@ -258,12 +376,7 @@ function PageShell({ children, t, onSave, saving }) {
               <div style={{ fontWeight: 700, color: "#F9FAFB" }}>
                 {t("section4.header.appTitle")}
               </div>
-              <div
-                style={{
-                  fontSize: 12,
-                  color: "rgba(249,250,251,0.8)",
-                }}
-              >
+              <div style={{ fontSize: 12, color: "rgba(249,250,251,0.8)" }}>
                 {t("section4.header.appSubtitle")}
               </div>
             </div>
@@ -273,12 +386,7 @@ function PageShell({ children, t, onSave, saving }) {
             <div style={{ fontSize: 12, color: "rgba(249,250,251,0.9)" }}>
               {t("section4.header.pill")}
             </div>
-            <Button
-              variant="primary"
-              size="slim"
-              onClick={onSave}
-              loading={saving}
-            >
+            <Button variant="primary" size="slim" onClick={onSave} loading={saving}>
               {t("section4.buttons.saveStore")}
             </Button>
           </InlineStack>
@@ -294,16 +402,13 @@ function PageShell({ children, t, onSave, saving }) {
 export default function Section4Pixels() {
   useInjectCss();
 
-  // On récupère t une seule fois
   const { t: rawT } = useI18n();
-
-  // Wrapper sécurisé pour éviter qu'un bug FR casse toute la page
   const t = (key, vars) => {
     try {
       return rawT(key, vars);
     } catch (e) {
       console.error("i18n error in Section4Pixels for key:", key, e);
-      return key; // fallback: on affiche la clé au lieu de crasher
+      return key;
     }
   };
 
@@ -315,6 +420,49 @@ export default function Section4Pixels() {
   const [testError, setTestError] = useState(null);
 
   const [saving, setSaving] = useState(false);
+
+  // === unified save logic ===
+  const lastSavedRef = useRef(stableStringify(defaultCfg())); // snapshot of last saved remote
+  const lastViewRef = useRef(view);
+
+  const [dirty, setDirty] = useState(false);
+
+  // SaveBar state (shown only when user switches panel without saving, or after save)
+  const [bar, setBar] = useState({
+    show: false,
+    tone: "warning", // warning | success | error
+    attn: false,
+    msg: "",
+  });
+
+  const showBar = (patch) => setBar((b) => ({ ...b, show: true, ...patch }));
+  const hideBar = () => setBar((b) => ({ ...b, show: false, attn: false, msg: "" }));
+
+  // Detect dirty when cfg changes (but DO NOT spam user here)
+  const cfgSig = useMemo(() => stableStringify(cfg), [cfg]);
+  useEffect(() => {
+    const isDirty = cfgSig !== lastSavedRef.current;
+    setDirty(isDirty);
+    // don't show bar on each keystroke
+  }, [cfgSig]);
+
+  // When user switches panel: if dirty => show attention bar (blink)
+  useEffect(() => {
+    const prev = lastViewRef.current;
+    if (prev !== view) {
+      if (dirty) {
+        showBar({
+          tone: "warning",
+          attn: true,
+          msg:
+            t("common.unsavedChanges") ||
+            t("section4.save.unsaved") ||
+            "You have unsaved changes. Save to apply them to your store.",
+        });
+      }
+      lastViewRef.current = view;
+    }
+  }, [view, dirty]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ===== load from localStorage (frontend only) =====
   useEffect(() => {
@@ -334,41 +482,58 @@ export default function Section4Pixels() {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
+    let cancelled = false;
     (async () => {
       try {
-        const res = await fetch("/api/pixels/load", {
-          credentials: "include",
-        });
+        const res = await fetch("/api/pixels/load", { credentials: "include" });
         const j = await res.json().catch(() => null);
+        if (cancelled) return;
+
         if (j?.ok && j.pixels) {
-          setCfg((prev) => ({
-            ...prev,
-            ...j.pixels,
-          }));
+          const merged = (prev) => ({ ...prev, ...j.pixels });
+          setCfg((prev) => {
+            const next = merged(prev);
+            // set last saved snapshot from server load
+            lastSavedRef.current = stableStringify(next);
+            return next;
+          });
+
+          // keep localStorage in sync
+          try {
+            window.localStorage.setItem("tripleform_cod_pixels_v1", JSON.stringify(j.pixels));
+          } catch {
+            /* ignore */
+          }
+
+          // clear any old bar
+          hideBar();
         }
       } catch (e) {
         console.error("Error loading pixels (remote):", e);
       }
     })();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // ===== auto-save to localStorage =====
   useEffect(() => {
     if (typeof window === "undefined") return;
     try {
-      window.localStorage.setItem(
-        "tripleform_cod_pixels_v1",
-        JSON.stringify(cfg)
-      );
+      window.localStorage.setItem("tripleform_cod_pixels_v1", JSON.stringify(cfg));
     } catch (e) {
       console.error("save pixels localStorage:", e);
     }
   }, [cfg]);
 
-  /* === SAVE to store button (now global in header) === */
+  /* === SAVE to store === */
   const handleSaveRemote = async () => {
     try {
       setSaving(true);
+      setTestError(null);
+
       const res = await fetch("/api/pixels/save", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -376,16 +541,29 @@ export default function Section4Pixels() {
         body: JSON.stringify({ pixels: cfg }),
       });
       const j = await res.json().catch(() => ({ ok: true }));
-      if (!res.ok || j?.ok === false) {
-        throw new Error(j?.error || "Save failed");
-      }
-      alert(t("section4.save.success"));
+      if (!res.ok || j?.ok === false) throw new Error(j?.error || "Save failed");
+
+      // Update "last saved" snapshot so dirty becomes false
+      lastSavedRef.current = stableStringify(cfg);
+
+      showBar({
+        tone: "success",
+        attn: false,
+        msg: t("section4.save.success") || "Saved successfully. Your tracking settings are now applied.",
+      });
+
+      // auto-hide success after short delay
+      setTimeout(() => {
+        hideBar();
+      }, 1800);
     } catch (e) {
-      alert(
-        t("section4.save.error", {
-          error: e?.message || t("section4.save.unknownError"),
-        })
-      );
+      showBar({
+        tone: "error",
+        attn: true,
+        msg:
+          t("section4.save.error", { error: e?.message }) ||
+          `Save failed: ${e?.message || "Unknown error"}`,
+      });
     } finally {
       setSaving(false);
     }
@@ -406,10 +584,7 @@ export default function Section4Pixels() {
       });
 
       const j = await res.json().catch(() => null);
-
-      if (!res.ok || !j?.ok) {
-        throw new Error(j?.error || "Test failed");
-      }
+      if (!res.ok || !j?.ok) throw new Error(j?.error || "Test failed");
 
       setTestResult(j);
     } catch (e) {
@@ -420,15 +595,11 @@ export default function Section4Pixels() {
   };
 
   /* ===== simple setters ===== */
-  const setGoogle = (p) =>
-    setCfg((c) => ({ ...c, google: { ...c.google, ...p } }));
+  const setGoogle = (p) => setCfg((c) => ({ ...c, google: { ...c.google, ...p } }));
   const setFB = (p) => setCfg((c) => ({ ...c, fb: { ...c.fb, ...p } }));
-  const setCAPIFB = (p) =>
-    setCfg((c) => ({ ...c, capi_fb: { ...c.capi_fb, ...p } }));
-  const setTT = (p) =>
-    setCfg((c) => ({ ...c, tiktok: { ...c.tiktok, ...p } }));
-  const setTTAPI = (p) =>
-    setCfg((c) => ({ ...c, tiktok_api: { ...c.tiktok_api, ...p } }));
+  const setCAPIFB = (p) => setCfg((c) => ({ ...c, capi_fb: { ...c.capi_fb, ...p } }));
+  const setTT = (p) => setCfg((c) => ({ ...c, tiktok: { ...c.tiktok, ...p } }));
+  const setTTAPI = (p) => setCfg((c) => ({ ...c, tiktok_api: { ...c.tiktok_api, ...p } }));
 
   /* ===== rail (main menu) ===== */
   const panels = [
@@ -454,9 +625,23 @@ export default function Section4Pixels() {
     </Badge>
   );
 
+  // optional: a tiny helper for navigation that respects the "show bar only on switching panel"
+  const go = (nextKey) => setView(nextKey);
+
   /* ===================== RENDER ===================== */
   return (
     <PageShell t={t} onSave={handleSaveRemote} saving={saving}>
+      {/* Slim Save Bar: appears ONLY when switching panel while dirty (or after save/error) */}
+      <SlimSaveBar
+        tone={bar.tone}
+        attn={bar.attn}
+        message={bar.show ? bar.msg : ""}
+        saving={saving}
+        onSave={handleSaveRemote}
+        onDismiss={hideBar}
+        t={t}
+      />
+
       <div className="tf-editor">
         {/* ===== Left rail ===== */}
         <div className="tf-rail">
@@ -469,7 +654,7 @@ export default function Section4Pixels() {
                   key={it.key}
                   className="tf-rail-item"
                   data-sel={view === it.key ? 1 : 0}
-                  onClick={() => setView(it.key)}
+                  onClick={() => go(it.key)}
                 >
                   {it.label}
                 </div>
@@ -479,9 +664,7 @@ export default function Section4Pixels() {
 
           {/* Quick status */}
           <div className="tf-rail-card">
-            <div className="tf-rail-head">
-              {t("section4.rail.statusTitle")}
-            </div>
+            <div className="tf-rail-head">{t("section4.rail.statusTitle")}</div>
             <div style={{ padding: 10 }}>
               <BlockStack gap="100">
                 <InlineStack align="space-between">
@@ -497,15 +680,11 @@ export default function Section4Pixels() {
                   {statusBadge(cfg.capi_fb.enabled)}
                 </InlineStack>
                 <InlineStack align="space-between">
-                  <Text as="span">
-                    {t("section4.platforms.tiktokPixel")}
-                  </Text>
+                  <Text as="span">{t("section4.platforms.tiktokPixel")}</Text>
                   {statusBadge(cfg.tiktok.enabled)}
                 </InlineStack>
                 <InlineStack align="space-between">
-                  <Text as="span">
-                    {t("section4.platforms.tiktokAPI")}
-                  </Text>
+                  <Text as="span">{t("section4.platforms.tiktokAPI")}</Text>
                   {statusBadge(cfg.tiktok_api.enabled)}
                 </InlineStack>
 
@@ -513,7 +692,12 @@ export default function Section4Pixels() {
                   {t("section4.rail.statusNote")}
                 </Text>
 
-                {/* ancien bouton Save ici supprimé : le save global est dans le header */}
+                {/* Optional tiny indicator (no alert spam) */}
+                {dirty && (
+                  <Text as="p" tone="warning">
+                    {t("common.unsavedShort") || "Unsaved changes"}
+                  </Text>
+                )}
               </BlockStack>
             </div>
           </div>
@@ -527,32 +711,21 @@ export default function Section4Pixels() {
               <GroupCard t={t} title="section4.overview.title">
                 <BlockStack gap="200">
                   <Text as="p">{t("section4.overview.description")}</Text>
-                  <ul
-                    style={{
-                      paddingLeft: "1.2rem",
-                      margin: 0,
-                      fontSize: 13,
-                    }}
-                  >
+                  <ul style={{ paddingLeft: "1.2rem", margin: 0, fontSize: 13 }}>
                     <li>
-                      <b>{t("section4.platforms.google")}</b>:{" "}
-                      {t("section4.overview.googleDesc")}
+                      <b>{t("section4.platforms.google")}</b>: {t("section4.overview.googleDesc")}
                     </li>
                     <li>
-                      <b>{t("section4.platforms.fbPixel")}</b>:{" "}
-                      {t("section4.overview.fbPixelDesc")}
+                      <b>{t("section4.platforms.fbPixel")}</b>: {t("section4.overview.fbPixelDesc")}
                     </li>
                     <li>
-                      <b>{t("section4.platforms.fbCAPI")}</b>:{" "}
-                      {t("section4.overview.fbCAPIDesc")}
+                      <b>{t("section4.platforms.fbCAPI")}</b>: {t("section4.overview.fbCAPIDesc")}
                     </li>
                     <li>
-                      <b>{t("section4.platforms.tiktokPixel")}</b>:{" "}
-                      {t("section4.overview.tiktokPixelDesc")}
+                      <b>{t("section4.platforms.tiktokPixel")}</b>: {t("section4.overview.tiktokPixelDesc")}
                     </li>
                     <li>
-                      <b>{t("section4.platforms.tiktokAPI")}</b>:{" "}
-                      {t("section4.overview.tiktokAPIDesc")}
+                      <b>{t("section4.platforms.tiktokAPI")}</b>: {t("section4.overview.tiktokAPIDesc")}
                     </li>
                   </ul>
                 </BlockStack>
@@ -587,9 +760,7 @@ export default function Section4Pixels() {
                       label={t("section4.google.adsConversionLabel")}
                       autoComplete="off"
                       value={cfg.google.adsConversionLabel}
-                      onChange={(v) =>
-                        setGoogle({ adsConversionLabel: v })
-                      }
+                      onChange={(v) => setGoogle({ adsConversionLabel: v })}
                     />
                   </Grid3>
                   <Text tone="subdued" as="p">
@@ -667,9 +838,7 @@ export default function Section4Pixels() {
                     <Checkbox
                       label={t("section4.fbPixel.initiateCheckout")}
                       checked={!!cfg.fb.initiateCheckout}
-                      onChange={(v) =>
-                        setFB({ initiateCheckout: v })
-                      }
+                      onChange={(v) => setFB({ initiateCheckout: v })}
                     />
                     <Checkbox
                       label={t("section4.fbPixel.purchase")}
@@ -679,9 +848,7 @@ export default function Section4Pixels() {
                     <Checkbox
                       label={t("section4.fbPixel.advancedMatching")}
                       checked={!!cfg.fb.advancedMatching}
-                      onChange={(v) =>
-                        setFB({ advancedMatching: v })
-                      }
+                      onChange={(v) => setFB({ advancedMatching: v })}
                     />
                   </BlockStack>
                 </GroupCard>
@@ -716,9 +883,7 @@ export default function Section4Pixels() {
                       label={t("section4.fbCAPI.testEventCodeLabel")}
                       autoComplete="off"
                       value={cfg.capi_fb.testEventCode}
-                      onChange={(v) =>
-                        setCAPIFB({ testEventCode: v })
-                      }
+                      onChange={(v) => setCAPIFB({ testEventCode: v })}
                     />
                   </Grid3>
                   <Text tone="subdued" as="p">
@@ -731,30 +896,22 @@ export default function Section4Pixels() {
                     <Checkbox
                       label={t("section4.fbCAPI.sendViewContent")}
                       checked={!!cfg.capi_fb.sendViewContent}
-                      onChange={(v) =>
-                        setCAPIFB({ sendViewContent: v })
-                      }
+                      onChange={(v) => setCAPIFB({ sendViewContent: v })}
                     />
                     <Checkbox
                       label={t("section4.fbCAPI.sendAddToCart")}
                       checked={!!cfg.capi_fb.sendAddToCart}
-                      onChange={(v) =>
-                        setCAPIFB({ sendAddToCart: v })
-                      }
+                      onChange={(v) => setCAPIFB({ sendAddToCart: v })}
                     />
                     <Checkbox
                       label={t("section4.fbCAPI.sendPurchase")}
                       checked={!!cfg.capi_fb.sendPurchase}
-                      onChange={(v) =>
-                        setCAPIFB({ sendPurchase: v })
-                      }
+                      onChange={(v) => setCAPIFB({ sendPurchase: v })}
                     />
                     <Checkbox
                       label={t("section4.fbCAPI.useEventIdDedup")}
                       checked={!!cfg.capi_fb.useEventIdDedup}
-                      onChange={(v) =>
-                        setCAPIFB({ useEventIdDedup: v })
-                      }
+                      onChange={(v) => setCAPIFB({ useEventIdDedup: v })}
                     />
                     <Text tone="subdued" as="p">
                       {t("section4.fbCAPI.eventsHelp")}
@@ -843,9 +1000,7 @@ export default function Section4Pixels() {
                       label={t("section4.tiktokAPI.accessTokenLabel")}
                       autoComplete="off"
                       value={cfg.tiktok_api.accessToken}
-                      onChange={(v) =>
-                        setTTAPI({ accessToken: v })
-                      }
+                      onChange={(v) => setTTAPI({ accessToken: v })}
                     />
                   </Grid3>
                   <Text tone="subdued" as="p">
@@ -858,9 +1013,7 @@ export default function Section4Pixels() {
                     <Checkbox
                       label={t("section4.tiktokAPI.sendPurchase")}
                       checked={!!cfg.tiktok_api.sendPurchase}
-                      onChange={(v) =>
-                        setTTAPI({ sendPurchase: v })
-                      }
+                      onChange={(v) => setTTAPI({ sendPurchase: v })}
                     />
                     <Text tone="subdued" as="p">
                       {t("section4.tiktokAPI.eventsHelp")}
@@ -877,16 +1030,8 @@ export default function Section4Pixels() {
               <BlockStack gap="300">
                 <GroupCard t={t} title="section4.tests.title">
                   <BlockStack gap="200">
-                    <Text as="p">
-                      {t("section4.tests.description")}
-                    </Text>
-                    <ul
-                      style={{
-                        paddingLeft: "1.2rem",
-                        margin: 0,
-                        fontSize: 13,
-                      }}
-                    >
+                    <Text as="p">{t("section4.tests.description")}</Text>
+                    <ul style={{ paddingLeft: "1.2rem", margin: 0, fontSize: 13 }}>
                       <li>{t("section4.tests.list.fbPixel")}</li>
                       <li>{t("section4.tests.list.tiktokPixel")}</li>
                       <li>{t("section4.tests.list.fbCAPI")}</li>
@@ -894,20 +1039,14 @@ export default function Section4Pixels() {
                     </ul>
 
                     <InlineStack gap="200" align="start">
-                      <Button
-                        variant="primary"
-                        onClick={handleTestRemote}
-                        loading={testLoading}
-                      >
+                      <Button variant="primary" onClick={handleTestRemote} loading={testLoading}>
                         {t("section4.tests.testButton")}
                       </Button>
                     </InlineStack>
 
                     {testError && (
                       <Text tone="critical" as="p">
-                        {t("section4.tests.error", {
-                          error: testError,
-                        })}
+                        {t("section4.tests.error", { error: testError })}
                       </Text>
                     )}
 
@@ -923,29 +1062,19 @@ export default function Section4Pixels() {
                       >
                         <BlockStack gap="150">
                           <InlineStack align="space-between">
-                            <Text as="span">
-                              {t("section4.tests.result.fbPixel")}
-                            </Text>
+                            <Text as="span">{t("section4.tests.result.fbPixel")}</Text>
                             {readyBadge(!!testResult.fbClientReady)}
                           </InlineStack>
                           <InlineStack align="space-between">
-                            <Text as="span">
-                              {t("section4.tests.result.tiktokPixel")}
-                            </Text>
-                            {readyBadge(
-                              !!testResult.tiktokClientReady
-                            )}
+                            <Text as="span">{t("section4.tests.result.tiktokPixel")}</Text>
+                            {readyBadge(!!testResult.tiktokClientReady)}
                           </InlineStack>
                           <InlineStack align="space-between">
-                            <Text as="span">
-                              {t("section4.tests.result.fbCAPI")}
-                            </Text>
+                            <Text as="span">{t("section4.tests.result.fbCAPI")}</Text>
                             {readyBadge(!!testResult.fbCapiReady)}
                           </InlineStack>
                           <InlineStack align="space-between">
-                            <Text as="span">
-                              {t("section4.tests.result.tiktokAPI")}
-                            </Text>
+                            <Text as="span">{t("section4.tests.result.tiktokAPI")}</Text>
                             {readyBadge(!!testResult.tiktokApiReady)}
                           </InlineStack>
 

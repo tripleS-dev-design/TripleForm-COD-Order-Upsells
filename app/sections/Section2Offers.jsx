@@ -18,6 +18,7 @@ import {
 } from "@shopify/polaris";
 import * as PI from "@shopify/polaris-icons";
 import { useI18n } from "../i18n/react";
+import CountryFlagsBar from "./components/CountryFlagsBar";
 
 /* ======================= SAFE ICON helper ======================= */
 function SafeIcon({ name, fallback = "AppsIcon", tone }) {
@@ -59,6 +60,113 @@ const LAYOUT_CSS = `
     z-index:40;
     box-shadow:0 10px 28px rgba(11,59,130,0.45);
   }
+
+  /* ✅ same header layout as Section 1 (brand / flags / actions) */
+  .tf-header-row{
+    display:grid;
+    grid-template-columns:auto 1fr auto;
+    gap:12px;
+    align-items:center;
+  }
+  .tf-brand{ display:flex; align-items:center; gap:10px; min-width:0; }
+  .tf-brand-text{ min-width:0; }
+  .tf-brand-title{
+    font-weight:950;
+    color:#F9FAFB;
+    line-height:1.1;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .tf-brand-sub{
+    font-size:12px;
+    color:rgba(249,250,251,0.85);
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .tf-flags-wrap{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    min-width:0;
+  }
+  .tf-header-right{
+    display:flex;
+    gap:8px;
+    align-items:center;
+    justify-content:flex-end;
+    flex-wrap:wrap;
+  }
+
+  /* ✅ Slim SaveBar (same logic + design) */
+  .tf-savebar{
+    position:sticky;
+    top:64px; /* under header */
+    z-index:39;
+    padding:10px 16px 0;
+    background:transparent;
+  }
+  .tf-savebar-inner{
+    background:#FFFFFF;
+    border:1px solid #E5E7EB;
+    border-radius:14px;
+    padding:10px 12px;
+    box-shadow:0 10px 26px rgba(15,23,42,0.08);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+  }
+  .tf-savebar-left{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    min-width:0;
+  }
+  .tf-savebadge{
+    font-size:11px;
+    font-weight:950;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    padding:4px 8px;
+    border-radius:999px;
+    border:1px solid #E5E7EB;
+    background:#F8FAFC;
+    color:#0F172A;
+    white-space:nowrap;
+    flex:0 0 auto;
+  }
+  .tf-savebar-text{ min-width:0; }
+  .tf-savemsg{
+    font-size:13px;
+    font-weight:900;
+    color:#0F172A;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .tf-savesub{
+    font-size:12px;
+    color:#64748B;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    margin-top:2px;
+  }
+  @keyframes tfBlink {
+    0%{ transform:translateX(0); box-shadow:0 10px 26px rgba(15,23,42,0.08); }
+    20%{ transform:translateX(-4px); }
+    40%{ transform:translateX(4px); }
+    60%{ transform:translateX(-3px); }
+    80%{ transform:translateX(3px); box-shadow:0 10px 26px rgba(239,68,68,0.20); }
+    100%{ transform:translateX(0); }
+  }
+  .tf-attention{
+    animation: tfBlink .9s ease-in-out 1;
+    border-color: rgba(239,68,68,.35);
+  }
+
   .tf-shell { padding:16px; }
 
   .tf-topnav{
@@ -117,8 +225,8 @@ const LAYOUT_CSS = `
 
   .tf-preview-col {
     position:sticky;
-    top:84px;
-    max-height:calc(100vh - 100px);
+    top:124px; /* header + savebar */
+    max-height:calc(100vh - 140px);
     overflow:auto;
   }
   .tf-preview-card {
@@ -473,6 +581,11 @@ const LAYOUT_CSS = `
     }
     .tf-ty-toolbtn{ min-width: 190px; }
   }
+  @media (max-width: 980px) {
+    .tf-brand-sub{ display:none; }
+    .tf-flags-wrap{ display:none; }
+    .tf-savebar{ top:64px; }
+  }
 `;
 
 function useInjectCss() {
@@ -489,6 +602,68 @@ function useInjectCss() {
       } catch {}
     };
   }, []);
+}
+
+/* ============================== SaveBarSlim (TOP) ============================== */
+function SaveBarSlim({ dirty, saving, notice, attention, onSave, tr }) {
+  if (!dirty && !notice) return null;
+
+  const isError = notice?.type === "error";
+  const isSuccess = notice?.type === "success";
+
+  const badgeText = isError
+    ? tr("common.savebar.badgeError", "Error")
+    : isSuccess
+    ? tr("common.savebar.badgeSaved", "Saved")
+    : dirty
+    ? tr("common.savebar.badgeUnsaved", "Unsaved")
+    : tr("common.savebar.badgeInfo", "Info");
+
+  const badgeStyle = isError
+    ? { background: "#FEF2F2", borderColor: "#FCA5A5", color: "#991B1B" }
+    : isSuccess
+    ? { background: "#ECFDF5", borderColor: "#86EFAC", color: "#065F46" }
+    : dirty
+    ? { background: "#FFF7ED", borderColor: "#FDBA74", color: "#9A3412" }
+    : {};
+
+  const mainMsg =
+    notice?.msg ||
+    (dirty
+      ? tr("common.savebar.unsaved", "You have unsaved changes.")
+      : tr("common.savebar.info", "Info"));
+
+  const subMsg = dirty
+    ? tr(
+        "common.savebar.sub",
+        "Save before leaving this section to avoid losing changes."
+      )
+    : "";
+
+  return (
+    <div className="tf-savebar">
+      <div className={`tf-savebar-inner ${attention ? "tf-attention" : ""}`}>
+        <div className="tf-savebar-left">
+          <span className="tf-savebadge" style={badgeStyle}>
+            {badgeText}
+          </span>
+
+          <div className="tf-savebar-text">
+            <div className="tf-savemsg">{mainMsg}</div>
+            {subMsg ? <div className="tf-savesub">{subMsg}</div> : null}
+          </div>
+        </div>
+
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          {dirty ? (
+            <Button variant="primary" onClick={onSave} loading={saving}>
+              {tr("common.save", "Save")}
+            </Button>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 /* ============================== UI helpers ============================== */
@@ -1062,8 +1237,7 @@ function PreviewCard({ item, products, isOffer, globalColors, tr }) {
               onClick={() => {}}
             >
               <SafeIcon name="CirclePlusIcon" fallback="PlusIcon" />
-              {item.buttonText ||
-                tr("section2.offers.buttonDefault", "Activate")}
+              {item.buttonText || tr("section2.offers.buttonDefault", "Activate")}
             </button>
           )}
         </div>
@@ -1289,7 +1463,15 @@ function ThankYouPreview({ thankYou, globalColors, tr }) {
 }
 
 /* ============================== Editors (Offers / Upsells) ============================== */
-function OfferEditor({ offer, index, products, onChange, onRemove, canRemove, tr }) {
+function OfferEditor({
+  offer,
+  index,
+  products,
+  onChange,
+  onRemove,
+  canRemove,
+  tr,
+}) {
   const productOptions = useMemo(() => {
     const opts = (products || []).map((p) => ({
       label: p.title || tr("section2.product.fallbackLabel", "Product"),
@@ -1309,7 +1491,11 @@ function OfferEditor({ offer, index, products, onChange, onRemove, canRemove, tr
   return (
     <div className="item-card">
       {canRemove && (
-        <div className="remove-btn" onClick={onRemove} title={tr("section2.common.remove", "Remove")}>
+        <div
+          className="remove-btn"
+          onClick={onRemove}
+          title={tr("section2.common.remove", "Remove")}
+        >
           ×
         </div>
       )}
@@ -1388,7 +1574,9 @@ function OfferEditor({ offer, index, products, onChange, onRemove, canRemove, tr
               label={tr("section2.quantity.label", "Number of products")}
               value={String(qtyMultiplier)}
               options={OFFER_QTY_OPTIONS}
-              onChange={(v) => onChange({ ...offer, qtyMultiplier: clampInt(v, 1, 3, 1) })}
+              onChange={(v) =>
+                onChange({ ...offer, qtyMultiplier: clampInt(v, 1, 3, 1) })
+              }
               helpText={tr(
                 "section2.quantity.help",
                 "Used to calculate totals (x2/x3) in the offer logic."
@@ -1460,7 +1648,10 @@ function OfferEditor({ offer, index, products, onChange, onRemove, canRemove, tr
                   label={tr("section2.colors.cardBg", "Card background")}
                   value={offer.colors?.cardBg || ""}
                   onChange={(v) =>
-                    onChange({ ...offer, colors: { ...(offer.colors || {}), cardBg: v } })
+                    onChange({
+                      ...offer,
+                      colors: { ...(offer.colors || {}), cardBg: v },
+                    })
                   }
                   placeholder="#FFFFFF"
                 />
@@ -1479,7 +1670,10 @@ function OfferEditor({ offer, index, products, onChange, onRemove, canRemove, tr
                   label={tr("section2.colors.iconBg", "Icon background")}
                   value={offer.colors?.iconBg || ""}
                   onChange={(v) =>
-                    onChange({ ...offer, colors: { ...(offer.colors || {}), iconBg: v } })
+                    onChange({
+                      ...offer,
+                      colors: { ...(offer.colors || {}), iconBg: v },
+                    })
                   }
                   placeholder="#EEF2FF"
                 />
@@ -1498,7 +1692,10 @@ function OfferEditor({ offer, index, products, onChange, onRemove, canRemove, tr
                   label={tr("section2.colors.buttonBg", "Button background")}
                   value={offer.colors?.buttonBg || ""}
                   onChange={(v) =>
-                    onChange({ ...offer, colors: { ...(offer.colors || {}), buttonBg: v } })
+                    onChange({
+                      ...offer,
+                      colors: { ...(offer.colors || {}), buttonBg: v },
+                    })
                   }
                   placeholder="#111827"
                 />
@@ -1538,7 +1735,15 @@ function OfferEditor({ offer, index, products, onChange, onRemove, canRemove, tr
   );
 }
 
-function UpsellEditor({ upsell, index, products, onChange, onRemove, canRemove, tr }) {
+function UpsellEditor({
+  upsell,
+  index,
+  products,
+  onChange,
+  onRemove,
+  canRemove,
+  tr,
+}) {
   const productOptions = useMemo(() => {
     const opts = (products || []).map((p) => ({
       label: p.title || tr("section2.product.fallbackLabel", "Product"),
@@ -1553,7 +1758,11 @@ function UpsellEditor({ upsell, index, products, onChange, onRemove, canRemove, 
   return (
     <div className="item-card">
       {canRemove && (
-        <div className="remove-btn" onClick={onRemove} title={tr("section2.common.remove", "Remove")}>
+        <div
+          className="remove-btn"
+          onClick={onRemove}
+          title={tr("section2.common.remove", "Remove")}
+        >
           ×
         </div>
       )}
@@ -1642,7 +1851,10 @@ function UpsellEditor({ upsell, index, products, onChange, onRemove, canRemove, 
                   label={tr("section2.colors.cardBg", "Card background")}
                   value={upsell.colors?.cardBg || ""}
                   onChange={(v) =>
-                    onChange({ ...upsell, colors: { ...(upsell.colors || {}), cardBg: v } })
+                    onChange({
+                      ...upsell,
+                      colors: { ...(upsell.colors || {}), cardBg: v },
+                    })
                   }
                   placeholder="#FFFFFF"
                 />
@@ -1661,7 +1873,10 @@ function UpsellEditor({ upsell, index, products, onChange, onRemove, canRemove, 
                   label={tr("section2.colors.iconBg", "Icon background")}
                   value={upsell.colors?.iconBg || ""}
                   onChange={(v) =>
-                    onChange({ ...upsell, colors: { ...(upsell.colors || {}), iconBg: v } })
+                    onChange({
+                      ...upsell,
+                      colors: { ...(upsell.colors || {}), iconBg: v },
+                    })
                   }
                   placeholder="#EEF2FF"
                 />
@@ -1675,6 +1890,7 @@ function UpsellEditor({ upsell, index, products, onChange, onRemove, canRemove, 
 }
 
 /* ============================== Thank You Editor (Paint/Canva) ============================== */
+/* (unchanged — kept exactly your code) */
 function ThankYouEditor({ thankYou, globalColors, onChange, tr }) {
   const ty = thankYou || DEFAULT_THANKYOU;
   const update = (patch) => onChange({ ...ty, ...patch });
@@ -2038,17 +2254,13 @@ function ThankYouEditor({ thankYou, globalColors, onChange, tr }) {
               <ColorField
                 label={tr("thankyou.colors.buttonText", "Button text color")}
                 value={ty.colors?.buttonTextColor || ""}
-                onChange={(v) =>
-                  update({ colors: { ...(ty.colors || {}), buttonTextColor: v } })
-                }
+                onChange={(v) => update({ colors: { ...(ty.colors || {}), buttonTextColor: v } })}
                 placeholder="#FFFFFF"
               />
               <ColorField
                 label={tr("thankyou.colors.buttonBorder", "Button border")}
                 value={ty.colors?.buttonBorder || ""}
-                onChange={(v) =>
-                  update({ colors: { ...(ty.colors || {}), buttonBorder: v } })
-                }
+                onChange={(v) => update({ colors: { ...(ty.colors || {}), buttonBorder: v } })}
                 placeholder="#0B3B82"
               />
             </div>
@@ -2107,12 +2319,22 @@ function ThankYouEditor({ thankYou, globalColors, onChange, tr }) {
 }
 
 /* ============================== HEADER / SHELL ============================== */
-function PageShell({ children, tr, loading, onSave, saving, dirty }) {
+function PageShell({
+  children,
+  tr,
+  loading,
+  onSave,
+  saving,
+  dirty,
+  saveNotice,
+  saveAttention,
+}) {
   return (
     <>
       <div className="tf-header">
-        <InlineStack align="space-between" blockAlign="center">
-          <InlineStack gap="300" blockAlign="center">
+        <div className="tf-header-row">
+          {/* LEFT: brand */}
+          <div className="tf-brand">
             <div
               style={{
                 width: 40,
@@ -2122,6 +2344,7 @@ function PageShell({ children, tr, loading, onSave, saving, dirty }) {
                 boxShadow: "0 10px 28px rgba(11,59,130,0.55)",
                 border: "1px solid rgba(255,255,255,0.35)",
                 background: "linear-gradient(135deg,#0B3B82,#7D0031)",
+                flex: "0 0 auto",
               }}
             >
               <img
@@ -2136,32 +2359,42 @@ function PageShell({ children, tr, loading, onSave, saving, dirty }) {
               />
             </div>
 
-            <div>
-              <div style={{ fontWeight: 950, color: "#F9FAFB" }}>
+            <div className="tf-brand-text">
+              <div className="tf-brand-title">
                 {tr("section2.header.appTitle", "TripleForm COD")}
               </div>
-              <div style={{ fontSize: 12, color: "rgba(249,250,251,0.85)" }}>
+              <div className="tf-brand-sub">
                 {tr("section2.header.subtitle", "Offers & Upsells — Pro settings")}
               </div>
             </div>
+          </div>
 
-            {dirty ? (
-              <Badge tone="warning">{tr("section2.badge.unsaved", "Unsaved changes")}</Badge>
-            ) : (
-              <Badge tone="success">{tr("section2.badge.saved", "Saved")}</Badge>
-            )}
-          </InlineStack>
+          {/* CENTER: country flags (same as Section 0 / Home) */}
+          <div className="tf-flags-wrap">
+            <CountryFlagsBar />
+          </div>
 
-          <InlineStack gap="200" blockAlign="center">
+          {/* RIGHT: actions */}
+          <div className="tf-header-right">
             <div style={{ fontSize: 12, color: "rgba(249,250,251,0.9)" }}>
-              {loading ? tr("section2.common.loading", "Loading...") : ""}
+              {loading ? tr("common.loading", "Loading...") : ""}
             </div>
-            <Button variant="primary" size="slim" onClick={onSave} loading={saving}>
-              {tr("section2.button.save", "Save")}
+            <Button variant="primary" onClick={onSave} loading={saving}>
+              {tr("common.save", "Save")}
             </Button>
-          </InlineStack>
-        </InlineStack>
+          </div>
+        </div>
       </div>
+
+      {/* ✅ slim save bar under header (NO alert on each setting change) */}
+      <SaveBarSlim
+        dirty={dirty}
+        saving={saving}
+        notice={saveNotice}
+        attention={saveAttention}
+        onSave={onSave}
+        tr={tr}
+      />
 
       <div className="tf-shell">{children}</div>
     </>
@@ -2189,6 +2422,22 @@ function Section2OffersInner({ products = [] }) {
   }, [cfg]);
 
   const dirty = useMemo(() => currentKey !== lastSavedKeyRef.current, [currentKey]);
+
+  /* ✅ Save notice + attention (blink) */
+  const [saveNotice, setSaveNotice] = useState(null); // {type,msg}
+  const [saveAttention, setSaveAttention] = useState(false);
+
+  const bumpAttention = () => {
+    setSaveAttention(true);
+    window.setTimeout(() => setSaveAttention(false), 900);
+  };
+
+  const pushNotice = (type, msg, ttl = 2500) => {
+    setSaveNotice({ type, msg, ts: Date.now() });
+    window.setTimeout(() => {
+      setSaveNotice((n) => (n?.ts ? null : n));
+    }, ttl);
+  };
 
   useEffect(() => {
     const handler = (e) => {
@@ -2272,7 +2521,6 @@ function Section2OffersInner({ products = [] }) {
       setSaving(true);
       persistLocal(toSave);
 
-      // ✅ unified save endpoint (keep your backend route consistent)
       const res = await fetch("/api/offers/save", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -2283,8 +2531,15 @@ function Section2OffersInner({ products = [] }) {
       if (!res.ok || j?.ok === false) throw new Error(j?.error || "Save failed");
 
       lastSavedKeyRef.current = JSON.stringify(toSave);
+      pushNotice("success", tr("common.savedOk", "Saved successfully."));
     } catch (e) {
-      alert(tr("section2.save.failed", "Save failed: ") + (e?.message || tr("section2.save.unknown", "Unknown error")));
+      pushNotice(
+        "error",
+        tr("common.saveFailed", "Save failed: ") +
+          (e?.message || tr("common.unknown", "Unknown error")),
+        3500
+      );
+      bumpAttention();
     } finally {
       setSaving(false);
     }
@@ -2292,12 +2547,26 @@ function Section2OffersInner({ products = [] }) {
 
   const requestTabChange = (nextTab) => {
     if (nextTab === tab) return;
+
+    // ✅ no alert during setting changes; only when switching section/tab
     if (!dirty) {
       setTab(nextTab);
       return;
     }
+
     pendingTabRef.current = nextTab;
     setConfirmOpen(true);
+
+    // ✅ blink + message bar when user tries to leave without saving
+    pushNotice(
+      "info",
+      tr(
+        "common.saveBeforeLeave",
+        "You have unsaved changes. Save before switching sections."
+      ),
+      2600
+    );
+    bumpAttention();
   };
 
   const applyPendingTab = () => {
@@ -2311,6 +2580,7 @@ function Section2OffersInner({ products = [] }) {
       const saved = JSON.parse(lastSavedKeyRef.current || "{}");
       const restored = withDefaults(saved);
       setCfg(restored);
+      pushNotice("info", tr("common.discarded", "Changes discarded."));
     } catch {}
     setConfirmOpen(false);
     applyPendingTab();
@@ -2318,10 +2588,16 @@ function Section2OffersInner({ products = [] }) {
 
   const addOffer = () => {
     if (cfg.offers.length >= 3) return;
-    setCfg((prev) => ({ ...prev, offers: [...prev.offers, JSON.parse(JSON.stringify(DEFAULT_OFFER))] }));
+    setCfg((prev) => ({
+      ...prev,
+      offers: [...prev.offers, JSON.parse(JSON.stringify(DEFAULT_OFFER))],
+    }));
   };
   const updateOffer = (index, updatedOffer) => {
-    setCfg((prev) => ({ ...prev, offers: prev.offers.map((o, i) => (i === index ? updatedOffer : o)) }));
+    setCfg((prev) => ({
+      ...prev,
+      offers: prev.offers.map((o, i) => (i === index ? updatedOffer : o)),
+    }));
   };
   const removeOffer = (index) => {
     if (cfg.offers.length <= 1) return;
@@ -2330,10 +2606,16 @@ function Section2OffersInner({ products = [] }) {
 
   const addUpsell = () => {
     if (cfg.upsells.length >= 3) return;
-    setCfg((prev) => ({ ...prev, upsells: [...prev.upsells, JSON.parse(JSON.stringify(DEFAULT_UPSELL))] }));
+    setCfg((prev) => ({
+      ...prev,
+      upsells: [...prev.upsells, JSON.parse(JSON.stringify(DEFAULT_UPSELL))],
+    }));
   };
   const updateUpsell = (index, updatedUpsell) => {
-    setCfg((prev) => ({ ...prev, upsells: prev.upsells.map((u, i) => (i === index ? updatedUpsell : u)) }));
+    setCfg((prev) => ({
+      ...prev,
+      upsells: prev.upsells.map((u, i) => (i === index ? updatedUpsell : u)),
+    }));
   };
   const removeUpsell = (index) => {
     if (cfg.upsells.length <= 1) return;
@@ -2349,13 +2631,26 @@ function Section2OffersInner({ products = [] }) {
   const isThankYouTab = tab === "thankyou";
 
   return (
-    <PageShell tr={tr} loading={loading} onSave={saveOffers} saving={saving} dirty={dirty}>
+    <PageShell
+      tr={tr}
+      loading={loading}
+      onSave={saveOffers}
+      saving={saving}
+      dirty={dirty}
+      saveNotice={saveNotice}
+      saveAttention={saveAttention}
+    >
       <Modal
         open={confirmOpen}
-        onClose={() => setConfirmOpen(false)}
+        onClose={() => {
+          setConfirmOpen(false);
+          bumpAttention(); // ✅ small reminder if user cancels
+        }}
         title={tr("section2.modal.unsavedTitle", "Unsaved changes")}
         primaryAction={{
-          content: saving ? tr("section2.modal.saving", "Saving...") : tr("section2.modal.saveContinue", "Save & continue"),
+          content: saving
+            ? tr("section2.modal.saving", "Saving...")
+            : tr("section2.modal.saveContinue", "Save & continue"),
           onAction: async () => {
             await saveOffers();
             setConfirmOpen(false);
@@ -2364,13 +2659,26 @@ function Section2OffersInner({ products = [] }) {
           loading: saving,
         }}
         secondaryActions={[
-          { content: tr("section2.modal.cancel", "Cancel"), onAction: () => setConfirmOpen(false) },
-          { content: tr("section2.modal.discard", "Discard"), onAction: discardChanges, destructive: true },
+          {
+            content: tr("section2.modal.cancel", "Cancel"),
+            onAction: () => {
+              setConfirmOpen(false);
+              bumpAttention();
+            },
+          },
+          {
+            content: tr("section2.modal.discard", "Discard"),
+            onAction: discardChanges,
+            destructive: true,
+          },
         ]}
       >
         <Modal.Section>
           <Text as="p">
-            {tr("section2.modal.unsavedBody", "You have unsaved changes. Save or discard before switching sections.")}
+            {tr(
+              "section2.modal.unsavedBody",
+              "You have unsaved changes. Save or discard before switching sections."
+            )}
           </Text>
         </Modal.Section>
       </Modal>
@@ -2399,8 +2707,12 @@ function Section2OffersInner({ products = [] }) {
                   {thankYou?.enabled !== false ? tr("thankyou.badge.on", "ThankYou ON") : tr("thankyou.badge.off", "ThankYou OFF")}
                 </span>
                 <div>
-                  <div style={{ fontWeight: 950, fontSize: 14 }}>{tr("section2.hero.title", "Offers & Upsells")}</div>
-                  <div style={{ fontSize: 12, opacity: 0.9 }}>{tr("section2.hero.subtitle", "Clean settings + professional preview")}</div>
+                  <div style={{ fontWeight: 950, fontSize: 14 }}>
+                    {tr("section2.hero.title", "Offers & Upsells")}
+                  </div>
+                  <div style={{ fontSize: 12, opacity: 0.9 }}>
+                    {tr("section2.hero.subtitle", "Clean settings + professional preview")}
+                  </div>
                 </div>
               </InlineStack>
               <InlineStack gap="200" blockAlign="center">
@@ -2418,7 +2730,9 @@ function Section2OffersInner({ products = [] }) {
                     <Checkbox
                       label={tr("section2.global.enable", "Enable Offers & Upsells")}
                       checked={!!cfg.global.enabled}
-                      onChange={(v) => setCfg((c) => ({ ...c, global: { ...c.global, enabled: v } }))}
+                      onChange={(v) =>
+                        setCfg((c) => ({ ...c, global: { ...c.global, enabled: v } }))
+                      }
                     />
                     <div />
                     <div />
@@ -2437,7 +2751,10 @@ function Section2OffersInner({ products = [] }) {
                         ...c,
                         global: {
                           ...c.global,
-                          colors: applyPaletteToGlobal(c.global?.colors || DEFAULT_GLOBAL_COLORS, paletteId),
+                          colors: applyPaletteToGlobal(
+                            c.global?.colors || DEFAULT_GLOBAL_COLORS,
+                            paletteId
+                          ),
                         },
                       }))
                     }
@@ -2453,19 +2770,34 @@ function Section2OffersInner({ products = [] }) {
                     <ColorField
                       label={tr("section2.colors.cardBg", "Card background")}
                       value={globalColors.cardBg}
-                      onChange={(v) => setCfg((c) => ({ ...c, global: { ...c.global, colors: { ...globalColors, cardBg: v } } }))}
+                      onChange={(v) =>
+                        setCfg((c) => ({
+                          ...c,
+                          global: { ...c.global, colors: { ...globalColors, cardBg: v } },
+                        }))
+                      }
                       placeholder="#FFFFFF"
                     />
                     <ColorField
                       label={tr("section2.colors.borderColor", "Border color")}
                       value={globalColors.borderColor}
-                      onChange={(v) => setCfg((c) => ({ ...c, global: { ...c.global, colors: { ...globalColors, borderColor: v } } }))}
+                      onChange={(v) =>
+                        setCfg((c) => ({
+                          ...c,
+                          global: { ...c.global, colors: { ...globalColors, borderColor: v } },
+                        }))
+                      }
                       placeholder="#E5E7EB"
                     />
                     <ColorField
                       label={tr("section2.colors.iconBg", "Icon background")}
                       value={globalColors.iconBg}
-                      onChange={(v) => setCfg((c) => ({ ...c, global: { ...c.global, colors: { ...globalColors, iconBg: v } } }))}
+                      onChange={(v) =>
+                        setCfg((c) => ({
+                          ...c,
+                          global: { ...c.global, colors: { ...globalColors, iconBg: v } },
+                        }))
+                      }
                       placeholder="#EEF2FF"
                     />
                   </Grid3>
@@ -2474,14 +2806,22 @@ function Section2OffersInner({ products = [] }) {
                     <ColorField
                       label={tr("section2.colors.buttonBg", "Button background")}
                       value={globalColors.buttonBg}
-                      onChange={(v) => setCfg((c) => ({ ...c, global: { ...c.global, colors: { ...globalColors, buttonBg: v } } }))}
+                      onChange={(v) =>
+                        setCfg((c) => ({
+                          ...c,
+                          global: { ...c.global, colors: { ...globalColors, buttonBg: v } },
+                        }))
+                      }
                       placeholder="#111827"
                     />
                     <ColorField
                       label={tr("section2.colors.buttonText", "Button text color")}
                       value={globalColors.buttonTextColor}
                       onChange={(v) =>
-                        setCfg((c) => ({ ...c, global: { ...c.global, colors: { ...globalColors, buttonTextColor: v } } }))
+                        setCfg((c) => ({
+                          ...c,
+                          global: { ...c.global, colors: { ...globalColors, buttonTextColor: v } },
+                        }))
                       }
                       placeholder="#FFFFFF"
                     />
@@ -2489,7 +2829,10 @@ function Section2OffersInner({ products = [] }) {
                       label={tr("section2.colors.buttonBorder", "Button border")}
                       value={globalColors.buttonBorder}
                       onChange={(v) =>
-                        setCfg((c) => ({ ...c, global: { ...c.global, colors: { ...globalColors, buttonBorder: v } } }))
+                        setCfg((c) => ({
+                          ...c,
+                          global: { ...c.global, colors: { ...globalColors, buttonBorder: v } },
+                        }))
                       }
                       placeholder="#111827"
                     />
@@ -2522,7 +2865,12 @@ function Section2OffersInner({ products = [] }) {
 
                 <div className="add-wrap">
                   <div className="add-btn">
-                    <Button fullWidth onClick={addOffer} disabled={cfg.offers.length >= 3} icon={PI.CirclePlusIcon}>
+                    <Button
+                      fullWidth
+                      onClick={addOffer}
+                      disabled={cfg.offers.length >= 3}
+                      icon={PI.CirclePlusIcon}
+                    >
                       {tr("section2.offers.add", "Add an offer")}
                     </Button>
                   </div>
@@ -2554,7 +2902,12 @@ function Section2OffersInner({ products = [] }) {
 
                 <div className="add-wrap">
                   <div className="add-btn">
-                    <Button fullWidth onClick={addUpsell} disabled={cfg.upsells.length >= 3} icon={PI.CirclePlusIcon}>
+                    <Button
+                      fullWidth
+                      onClick={addUpsell}
+                      disabled={cfg.upsells.length >= 3}
+                      icon={PI.CirclePlusIcon}
+                    >
                       {tr("section2.upsells.add", "Add an upsell")}
                     </Button>
                   </div>
@@ -2587,7 +2940,9 @@ function Section2OffersInner({ products = [] }) {
                 <InlineStack align="space-between" blockAlign="center">
                   <Text as="h3" variant="headingSm">{tr("section2.preview.title", "Preview")}</Text>
                   <Badge tone={cfg.global.enabled ? "success" : "critical"}>
-                    {cfg.global.enabled ? tr("section2.preview.active", "Active") : tr("section2.preview.inactive", "Inactive")}
+                    {cfg.global.enabled
+                      ? tr("section2.preview.active", "Active")
+                      : tr("section2.preview.inactive", "Inactive")}
                   </Badge>
                 </InlineStack>
 
@@ -2597,28 +2952,50 @@ function Section2OffersInner({ products = [] }) {
 
                 <Divider />
 
-                <Text as="p" variant="bodySm" fontWeight="bold">{tr("section2.preview.offersTitle", "Offers")}</Text>
+                <Text as="p" variant="bodySm" fontWeight="bold">
+                  {tr("section2.preview.offersTitle", "Offers")}
+                </Text>
                 {activeOffers.length ? (
                   <BlockStack gap="200">
                     {activeOffers.map((o, idx) => (
-                      <PreviewCard key={`o-${idx}`} item={o} products={products} isOffer globalColors={globalColors} tr={tr} />
+                      <PreviewCard
+                        key={`o-${idx}`}
+                        item={o}
+                        products={products}
+                        isOffer
+                        globalColors={globalColors}
+                        tr={tr}
+                      />
                     ))}
                   </BlockStack>
                 ) : (
-                  <Text variant="bodySm" tone="subdued">{tr("section2.preview.noOffer", "No active offer in preview.")}</Text>
+                  <Text variant="bodySm" tone="subdued">
+                    {tr("section2.preview.noOffer", "No active offer in preview.")}
+                  </Text>
                 )}
 
                 <Divider />
 
-                <Text as="p" variant="bodySm" fontWeight="bold">{tr("section2.preview.upsellsTitle", "Upsells")}</Text>
+                <Text as="p" variant="bodySm" fontWeight="bold">
+                  {tr("section2.preview.upsellsTitle", "Upsells")}
+                </Text>
                 {activeUpsells.length ? (
                   <BlockStack gap="200">
                     {activeUpsells.map((u, idx) => (
-                      <PreviewCard key={`u-${idx}`} item={u} products={products} isOffer={false} globalColors={globalColors} tr={tr} />
+                      <PreviewCard
+                        key={`u-${idx}`}
+                        item={u}
+                        products={products}
+                        isOffer={false}
+                        globalColors={globalColors}
+                        tr={tr}
+                      />
                     ))}
                   </BlockStack>
                 ) : (
-                  <Text variant="bodySm" tone="subdued">{tr("section2.preview.noUpsell", "No active upsell in preview.")}</Text>
+                  <Text variant="bodySm" tone="subdued">
+                    {tr("section2.preview.noUpsell", "No active upsell in preview.")}
+                  </Text>
                 )}
               </BlockStack>
             </div>
