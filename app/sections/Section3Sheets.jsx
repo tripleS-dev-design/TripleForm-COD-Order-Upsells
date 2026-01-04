@@ -19,7 +19,7 @@ import {
 import * as PolarisIcons from "@shopify/polaris-icons";
 import { useI18n } from "../i18n/react";
 import { useNavigate } from "@remix-run/react";
-import CountryFlagsBar from "./components/CountryFlagsBar";
+import CountryFlagsBar from "../components/CountryFlagsBar";
 
 /* ======================= CSS / layout ======================= */
 const LAYOUT_CSS = `
