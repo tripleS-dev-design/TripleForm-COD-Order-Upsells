@@ -8,34 +8,65 @@
    ✅ Offer can override total price (bundleTotal) OR force qty
    ✅ Thank you: popup/redirect WITHOUT keeping "Thanks..." on CTA
    ✅ Anti-bot: honeypot + minimum time on page (configurable)
+   ✅ reCAPTCHA v3: robust loader (waits for grecaptcha ready)
    ========================================================================= */
 
 window.TripleformCOD = (function () {
   "use strict";
 
   /* ------------------------------------------------------------------ */
-  /* reCAPTCHA script loader (v3)                                       */
+  /* reCAPTCHA script loader (v3) — ROBUST FIX                          */
   /* ------------------------------------------------------------------ */
   let recaptchaScriptPromise = null;
 
+  function waitForGrecaptcha({ timeoutMs = 8000, intervalMs = 80 } = {}) {
+    return new Promise((resolve, reject) => {
+      const start = Date.now();
+      const timer = setInterval(() => {
+        const g = window.grecaptcha;
+        if (g && typeof g.ready === "function" && typeof g.execute === "function") {
+          clearInterval(timer);
+          resolve(g);
+          return;
+        }
+        if (Date.now() - start > timeoutMs) {
+          clearInterval(timer);
+          reject(new Error("grecaptcha not available (timeout)"));
+        }
+      }, intervalMs);
+    });
+  }
+
   function ensureRecaptchaScript(cfg) {
-    if (!cfg || !cfg.enabled || !cfg.siteKey) return Promise.resolve();
+    if (!cfg || !cfg.enabled || !cfg.siteKey) return Promise.resolve(null);
+
+    // already available
+    if (window.grecaptcha && typeof window.grecaptcha.ready === "function") {
+      return Promise.resolve(window.grecaptcha);
+    }
+
+    // already in-flight
     if (recaptchaScriptPromise) return recaptchaScriptPromise;
 
     recaptchaScriptPromise = new Promise((resolve, reject) => {
-      if (window.grecaptcha && window.grecaptcha.execute) {
-        resolve();
+      // already injected?
+      const existing = document.querySelector('script[data-tf-recaptcha="1"]');
+      if (existing) {
+        waitForGrecaptcha().then(resolve).catch(reject);
         return;
       }
+
       const s = document.createElement("script");
       s.src =
         "https://www.google.com/recaptcha/api.js?render=" +
         encodeURIComponent(cfg.siteKey);
       s.async = true;
       s.defer = true;
+      s.setAttribute("data-tf-recaptcha", "1");
+
+      // IMPORTANT: onload != grecaptcha ready => wait
       s.onload = () => {
-        if (window.grecaptcha && window.grecaptcha.execute) resolve();
-        else reject(new Error("grecaptcha not available"));
+        waitForGrecaptcha().then(resolve).catch(reject);
       };
       s.onerror = () => reject(new Error("Failed to load reCAPTCHA script"));
       document.head.appendChild(s);
@@ -47,18 +78,15 @@ window.TripleformCOD = (function () {
   async function getRecaptchaToken(cfg) {
     if (!cfg || !cfg.enabled || cfg.version !== "v3" || !cfg.siteKey) return null;
     try {
-      await ensureRecaptchaScript(cfg);
-      const gre = window.grecaptcha;
-      if (!gre || !gre.execute) return null;
-
-      // ✅ important: wait until reCAPTCHA is ready
-      await new Promise((resolve) => {
-        if (typeof gre.ready === "function") gre.ready(resolve);
-        else resolve();
-      });
+      const g = await ensureRecaptchaScript(cfg);
+      if (!g) return null;
 
       const action = cfg.expectedAction || cfg.action || "tf_submit";
-      const token = await gre.execute(cfg.siteKey, { action });
+
+      // wait until ready
+      await new Promise((resolve) => g.ready(resolve));
+
+      const token = await g.execute(cfg.siteKey, { action });
       return token || null;
     } catch (e) {
       console.warn("[Tripleform COD] reCAPTCHA token error:", e);
@@ -537,9 +565,9 @@ window.TripleformCOD = (function () {
   }
 
   /* ------------------------------------------------------------------ */
-  /* ✅ NO COUNTRY_DATA HERE (paste manually if you want)                */
+  /* ✅ NO COUNTRY_DATA HERE (left empty on purpose)                     */
   /* ------------------------------------------------------------------ */
-const COUNTRY_DATA = {
+ const COUNTRY_DATA = {
     ma: {
       label: "Maroc",
       phonePrefix: "+212",
@@ -3339,6 +3367,11 @@ const COUNTRY_DATA = {
 
       recaptchaToken = await getRecaptchaToken(recaptchaCfg);
 
+      // ✅ IMPORTANT: stop if enabled but token missing (avoid 403)
+      if (recaptchaCfg?.enabled && !recaptchaToken) {
+        alert("Erreur reCAPTCHA. Rafraîchis la page et réessaie.");
+        return;
+      }
 
       const activeOfferData = getActiveOfferData(root.id);
 
@@ -3359,7 +3392,6 @@ const COUNTRY_DATA = {
         recaptchaToken,
         recaptchaVersion,
         recaptchaAction: recaptchaCfg?.expectedAction || recaptchaCfg?.action || "tf_submit",
-
       };
 
       const formCard = root.querySelector('[data-tf-role="form-card"]');
