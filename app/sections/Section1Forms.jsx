@@ -25,6 +25,8 @@ import * as PI from "@shopify/polaris-icons";
 import { useNavigate, useRouteLoaderData } from "@remix-run/react";
 import { useI18n } from "../i18n/react";
 
+import CountryFlagsBar from "../components/CountryFlagsBar";
+
 import {
   COUNTRY_DATA,
   PHONE_PREFIX_BY_COUNTRY,
@@ -191,7 +193,133 @@ const LAYOUT_CSS = `
   .Polaris-Page, .Polaris-Page__Content { max-width:none!important; padding-left:0!important; padding-right:0!important; }
   .Polaris-TextField, .Polaris-Select, .Polaris-Labelled__LabelWrapper { min-width:0; }
 
-  .tf-header { background:linear-gradient(90deg,#0B3B82,#7D0031); border-bottom:none; padding:12px 16px; position:sticky; top:0; z-index:40; box-shadow:0 10px 28px rgba(11,59,130,0.45); }
+  /* ✅ HEADER SLIM + FLAGS */
+  .tf-header{
+    background:linear-gradient(90deg,#0B3B82,#7D0031);
+    border-bottom:none;
+    padding:6px 10px;
+    position:sticky;
+    top:0;
+    z-index:60;
+    box-shadow:0 10px 28px rgba(11,59,130,0.45);
+  }
+  .tf-header-row{
+    display:grid;
+    grid-template-columns: auto 1fr auto;
+    align-items:center;
+    gap:10px;
+    min-height:44px;
+  }
+  .tf-brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    min-width:0;
+  }
+  .tf-brand-text{
+    display:flex;
+    flex-direction:column;
+    min-width:0;
+    line-height:1.05;
+  }
+  .tf-brand-title{
+    font-weight:900;
+    color:#F9FAFB;
+    font-size:13px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .tf-brand-sub{
+    font-size:11px;
+    color:rgba(249,250,251,0.78);
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .tf-flags-wrap{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    width:100%;
+    min-width:0;
+  }
+  .tf-header-right{
+    display:flex;
+    align-items:center;
+    justify-content:flex-end;
+    gap:10px;
+    min-width:0;
+  }
+
+  /* ✅ SAVE BAR (slim, pro) */
+  .tf-savebar{
+    position:sticky;
+    top:56px;
+    z-index:55;
+    padding:8px 10px;
+    background:rgba(255,255,255,0.86);
+    backdrop-filter: blur(10px);
+    border-bottom:1px solid #E5E7EB;
+  }
+  .tf-savebar-inner{
+    max-width:1100px;
+    margin:0 auto;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    padding:10px 12px;
+    border-radius:14px;
+    border:1px solid #E5E7EB;
+    box-shadow:0 10px 24px rgba(15,23,42,.06);
+  }
+  .tf-savebar-left{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    min-width:0;
+  }
+  .tf-savebadge{
+    font-size:12px;
+    font-weight:900;
+    padding:6px 10px;
+    border-radius:999px;
+    border:1px solid #E5E7EB;
+    background:#F8FAFC;
+    white-space:nowrap;
+  }
+  .tf-savebar-text{
+    display:flex;
+    flex-direction:column;
+    min-width:0;
+    line-height:1.15;
+  }
+  .tf-savemsg{
+    font-size:13px;
+    font-weight:700;
+    color:#0F172A;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  .tf-savesub{
+    font-size:12px;
+    color:#64748B;
+    font-weight:600;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+
+  @keyframes tfBarBlink { 0%,100%{filter:none} 50%{filter:brightness(1.15)} }
+  @keyframes tfBarSlide { 0%{transform:translateX(0)} 50%{transform:translateX(10px)} 100%{transform:translateX(0)} }
+  .tf-attention{
+    animation: tfBarBlink .9s ease-in-out 2, tfBarSlide .9s ease-in-out 2;
+    border-color:#F97316 !important;
+    box-shadow:0 10px 24px rgba(249,115,22,.18);
+  }
+
   .tf-shell { padding:16px; }
 
   .tf-editor {
@@ -201,7 +329,7 @@ const LAYOUT_CSS = `
     align-items:start;
   }
 
-  .tf-rail { position:sticky; top:68px; max-height:calc(100vh - 84px); overflow:auto; }
+  .tf-rail { position:sticky; top:116px; max-height:calc(100vh - 132px); overflow:auto; }
   .tf-rail-card { background:#fff; border:1px solid #E5E7EB; border-radius:10px; }
   .tf-rail-head { padding:10px 12px; border-bottom:1px solid #E5E7EB; font-weight:700; }
   .tf-rail-list { padding:8px; display:grid; gap:8px; }
@@ -258,7 +386,7 @@ const LAYOUT_CSS = `
   .tf-right-col { display:grid; gap:16px; }
   .tf-panel   { background:#fff; border:1px solid #E5E7EB; border-radius:10px; padding:12px; }
 
-  .tf-preview-col { position:sticky; top:68px; max-height:calc(100vh - 84px); overflow:auto; }
+  .tf-preview-col { position:sticky; top:116px; max-height:calc(100vh - 132px); overflow:auto; }
   .tf-preview-card { background:#fff; border:1px solid #E5E7EB; border-radius:10px; padding:12px; }
 
   .tf-group-title {
@@ -340,6 +468,7 @@ const LAYOUT_CSS = `
   @media (max-width: 980px) {
     .tf-editor { grid-template-columns: 1fr; }
     .tf-rail, .tf-preview-col { position:static; max-height:none; }
+    .tf-brand-sub{ display:none; }
   }
 `;
 
@@ -701,11 +830,34 @@ const DESIGN_PRESETS = {
 const NONE_ICON = { value: "", label: "Aucun" };
 
 const ICON_LIBRARY = {
-  cartTitle: [NONE_ICON, { value: "CartIcon", label: "Panier" }, { value: "ReceiptIcon", label: "Reçu" }, { value: "NoteIcon", label: "Note" }],
-  name: [NONE_ICON, { value: "PersonIcon", label: "Personne" }, { value: "ProfileIcon", label: "Profil" }],
-  phone: [NONE_ICON, { value: "PhoneIcon", label: "Téléphone" }, { value: "MobileIcon", label: "Mobile" }, { value: "ChatIcon", label: "WhatsApp" }],
-  quantity: [NONE_ICON, { value: "HashtagIcon", label: "Hashtag" }, { value: "CartIcon", label: "Panier" }],
-  pincode: [NONE_ICON, { value: "LocationIcon", label: "Localisation" }, { value: "PinIcon", label: "Épingle" }, { value: "HomeIcon", label: "Maison" }],
+  cartTitle: [
+    NONE_ICON,
+    { value: "CartIcon", label: "Panier" },
+    { value: "ReceiptIcon", label: "Reçu" },
+    { value: "NoteIcon", label: "Note" },
+  ],
+  name: [
+    NONE_ICON,
+    { value: "PersonIcon", label: "Personne" },
+    { value: "ProfileIcon", label: "Profil" },
+  ],
+  phone: [
+    NONE_ICON,
+    { value: "PhoneIcon", label: "Téléphone" },
+    { value: "MobileIcon", label: "Mobile" },
+    { value: "ChatIcon", label: "WhatsApp" },
+  ],
+  quantity: [
+    NONE_ICON,
+    { value: "HashtagIcon", label: "Hashtag" },
+    { value: "CartIcon", label: "Panier" },
+  ],
+  pincode: [
+    NONE_ICON,
+    { value: "LocationIcon", label: "Localisation" },
+    { value: "PinIcon", label: "Épingle" },
+    { value: "HomeIcon", label: "Maison" },
+  ],
   pincode2: [NONE_ICON, { value: "LocationIcon", label: "Localisation" }, { value: "GlobeIcon", label: "Globe" }],
   pincode3: [NONE_ICON, { value: "HashtagIcon", label: "Hashtag" }, { value: "CircleInformationIcon", label: "Information" }, { value: "LocationIcon", label: "Marqueur" }],
   email: [NONE_ICON, { value: "EmailIcon", label: "Email" }],
@@ -809,22 +961,84 @@ function PolarisIcon({ iconName, size = 20, color = "currentColor", accessibilit
   );
 }
 
+/* ============================== SaveBarSlim (TOP) ============================== */
+function SaveBarSlim({ dirty, saving, notice, attention, onSave, t }) {
+  if (!dirty && !notice) return null;
+
+  const isError = notice?.type === "error";
+  const isSuccess = notice?.type === "success";
+
+  const badgeText = isError ? "Error" : isSuccess ? "Saved" : dirty ? "Unsaved" : "Info";
+  const badgeStyle = isError
+    ? { background: "#FEF2F2", borderColor: "#FCA5A5", color: "#991B1B" }
+    : isSuccess
+    ? { background: "#ECFDF5", borderColor: "#86EFAC", color: "#065F46" }
+    : dirty
+    ? { background: "#FFF7ED", borderColor: "#FDBA74", color: "#9A3412" }
+    : {};
+
+  const mainMsg =
+    notice?.msg ||
+    (dirty ? (t?.("section1.savebar.unsaved") || "You have unsaved changes.") : "");
+
+  const subMsg =
+    dirty
+      ? (t?.("section1.savebar.sub") || "Save before leaving this section to avoid losing changes.")
+      : "";
+
+  return (
+    <div className="tf-savebar">
+      <div className={`tf-savebar-inner ${attention ? "tf-attention" : ""}`}>
+        <div className="tf-savebar-left">
+          <span className="tf-savebadge" style={badgeStyle}>
+            {badgeText}
+          </span>
+
+          <div className="tf-savebar-text">
+            <div className="tf-savemsg">{mainMsg}</div>
+            {subMsg ? <div className="tf-savesub">{subMsg}</div> : null}
+          </div>
+        </div>
+
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          {dirty ? (
+            <Button variant="primary" onClick={onSave} loading={saving}>
+              {t?.("section1.header.btnSave") || "Save"}
+            </Button>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ============================== Shell ============================== */
-function PageShell({ themeLink, onOpenPreview, onSave, saving, t }) {
+function PageShell({
+  themeLink,
+  onOpenPreview,
+  onSave,
+  saving,
+  t,
+  dirty,
+  saveNotice,
+  saveAttention,
+}) {
   return (
     <>
       <div className="tf-header">
-        <InlineStack align="space-between" blockAlign="center">
-          <InlineStack gap="300" blockAlign="center">
+        <div className="tf-header-row">
+          {/* LEFT: brand */}
+          <div className="tf-brand">
             <div
               style={{
-                width: 40,
-                height: 40,
+                width: 38,
+                height: 38,
                 borderRadius: 12,
                 overflow: "hidden",
                 boxShadow: "0 10px 28px rgba(11,59,130,0.55)",
                 border: "1px solid rgba(255,255,255,0.35)",
                 background: "linear-gradient(135deg,#0B3B82,#7D0031)",
+                flex: "0 0 auto",
               }}
             >
               <img
@@ -833,17 +1047,20 @@ function PageShell({ themeLink, onOpenPreview, onSave, saving, t }) {
                 style={{ width: "100%", height: "100%", display: "block", objectFit: "cover" }}
               />
             </div>
-            <div>
-              <div style={{ fontWeight: 700, color: "#F9FAFB" }}>
-                {t("section1.header.appTitle")}
-              </div>
-              <div style={{ fontSize: 12, color: "rgba(249,250,251,0.8)" }}>
-                {t("section1.header.appSubtitle")}
-              </div>
-            </div>
-          </InlineStack>
 
-          <InlineStack gap="200">
+            <div className="tf-brand-text">
+              <div className="tf-brand-title">{t("section1.header.appTitle")}</div>
+              <div className="tf-brand-sub">{t("section1.header.appSubtitle")}</div>
+            </div>
+          </div>
+
+          {/* CENTER: flags */}
+          <div className="tf-flags-wrap">
+            <CountryFlagsBar />
+          </div>
+
+          {/* RIGHT: actions */}
+          <div className="tf-header-right">
             <Button url={themeLink} external target="_blank">
               {t("section1.header.btnAddToTheme")}
             </Button>
@@ -851,9 +1068,19 @@ function PageShell({ themeLink, onOpenPreview, onSave, saving, t }) {
             <Button variant="primary" onClick={onSave} loading={saving}>
               {t("section1.header.btnSave")}
             </Button>
-          </InlineStack>
-        </InlineStack>
+          </div>
+        </div>
       </div>
+
+      {/* ✅ slim save bar under header */}
+      <SaveBarSlim
+        dirty={dirty}
+        saving={saving}
+        notice={saveNotice}
+        attention={saveAttention}
+        onSave={onSave}
+        t={t}
+      />
 
       <div className="tf-shell">
         <div className="tf-editor">
@@ -984,6 +1211,34 @@ function Section1FormsLayoutInner() {
   const [navGuardOpen, setNavGuardOpen] = useState(false);
   const pendingHrefRef = useRef(null);
 
+  // ✅ Save bar state
+  const [saveNotice, setSaveNotice] = useState(null); // {type,msg}
+  const [saveAttention, setSaveAttention] = useState(false);
+  const attentionTimerRef = useRef(null);
+  const noticeTimerRef = useRef(null);
+
+  const bumpAttention = () => {
+    setSaveAttention(true);
+    try {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch {}
+    if (attentionTimerRef.current) clearTimeout(attentionTimerRef.current);
+    attentionTimerRef.current = setTimeout(() => setSaveAttention(false), 1600);
+  };
+
+  const pushNotice = (type, msg) => {
+    setSaveNotice({ type, msg });
+    if (noticeTimerRef.current) clearTimeout(noticeTimerRef.current);
+    noticeTimerRef.current = setTimeout(() => setSaveNotice(null), 2600);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (attentionTimerRef.current) clearTimeout(attentionTimerRef.current);
+      if (noticeTimerRef.current) clearTimeout(noticeTimerRef.current);
+    };
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
 
@@ -1065,20 +1320,30 @@ function Section1FormsLayoutInner() {
     return () => window.removeEventListener("beforeunload", handler);
   }, [dirty]);
 
-  // ✅ internal link guard (capture clicks)
+  // ✅ internal link guard (ONLY when leaving this route/section)
   useEffect(() => {
     const onClick = (e) => {
       if (!dirty) return;
+
       const a = e.target?.closest?.("a");
       if (!a) return;
+
       const href = a.getAttribute("href") || "";
       const target = a.getAttribute("target");
-      if (!href || href.startsWith("#") || target === "_blank") return;
 
-      const isHttp = /^https?:\/\//i.test(href);
-      if (isHttp) return;
+      if (!href || href.startsWith("#") || target === "_blank") return;
+      if (/^https?:\/\//i.test(href)) return;
+
+      const currentPath = window.location.pathname;
+      const nextPath = href.startsWith("/") ? href.split("?")[0] : href;
+
+      if (!nextPath || nextPath === currentPath) return;
 
       e.preventDefault();
+
+      // ✅ blink + move save bar (pro)
+      bumpAttention();
+
       pendingHrefRef.current = href;
       setNavGuardOpen(true);
     };
@@ -1235,12 +1500,12 @@ function Section1FormsLayoutInner() {
       lastSavedRef.current = JSON.stringify(config);
       setDirty(false);
 
-      alert(t("section1.save.success"));
+      pushNotice("success", t("section1.save.success"));
       return true;
     } catch (e) {
       console.error(e);
       const fallbackMessage = t("section1.save.unknownError");
-      alert(t("section1.save.failedPrefix") + (e?.message || fallbackMessage));
+      pushNotice("error", t("section1.save.failedPrefix") + (e?.message || fallbackMessage));
       return false;
     } finally {
       setSaving(false);
@@ -1296,6 +1561,9 @@ function Section1FormsLayoutInner() {
         onSave={saveToShop}
         saving={saving}
         t={t}
+        dirty={dirty}
+        saveNotice={saveNotice}
+        saveAttention={saveAttention}
       />
 
       {/* ✅ modal preview */}
@@ -1328,6 +1596,7 @@ function Section1FormsLayoutInner() {
           onAction: async () => {
             const ok = await saveToShop();
             if (ok) proceedPendingNav();
+            else bumpAttention();
           },
         }}
         secondaryActions={[
@@ -1341,6 +1610,7 @@ function Section1FormsLayoutInner() {
             onAction: () => {
               pendingHrefRef.current = null;
               setNavGuardOpen(false);
+              bumpAttention();
             },
           },
         ]}

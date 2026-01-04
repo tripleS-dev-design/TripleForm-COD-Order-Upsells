@@ -938,7 +938,9 @@ function applyPaletteToGlobal(globalColors, paletteId) {
 
 /* ============================== Preview Card (offers/upsells) ============================== */
 function PreviewCard({ item, products, isOffer, globalColors, tr }) {
-  const product = item.productId ? getProductById(products, item.productId) : null;
+  const product = item.productId
+    ? getProductById(products, item.productId)
+    : null;
   const images = product ? getProductImages(product) : [];
 
   const fallbackImg =
@@ -1226,9 +1228,7 @@ function ThankYouPreview({ thankYou, globalColors, tr }) {
     </div>
   );
 
-  // ✅ popup size realism
-  const popupMaxWidth =
-    ty.size === "sm" ? 420 : ty.size === "lg" ? 720 : 560;
+  const popupMaxWidth = ty.size === "sm" ? 420 : ty.size === "lg" ? 720 : 560;
 
   return (
     <div className="tf-ty-preview-wrap" style={{ minHeight: 420 }}>
@@ -1295,7 +1295,10 @@ function OfferEditor({ offer, index, products, onChange, onRemove, canRemove, tr
       label: p.title || tr("section2.product.fallbackLabel", "Product"),
       value: String(p.id),
     }));
-    return [{ label: tr("section2.product.placeholder", "— Choose a product —"), value: "" }, ...opts];
+    return [
+      { label: tr("section2.product.placeholder", "— Choose a product —"), value: "" },
+      ...opts,
+    ];
   }, [products, tr]);
 
   const discountEnabled = !!offer.discountEnabled;
@@ -1328,19 +1331,54 @@ function OfferEditor({ offer, index, products, onChange, onRemove, canRemove, tr
       <BlockStack gap="400">
         <GroupCard title={tr("section2.groups.content", "Content")}>
           <Grid3>
-            <TextField label={tr("section2.fields.title", "Title")} value={offer.title || ""} onChange={(v) => onChange({ ...offer, title: v })} autoComplete="off" />
-            <TextField label={tr("section2.fields.description", "Text")} value={offer.description || ""} onChange={(v) => onChange({ ...offer, description: v })} autoComplete="off" />
-            <Select label={tr("section2.fields.layoutStyle", "Layout style")} value={offer.layoutStyle || "image-left"} options={LAYOUT_STYLE_OPTIONS} onChange={(v) => onChange({ ...offer, layoutStyle: v })} />
+            <TextField
+              label={tr("section2.fields.title", "Title")}
+              value={offer.title || ""}
+              onChange={(v) => onChange({ ...offer, title: v })}
+              autoComplete="off"
+            />
+            <TextField
+              label={tr("section2.fields.description", "Text")}
+              value={offer.description || ""}
+              onChange={(v) => onChange({ ...offer, description: v })}
+              autoComplete="off"
+            />
+            <Select
+              label={tr("section2.fields.layoutStyle", "Layout style")}
+              value={offer.layoutStyle || "image-left"}
+              options={LAYOUT_STYLE_OPTIONS}
+              onChange={(v) => onChange({ ...offer, layoutStyle: v })}
+            />
           </Grid3>
 
           <Grid3>
-            <Select label={tr("section2.fields.product", "Shopify product")} value={offer.productId ? String(offer.productId) : ""} options={productOptions} onChange={(v) => onChange({ ...offer, productId: v })} />
-            <TextField label={tr("section2.fields.imageUrl", "Image URL")} value={offer.imageUrl || ""} onChange={(v) => onChange({ ...offer, imageUrl: v })} placeholder="https://cdn.shopify.com/..." autoComplete="off" />
-            <TextField label={tr("section2.fields.iconUrl", "Icon URL")} value={offer.iconUrl || ""} onChange={(v) => onChange({ ...offer, iconUrl: v })} placeholder="https://cdn.shopify.com/..." autoComplete="off" />
+            <Select
+              label={tr("section2.fields.product", "Shopify product")}
+              value={offer.productId ? String(offer.productId) : ""}
+              options={productOptions}
+              onChange={(v) => onChange({ ...offer, productId: v })}
+            />
+            <TextField
+              label={tr("section2.fields.imageUrl", "Image URL")}
+              value={offer.imageUrl || ""}
+              onChange={(v) => onChange({ ...offer, imageUrl: v })}
+              placeholder="https://cdn.shopify.com/..."
+              autoComplete="off"
+            />
+            <TextField
+              label={tr("section2.fields.iconUrl", "Icon URL")}
+              value={offer.iconUrl || ""}
+              onChange={(v) => onChange({ ...offer, iconUrl: v })}
+              placeholder="https://cdn.shopify.com/..."
+              autoComplete="off"
+            />
           </Grid3>
 
           <Text variant="bodySm" tone="subdued">
-            {tr("section2.hints.urlPriority", "If URL is empty, we auto-use the Shopify product image (when available).")}
+            {tr(
+              "section2.hints.urlPriority",
+              "If URL is empty, we auto-use the Shopify product image (when available)."
+            )}
           </Text>
         </GroupCard>
 
@@ -1351,7 +1389,10 @@ function OfferEditor({ offer, index, products, onChange, onRemove, canRemove, tr
               value={String(qtyMultiplier)}
               options={OFFER_QTY_OPTIONS}
               onChange={(v) => onChange({ ...offer, qtyMultiplier: clampInt(v, 1, 3, 1) })}
-              helpText={tr("section2.quantity.help", "Used to calculate totals (x2/x3) in the offer logic.")}
+              helpText={tr(
+                "section2.quantity.help",
+                "Used to calculate totals (x2/x3) in the offer logic."
+              )}
             />
             <div />
             <div />
@@ -1360,17 +1401,34 @@ function OfferEditor({ offer, index, products, onChange, onRemove, canRemove, tr
 
         <GroupCard title={tr("section2.groups.discount", "Discount (Offer)")}>
           <Grid3>
-            <Checkbox label={tr("section2.discount.enable", "Enable discount")} checked={discountEnabled} onChange={(v) => onChange({ ...offer, discountEnabled: v })} />
-            <Select label={tr("section2.discount.type", "Discount type")} value={discountType} options={DISCOUNT_TYPE_OPTIONS} disabled={!discountEnabled} onChange={(v) => onChange({ ...offer, discountType: v })} />
+            <Checkbox
+              label={tr("section2.discount.enable", "Enable discount")}
+              checked={discountEnabled}
+              onChange={(v) => onChange({ ...offer, discountEnabled: v })}
+            />
+            <Select
+              label={tr("section2.discount.type", "Discount type")}
+              value={discountType}
+              options={DISCOUNT_TYPE_OPTIONS}
+              disabled={!discountEnabled}
+              onChange={(v) => onChange({ ...offer, discountType: v })}
+            />
             <TextField
               type="number"
-              label={discountType === "fixed" ? tr("section2.discount.valueFixed", "Discount value (amount)") : tr("section2.discount.valuePercent", "Discount value (%)")}
+              label={
+                discountType === "fixed"
+                  ? tr("section2.discount.valueFixed", "Discount value (amount)")
+                  : tr("section2.discount.valuePercent", "Discount value (%)")
+              }
               value={String(discountValue)}
               disabled={!discountEnabled}
               onChange={(v) => {
                 const n = Number(v);
                 const safe = Number.isFinite(n) ? n : 0;
-                const finalVal = discountType === "percentage" ? Math.max(0, Math.min(100, safe)) : Math.max(0, safe);
+                const finalVal =
+                  discountType === "percentage"
+                    ? Math.max(0, Math.min(100, safe))
+                    : Math.max(0, safe);
                 onChange({ ...offer, discountValue: finalVal });
               }}
               placeholder={discountType === "fixed" ? "20" : "10"}
@@ -1381,8 +1439,16 @@ function OfferEditor({ offer, index, products, onChange, onRemove, canRemove, tr
 
         <GroupCard title={tr("section2.groups.design", "Design")}>
           <Grid3>
-            <Checkbox label={tr("section2.fields.useGlobalColors", "Use global colors")} checked={offer.useGlobalColors !== false} onChange={(v) => onChange({ ...offer, useGlobalColors: v })} />
-            <Checkbox label={tr("section2.fields.showInPreview", "Show in preview")} checked={!!offer.showInPreview} onChange={(v) => onChange({ ...offer, showInPreview: v })} />
+            <Checkbox
+              label={tr("section2.fields.useGlobalColors", "Use global colors")}
+              checked={offer.useGlobalColors !== false}
+              onChange={(v) => onChange({ ...offer, useGlobalColors: v })}
+            />
+            <Checkbox
+              label={tr("section2.fields.showInPreview", "Show in preview")}
+              checked={!!offer.showInPreview}
+              onChange={(v) => onChange({ ...offer, showInPreview: v })}
+            />
             <div />
           </Grid3>
 
@@ -1390,21 +1456,77 @@ function OfferEditor({ offer, index, products, onChange, onRemove, canRemove, tr
             <>
               <Divider />
               <Grid3>
-                <ColorField label={tr("section2.colors.cardBg", "Card background")} value={offer.colors?.cardBg || ""} onChange={(v) => onChange({ ...offer, colors: { ...(offer.colors || {}), cardBg: v } })} placeholder="#FFFFFF" />
-                <ColorField label={tr("section2.colors.borderColor", "Border color")} value={offer.colors?.borderColor || ""} onChange={(v) => onChange({ ...offer, colors: { ...(offer.colors || {}), borderColor: v } })} placeholder="#E5E7EB" />
-                <ColorField label={tr("section2.colors.iconBg", "Icon background")} value={offer.colors?.iconBg || ""} onChange={(v) => onChange({ ...offer, colors: { ...(offer.colors || {}), iconBg: v } })} placeholder="#EEF2FF" />
+                <ColorField
+                  label={tr("section2.colors.cardBg", "Card background")}
+                  value={offer.colors?.cardBg || ""}
+                  onChange={(v) =>
+                    onChange({ ...offer, colors: { ...(offer.colors || {}), cardBg: v } })
+                  }
+                  placeholder="#FFFFFF"
+                />
+                <ColorField
+                  label={tr("section2.colors.borderColor", "Border color")}
+                  value={offer.colors?.borderColor || ""}
+                  onChange={(v) =>
+                    onChange({
+                      ...offer,
+                      colors: { ...(offer.colors || {}), borderColor: v },
+                    })
+                  }
+                  placeholder="#E5E7EB"
+                />
+                <ColorField
+                  label={tr("section2.colors.iconBg", "Icon background")}
+                  value={offer.colors?.iconBg || ""}
+                  onChange={(v) =>
+                    onChange({ ...offer, colors: { ...(offer.colors || {}), iconBg: v } })
+                  }
+                  placeholder="#EEF2FF"
+                />
               </Grid3>
 
               <Divider />
 
               <Grid3>
-                <TextField label={tr("section2.offers.buttonText", "Button text")} value={offer.buttonText || ""} onChange={(v) => onChange({ ...offer, buttonText: v })} autoComplete="off" />
-                <ColorField label={tr("section2.colors.buttonBg", "Button background")} value={offer.colors?.buttonBg || ""} onChange={(v) => onChange({ ...offer, colors: { ...(offer.colors || {}), buttonBg: v } })} placeholder="#111827" />
-                <ColorField label={tr("section2.colors.buttonText", "Button text color")} value={offer.colors?.buttonTextColor || ""} onChange={(v) => onChange({ ...offer, colors: { ...(offer.colors || {}), buttonTextColor: v } })} placeholder="#FFFFFF" />
+                <TextField
+                  label={tr("section2.offers.buttonText", "Button text")}
+                  value={offer.buttonText || ""}
+                  onChange={(v) => onChange({ ...offer, buttonText: v })}
+                  autoComplete="off"
+                />
+                <ColorField
+                  label={tr("section2.colors.buttonBg", "Button background")}
+                  value={offer.colors?.buttonBg || ""}
+                  onChange={(v) =>
+                    onChange({ ...offer, colors: { ...(offer.colors || {}), buttonBg: v } })
+                  }
+                  placeholder="#111827"
+                />
+                <ColorField
+                  label={tr("section2.colors.buttonText", "Button text color")}
+                  value={offer.colors?.buttonTextColor || ""}
+                  onChange={(v) =>
+                    onChange({
+                      ...offer,
+                      colors: { ...(offer.colors || {}), buttonTextColor: v },
+                    })
+                  }
+                  placeholder="#FFFFFF"
+                />
               </Grid3>
 
               <Grid3>
-                <ColorField label={tr("section2.colors.buttonBorder", "Button border")} value={offer.colors?.buttonBorder || ""} onChange={(v) => onChange({ ...offer, colors: { ...(offer.colors || {}), buttonBorder: v } })} placeholder="#111827" />
+                <ColorField
+                  label={tr("section2.colors.buttonBorder", "Button border")}
+                  value={offer.colors?.buttonBorder || ""}
+                  onChange={(v) =>
+                    onChange({
+                      ...offer,
+                      colors: { ...(offer.colors || {}), buttonBorder: v },
+                    })
+                  }
+                  placeholder="#111827"
+                />
                 <div />
                 <div />
               </Grid3>
@@ -1422,7 +1544,10 @@ function UpsellEditor({ upsell, index, products, onChange, onRemove, canRemove, 
       label: p.title || tr("section2.product.fallbackLabel", "Product"),
       value: String(p.id),
     }));
-    return [{ label: tr("section2.product.placeholder", "— Choose a product —"), value: "" }, ...opts];
+    return [
+      { label: tr("section2.product.placeholder", "— Choose a product —"), value: "" },
+      ...opts,
+    ];
   }, [products, tr]);
 
   return (
@@ -1450,22 +1575,62 @@ function UpsellEditor({ upsell, index, products, onChange, onRemove, canRemove, 
       <BlockStack gap="400">
         <GroupCard title={tr("section2.groups.content", "Content")}>
           <Grid3>
-            <TextField label={tr("section2.fields.title", "Title")} value={upsell.title || ""} onChange={(v) => onChange({ ...upsell, title: v })} autoComplete="off" />
-            <TextField label={tr("section2.fields.description", "Text")} value={upsell.description || ""} onChange={(v) => onChange({ ...upsell, description: v })} autoComplete="off" />
-            <Select label={tr("section2.fields.layoutStyle", "Layout style")} value={upsell.layoutStyle || "image-left"} options={LAYOUT_STYLE_OPTIONS} onChange={(v) => onChange({ ...upsell, layoutStyle: v })} />
+            <TextField
+              label={tr("section2.fields.title", "Title")}
+              value={upsell.title || ""}
+              onChange={(v) => onChange({ ...upsell, title: v })}
+              autoComplete="off"
+            />
+            <TextField
+              label={tr("section2.fields.description", "Text")}
+              value={upsell.description || ""}
+              onChange={(v) => onChange({ ...upsell, description: v })}
+              autoComplete="off"
+            />
+            <Select
+              label={tr("section2.fields.layoutStyle", "Layout style")}
+              value={upsell.layoutStyle || "image-left"}
+              options={LAYOUT_STYLE_OPTIONS}
+              onChange={(v) => onChange({ ...upsell, layoutStyle: v })}
+            />
           </Grid3>
 
           <Grid3>
-            <Select label={tr("section2.fields.product", "Shopify product")} value={upsell.productId ? String(upsell.productId) : ""} options={productOptions} onChange={(v) => onChange({ ...upsell, productId: v })} />
-            <TextField label={tr("section2.fields.imageUrl", "Image URL")} value={upsell.imageUrl || ""} onChange={(v) => onChange({ ...upsell, imageUrl: v })} placeholder="https://cdn.shopify.com/..." autoComplete="off" />
-            <TextField label={tr("section2.fields.iconUrl", "Icon URL")} value={upsell.iconUrl || ""} onChange={(v) => onChange({ ...upsell, iconUrl: v })} placeholder="https://cdn.shopify.com/..." autoComplete="off" />
+            <Select
+              label={tr("section2.fields.product", "Shopify product")}
+              value={upsell.productId ? String(upsell.productId) : ""}
+              options={productOptions}
+              onChange={(v) => onChange({ ...upsell, productId: v })}
+            />
+            <TextField
+              label={tr("section2.fields.imageUrl", "Image URL")}
+              value={upsell.imageUrl || ""}
+              onChange={(v) => onChange({ ...upsell, imageUrl: v })}
+              placeholder="https://cdn.shopify.com/..."
+              autoComplete="off"
+            />
+            <TextField
+              label={tr("section2.fields.iconUrl", "Icon URL")}
+              value={upsell.iconUrl || ""}
+              onChange={(v) => onChange({ ...upsell, iconUrl: v })}
+              placeholder="https://cdn.shopify.com/..."
+              autoComplete="off"
+            />
           </Grid3>
         </GroupCard>
 
         <GroupCard title={tr("section2.groups.design", "Design")}>
           <Grid3>
-            <Checkbox label={tr("section2.fields.useGlobalColors", "Use global colors")} checked={upsell.useGlobalColors !== false} onChange={(v) => onChange({ ...upsell, useGlobalColors: v })} />
-            <Checkbox label={tr("section2.fields.showInPreview", "Show in preview")} checked={!!upsell.showInPreview} onChange={(v) => onChange({ ...upsell, showInPreview: v })} />
+            <Checkbox
+              label={tr("section2.fields.useGlobalColors", "Use global colors")}
+              checked={upsell.useGlobalColors !== false}
+              onChange={(v) => onChange({ ...upsell, useGlobalColors: v })}
+            />
+            <Checkbox
+              label={tr("section2.fields.showInPreview", "Show in preview")}
+              checked={!!upsell.showInPreview}
+              onChange={(v) => onChange({ ...upsell, showInPreview: v })}
+            />
             <div />
           </Grid3>
 
@@ -1473,9 +1638,33 @@ function UpsellEditor({ upsell, index, products, onChange, onRemove, canRemove, 
             <>
               <Divider />
               <Grid3>
-                <ColorField label={tr("section2.colors.cardBg", "Card background")} value={upsell.colors?.cardBg || ""} onChange={(v) => onChange({ ...upsell, colors: { ...(upsell.colors || {}), cardBg: v } })} placeholder="#FFFFFF" />
-                <ColorField label={tr("section2.colors.borderColor", "Border color")} value={upsell.colors?.borderColor || ""} onChange={(v) => onChange({ ...upsell, colors: { ...(upsell.colors || {}), borderColor: v } })} placeholder="#E5E7EB" />
-                <ColorField label={tr("section2.colors.iconBg", "Icon background")} value={upsell.colors?.iconBg || ""} onChange={(v) => onChange({ ...upsell, colors: { ...(upsell.colors || {}), iconBg: v } })} placeholder="#EEF2FF" />
+                <ColorField
+                  label={tr("section2.colors.cardBg", "Card background")}
+                  value={upsell.colors?.cardBg || ""}
+                  onChange={(v) =>
+                    onChange({ ...upsell, colors: { ...(upsell.colors || {}), cardBg: v } })
+                  }
+                  placeholder="#FFFFFF"
+                />
+                <ColorField
+                  label={tr("section2.colors.borderColor", "Border color")}
+                  value={upsell.colors?.borderColor || ""}
+                  onChange={(v) =>
+                    onChange({
+                      ...upsell,
+                      colors: { ...(upsell.colors || {}), borderColor: v },
+                    })
+                  }
+                  placeholder="#E5E7EB"
+                />
+                <ColorField
+                  label={tr("section2.colors.iconBg", "Icon background")}
+                  value={upsell.colors?.iconBg || ""}
+                  onChange={(v) =>
+                    onChange({ ...upsell, colors: { ...(upsell.colors || {}), iconBg: v } })
+                  }
+                  placeholder="#EEF2FF"
+                />
               </Grid3>
             </>
           )}
@@ -1571,7 +1760,6 @@ function ThankYouEditor({ thankYou, globalColors, onChange, tr }) {
       <BlockStack gap="400">
         <Text as="h3" variant="headingSm">{tr("thankyou.subtabs.mode", "Mode")}</Text>
 
-        {/* ✅ controls moved here (top band removed) */}
         <div className="tf-ty-minirow3">
           <Select
             label={tr("thankyou.mode.label", "Thank you mode")}
@@ -1648,9 +1836,23 @@ function ThankYouEditor({ thankYou, globalColors, onChange, tr }) {
         <Divider />
 
         <div className="tf-ty-minirow3">
-          <TextField label={tr("thankyou.fields.title", "Title")} value={ty.title || ""} onChange={(v) => update({ title: v })} autoComplete="off" />
-          <TextField label={tr("thankyou.fields.chipText", "Status chip text")} value={ty.chipText || ""} onChange={(v) => update({ chipText: v })} autoComplete="off" />
-          <Checkbox label={tr("thankyou.fields.showChip", "Show chip")} checked={ty.showChip !== false} onChange={(v) => update({ showChip: v })} />
+          <TextField
+            label={tr("thankyou.fields.title", "Title")}
+            value={ty.title || ""}
+            onChange={(v) => update({ title: v })}
+            autoComplete="off"
+          />
+          <TextField
+            label={tr("thankyou.fields.chipText", "Status chip text")}
+            value={ty.chipText || ""}
+            onChange={(v) => update({ chipText: v })}
+            autoComplete="off"
+          />
+          <Checkbox
+            label={tr("thankyou.fields.showChip", "Show chip")}
+            checked={ty.showChip !== false}
+            onChange={(v) => update({ showChip: v })}
+          />
         </div>
 
         <TextField
@@ -1692,7 +1894,12 @@ function ThankYouEditor({ thankYou, globalColors, onChange, tr }) {
         <Divider />
 
         <div className="tf-ty-minirow3">
-          <Select label={tr("thankyou.layout.label", "Layout")} value={ty.layout || "image-top"} options={THANKYOU_LAYOUT_OPTIONS} onChange={(v) => update({ layout: v })} />
+          <Select
+            label={tr("thankyou.layout.label", "Layout")}
+            value={ty.layout || "image-top"}
+            options={THANKYOU_LAYOUT_OPTIONS}
+            onChange={(v) => update({ layout: v })}
+          />
           <RangeSlider
             label={tr("thankyou.layout.imageHeight", "Image height (px)")}
             value={clampInt(ty.imageHeight, 120, 240, 160)}
@@ -1721,17 +1928,49 @@ function ThankYouEditor({ thankYou, globalColors, onChange, tr }) {
 
         <GroupCard title={tr("thankyou.actions.primary", "Primary button")}>
           <div className="tf-ty-minirow3">
-            <Checkbox label={tr("thankyou.actions.primaryEnabled", "Enable primary button")} checked={ty.primaryEnabled !== false} onChange={(v) => update({ primaryEnabled: v })} />
-            <TextField label={tr("thankyou.actions.primaryText", "Button text")} value={ty.primaryText || ""} onChange={(v) => update({ primaryText: v })} autoComplete="off" />
-            <TextField label={tr("thankyou.actions.primaryUrl", "Button URL")} value={ty.primaryUrl || ""} onChange={(v) => update({ primaryUrl: v })} placeholder="/" autoComplete="off" />
+            <Checkbox
+              label={tr("thankyou.actions.primaryEnabled", "Enable primary button")}
+              checked={ty.primaryEnabled !== false}
+              onChange={(v) => update({ primaryEnabled: v })}
+            />
+            <TextField
+              label={tr("thankyou.actions.primaryText", "Button text")}
+              value={ty.primaryText || ""}
+              onChange={(v) => update({ primaryText: v })}
+              autoComplete="off"
+            />
+            <TextField
+              label={tr("thankyou.actions.primaryUrl", "Button URL")}
+              value={ty.primaryUrl || ""}
+              onChange={(v) => update({ primaryUrl: v })}
+              placeholder="/"
+              autoComplete="off"
+            />
           </div>
         </GroupCard>
 
         <GroupCard title={tr("thankyou.actions.secondary", "Secondary link")}>
           <div className="tf-ty-minirow3">
-            <Checkbox label={tr("thankyou.actions.secondaryEnabled", "Enable secondary link")} checked={!!ty.secondaryEnabled} onChange={(v) => update({ secondaryEnabled: v })} />
-            <TextField label={tr("thankyou.actions.secondaryText", "Link text")} value={ty.secondaryText || ""} onChange={(v) => update({ secondaryText: v })} autoComplete="off" disabled={!ty.secondaryEnabled} />
-            <TextField label={tr("thankyou.actions.secondaryUrl", "Link URL")} value={ty.secondaryUrl || ""} onChange={(v) => update({ secondaryUrl: v })} placeholder="/pages/track-order" autoComplete="off" disabled={!ty.secondaryEnabled} />
+            <Checkbox
+              label={tr("thankyou.actions.secondaryEnabled", "Enable secondary link")}
+              checked={!!ty.secondaryEnabled}
+              onChange={(v) => update({ secondaryEnabled: v })}
+            />
+            <TextField
+              label={tr("thankyou.actions.secondaryText", "Link text")}
+              value={ty.secondaryText || ""}
+              onChange={(v) => update({ secondaryText: v })}
+              autoComplete="off"
+              disabled={!ty.secondaryEnabled}
+            />
+            <TextField
+              label={tr("thankyou.actions.secondaryUrl", "Link URL")}
+              value={ty.secondaryUrl || ""}
+              onChange={(v) => update({ secondaryUrl: v })}
+              placeholder="/pages/track-order"
+              autoComplete="off"
+              disabled={!ty.secondaryEnabled}
+            />
           </div>
         </GroupCard>
       </BlockStack>
@@ -1761,21 +2000,57 @@ function ThankYouEditor({ thankYou, globalColors, onChange, tr }) {
 
             <PaletteSelector
               value={(ty.colors?.paletteId || DEFAULT_THANKYOU_COLORS.paletteId) || "brand-gradient"}
-              onChange={(paletteId) => update({ colors: applyPalette(paletteId, ty.colors || DEFAULT_THANKYOU_COLORS) })}
+              onChange={(paletteId) =>
+                update({ colors: applyPalette(paletteId, ty.colors || DEFAULT_THANKYOU_COLORS) })
+              }
             />
 
             <Divider />
 
             <div className="tf-ty-minirow3">
-              <ColorField label={tr("thankyou.colors.cardBg", "Card background")} value={ty.colors?.cardBg || ""} onChange={(v) => update({ colors: { ...(ty.colors || {}), cardBg: v } })} placeholder="#FFFFFF" />
-              <ColorField label={tr("thankyou.colors.borderColor", "Border color")} value={ty.colors?.borderColor || ""} onChange={(v) => update({ colors: { ...(ty.colors || {}), borderColor: v } })} placeholder="#E5E7EB" />
-              <ColorField label={tr("thankyou.colors.iconBg", "Icon background")} value={ty.colors?.iconBg || ""} onChange={(v) => update({ colors: { ...(ty.colors || {}), iconBg: v } })} placeholder="#EEF2FF" />
+              <ColorField
+                label={tr("thankyou.colors.cardBg", "Card background")}
+                value={ty.colors?.cardBg || ""}
+                onChange={(v) => update({ colors: { ...(ty.colors || {}), cardBg: v } })}
+                placeholder="#FFFFFF"
+              />
+              <ColorField
+                label={tr("thankyou.colors.borderColor", "Border color")}
+                value={ty.colors?.borderColor || ""}
+                onChange={(v) => update({ colors: { ...(ty.colors || {}), borderColor: v } })}
+                placeholder="#E5E7EB"
+              />
+              <ColorField
+                label={tr("thankyou.colors.iconBg", "Icon background")}
+                value={ty.colors?.iconBg || ""}
+                onChange={(v) => update({ colors: { ...(ty.colors || {}), iconBg: v } })}
+                placeholder="#EEF2FF"
+              />
             </div>
 
             <div className="tf-ty-minirow3">
-              <ColorField label={tr("thankyou.colors.buttonBg", "Button background")} value={ty.colors?.buttonBg || ""} onChange={(v) => update({ colors: { ...(ty.colors || {}), buttonBg: v } })} placeholder="#0B3B82" />
-              <ColorField label={tr("thankyou.colors.buttonText", "Button text color")} value={ty.colors?.buttonTextColor || ""} onChange={(v) => update({ colors: { ...(ty.colors || {}), buttonTextColor: v } })} placeholder="#FFFFFF" />
-              <ColorField label={tr("thankyou.colors.buttonBorder", "Button border")} value={ty.colors?.buttonBorder || ""} onChange={(v) => update({ colors: { ...(ty.colors || {}), buttonBorder: v } })} placeholder="#0B3B82" />
+              <ColorField
+                label={tr("thankyou.colors.buttonBg", "Button background")}
+                value={ty.colors?.buttonBg || ""}
+                onChange={(v) => update({ colors: { ...(ty.colors || {}), buttonBg: v } })}
+                placeholder="#0B3B82"
+              />
+              <ColorField
+                label={tr("thankyou.colors.buttonText", "Button text color")}
+                value={ty.colors?.buttonTextColor || ""}
+                onChange={(v) =>
+                  update({ colors: { ...(ty.colors || {}), buttonTextColor: v } })
+                }
+                placeholder="#FFFFFF"
+              />
+              <ColorField
+                label={tr("thankyou.colors.buttonBorder", "Button border")}
+                value={ty.colors?.buttonBorder || ""}
+                onChange={(v) =>
+                  update({ colors: { ...(ty.colors || {}), buttonBorder: v } })
+                }
+                placeholder="#0B3B82"
+              />
             </div>
           </>
         ) : (
@@ -1814,18 +2089,15 @@ function ThankYouEditor({ thankYou, globalColors, onChange, tr }) {
 
   return (
     <div className="tf-ty-builder">
-      {/* ✅ TOP BAND REMOVED (as requested) */}
       <div className="tf-ty-body">
         <ToolRail />
 
-        {/* ✅ PREVIEW LIVE AU MILIEU (FULL WIDTH) */}
         <div className="tf-ty-stage">
           <div className="tf-ty-stage-inner">
             <ThankYouPreview thankYou={ty} globalColors={colors} tr={tr} />
           </div>
         </div>
 
-        {/* ✅ SETTINGS A DROITE */}
         <div className="tf-ty-settings">
           <ActivePanel />
         </div>
@@ -1855,7 +2127,12 @@ function PageShell({ children, tr, loading, onSave, saving, dirty }) {
               <img
                 src="/tripleform-cod-icon.png"
                 alt="TripleForm COD"
-                style={{ width: "100%", height: "100%", display: "block", objectFit: "cover" }}
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  display: "block",
+                  objectFit: "cover",
+                }}
               />
             </div>
 
@@ -1953,8 +2230,9 @@ function Section2OffersInner({ products = [] }) {
         const res = await fetch("/api/offers/load");
         if (res.ok) {
           const j = await res.json().catch(() => null);
-          if (!cancelled && j?.ok && j.offers) {
-            const merged = withDefaults(j.offers);
+          const payload = j?.offers || j?.data?.offers || j?.data || j;
+          if (!cancelled && j?.ok !== false && payload) {
+            const merged = withDefaults(payload);
             setCfg(merged);
             persistLocal(merged);
             lastSavedKeyRef.current = JSON.stringify(merged);
@@ -1994,7 +2272,8 @@ function Section2OffersInner({ products = [] }) {
       setSaving(true);
       persistLocal(toSave);
 
-      const res = await fetch("/api/save-offers", {
+      // ✅ unified save endpoint (keep your backend route consistent)
+      const res = await fetch("/api/offers/save", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ offers: toSave }),
@@ -2067,7 +2346,6 @@ function Section2OffersInner({ products = [] }) {
   const activeUpsells = cfg.upsells.filter((u) => u.enabled && u.showInPreview);
 
   const thankYou = cfg.thankYou || DEFAULT_THANKYOU;
-
   const isThankYouTab = tab === "thankyou";
 
   return (
@@ -2172,15 +2450,49 @@ function Section2OffersInner({ products = [] }) {
                   </Text>
 
                   <Grid3>
-                    <ColorField label={tr("section2.colors.cardBg", "Card background")} value={globalColors.cardBg} onChange={(v) => setCfg((c) => ({ ...c, global: { ...c.global, colors: { ...globalColors, cardBg: v } } }))} placeholder="#FFFFFF" />
-                    <ColorField label={tr("section2.colors.borderColor", "Border color")} value={globalColors.borderColor} onChange={(v) => setCfg((c) => ({ ...c, global: { ...c.global, colors: { ...globalColors, borderColor: v } } }))} placeholder="#E5E7EB" />
-                    <ColorField label={tr("section2.colors.iconBg", "Icon background")} value={globalColors.iconBg} onChange={(v) => setCfg((c) => ({ ...c, global: { ...c.global, colors: { ...globalColors, iconBg: v } } }))} placeholder="#EEF2FF" />
+                    <ColorField
+                      label={tr("section2.colors.cardBg", "Card background")}
+                      value={globalColors.cardBg}
+                      onChange={(v) => setCfg((c) => ({ ...c, global: { ...c.global, colors: { ...globalColors, cardBg: v } } }))}
+                      placeholder="#FFFFFF"
+                    />
+                    <ColorField
+                      label={tr("section2.colors.borderColor", "Border color")}
+                      value={globalColors.borderColor}
+                      onChange={(v) => setCfg((c) => ({ ...c, global: { ...c.global, colors: { ...globalColors, borderColor: v } } }))}
+                      placeholder="#E5E7EB"
+                    />
+                    <ColorField
+                      label={tr("section2.colors.iconBg", "Icon background")}
+                      value={globalColors.iconBg}
+                      onChange={(v) => setCfg((c) => ({ ...c, global: { ...c.global, colors: { ...globalColors, iconBg: v } } }))}
+                      placeholder="#EEF2FF"
+                    />
                   </Grid3>
 
                   <Grid3>
-                    <ColorField label={tr("section2.colors.buttonBg", "Button background")} value={globalColors.buttonBg} onChange={(v) => setCfg((c) => ({ ...c, global: { ...c.global, colors: { ...globalColors, buttonBg: v } } }))} placeholder="#111827" />
-                    <ColorField label={tr("section2.colors.buttonText", "Button text color")} value={globalColors.buttonTextColor} onChange={(v) => setCfg((c) => ({ ...c, global: { ...c.global, colors: { ...globalColors, buttonTextColor: v } } }))} placeholder="#FFFFFF" />
-                    <ColorField label={tr("section2.colors.buttonBorder", "Button border")} value={globalColors.buttonBorder} onChange={(v) => setCfg((c) => ({ ...c, global: { ...c.global, colors: { ...globalColors, buttonBorder: v } } }))} placeholder="#111827" />
+                    <ColorField
+                      label={tr("section2.colors.buttonBg", "Button background")}
+                      value={globalColors.buttonBg}
+                      onChange={(v) => setCfg((c) => ({ ...c, global: { ...c.global, colors: { ...globalColors, buttonBg: v } } }))}
+                      placeholder="#111827"
+                    />
+                    <ColorField
+                      label={tr("section2.colors.buttonText", "Button text color")}
+                      value={globalColors.buttonTextColor}
+                      onChange={(v) =>
+                        setCfg((c) => ({ ...c, global: { ...c.global, colors: { ...globalColors, buttonTextColor: v } } }))
+                      }
+                      placeholder="#FFFFFF"
+                    />
+                    <ColorField
+                      label={tr("section2.colors.buttonBorder", "Button border")}
+                      value={globalColors.buttonBorder}
+                      onChange={(v) =>
+                        setCfg((c) => ({ ...c, global: { ...c.global, colors: { ...globalColors, buttonBorder: v } } }))
+                      }
+                      placeholder="#111827"
+                    />
                   </Grid3>
                 </GroupCard>
               </BlockStack>
@@ -2189,7 +2501,9 @@ function Section2OffersInner({ products = [] }) {
             {tab === "offers" && (
               <BlockStack gap="400">
                 <InlineStack align="space-between" blockAlign="center">
-                  <Text as="h2" variant="headingMd">{tr("section2.offers.title", "Offers")} ({cfg.offers.length}/3)</Text>
+                  <Text as="h2" variant="headingMd">
+                    {tr("section2.offers.title", "Offers")} ({cfg.offers.length}/3)
+                  </Text>
                   <Badge tone="subdued">{tr("section2.badge.proSettings", "Pro settings")}</Badge>
                 </InlineStack>
 
@@ -2219,7 +2533,9 @@ function Section2OffersInner({ products = [] }) {
             {tab === "upsells" && (
               <BlockStack gap="400">
                 <InlineStack align="space-between" blockAlign="center">
-                  <Text as="h2" variant="headingMd">{tr("section2.upsells.title", "Upsells")} ({cfg.upsells.length}/3)</Text>
+                  <Text as="h2" variant="headingMd">
+                    {tr("section2.upsells.title", "Upsells")} ({cfg.upsells.length}/3)
+                  </Text>
                   <Badge tone="subdued">{tr("section2.badge.noButton", "No button")}</Badge>
                 </InlineStack>
 
@@ -2264,7 +2580,6 @@ function Section2OffersInner({ products = [] }) {
           </div>
         </div>
 
-        {/* ✅ RIGHT PREVIEW ONLY for non-thankyou tabs */}
         {tab !== "thankyou" && (
           <div className="tf-preview-col">
             <div className="tf-preview-card">
