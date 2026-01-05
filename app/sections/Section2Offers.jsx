@@ -2303,9 +2303,15 @@ function Section2OffersInner({ products = [] }) {
               {loading ? tr("common.loading", "Loading...") : ""}
             </div>
 
-            <Button variant="primary" onClick={saveOffers} loading={saving}>
-              {tr("common.save", "Save")}
-            </Button>
+           <Button
+            variant="primary"
+            onClick={navGuard.onSave}
+            loading={navGuard.saving}
+            disabled={!dirty || loading}
+          >
+            Enregistrer
+          </Button>
+
           </InlineStack>
         }
       />
