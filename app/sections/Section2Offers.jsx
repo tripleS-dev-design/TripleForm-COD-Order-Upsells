@@ -1,5 +1,6 @@
 // ===== File: app/sections/Section2Offers.jsx =====
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "@remix-run/react";
 import {
   Card,
   BlockStack,
@@ -16,7 +17,6 @@ import {
   RangeSlider,
 } from "@shopify/polaris";
 import * as PI from "@shopify/polaris-icons";
-import { useNavigate } from "@remix-run/react";
 import { useI18n } from "../i18n/react";
 
 import TFSectionHeader from "../components/TFSectionHeader";
@@ -108,7 +108,7 @@ const LAYOUT_CSS = `
     background:#fff;
     border:1px solid #E5E7EB;
     border-radius:12px;
-    padding:8px 10px;
+    padding:10px 12px;
     box-shadow:0 8px 24px rgba(15,23,42,0.04);
   }
   .tf-topnav-center{
@@ -118,6 +118,14 @@ const LAYOUT_CSS = `
   }
   .tf-topnav-center > div{ width:fit-content; }
 
+  /* ✅ Tabs more spaced + medium */
+  .tf-topnav .Polaris-Tabs__Tab{
+    padding:10px 14px!important;
+    margin:0 6px!important;
+    border-radius:10px!important;
+    font-weight:800!important;
+  }
+
   .tf-editor {
     display:grid;
     grid-template-columns: minmax(0,1fr) 460px;
@@ -126,32 +134,13 @@ const LAYOUT_CSS = `
   }
   .tf-editor--full{ grid-template-columns: 1fr; }
 
-  .tf-main-col{ display:grid; gap:16px; min-width:0; }
-
-  .tf-hero {
-    background:#FFFFFF;
-    border-radius:12px;
-    padding:10px 14px;
-    border:1px solid #E5E7EB;
-    box-shadow:0 10px 24px rgba(15,23,42,0.06);
-  }
-  .tf-hero-badge {
-    font-size:11px;
-    font-weight:700;
-    text-transform:uppercase;
-    letter-spacing:.08em;
-    padding:3px 8px;
-    border-radius:999px;
-    background:#EEF2FF;
-    border:1px solid #C7D2FE;
-    color:#1E3A8A;
-  }
+  .tf-main-col{ display:grid; gap:14px; min-width:0; }
 
   .tf-panel {
     background:#FFFFFF;
     border:1px solid #E5E7EB;
     border-radius:12px;
-    padding:14px;
+    padding:12px;
     box-shadow:0 8px 24px rgba(15,23,42,0.04);
     min-width:0;
   }
@@ -171,13 +160,13 @@ const LAYOUT_CSS = `
   }
 
   .tf-group-title {
-    padding:10px 14px;
+    padding:8px 12px;
     background:linear-gradient(90deg,#1E40AF,#7C2D12);
     color:#F9FAFB;
     border-radius:10px;
     font-weight:900;
     letter-spacing:.02em;
-    margin-bottom:12px;
+    margin-bottom:10px;
     font-size:13px;
     box-shadow:0 6px 16px rgba(30,64,175,0.15);
   }
@@ -186,15 +175,15 @@ const LAYOUT_CSS = `
     background:#FFFFFF;
     border:1px solid #E5E7EB;
     border-radius:12px;
-    padding:14px;
-    margin-bottom:14px;
+    padding:12px;
+    margin-bottom:12px;
     position:relative;
   }
   .item-header {
     display:flex;
     justify-content:space-between;
     align-items:center;
-    margin-bottom:12px;
+    margin-bottom:10px;
     padding-bottom:10px;
     border-bottom:1px solid #F3F4F6;
   }
@@ -230,6 +219,7 @@ const LAYOUT_CSS = `
   }
   .remove-btn:hover { background:#FEE2E2; transform:scale(1.04); }
 
+  /* Palette CSS kept (ThankYou uses it) */
   .tf-color-palettes {
     display:grid;
     grid-template-columns:repeat(auto-fill, minmax(160px, 1fr));
@@ -315,7 +305,7 @@ const LAYOUT_CSS = `
   .preview-style--image-bottom .preview-img { width:100%; height:160px; border-radius:16px; }
   .preview-style--image-bottom .preview-desc { font-size:11px; }
 
-  .add-wrap { display:flex; justify-content:center; margin-top:12px; }
+  .add-wrap { display:flex; justify-content:center; margin-top:10px; }
   .add-btn {
     width:100%;
     max-width:520px;
@@ -532,13 +522,13 @@ function GroupCard({ title, children }) {
   );
 }
 
-/* ✅ 3 per row */
-const Grid3 = ({ children }) => (
+/* ✅ compact 3 per row */
+const Grid3 = ({ children, min = 200 }) => (
   <div
     style={{
       display: "grid",
-      gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-      gap: 12,
+      gridTemplateColumns: `repeat(auto-fit, minmax(${min}px, 1fr))`,
+      gap: 10,
       alignItems: "start",
     }}
   >
@@ -596,7 +586,7 @@ const DISCOUNT_TYPE_OPTIONS = [
   { label: "Fixed amount", value: "fixed" },
 ];
 
-/* ✅ NEW: Quantity multiplier options (x1/x2/x3) */
+/* ✅ Quantity multiplier options (x1/x2/x3) */
 const OFFER_QTY_OPTIONS = [
   { label: "x1 (1 product)", value: "1" },
   { label: "x2 (2 products)", value: "2" },
@@ -674,7 +664,7 @@ const THANKYOU_TEMPLATES = [
   },
 ];
 
-/* ============================== Palettes globales ============================== */
+/* ============================== Palettes (kept for ThankYou) ============================== */
 const COLOR_PALETTES = [
   {
     id: "clean-pro",
@@ -922,7 +912,7 @@ function withDefaults(raw = {}) {
   return x;
 }
 
-/* ============================== Palette Selector ============================== */
+/* ============================== Palette Selector (kept for ThankYou) ============================== */
 function PaletteSelector({ value, onChange }) {
   return (
     <div className="tf-color-palettes">
@@ -964,9 +954,6 @@ function applyPalette(paletteId, baseColors) {
   if (!p?.preset) return baseColors;
   return { ...baseColors, paletteId, ...p.preset };
 }
-function applyPaletteToGlobal(globalColors, paletteId) {
-  return applyPalette(paletteId, globalColors);
-}
 
 /* ============================== Preview Card (offers/upsells) ============================== */
 function PreviewCard({ item, products, isOffer, globalColors, tr }) {
@@ -982,6 +969,7 @@ function PreviewCard({ item, products, isOffer, globalColors, tr }) {
 
   const useGlobal = item.useGlobalColors !== false;
   const c = useGlobal ? globalColors : item.colors || {};
+
   const cardBg = c.cardBg || "#fff";
   const borderColor = c.borderColor || "#E5E7EB";
   const iconBg = c.iconBg || "#EEF2FF";
@@ -1103,8 +1091,7 @@ function PreviewCard({ item, products, isOffer, globalColors, tr }) {
   );
 }
 
-/* ============================== Thank You Preview + Editor ============================== */
-/* NOTE: kept your behavior (same as what you posted) */
+/* ============================== Thank You Preview + Editor (UNCHANGED) ============================== */
 function ThankYouPreview({ thankYou, globalColors, tr }) {
   const fallbackImg =
     "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 900 520'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23EEF2FF'/%3E%3Cstop offset='1' stop-color='%23F8FAFC'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='900' height='520' rx='28' fill='url(%23g)'/%3E%3Cpath d='M220 210l110-110 220 220v180H170V210z' fill='%234F46E5' opacity='.88'/%3E%3Ccircle cx='240' cy='190' r='46' fill='%2399A7FF' opacity='.85'/%3E%3C/svg%3E";
@@ -1321,6 +1308,7 @@ function ThankYouPreview({ thankYou, globalColors, tr }) {
 }
 
 /* ============================== Editors (Offers / Upsells) ============================== */
+/* ✅ CHANGE ONLY: Offer colors section => ONLY 3 colors in same line */
 function OfferEditor({ offer, index, products, onChange, onRemove, canRemove, tr }) {
   const productOptions = useMemo(() => {
     const opts = (products || []).map((p) => ({
@@ -1341,7 +1329,11 @@ function OfferEditor({ offer, index, products, onChange, onRemove, canRemove, tr
   return (
     <div className="item-card">
       {canRemove && (
-        <div className="remove-btn" onClick={onRemove} title={tr("section2.common.remove", "Remove")}>
+        <div
+          className="remove-btn"
+          onClick={onRemove}
+          title={tr("section2.common.remove", "Remove")}
+        >
           ×
         </div>
       )}
@@ -1362,7 +1354,7 @@ function OfferEditor({ offer, index, products, onChange, onRemove, canRemove, tr
 
       <BlockStack gap="400">
         <GroupCard title={tr("section2.groups.content", "Content")}>
-          <Grid3>
+          <Grid3 min={220}>
             <TextField
               label={tr("section2.fields.title", "Title")}
               value={offer.title || ""}
@@ -1383,7 +1375,7 @@ function OfferEditor({ offer, index, products, onChange, onRemove, canRemove, tr
             />
           </Grid3>
 
-          <Grid3>
+          <Grid3 min={220}>
             <Select
               label={tr("section2.fields.product", "Shopify product")}
               value={offer.productId ? String(offer.productId) : ""}
@@ -1415,13 +1407,18 @@ function OfferEditor({ offer, index, products, onChange, onRemove, canRemove, tr
         </GroupCard>
 
         <GroupCard title={tr("section2.groups.quantity", "Quantity (Offer)")}>
-          <Grid3>
+          <Grid3 min={240}>
             <Select
               label={tr("section2.quantity.label", "Number of products")}
               value={String(qtyMultiplier)}
               options={OFFER_QTY_OPTIONS}
-              onChange={(v) => onChange({ ...offer, qtyMultiplier: clampInt(v, 1, 3, 1) })}
-              helpText={tr("section2.quantity.help", "Used to calculate totals (x2/x3) in the offer logic.")}
+              onChange={(v) =>
+                onChange({ ...offer, qtyMultiplier: clampInt(v, 1, 3, 1) })
+              }
+              helpText={tr(
+                "section2.quantity.help",
+                "Used to calculate totals (x2/x3) in the offer logic."
+              )}
             />
             <div />
             <div />
@@ -1429,7 +1426,7 @@ function OfferEditor({ offer, index, products, onChange, onRemove, canRemove, tr
         </GroupCard>
 
         <GroupCard title={tr("section2.groups.discount", "Discount (Offer)")}>
-          <Grid3>
+          <Grid3 min={220}>
             <Checkbox
               label={tr("section2.discount.enable", "Enable discount")}
               checked={discountEnabled}
@@ -1467,7 +1464,7 @@ function OfferEditor({ offer, index, products, onChange, onRemove, canRemove, tr
         </GroupCard>
 
         <GroupCard title={tr("section2.groups.design", "Design")}>
-          <Grid3>
+          <Grid3 min={220}>
             <Checkbox
               label={tr("section2.fields.useGlobalColors", "Use global colors")}
               checked={offer.useGlobalColors !== false}
@@ -1481,65 +1478,54 @@ function OfferEditor({ offer, index, products, onChange, onRemove, canRemove, tr
             <div />
           </Grid3>
 
+          {/* ✅ KEEP ALL settings, ONLY change the colors UI */}
           {offer.useGlobalColors === false && (
             <>
               <Divider />
-              <Grid3>
+              <Grid3 min={220}>
                 <ColorField
-                  label={tr("section2.colors.cardBg", "Card background")}
+                  label={tr("section2.colors.offerBg", "Background")}
                   value={offer.colors?.cardBg || ""}
-                  onChange={(v) => onChange({ ...offer, colors: { ...(offer.colors || {}), cardBg: v } })}
+                  onChange={(v) =>
+                    onChange({
+                      ...offer,
+                      colors: { ...(offer.colors || {}), cardBg: v },
+                    })
+                  }
                   placeholder="#FFFFFF"
                 />
                 <ColorField
-                  label={tr("section2.colors.borderColor", "Border color")}
-                  value={offer.colors?.borderColor || ""}
+                  label={tr("section2.colors.offerBtnBg", "Button BG")}
+                  value={offer.colors?.buttonBg || ""}
                   onChange={(v) =>
-                    onChange({ ...offer, colors: { ...(offer.colors || {}), borderColor: v } })
+                    onChange({
+                      ...offer,
+                      colors: { ...(offer.colors || {}), buttonBg: v },
+                    })
                   }
-                  placeholder="#E5E7EB"
+                  placeholder="#111827"
                 />
                 <ColorField
-                  label={tr("section2.colors.iconBg", "Icon background")}
-                  value={offer.colors?.iconBg || ""}
-                  onChange={(v) => onChange({ ...offer, colors: { ...(offer.colors || {}), iconBg: v } })}
-                  placeholder="#EEF2FF"
+                  label={tr("section2.colors.offerBtnText", "Button Text")}
+                  value={offer.colors?.buttonTextColor || ""}
+                  onChange={(v) =>
+                    onChange({
+                      ...offer,
+                      colors: { ...(offer.colors || {}), buttonTextColor: v },
+                    })
+                  }
+                  placeholder="#FFFFFF"
                 />
               </Grid3>
 
               <Divider />
 
-              <Grid3>
+              <Grid3 min={220}>
                 <TextField
                   label={tr("section2.offers.buttonText", "Button text")}
                   value={offer.buttonText || ""}
                   onChange={(v) => onChange({ ...offer, buttonText: v })}
                   autoComplete="off"
-                />
-                <ColorField
-                  label={tr("section2.colors.buttonBg", "Button background")}
-                  value={offer.colors?.buttonBg || ""}
-                  onChange={(v) => onChange({ ...offer, colors: { ...(offer.colors || {}), buttonBg: v } })}
-                  placeholder="#111827"
-                />
-                <ColorField
-                  label={tr("section2.colors.buttonText", "Button text color")}
-                  value={offer.colors?.buttonTextColor || ""}
-                  onChange={(v) =>
-                    onChange({ ...offer, colors: { ...(offer.colors || {}), buttonTextColor: v } })
-                  }
-                  placeholder="#FFFFFF"
-                />
-              </Grid3>
-
-              <Grid3>
-                <ColorField
-                  label={tr("section2.colors.buttonBorder", "Button border")}
-                  value={offer.colors?.buttonBorder || ""}
-                  onChange={(v) =>
-                    onChange({ ...offer, colors: { ...(offer.colors || {}), buttonBorder: v } })
-                  }
-                  placeholder="#111827"
                 />
                 <div />
                 <div />
@@ -1552,6 +1538,7 @@ function OfferEditor({ offer, index, products, onChange, onRemove, canRemove, tr
   );
 }
 
+/* UpsellEditor kept as in your code (no change in idea) */
 function UpsellEditor({ upsell, index, products, onChange, onRemove, canRemove, tr }) {
   const productOptions = useMemo(() => {
     const opts = (products || []).map((p) => ({
@@ -1588,7 +1575,7 @@ function UpsellEditor({ upsell, index, products, onChange, onRemove, canRemove, 
 
       <BlockStack gap="400">
         <GroupCard title={tr("section2.groups.content", "Content")}>
-          <Grid3>
+          <Grid3 min={220}>
             <TextField
               label={tr("section2.fields.title", "Title")}
               value={upsell.title || ""}
@@ -1609,7 +1596,7 @@ function UpsellEditor({ upsell, index, products, onChange, onRemove, canRemove, 
             />
           </Grid3>
 
-          <Grid3>
+          <Grid3 min={220}>
             <Select
               label={tr("section2.fields.product", "Shopify product")}
               value={upsell.productId ? String(upsell.productId) : ""}
@@ -1634,7 +1621,7 @@ function UpsellEditor({ upsell, index, products, onChange, onRemove, canRemove, 
         </GroupCard>
 
         <GroupCard title={tr("section2.groups.design", "Design")}>
-          <Grid3>
+          <Grid3 min={220}>
             <Checkbox
               label={tr("section2.fields.useGlobalColors", "Use global colors")}
               checked={upsell.useGlobalColors !== false}
@@ -1651,11 +1638,13 @@ function UpsellEditor({ upsell, index, products, onChange, onRemove, canRemove, 
           {upsell.useGlobalColors === false && (
             <>
               <Divider />
-              <Grid3>
+              <Grid3 min={220}>
                 <ColorField
                   label={tr("section2.colors.cardBg", "Card background")}
                   value={upsell.colors?.cardBg || ""}
-                  onChange={(v) => onChange({ ...upsell, colors: { ...(upsell.colors || {}), cardBg: v } })}
+                  onChange={(v) =>
+                    onChange({ ...upsell, colors: { ...(upsell.colors || {}), cardBg: v } })
+                  }
                   placeholder="#FFFFFF"
                 />
                 <ColorField
@@ -1669,7 +1658,9 @@ function UpsellEditor({ upsell, index, products, onChange, onRemove, canRemove, 
                 <ColorField
                   label={tr("section2.colors.iconBg", "Icon background")}
                   value={upsell.colors?.iconBg || ""}
-                  onChange={(v) => onChange({ ...upsell, colors: { ...(upsell.colors || {}), iconBg: v } })}
+                  onChange={(v) =>
+                    onChange({ ...upsell, colors: { ...(upsell.colors || {}), iconBg: v } })
+                  }
                   placeholder="#EEF2FF"
                 />
               </Grid3>
@@ -1681,8 +1672,7 @@ function UpsellEditor({ upsell, index, products, onChange, onRemove, canRemove, 
   );
 }
 
-/* ============================== Thank You Editor (kept as you posted) ============================== */
-// (Ton ThankYouEditor block reste identique à ta version — je le garde tel quel)
+/* ============================== Thank You Editor (AS IS) ============================== */
 function ThankYouEditor({ thankYou, globalColors, onChange, tr }) {
   const ty = thankYou || DEFAULT_THANKYOU;
   const update = (patch) => onChange({ ...ty, ...patch });
@@ -2126,10 +2116,8 @@ function Section2OffersInner({ products = [] }) {
   const [saving, setSaving] = useState(false);
 
   const [tab, setTab] = useState("global");
-
   const lastSavedKeyRef = useRef("");
 
-  // ✅ compute key from NORMALIZED config (same as saved)
   const normalizedCfg = useMemo(() => withDefaults(cfg), [cfg]);
 
   const currentKey = useMemo(() => {
@@ -2148,7 +2136,6 @@ function Section2OffersInner({ products = [] }) {
     } catch {}
   };
 
-  // ✅ LOAD (good): /api/offers/load
   useEffect(() => {
     let cancelled = false;
 
@@ -2195,7 +2182,6 @@ function Section2OffersInner({ products = [] }) {
     };
   }, []);
 
-  // ✅ SAVE (FIXED): /api/save-offers + send FULL payload
   const saveOffers = async () => {
     const toSave = withDefaults(cfg);
 
@@ -2212,7 +2198,6 @@ function Section2OffersInner({ products = [] }) {
       const j = await res.json().catch(() => ({ ok: true }));
       if (!res.ok || j?.ok === false) throw new Error(j?.error || "Save failed");
 
-      // ✅ IMPORTANT: sync UI state with saved normalized payload
       setCfg(toSave);
       lastSavedKeyRef.current = JSON.stringify(toSave);
 
@@ -2303,15 +2288,14 @@ function Section2OffersInner({ products = [] }) {
               {loading ? tr("common.loading", "Loading...") : ""}
             </div>
 
-           <Button
-            variant="primary"
-          onClick={navGuard.manualSave}
-          disabled={!dirty || navGuard.saving}
-          loading={navGuard.saving}
-          >
-            Save
-          </Button>
-
+            <Button
+              variant="primary"
+              onClick={navGuard.manualSave}
+              disabled={!dirty || navGuard.saving}
+              loading={navGuard.saving}
+            >
+              Save
+            </Button>
           </InlineStack>
         }
       />
@@ -2346,44 +2330,13 @@ function Section2OffersInner({ products = [] }) {
 
         <div className={`tf-editor ${isThankYouTab ? "tf-editor--full" : ""}`}>
           <div className="tf-main-col">
-            <div className="tf-hero">
-              <InlineStack align="space-between" blockAlign="center">
-                <InlineStack gap="200" blockAlign="center">
-                  <span className="tf-hero-badge">
-                    {cfg.offers.filter((o) => o.enabled).length}{" "}
-                    {tr("section2.badge.offers", "Offers")} •{" "}
-                    {cfg.upsells.filter((u) => u.enabled).length}{" "}
-                    {tr("section2.badge.upsells", "Upsells")} •{" "}
-                    {thankYou?.enabled !== false
-                      ? tr("thankyou.badge.on", "ThankYou ON")
-                      : tr("thankyou.badge.off", "ThankYou OFF")}
-                  </span>
-                  <div>
-                    <div style={{ fontWeight: 950, fontSize: 14 }}>
-                      {tr("section2.hero.title", "Offers & Upsells")}
-                    </div>
-                    <div style={{ fontSize: 12, opacity: 0.9 }}>
-                      {tr("section2.hero.subtitle", "Clean settings + professional preview")}
-                    </div>
-                  </div>
-                </InlineStack>
-                <InlineStack gap="200" blockAlign="center">
-                  <SafeIcon
-                    name={tabs[selectedTabIndex]?.icon || "AppsIcon"}
-                    fallback="AppsIcon"
-                  />
-                  <div style={{ fontSize: 12, opacity: 0.9 }}>
-                    {tabs[selectedTabIndex]?.content}
-                  </div>
-                </InlineStack>
-              </InlineStack>
-            </div>
+            {/* ✅ HERO BANDE SUPPRIMÉE (comme tu as demandé) */}
 
             <div className="tf-panel">
               {tab === "global" && (
                 <BlockStack gap="400">
                   <GroupCard title={tr("section2.global.title", "Global")}>
-                    <Grid3>
+                    <Grid3 min={240}>
                       <Checkbox
                         label={tr("section2.global.enable", "Enable Offers & Upsells")}
                         checked={!!cfg.global.enabled}
@@ -2398,126 +2351,13 @@ function Section2OffersInner({ products = [] }) {
                       <div />
                     </Grid3>
 
-                    <Divider />
-
+                    {/* ✅ Global tab: NO colors / palettes UI */}
                     <Text as="p" variant="bodySm" tone="subdued">
                       {tr(
-                        "section2.global.paletteHint",
-                        "Choose a global palette (applied to all items by default)."
+                        "section2.global.noteNoColors",
+                        "Global colors are managed automatically. Customize colors inside each Offer if needed."
                       )}
                     </Text>
-
-                    <PaletteSelector
-                      value={globalColors.paletteId || "clean-pro"}
-                      onChange={(paletteId) =>
-                        setCfg((c) => ({
-                          ...c,
-                          global: {
-                            ...c.global,
-                            colors: applyPaletteToGlobal(
-                              c.global?.colors || DEFAULT_GLOBAL_COLORS,
-                              paletteId
-                            ),
-                          },
-                        }))
-                      }
-                    />
-
-                    <Divider />
-
-                    <Text as="p" variant="bodySm" fontWeight="bold">
-                      {tr("section2.global.manualColorsTitle", "Global colors")}
-                    </Text>
-
-                    <Grid3>
-                      <ColorField
-                        label={tr("section2.colors.cardBg", "Card background")}
-                        value={globalColors.cardBg}
-                        onChange={(v) =>
-                          setCfg((c) => ({
-                            ...c,
-                            global: {
-                              ...c.global,
-                              colors: { ...globalColors, cardBg: v },
-                            },
-                          }))
-                        }
-                        placeholder="#FFFFFF"
-                      />
-                      <ColorField
-                        label={tr("section2.colors.borderColor", "Border color")}
-                        value={globalColors.borderColor}
-                        onChange={(v) =>
-                          setCfg((c) => ({
-                            ...c,
-                            global: {
-                              ...c.global,
-                              colors: { ...globalColors, borderColor: v },
-                            },
-                          }))
-                        }
-                        placeholder="#E5E7EB"
-                      />
-                      <ColorField
-                        label={tr("section2.colors.iconBg", "Icon background")}
-                        value={globalColors.iconBg}
-                        onChange={(v) =>
-                          setCfg((c) => ({
-                            ...c,
-                            global: {
-                              ...c.global,
-                              colors: { ...globalColors, iconBg: v },
-                            },
-                          }))
-                        }
-                        placeholder="#EEF2FF"
-                      />
-                    </Grid3>
-
-                    <Grid3>
-                      <ColorField
-                        label={tr("section2.colors.buttonBg", "Button background")}
-                        value={globalColors.buttonBg}
-                        onChange={(v) =>
-                          setCfg((c) => ({
-                            ...c,
-                            global: {
-                              ...c.global,
-                              colors: { ...globalColors, buttonBg: v },
-                            },
-                          }))
-                        }
-                        placeholder="#111827"
-                      />
-                      <ColorField
-                        label={tr("section2.colors.buttonText", "Button text color")}
-                        value={globalColors.buttonTextColor}
-                        onChange={(v) =>
-                          setCfg((c) => ({
-                            ...c,
-                            global: {
-                              ...c.global,
-                              colors: { ...globalColors, buttonTextColor: v },
-                            },
-                          }))
-                        }
-                        placeholder="#FFFFFF"
-                      />
-                      <ColorField
-                        label={tr("section2.colors.buttonBorder", "Button border")}
-                        value={globalColors.buttonBorder}
-                        onChange={(v) =>
-                          setCfg((c) => ({
-                            ...c,
-                            global: {
-                              ...c.global,
-                              colors: { ...globalColors, buttonBorder: v },
-                            },
-                          }))
-                        }
-                        placeholder="#111827"
-                      />
-                    </Grid3>
                   </GroupCard>
                 </BlockStack>
               )}
@@ -2692,6 +2532,30 @@ function Section2OffersInner({ products = [] }) {
           )}
         </div>
       </div>
+
+      {/* 
+        ✅ Keys to add to your dictionary (4 translations):
+        - section2.colors.offerBg
+          EN: Background
+          FR: Arrière-plan
+          ES: Fondo
+          AR: الخلفية
+        - section2.colors.offerBtnBg
+          EN: Button BG
+          FR: Fond du bouton
+          ES: Fondo del botón
+          AR: خلفية الزر
+        - section2.colors.offerBtnText
+          EN: Button Text
+          FR: Texte du bouton
+          ES: Texto del botón
+          AR: نص الزر
+        - section2.global.noteNoColors
+          EN: Global colors are managed automatically. Customize colors inside each Offer if needed.
+          FR: Les couleurs globales sont gérées automatiquement. Personnalisez les couleurs داخل كل Offer إذا لزم.
+          ES: Los colores globales se gestionan automáticamente. Personaliza los colores dentro de cada Oferta si es necesario.
+          AR: الألوان العامة تُدار تلقائيًا. يمكنك تخصيص الألوان داخل كل عرض عند الحاجة.
+      */}
     </>
   );
 }

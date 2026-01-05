@@ -1692,8 +1692,14 @@ const EN = {
 "common.save.btnDiscard": "Discard",
 "common.save.btnStay": "Stay",
 
+
 // Ajouter dans la section 3, après "section3.sheetsConfiguration.selectSpreadsheetHelp"
-"section3.sheetsConfiguration.chooseSpreadsheet": "Choose a spreadsheet"
+"section3.sheetsConfiguration.chooseSpreadsheet": "Choose a spreadsheet",
+ "section2.tabs.global": "Global",
+  "section2.tabs.offers": "Offers",
+  "section2.tabs.upsells": "Upsells",
+  "section2.tabs.thankyou": "Thank you page",
+  "section2.global.notePerOfferColors": "Colors are configured inside each offer."
 
 
 
@@ -3370,7 +3376,13 @@ const FR = {
 "common.save.btnStay": "Rester",
 
 // Ajouter dans la section 3, après "section3.sheetsConfiguration.selectSpreadsheetHelp"
-"section3.sheetsConfiguration.chooseSpreadsheet": "Choisir une feuille de calcul"
+"section3.sheetsConfiguration.chooseSpreadsheet": "Choisir une feuille de calcul",
+  "section2.tabs.global": "Global",
+  "section2.tabs.offers": "Offres",
+  "section2.tabs.upsells": "Upsells",
+  "section2.tabs.thankyou": "Page de remerciement",
+  "section2.global.notePerOfferColors": "Les couleurs se configurent dans chaque offre."
+
 
 
 
@@ -5050,7 +5062,13 @@ const ES = {
 "common.save.btnStay": "Permanecer",
 
 // Ajouter dans la section 3, après "section3.sheetsConfiguration.selectSpreadsheetHelp"
-"section3.sheetsConfiguration.chooseSpreadsheet": "Elegir una hoja de cálculo"
+"section3.sheetsConfiguration.chooseSpreadsheet": "Elegir una hoja de cálculo",
+"section2.tabs.global": "Global",
+  "section2.tabs.offers": "Ofertas",
+  "section2.tabs.upsells": "Upsells",
+  "section2.tabs.thankyou": "Página de gracias",
+  "section2.global.notePerOfferColors": "Los colores se configuran dentro de cada oferta."
+
 
 
 };
@@ -6724,7 +6742,12 @@ const AR = {
 "common.save.btnSave": "حفظ",
 "common.save.btnDiscard": "تجاهل",
 "common.save.btnStay": "البقاء",
-"section3.sheetsConfiguration.chooseSpreadsheet": "اختر جدول بيانات"
+"section3.sheetsConfiguration.chooseSpreadsheet": "اختر جدول بيانات",
+ "section2.tabs.global": "عام",
+  "section2.tabs.offers": "العروض",
+  "section2.tabs.upsells": "عروض إضافية",
+  "section2.tabs.thankyou": "صفحة الشكر",
+  "section2.global.notePerOfferColors": "الألوان كتتحدد داخل كل عرض."
 
 };
 
