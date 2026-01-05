@@ -231,7 +231,6 @@ export default function Section6Geo() {
 
   const [cfg, setCfg] = useState(() => normalizeGeoCfg(defaultCfg()));
   const [view, setView] = useState("province"); // price | province | city | advanced
-  const [saving, setSaving] = useState(false);
 
   const lastSavedRef = useRef(stableStringify(normalizeGeoCfg(defaultCfg())));
   const normalizedCfg = useMemo(() => normalizeGeoCfg(cfg), [cfg]);
@@ -299,7 +298,6 @@ export default function Section6Geo() {
   /* ---------- SAVE remote (returns boolean for the guard) ---------- */
   const saveGeo = async () => {
     try {
-      setSaving(true);
       const payload = normalizeGeoCfg(cfg);
 
       const res = await fetch("/api/geo/save", {
@@ -313,12 +311,16 @@ export default function Section6Geo() {
       if (!res.ok || j?.ok === false) throw new Error(j?.error || "Save failed");
 
       lastSavedRef.current = stableStringify(payload);
+
+      // keep localStorage in sync
+      try {
+        window.localStorage.setItem("tripleform_cod_geo", JSON.stringify(payload));
+      } catch {}
+
       return true;
     } catch (e) {
       console.warn("[Section6Geo] save failed:", e);
       return false;
-    } finally {
-      setSaving(false);
     }
   };
 
@@ -398,7 +400,11 @@ export default function Section6Geo() {
   const countryDef = getCountryDef(cfg.country);
   const countryOptions = Object.entries(GEO_COUNTRIES).map(([code, data]) => ({ label: data.label, value: code }));
 
-  const provinceOptionsWithPlaceholder = useMemo(() => getProvinceOptions(cfg.country, tr), [cfg.country, tr]);
+  const provinceOptionsWithPlaceholder = useMemo(
+    () => getProvinceOptions(cfg.country, tr),
+    // tr changes when locale changes; safe to keep it
+    [cfg.country, tr]
+  );
 
   return (
     <>
@@ -409,16 +415,17 @@ export default function Section6Geo() {
         rightSlot={
           <Button
             variant="primary"
-            onClick={navGuard.manualSave}
-            loading={navGuard.saving}
-            disabled={!dirty || navGuard.saving}
+            // ✅ IMPORTANT: header Save opens ONLY the alert (does not save directly)
+            onClick={guard.manualSave}
+            disabled={!dirty || guard.saving}
+            loading={false}
           >
             {tr("section6.buttons.saveStore", "Save")}
           </Button>
         }
       />
 
-      {/* ✅ BAR “UNSAVED” (s’affiche uniquement quand user veut quitter la section) */}
+      {/* ✅ BAR “UNSAVED” : le VRAI SAVE est داخل هاد ال-bar */}
       <UnsavedSaveBar
         open={guard.open}
         dirty={dirty}
@@ -491,7 +498,8 @@ export default function Section6Geo() {
                     })}
                   </Text>
 
-                  <Button size="slim" variant="primary" onClick={saveGeo} loading={saving}>
+                  {/* ✅ ici aussi: on ouvre l’alert, pas de save direct */}
+                  <Button size="slim" variant="primary" onClick={guard.manualSave} disabled={!dirty || guard.saving}>
                     {tr("section6.buttons.saveStore", "Save")}
                   </Button>
                 </BlockStack>
@@ -761,7 +769,8 @@ export default function Section6Geo() {
                   <Divider />
 
                   <InlineStack align="end">
-                    <Button variant="primary" onClick={saveGeo} loading={saving}>
+                    {/* ✅ هنا كذلك: يفتح ال-alert فقط */}
+                    <Button variant="primary" onClick={guard.manualSave} disabled={!dirty || guard.saving}>
                       {tr("section6.buttons.save", "Save")}
                     </Button>
                   </InlineStack>
@@ -795,7 +804,8 @@ export default function Section6Geo() {
                   </Text>
                 </InlineStack>
                 <div style={{ marginTop: 10 }}>
-                  <Button variant="primary" fullWidth onClick={saveGeo} loading={saving}>
+                  {/* ✅ يفتح ال-alert فقط */}
+                  <Button variant="primary" fullWidth onClick={guard.manualSave} disabled={guard.saving}>
                     {tr("common.save", "Save")}
                   </Button>
                 </div>
