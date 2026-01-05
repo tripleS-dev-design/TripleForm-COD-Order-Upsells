@@ -2321,8 +2321,13 @@ export default function Section3Sheets() {
                   {t("section3.guide.title")}
                 </Text>
 
-                <Button variant="primary" size="slim" onClick={handleSaveRemote} loading={saving} disabled={!isDirty}>
-                  {t("common.save")}
+                  <Button
+                    variant="primary"
+                    onClick={navGuard.manualSave}
+                    loading={navGuard.saving}
+                    disabled={!dirty || navGuard.saving}
+                    >    
+                    {t("common.save")}
                 </Button>
               </InlineStack>
 

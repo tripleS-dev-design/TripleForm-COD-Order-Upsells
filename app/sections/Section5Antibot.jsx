@@ -1009,8 +1009,13 @@ export default function Section5Antibot() {
                   </Text>
                 </InlineStack>
                 <div style={{ marginTop: 10 }}>
-                  <Button variant="primary" fullWidth onClick={guard.onSave} loading={guard.saving}>
-                    {tr("common.save", "Save")}
+                <Button
+                  variant="primary"
+                  onClick={navGuard.manualSave}
+                  loading={navGuard.saving}
+                  disabled={!dirty || navGuard.saving}
+                > 
+                   {tr("common.save", "Save")}
                   </Button>
                 </div>
               </div>

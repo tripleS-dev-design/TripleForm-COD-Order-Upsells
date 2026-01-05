@@ -407,7 +407,12 @@ export default function Section6Geo() {
         title={tr("section6.header.appTitle", "TripleForm — GEO")}
         subtitle={tr("section6.header.appSubtitle", "Shipping rates by province, city, or cart amount")}
         rightSlot={
-          <Button variant="primary" size="slim" onClick={saveGeo} loading={saving}>
+          <Button
+            variant="primary"
+            onClick={navGuard.manualSave}
+            loading={navGuard.saving}
+            disabled={!dirty || navGuard.saving}
+          >
             {tr("section6.buttons.saveStore", "Save")}
           </Button>
         }

@@ -508,8 +508,13 @@ export default function Section4Pixels() {
         title={t("section4.header.appTitle") || "TripleForm COD"}
         subtitle={t("section4.header.appSubtitle") || "Pixels & Tracking"}
         rightSlot={
-          <Button variant="primary" size="slim" onClick={saveToShop} loading={saving}>
-            {t("section4.buttons.saveStore") || "Save"}
+        <Button
+          variant="primary"
+          onClick={navGuard.manualSave}
+          loading={navGuard.saving}
+          disabled={!dirty || navGuard.saving}
+        > 
+         {t("section4.buttons.saveStore") || "Save"}
           </Button>
         }
       />

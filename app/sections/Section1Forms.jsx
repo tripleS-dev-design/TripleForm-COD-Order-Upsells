@@ -1392,8 +1392,13 @@ function Section1FormsLayoutInner() {
         themeLink={themeDeepLink}
         onPreview={() => setShowPreview(true)}
         rightSlot={
-          <Button variant="primary" onClick={saveToShop} loading={saving}>
-            {t("section1.header.btnSave") || "Enregistrer"}
+        <Button
+          variant="primary"
+          onClick={navGuard.manualSave}
+          loading={navGuard.saving}
+          disabled={!dirty || navGuard.saving}
+        >  
+           {t("section1.header.btnSave") || "Enregistrer"}
           </Button>
         }
       />
