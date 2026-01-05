@@ -2303,13 +2303,8 @@ function Section2OffersInner({ products = [] }) {
               {loading ? tr("common.loading", "Loading...") : ""}
             </div>
 
-           <Button
-            variant="primary"
-            onClick={navGuard.onSave}
-            loading={navGuard.saving}
-            disabled={!dirty || loading}
-          >
-            Enregistrer
+           <Button variant="primary" onClick={saveToShop} loading={saving}>
+            Save
           </Button>
 
           </InlineStack>

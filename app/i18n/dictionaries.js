@@ -742,7 +742,7 @@ const EN = {
   // ===== Section 3 — Google Sheets =====
 // Header
 "section3.header.title": "TripleForm COD · Google Sheets & Dashboard",
-"section3.header.subtitle": "Connect Google Sheets to track COD orders in real time (confirmed & abandoned) — without leaving the interface.",
+"section3.header.subtitle": "Connect Google ",
 "section3.header.pill": "Google Sheets sync · Live orders",
 
 // Rail navigation
@@ -937,7 +937,7 @@ const EN = {
 
 // Section 4 — Pixels & Tracking
 "section4.header.appTitle": "TripleForm COD · Pixels & Suivi",
-"section4.header.appSubtitle": "Connecte Google, Facebook (Pixel & Conversions API) et TikTok pour suivre tes commandes COD.",
+"section4.header.appSubtitle": "Connecte Google, Facebook (Pixel & Conversions API) et TikTok.",
 "section4.header.pill": "Pixels & tracking hub",
 
 "section4.rail.title": "Panneaux",
@@ -1067,7 +1067,7 @@ const EN = {
 "section4.test.unknownError": "Unknown error",
 // Section 5 — Anti‑bot & Protection
 "section5.header.appTitle": "TripleForm COD · Anti-bot & Protection",
-"section5.header.appSubtitle": "IP · phone · country · reCAPTCHA · honeypot — to block bot orders without breaking real customers.",
+"section5.header.appSubtitle": "IP · phone · country · reCAPTCHA · honeypot ",
 "section5.header.pill": "Anti-spam security center",
 
 "section5.rail.title": "Panels",
@@ -1165,7 +1165,7 @@ const EN = {
 "section5.guide.step5": "When ready, you'll be able to use these settings in your Remix routes /api/antibot/* and in the COD form block.",
 // ===== Section 6 — Geo / Shipping =====
 "section6.header.appTitle": "TripleForm COD · Shipping Rates by Country/City",
-"section6.header.appSubtitle": "Configure shipping rates for Morocco, Algeria, Tunisia — per province, city, or price brackets.",
+"section6.header.appSubtitle": "Configure shipping rates  — per province, city, or price brackets.",
 "section6.header.pill": "Shipping calculator · Cities/Provinces",
 
 "section6.rail.title": "Panels",
@@ -2418,7 +2418,7 @@ const FR = {
   // ===== Section 3 — Google Sheets =====
 // Header
 "section3.header.title": "TripleForm COD · Google Sheets & Dashboard",
-"section3.header.subtitle": "Connecte Google Sheets pour suivre les commandes COD en temps réel (validées & abandons) — sans quitter l'interface.",
+"section3.header.subtitle": "Connecte Google Sheets ",
 "section3.header.pill": "Google Sheets sync · Live orders",
 
 // Rail navigation
@@ -2613,7 +2613,7 @@ const FR = {
 
 // Section 4 — Pixels & Tracking
 "section4.header.appTitle": "TripleForm COD · Pixels & Tracking",
-"section4.header.appSubtitle": "Connecte Google, Facebook (Pixel & Conversions API) et TikTok pour suivre tes commandes COD.",
+"section4.header.appSubtitle": "Connecte Google, Facebook (Pixel & Conversions API) et TikTok.",
 "section4.header.pill": "Centre de pixels & tracking",
 
 "section4.rail.title": "Panneaux",
@@ -2743,7 +2743,7 @@ const FR = {
 "section4.test.unknownError": "Erreur inconnue",
 // Section 5 — Anti‑bot & Protection
 "section5.header.appTitle": "TripleForm COD · Anti-bot & Protection",
-"section5.header.appSubtitle": "IP · téléphone · pays · reCAPTCHA · honeypot — pour bloquer les commandes robots sans casser les vrais clients.",
+"section5.header.appSubtitle": "IP · téléphone · pays · reCAPTCHA · honeypot ",
 "section5.header.pill": "Centre de sécurité anti-spam",
 
 "section5.rail.title": "Panneaux",
@@ -2841,7 +2841,7 @@ const FR = {
 "section5.guide.step5": "Quand tu seras prêt, tu pourras utiliser ces réglages dans tes routes Remix /api/antibot/* et dans le bloc du formulaire COD.",
 // ===== Section 6 — Geo / Shipping =====
 "section6.header.appTitle": "TripleForm COD · Tarifs de livraison par pays/ville",
-"section6.header.appSubtitle": "Configure les frais de livraison pour Maroc, Algérie, Tunisie — par province, ville ou paliers de prix.",
+"section6.header.appSubtitle": "Configure les frais de livraison / province, ville ou paliers de prix.",
 "section6.header.pill": "Calculateur livraison · Villes/Provinces",
 
 "section6.rail.title": "Panneaux",
@@ -4111,7 +4111,7 @@ const ES = {
   // ===== Section 3 — Google Sheets =====
 // Header
 "section3.header.title": "TripleForm COD · Google Sheets & Panel",
-"section3.header.subtitle": "Conecta Google Sheets para seguir pedidos COD en tiempo real (confirmados & abandonados) — sin salir de la interfaz.",
+"section3.header.subtitle": "Conecta Google Sheets",
 "section3.header.pill": "Google Sheets sync · Pedidos en vivo",
 
 // Rail navigation
@@ -4305,7 +4305,7 @@ const ES = {
 "section3.sheetsConfiguration.selectTabHelp": "Elige la pestaña en la hoja",
 // Section 4 — Pixels & Tracking
 "section4.header.appTitle": "TripleForm COD · Píxeles y Seguimiento",
-"section4.header.appSubtitle": "Conecta Google, Facebook (Pixel y Conversions API) y TikTok para rastrear tus pedidos COD.",
+"section4.header.appSubtitle": "Conecta Google, Facebook (Pixel y Conversions API) y TikTok.",
 "section4.header.pill": "Centro de píxeles y tracking",
 
 "section4.rail.title": "Paneles",
@@ -4435,7 +4435,7 @@ const ES = {
 "section4.test.unknownError": "Error desconocido",
 // Section 5 — Anti‑bot & Protection
 "section5.header.appTitle": "TripleForm COD · Anti-bot & Protección",
-"section5.header.appSubtitle": "IP · teléfono · país · reCAPTCHA · honeypot — para bloquear pedidos de robots sin afectar a clientes reales",
+"section5.header.appSubtitle": "IP · teléfono · país · reCAPTCHA · honeypot ",
 "section5.header.pill": "Centro de seguridad anti-spam",
 
 "section5.rail.title": "Paneles",
@@ -4533,7 +4533,7 @@ const ES = {
 "section5.guide.step5": "Cuando estés listo, podrás usar estos ajustes en tus rutas Remix /api/antibot/* y en el bloque del formulario COD.",
 // ===== Section 6 — Geo / Shipping =====
 "section6.header.appTitle": "TripleForm COD · Tarifas de envío por país/ciudad",
-"section6.header.appSubtitle": "Configura tarifas de envío para Marruecos, Argelia, Túnez — por provincia, ciudad o rangos de precio.",
+"section6.header.appSubtitle": "Configura tarifas de envío  — por provincia, ciudad o rangos de precio.",
 "section6.header.pill": "Calculadora envío · Ciudades/Provincias",
 
 "section6.rail.title": "Paneles",
@@ -5787,7 +5787,7 @@ const AR = {
   // ===== Section 3 — Google Sheets =====
 // Header
 "section3.header.title": "TripleForm COD · جوجل شيتس ولوحة التحكم",
-"section3.header.subtitle": "قم بتوصيل جوجل شيتس لمتابعة طلبات الدفع عند الاستلام في الوقت الفعلي (المؤكدة والمتروكة) — دون مغادرة الواجهة.",
+"section3.header.subtitle": "قم بتوصيل جوجل شيت .",
 "section3.header.pill": "مزامنة جوجل شيتس · الطلبات المباشرة",
 
 // Rail navigation
@@ -5981,7 +5981,7 @@ const AR = {
 "section3.sheetsConfiguration.selectTabHelp": "اختر علامة التبويب في جدول البيانات",
 // Section 4 — Pixels & Tracking
 "section4.header.appTitle": "TripleForm COD · بكسلز وتتبع",
-"section4.header.appSubtitle": "اتصل بـ Google و Facebook (Pixel و Conversions API) و TikTok لتتبع طلبات COD الخاصة بك.",
+"section4.header.appSubtitle": "  Google و Facebook (Pixel و Conversions API) و TikTok .",
 "section4.header.pill": "مركز البيكسلات والتتبع",
 
 "section4.rail.title": "الألواح",
@@ -6111,7 +6111,7 @@ const AR = {
 "section4.test.unknownError": "خطأ غير معروف",
 // Section 5 — Anti‑bot & Protection
 "section5.header.appTitle": "TripleForm COD · الحماية من الروبوتات",
-"section5.header.appSubtitle": "IP · الهاتف · البلد · reCAPTCHA · honeypot — لحجب طلبات الروبوتات دون التأثير على العملاء الحقيقيين",
+"section5.header.appSubtitle": "IP · الهاتف · البلد · reCAPTCHA · ",
 "section5.header.pill": "مركز الحماية من السبام",
 
 "section5.rail.title": "الألواح",
@@ -6209,7 +6209,7 @@ const AR = {
 "section5.guide.step5": "عندما تكون جاهزاً، يمكنك استخدام هذه الإعدادات في مسارات Remix /api/antibot/* وفي كتلة استمارة الدفع عند الاستلام.",
 // ===== Section 6 — Geo / Shipping =====
 "section6.header.appTitle": "TripleForm COD · أسعار الشحن حسب البلد/المدينة",
-"section6.header.appSubtitle": "اضبط أسعار الشحن للمغرب، الجزائر، تونس — حسب الولاية، المدينة أو شرائح الأسعار.",
+"section6.header.appSubtitle": "اضبط أسعار الشحن  — حسب الولاية، المدينة أو شرائح الأسعار.",
 "section6.header.pill": "آلة حاسبة الشحن · المدن/الولايات",
 
 "section6.rail.title": "الألواح",
