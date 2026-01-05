@@ -10,7 +10,7 @@ Lit la config OFFRES / UPSELL depuis:
 - shop.metafields.tripleform_cod.offers (fallback)
 
 reCAPTCHA v2 ONLY:
-- lit la Site Key depuis shop.metafields.tripleform_cod.antibot (recaptcha.siteKey)
+- lit la config depuis shop.metafields.tripleform_cod.antibot (recaptcha.enabled + recaptcha.siteKey)
 - NE PAS injecter <script google> dans le Liquid (theme-check RemoteAsset)
 - on passe la config au JS via data-*
 {% endcomment %}
@@ -19,13 +19,24 @@ reCAPTCHA v2 ONLY:
 {%- assign tf_shop_val = shop.metafields.tripleform_cod.settings.value -%}
 
 {%- comment -%}
-✅ reCAPTCHA Site Key (PUBLIC) — source (2): metafield tripleform_cod.antibot (type json)
-بدون parse_json (theme-check)
+✅ reCAPTCHA config (PUBLIC) — source: metafield tripleform_cod.antibot (type json)
+Sans parse_json (theme-check)
 {%- endcomment -%}
 {%- assign tf_antibot_mf = shop.metafields.tripleform_cod.antibot -%}
 {%- assign tf_recaptcha_site_key = '' -%}
+{%- assign tf_recaptcha_enabled = false -%}
+
 {%- if tf_antibot_mf != blank and tf_antibot_mf.value != blank and tf_antibot_mf.value.recaptcha != blank -%}
   {%- assign tf_recaptcha_site_key = tf_antibot_mf.value.recaptcha.siteKey | default: '' -%}
+
+  {%- comment -%}
+  IMPORTANT:
+  - enabled doit venir de la config UI (metafield)
+  - si enabled=true mais pas de siteKey => on force false
+  {%- endcomment -%}
+  {%- if tf_antibot_mf.value.recaptcha.enabled == true and tf_recaptcha_site_key != blank -%}
+    {%- assign tf_recaptcha_enabled = true -%}
+  {%- endif -%}
 {%- endif -%}
 
 {%- if tf_prod_val and tf_prod_val != blank -%}
@@ -389,7 +400,7 @@ Le JS (tripleform.js) charge le script tout seul quand enabled=true.
   data-currency='{{ cart.currency.iso_code | default: shop.currency }}'
   data-locale='{{ request.locale.iso_code }}'
 
-  data-recaptcha-enabled="{% if tf_recaptcha_site_key != blank %}true{% else %}false{% endif %}"
+  data-recaptcha-enabled="{% if tf_recaptcha_enabled %}true{% else %}false{% endif %}"
   data-recaptcha-version="v2"
   data-recaptcha-site-key="{{ tf_recaptcha_site_key | escape }}"
   data-recaptcha-v2-size="normal"
@@ -406,12 +417,14 @@ Le JS (tripleform.js) charge le script tout seul quand enabled=true.
     Loading COD form…
   </div>
 
-  <div
-    id="tf-recaptcha-v2-{{ section.id }}"
-    class="tf-recaptcha-v2"
-    style="margin-top:12px"
-    aria-label="reCAPTCHA"
-  ></div>
+  {%- if tf_recaptcha_enabled -%}
+    <div
+      id="tf-recaptcha-v2-{{ section.id }}"
+      class="tf-recaptcha-v2"
+      style="margin-top:12px"
+      aria-label="reCAPTCHA"
+    ></div>
+  {%- endif -%}
 </div>
 
 <script type="application/json" id="tf-product-json-{{ section.id }}">

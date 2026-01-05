@@ -2204,8 +2204,8 @@ function Section2OffersInner({ products = [] }) {
       const res = await fetch("/api/offers/save", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ offers: toSave }),
-      });
+        body: JSON.stringify(toSave), 
+     });
 
       const j = await res.json().catch(() => ({ ok: true }));
       if (!res.ok || j?.ok === false) throw new Error(j?.error || "Save failed");
