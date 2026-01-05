@@ -6,6 +6,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
  * - PAS d'alert à chaque modif
  * - Bloque seulement quand l'utilisateur veut quitter la section (liens internes)
  * - Ouvre une barre slim avec animation "attention"
+ *
+ * ✅ NEW:
+ * - manualSave() : pour le bouton "Enregistrer" du header (save direct, sans navigation)
  */
 export function useUnsavedNavigationGuard({
   dirty,
@@ -87,24 +90,36 @@ export function useUnsavedNavigationGuard({
     if (href) navigate(href);
   };
 
-  const runSave = async () => {
+  // ✅ Save flow utilisé quand on veut QUITTER (avec pending href)
+  const runSaveAndMaybeLeave = async () => {
     if (saving) return false;
+
     setSaving(true);
     setMode("attention");
     setOpen(true);
 
     try {
       const ok = await onSave?.();
+
       if (ok) {
         setMode("success");
+
         if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+
         closeTimerRef.current = setTimeout(() => {
-          setOpen(false);
-          setMode("idle");
-          proceed();
+          // ✅ important: si user était en train de quitter -> navigate
+          // sinon -> juste fermer
+          if (pendingHrefRef.current) {
+            proceed();
+          } else {
+            setOpen(false);
+            setMode("idle");
+          }
         }, 600);
+
         return true;
       }
+
       setMode("error");
       setOpen(true);
       return false;
@@ -115,6 +130,13 @@ export function useUnsavedNavigationGuard({
     } finally {
       setSaving(false);
     }
+  };
+
+  // ✅ NEW: Save direct (header button) => pas besoin de pending href
+  const manualSave = async () => {
+    // force: on n'est pas en train de quitter
+    pendingHrefRef.current = null;
+    return runSaveAndMaybeLeave();
   };
 
   const discardAndLeave = () => {
@@ -138,8 +160,11 @@ export function useUnsavedNavigationGuard({
     mode,
     saving,
     dirty,
-    onSave: runSave,
+    // Pour UnsavedSaveBar (quand user veut quitter)
+    onSave: runSaveAndMaybeLeave,
     onDiscard: discardAndLeave,
     onCancel: cancel,
+    // ✅ Pour le bouton Enregistrer du header
+    manualSave,
   };
 }
