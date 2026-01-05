@@ -42,24 +42,17 @@ function useT() {
     return fallback || key;
   };
 
-  return { t, tr };
+  // adapter for shared components expecting t(key, vars?)
+  const tAdapter = (key, vars) => tr(key, key, vars);
+
+  return { t, tr, tAdapter };
 }
 
-/* ======================= CSS / layout (NO backticks) ======================= */
+/* ======================= CSS / layout (NO header overrides) ======================= */
 const LAYOUT_CSS = [
   "html, body { margin:0; background:#F6F7F9; }",
   ".Polaris-Page, .Polaris-Page__Content { max-width:none!important; padding-left:0!important; padding-right:0!important; }",
   ".Polaris-TextField, .Polaris-Select, .Polaris-Labelled__LabelWrapper { min-width:0; }",
-
-  "/* ✅ HEADER (TFSectionHeader) */",
-  ".tf-header{ background:linear-gradient(90deg,#0B3B82,#7D0031); padding:6px 10px; position:sticky; top:0; z-index:60; box-shadow:0 10px 28px rgba(11,59,130,0.45); }",
-  ".tf-header-row{ display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:10px; min-height:44px; }",
-  ".tf-brand{ display:flex; align-items:center; gap:10px; min-width:0; }",
-  ".tf-brand-text{ display:flex; flex-direction:column; min-width:0; line-height:1.05; }",
-  ".tf-brand-title{ font-weight:950; color:#F9FAFB; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }",
-  ".tf-brand-sub{ font-size:11px; color:rgba(249,250,251,0.78); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }",
-  ".tf-flags-wrap{ display:flex; justify-content:center; align-items:center; width:100%; min-width:0; }",
-  ".tf-header-right{ display:flex; align-items:center; justify-content:flex-end; gap:10px; min-width:0; flex-wrap:wrap; }",
 
   ".tf-shell{ padding:16px; }",
 
@@ -90,8 +83,6 @@ const LAYOUT_CSS = [
   "@media (max-width: 980px) {",
   "  .tf-editor { grid-template-columns: 1fr; }",
   "  .tf-rail, .tf-side-col { position:static; max-height:none; width:auto; }",
-  "  .tf-brand-sub{ display:none; }",
-  "  .tf-flags-wrap{ display:none; }",
   "}",
 ].join("\n");
 
@@ -133,12 +124,16 @@ function getProvinceOptions(countryCode, tr) {
 }
 
 function getCityOptions(countryCode, provinceNameOrId, tr) {
-  if (!provinceNameOrId) return [{ label: tr("section6.select.cityPlaceholder", "Select city"), value: "" }];
+  if (!provinceNameOrId)
+    return [{ label: tr("section6.select.cityPlaceholder", "Select city"), value: "" }];
+
   const def = getCountryDef(countryCode);
   const prov =
-    (def.provinces || []).find((p) => p.name === provinceNameOrId || p.id === provinceNameOrId) || null;
+    (def.provinces || []).find((p) => p.name === provinceNameOrId || p.id === provinceNameOrId) ||
+    null;
 
-  if (!prov) return [{ label: tr("section6.select.cityPlaceholder", "Select city"), value: "" }];
+  if (!prov)
+    return [{ label: tr("section6.select.cityPlaceholder", "Select city"), value: "" }];
 
   return [{ label: tr("section6.select.cityPlaceholder", "Select city"), value: "" }].concat(
     (prov.cities || []).map((city) => ({ label: city, value: city }))
@@ -170,9 +165,10 @@ const Grid3 = ({ children }) => (
 
 const newId = () => Math.random().toString(36).slice(2, 8);
 
-/* ============================== default config ============================== */
+/* ============================== default config (✅ stable ids) ============================== */
 function defaultCfg() {
   const allCountries = Object.keys(GEO_COUNTRIES);
+
   return {
     meta: { version: 2 },
     country: "MA",
@@ -181,9 +177,10 @@ function defaultCfg() {
     isFree: false,
     mode: "province", // price | province | city
 
+    // ✅ ids stables pour éviter dirty=true au démarrage
     priceBrackets: [
-      { id: newId(), min: 0, max: 299, rate: 29 },
-      { id: newId(), min: 299, max: null, rate: 0 },
+      { id: "b1", min: 0, max: 299, rate: 29 },
+      { id: "b2", min: 299, max: null, rate: 0 },
     ],
 
     provinceRates: Object.fromEntries(allCountries.map((c) => [c, []])),
@@ -227,12 +224,17 @@ function normalizeGeoCfg(cfg) {
 export default function Section6Geo() {
   useInjectCss();
   const navigate = useNavigate();
-  const { tr } = useT();
+  const { tr, tAdapter } = useT();
 
-  const [cfg, setCfg] = useState(() => normalizeGeoCfg(defaultCfg()));
+  // ✅ init stable (même objet pour cfg + lastSaved)
+  const initialCfg = useMemo(() => normalizeGeoCfg(defaultCfg()), []);
+  const [cfg, setCfg] = useState(() => initialCfg);
   const [view, setView] = useState("province"); // price | province | city | advanced
 
-  const lastSavedRef = useRef(stableStringify(normalizeGeoCfg(defaultCfg())));
+  // ✅ manual open (header Save opens the bar, doesn't save مباشرة)
+  const [manualOpen, setManualOpen] = useState(false);
+
+  const lastSavedRef = useRef(stableStringify(initialCfg));
   const normalizedCfg = useMemo(() => normalizeGeoCfg(cfg), [cfg]);
 
   const dirty = useMemo(() => {
@@ -328,7 +330,7 @@ export default function Section6Geo() {
   const guard = useUnsavedNavigationGuard({
     dirty,
     onSave: saveGeo,
-    navigate: (href) => navigate(href),
+    navigate,
     isInternalHref: (href) => {
       if (!href) return false;
       if (href.startsWith("#")) return false;
@@ -337,6 +339,31 @@ export default function Section6Geo() {
       return true;
     },
   });
+
+  /* -------------------- header Save opens the bar (not save مباشرة) -------------------- */
+  const openSavePrompt = () => {
+    if (!dirty) return;
+    setManualOpen(true);
+  };
+
+  const barOpen = guard.open || manualOpen;
+  const barMode = guard.open ? guard.mode : manualOpen ? "attention" : guard.mode;
+
+  const barOnSave = async () => {
+    const ok = await guard.onSave?.();
+    setManualOpen(false);
+    return ok;
+  };
+
+  const barOnDiscard = () => {
+    if (guard.open) guard.onDiscard?.(); // discard navigation-block
+    setManualOpen(false); // manual prompt: just close
+  };
+
+  const barOnCancel = () => {
+    guard.onCancel?.();
+    setManualOpen(false);
+  };
 
   /* ====== helpers ====== */
   const setRoot = (p) => setCfg((c) => ({ ...c, ...p }));
@@ -363,11 +390,13 @@ export default function Section6Geo() {
       ...c,
       priceBrackets: c.priceBrackets.map((b) => (b.id === id ? { ...b, ...patch } : b)),
     }));
-  const delBracket = (id) => setCfg((c) => ({ ...c, priceBrackets: c.priceBrackets.filter((b) => b.id !== id) }));
+  const delBracket = (id) =>
+    setCfg((c) => ({ ...c, priceBrackets: c.priceBrackets.filter((b) => b.id !== id) }));
 
   // provinces for current country
   const curProv = cfg.provinceRates[cfg.country] || [];
-  const setProv = (arr) => setCfg((c) => ({ ...c, provinceRates: { ...c.provinceRates, [c.country]: arr } }));
+  const setProv = (arr) =>
+    setCfg((c) => ({ ...c, provinceRates: { ...c.provinceRates, [c.country]: arr } }));
   const addProv = () => setProv([...curProv, { id: newId(), code: "", name: "", rate: 0 }]);
   const updProv = (id, patch) => setProv(curProv.map((p) => (p.id === id ? { ...p, ...patch } : p)));
   const delProv = (id) => setProv(curProv.filter((p) => p.id !== id));
@@ -398,43 +427,42 @@ export default function Section6Geo() {
   };
 
   const countryDef = getCountryDef(cfg.country);
-  const countryOptions = Object.entries(GEO_COUNTRIES).map(([code, data]) => ({ label: data.label, value: code }));
+  const countryOptions = Object.entries(GEO_COUNTRIES).map(([code, data]) => ({
+    label: data.label,
+    value: code,
+  }));
 
   const provinceOptionsWithPlaceholder = useMemo(
     () => getProvinceOptions(cfg.country, tr),
-    // tr changes when locale changes; safe to keep it
     [cfg.country, tr]
   );
 
   return (
     <>
-      {/* ✅ HEADER COMMUN + FLAGS */}
+      {/* ✅ HEADER: Save opens only the alert (no direct save) */}
       <TFSectionHeader
         title={tr("section6.header.appTitle", "TripleForm — GEO")}
-        subtitle={tr("section6.header.appSubtitle", "Shipping rates by province, city, or cart amount")}
+        subtitle={tr(
+          "section6.header.appSubtitle",
+          "Shipping rates by province, city, or cart amount"
+        )}
         rightSlot={
-          <Button
-            variant="primary"
-            // ✅ IMPORTANT: header Save opens ONLY the alert (does not save directly)
-            onClick={guard.manualSave}
-            disabled={!dirty || guard.saving}
-            loading={false}
-          >
+          <Button variant="primary" size="slim" onClick={openSavePrompt} disabled={!dirty}>
             {tr("section6.buttons.saveStore", "Save")}
           </Button>
         }
       />
 
-      {/* ✅ BAR “UNSAVED” : le VRAI SAVE est داخل هاد ال-bar */}
+      {/* ✅ VRAI SAVE داخل bar */}
       <UnsavedSaveBar
-        open={guard.open}
+        open={barOpen}
         dirty={dirty}
         saving={guard.saving}
-        mode={guard.mode}
-        onSave={guard.onSave}
-        onDiscard={guard.onDiscard}
-        onCancel={guard.onCancel}
-        t={(key) => tr(key, key)}
+        mode={barMode}
+        onSave={barOnSave}
+        onDiscard={barOnDiscard}
+        onCancel={barOnCancel}
+        t={tAdapter}
       />
 
       <div className="tf-shell">
@@ -449,7 +477,7 @@ export default function Section6Geo() {
                     key={it.key}
                     className="tf-rail-item"
                     data-sel={view === it.key ? 1 : 0}
-                    onClick={() => setView(it.key)} // ✅ pas d’alerte ici (même section)
+                    onClick={() => setView(it.key)} // ✅ no alert (same section)
                   >
                     <span style={{ fontWeight: 800 }}>{it.label}</span>
                     <span style={{ opacity: 0.75 }}>
@@ -466,7 +494,9 @@ export default function Section6Geo() {
                 <BlockStack gap="100">
                   <InlineStack align="space-between">
                     <Text as="span">{tr("section6.rail.type", "Shipping")}</Text>
-                    <Badge>{cfg.isFree ? tr("section6.rail.free", "Free") : tr("section6.rail.paid", "Paid")}</Badge>
+                    <Badge>
+                      {cfg.isFree ? tr("section6.rail.free", "Free") : tr("section6.rail.paid", "Paid")}
+                    </Badge>
                   </InlineStack>
 
                   {!cfg.isFree ? (
@@ -498,10 +528,12 @@ export default function Section6Geo() {
                     })}
                   </Text>
 
-                  {/* ✅ ici aussi: on ouvre l’alert, pas de save direct */}
-                  <Button size="slim" variant="primary" onClick={guard.manualSave} disabled={!dirty || guard.saving}>
-                    {tr("section6.buttons.saveStore", "Save")}
-                  </Button>
+                  {dirty ? (
+                    <Text tone="subdued" as="p">
+                      {tr("common.savebar.unsaved", "You have unsaved changes.")} —{" "}
+                      {tr("section6.tip", "Use the Save button in the header.")}
+                    </Text>
+                  ) : null}
                 </BlockStack>
               </div>
             </div>
@@ -616,10 +648,7 @@ export default function Section6Geo() {
 
               {/* City view */}
               {!cfg.isFree && view === "city" && (
-                <GroupCard
-                  title={tr("section6.city.title", "City rates — {{country}}", { country: countryDef.label })}
-                  tr={tr}
-                >
+                <GroupCard title={tr("section6.city.title", "City rates — {{country}}", { country: countryDef.label })} tr={tr}>
                   <Text tone="subdued" as="p">
                     {tr("section6.city.description", "Define shipping rate per city inside a province.")}
                   </Text>
@@ -768,12 +797,9 @@ export default function Section6Geo() {
 
                   <Divider />
 
-                  <InlineStack align="end">
-                    {/* ✅ هنا كذلك: يفتح ال-alert فقط */}
-                    <Button variant="primary" onClick={guard.manualSave} disabled={!dirty || guard.saving}>
-                      {tr("section6.buttons.save", "Save")}
-                    </Button>
-                  </InlineStack>
+                  <Text tone="subdued" as="p">
+                    {tr("section6.tip", "Use the Save button in the header.")}
+                  </Text>
                 </GroupCard>
               )}
             </div>
@@ -803,12 +829,9 @@ export default function Section6Geo() {
                     {tr("common.savebar.unsaved", "You have unsaved changes.")}
                   </Text>
                 </InlineStack>
-                <div style={{ marginTop: 10 }}>
-                  {/* ✅ يفتح ال-alert فقط */}
-                  <Button variant="primary" fullWidth onClick={guard.manualSave} disabled={guard.saving}>
-                    {tr("common.save", "Save")}
-                  </Button>
-                </div>
+                <Text tone="subdued" as="p" style={{ marginTop: 8 }}>
+                  {tr("section6.tip", "Use the Save button in the header.")}
+                </Text>
               </div>
             ) : null}
           </div>

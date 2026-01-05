@@ -335,7 +335,12 @@ export default function Section5Antibot() {
   const [sel, setSel] = useState("overview");
 
   // ✅ last saved snapshot (for dirty comparison)
-  const lastSavedRef = useRef(stableStringify(normalizeAntibotCfg(defaultCfg())));
+  const lastSavedRef = useRef(
+    stableStringify(normalizeAntibotCfg(defaultCfg()))
+  );
+
+  // ✅ manual open (header Save opens the bar, doesn't save مباشرة)
+  const [manualOpen, setManualOpen] = useState(false);
 
   // GEO inputs
   const [geoCountry, setGeoCountry] = useState("MA");
@@ -433,9 +438,40 @@ export default function Section5Antibot() {
     navigate,
   });
 
+  /* -------------------- header Save opens the bar (not save مباشرة) -------------------- */
+  const openSavePrompt = () => {
+    // if you want it to open even when not dirty, remove this guard
+    if (!dirty) return;
+    setManualOpen(true);
+  };
+
+  const barOpen = guard.open || manualOpen;
+  const barMode = guard.open ? guard.mode : manualOpen ? "attention" : guard.mode;
+
+  const barOnSave = async () => {
+    const ok = await guard.onSave?.();
+    // after saving manually, close manual prompt
+    setManualOpen(false);
+    return ok;
+  };
+
+  const barOnDiscard = () => {
+    // if we are blocking navigation, discard should follow guard logic
+    if (guard.open) guard.onDiscard?.();
+    // if it's a manual prompt, discard = close prompt (no navigation)
+    setManualOpen(false);
+  };
+
+  const barOnCancel = () => {
+    // "stay" / close
+    guard.onCancel?.();
+    setManualOpen(false);
+  };
+
   /* -------------------- setters -------------------- */
   const setIP = (p) => setCfg((c) => ({ ...c, ipBlock: { ...c.ipBlock, ...p } }));
-  const setTEL = (p) => setCfg((c) => ({ ...c, phoneBlock: { ...c.phoneBlock, ...p } }));
+  const setTEL = (p) =>
+    setCfg((c) => ({ ...c, phoneBlock: { ...c.phoneBlock, ...p } }));
   const setCTRY = (p) =>
     setCfg((c) => ({ ...c, countryBlock: { ...c.countryBlock, ...p } }));
   const setRC = (p) =>
@@ -443,7 +479,8 @@ export default function Section5Antibot() {
       ...c,
       recaptcha: { ...c.recaptcha, ...p, version: "v2" },
     }));
-  const setHP = (p) => setCfg((c) => ({ ...c, honeypot: { ...c.honeypot, ...p } }));
+  const setHP = (p) =>
+    setCfg((c) => ({ ...c, honeypot: { ...c.honeypot, ...p } }));
 
   const addItems = (arr, items) => {
     const set = new Set(arr || []);
@@ -465,7 +502,8 @@ export default function Section5Antibot() {
     { key: "honeypot", label: tr("section5.rail.panels.honeypot", "Honeypot") },
   ];
 
-  const countIPs = (cfg.ipBlock.allowList?.length || 0) + (cfg.ipBlock.denyList?.length || 0);
+  const countIPs =
+    (cfg.ipBlock.allowList?.length || 0) + (cfg.ipBlock.denyList?.length || 0);
   const countPhones =
     (cfg.phoneBlock.blockedNumbers?.length || 0) +
     (cfg.phoneBlock.blockedPatterns?.length || 0);
@@ -502,9 +540,12 @@ export default function Section5Antibot() {
   const cityOptions = useMemo(() => {
     const c = COUNTRY_DATA && COUNTRY_DATA[geoCountry];
     const provinces = (c && c.provinces) || {};
-    if (!geoProvince || !provinces[geoProvince]) return [{ label: "Any city", value: "" }];
+    if (!geoProvince || !provinces[geoProvince])
+      return [{ label: "Any city", value: "" }];
     const cities = provinces[geoProvince].cities || [];
-    return [{ label: "Any city", value: "" }].concat(cities.map((x) => ({ label: x, value: x })));
+    return [{ label: "Any city", value: "" }].concat(
+      cities.map((x) => ({ label: x, value: x }))
+    );
   }, [geoCountry, geoProvince]);
 
   const geoRulePills = useMemo(() => {
@@ -548,23 +589,31 @@ export default function Section5Antibot() {
       {/* ✅ COMMON HEADER (same everywhere + flags fixed) */}
       <TFSectionHeader
         title={tr("section5.header.appTitle", "TripleForm — AntiBot")}
-        subtitle={tr("section5.header.appSubtitle", "Protect your COD form from spam orders")}
+        subtitle={tr(
+          "section5.header.appSubtitle",
+          "Protect your COD form from spam orders"
+        )}
         rightSlot={
-          <Button variant="primary" size="slim" onClick={guard.onSave} loading={guard.saving}>
+          <Button
+            variant="primary"
+            size="slim"
+            onClick={openSavePrompt} // ✅ opens bar (doesn't save مباشرة)
+            disabled={!dirty}
+          >
             {tr("common.save", "Save")}
           </Button>
         }
       />
 
-      {/* ✅ Unified Save Bar (only when user tries to leave the section route with unsaved changes) */}
+      {/* ✅ Unified Save Bar (works for leaving-guard + manual header click) */}
       <UnsavedSaveBar
-        open={guard.open}
+        open={barOpen}
         dirty={dirty}
         saving={guard.saving}
-        mode={guard.mode}
-        onSave={guard.onSave}
-        onDiscard={guard.onDiscard}
-        onCancel={guard.onCancel}
+        mode={barMode}
+        onSave={barOnSave}
+        onDiscard={barOnDiscard}
+        onCancel={barOnCancel}
         t={tAdapter}
       />
 
@@ -772,10 +821,7 @@ export default function Section5Antibot() {
                           value: "block",
                         },
                         {
-                          label: tr(
-                            "section5.countryBlock.defaultActionOptions.challenge",
-                            "Challenge"
-                          ),
+                          label: tr("section5.countryBlock.defaultActionOptions.challenge", "Challenge"),
                           value: "challenge",
                         },
                       ]}
@@ -856,7 +902,9 @@ export default function Section5Antibot() {
                     onAddItems={(arr) =>
                       setCTRY({ allowList: addItems(cfg.countryBlock.allowList, arr) })
                     }
-                    onRemoveAt={(i) => setCTRY({ allowList: removeAt(cfg.countryBlock.allowList, i) })}
+                    onRemoveAt={(i) =>
+                      setCTRY({ allowList: removeAt(cfg.countryBlock.allowList, i) })
+                    }
                   />
 
                   <TokenEditor
@@ -870,7 +918,9 @@ export default function Section5Antibot() {
                     onAddItems={(arr) =>
                       setCTRY({ denyList: addItems(cfg.countryBlock.denyList, arr) })
                     }
-                    onRemoveAt={(i) => setCTRY({ denyList: removeAt(cfg.countryBlock.denyList, i) })}
+                    onRemoveAt={(i) =>
+                      setCTRY({ denyList: removeAt(cfg.countryBlock.denyList, i) })
+                    }
                   />
                 </GroupCard>
               </div>
@@ -1003,19 +1053,17 @@ export default function Section5Antibot() {
             {dirty ? (
               <div className="tf-side-card">
                 <InlineStack gap="200" blockAlign="center">
-                  <Badge tone="warning">{tr("common.savebar.badgeUnsaved", "Unsaved")}</Badge>
+                  <Badge tone="warning">
+                    {tr("common.savebar.badgeUnsaved", "Unsaved")}
+                  </Badge>
                   <Text as="span" fontWeight="bold">
                     {tr("common.savebar.unsaved", "You have unsaved changes.")}
                   </Text>
                 </InlineStack>
+
                 <div style={{ marginTop: 10 }}>
-                <Button
-                  variant="primary"
-                  onClick={navGuard.manualSave}
-                  loading={navGuard.saving}
-                  disabled={!dirty || navGuard.saving}
-                > 
-                   {tr("common.save", "Save")}
+                  <Button variant="primary" onClick={openSavePrompt}>
+                    {tr("common.save", "Save")}
                   </Button>
                 </div>
               </div>

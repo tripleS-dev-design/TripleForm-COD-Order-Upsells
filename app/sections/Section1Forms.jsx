@@ -151,13 +151,27 @@ function b64urlToB64(s) {
     ("===".slice(((s?.length || 0) + 3) % 4) || "")
   );
 }
+
+// ✅ SSR-safe decodeHost
 function decodeHost(h) {
   try {
-    return atob(b64urlToB64(h || ""));
+    const b64 = b64urlToB64(h || "");
+
+    if (typeof window !== "undefined" && typeof window.atob === "function") {
+      return window.atob(b64);
+    }
+    if (typeof Buffer !== "undefined") {
+      return Buffer.from(b64, "base64").toString("utf8");
+    }
+    if (typeof globalThis !== "undefined" && typeof globalThis.atob === "function") {
+      return globalThis.atob(b64);
+    }
+    return "";
   } catch {
     return "";
   }
 }
+
 function buildThemeEditorUrl({
   hostB64,
   apiKey,
@@ -653,7 +667,6 @@ const DESIGN_PRESETS = {
     cartTitleColor: "#374151",
     cartTextColor: "#374151",
   },
-
   BlackFriday: {
     bg: "#0B1220",
     text: "#F8FAFC",
@@ -1310,7 +1323,7 @@ function Section1FormsLayoutInner() {
     [config.design, eff, glowPx, glowCol, baseFontSize]
   );
 
-  // ✅ save (used by header button + navigation guard)
+  // ✅ save (used by guard)
   const saveToShop = async () => {
     if (saving) return false;
     setSaving(true);
@@ -1349,13 +1362,53 @@ function Section1FormsLayoutInner() {
     navigate: (href) => remixNavigate(href),
   });
 
+  // ✅ Header Save opens bar (does NOT save directly)
+  const [manualOpen, setManualOpen] = useState(false);
+
+  const openSavePrompt = () => {
+    if (!dirty) return;
+    setManualOpen(true);
+  };
+
+  // auto-close manual bar if nothing to save
+  useEffect(() => {
+    if (!dirty) setManualOpen(false);
+  }, [dirty]);
+
+  const barOpen = guard.open || manualOpen;
+  const barMode =
+    manualOpen && (guard.mode === "idle" || !guard.mode) ? "attention" : guard.mode;
+
+  const onBarCancel = () => {
+    setManualOpen(false);
+    guard.onCancel?.();
+  };
+
+  const onBarDiscard = () => {
+    setManualOpen(false);
+    guard.onDiscard?.();
+  };
+
+  const onBarSave = async () => {
+    const ok = await guard.onSave?.();
+    if (ok) setManualOpen(false);
+    return ok;
+  };
+
   if (loadingInitial) {
     return (
       <div style={{ padding: 32 }}>
         <Card>
           <BlockStack gap="300">
             <div style={{ height: 16, background: "#E5E7EB", borderRadius: 999 }} />
-            <div style={{ height: 16, background: "#E5E7EB", borderRadius: 999, width: "60%" }} />
+            <div
+              style={{
+                height: 16,
+                background: "#E5E7EB",
+                borderRadius: 999,
+                width: "60%",
+              }}
+            />
             <div style={{ height: 220, background: "#E5E7EB", borderRadius: 16 }} />
           </BlockStack>
         </Card>
@@ -1392,26 +1445,26 @@ function Section1FormsLayoutInner() {
         themeLink={themeDeepLink}
         onPreview={() => setShowPreview(true)}
         rightSlot={
-        <Button
-          variant="primary"
-          onClick={navGuard.manualSave}
-          loading={navGuard.saving}
-          disabled={!dirty || navGuard.saving}
-        >  
-           {t("section1.header.btnSave") || "Enregistrer"}
+          <Button
+            variant="primary"
+            onClick={openSavePrompt}
+            loading={guard.saving}
+            disabled={!dirty || guard.saving}
+          >
+            {t("section1.header.btnSave") || "Enregistrer"}
           </Button>
         }
       />
 
-      {/* ✅ Slim save bar ONLY on leave attempt */}
+      {/* ✅ Slim save bar ONLY on leave attempt OR header click */}
       <UnsavedSaveBar
-        open={guard.open}
-        dirty={guard.dirty}
+        open={barOpen}
+        dirty={dirty}
         saving={guard.saving}
-        mode={guard.mode}
-        onSave={guard.onSave}
-        onDiscard={guard.onDiscard}
-        onCancel={guard.onCancel}
+        mode={barMode}
+        onSave={onBarSave}
+        onDiscard={onBarDiscard}
+        onCancel={onBarCancel}
         t={t}
       />
 

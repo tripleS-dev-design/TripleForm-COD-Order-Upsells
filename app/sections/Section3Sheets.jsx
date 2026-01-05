@@ -2,7 +2,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "@remix-run/react";
 
-import LanguageSelector from "../components/LanguageSelector";
 import TFSectionHeader from "../components/TFSectionHeader";
 import UnsavedSaveBar from "../components/UnsavedSaveBar";
 import { useUnsavedNavigationGuard } from "../hooks/useUnsavedNavigationGuard";
@@ -478,6 +477,7 @@ const labelFromValue = (v, t) => {
         .replace(/\b\w/g, (m) => m.toUpperCase());
 };
 
+/* ✅ defaultCfg with stable IDs (no random) */
 const defaultCfg = () => ({
   meta: { version: 8 },
   sheet: { spreadsheetId: "", tabName: "Orders", headerRowIndex: 1 },
@@ -1090,7 +1090,9 @@ function SimpleWhatsAppConfig() {
           ) : (
             <>
               <div className="whatsapp-card-header">
-                <div className="whatsapp-icon-circle">{KeySrc ? <Icon source={KeySrc} color="base" /> : <span>🔑</span>}</div>
+                <div className="whatsapp-icon-circle">
+                  {KeySrc ? <Icon source={KeySrc} color="base" /> : <span>🔑</span>}
+                </div>
                 <div>
                   <Text as="h3" variant="headingMd" fontWeight="bold">
                     {t("whatsapp.advanced.title")}
@@ -1159,7 +1161,9 @@ function SimpleWhatsAppConfig() {
         <Card>
           <BlockStack gap="400">
             <div className="whatsapp-card-header">
-              <div className="whatsapp-icon-circle">{ChatSrc ? <Icon source={ChatSrc} color="base" /> : <span>💬</span>}</div>
+              <div className="whatsapp-icon-circle">
+                {ChatSrc ? <Icon source={ChatSrc} color="base" /> : <span>💬</span>}
+              </div>
               <div>
                 <Text as="h3" variant="headingMd" fontWeight="bold">
                   {t("whatsapp.qr.title")}
@@ -1296,9 +1300,7 @@ function SimpleWhatsAppConfig() {
                   </div>
                 </InlineStack>
 
-                <Badge tone="success">
-                  {t("whatsapp.connected.sent", { count: whatsappStatus.messagesSent })}
-                </Badge>
+                <Badge tone="success">{t("whatsapp.connected.sent", { count: whatsappStatus.messagesSent })}</Badge>
               </InlineStack>
             </div>
 
@@ -1353,8 +1355,18 @@ export default function Section3Sheets() {
 
   const [sheetTab, setSheetTab] = useState(0);
   const sheetTabs = [
-    { id: "orders", content: t("section3.sheetsTabs.orders"), accessibilityLabel: t("section3.sheetsTabs.orders"), panelID: "orders-panel" },
-    { id: "abandoned", content: t("section3.sheetsTabs.abandoned"), accessibilityLabel: t("section3.sheetsTabs.abandoned"), panelID: "abandoned-panel" },
+    {
+      id: "orders",
+      content: t("section3.sheetsTabs.orders"),
+      accessibilityLabel: t("section3.sheetsTabs.orders"),
+      panelID: "orders-panel",
+    },
+    {
+      id: "abandoned",
+      content: t("section3.sheetsTabs.abandoned"),
+      accessibilityLabel: t("section3.sheetsTabs.abandoned"),
+      panelID: "abandoned-panel",
+    },
   ];
 
   /* ===================== DIRTY SNAPSHOT (NO SPAM UI) ===================== */
@@ -1369,7 +1381,7 @@ export default function Section3Sheets() {
     savedSnapshotRef.current = stableStringify(newCfg || cfg);
   };
 
-  /* ===================== GUARD: ONLY WHEN LEAVING ROUTE ===================== */
+  /* ===================== SAVE REMOTE ===================== */
   const handleSaveRemote = async () => {
     try {
       setSaving(true);
@@ -1392,6 +1404,7 @@ export default function Section3Sheets() {
     }
   };
 
+  /* ===================== GUARD ===================== */
   const guard = useUnsavedNavigationGuard({
     dirty: isDirty,
     onSave: handleSaveRemote,
@@ -1403,6 +1416,33 @@ export default function Section3Sheets() {
       return true;
     },
   });
+
+  /* ✅ header save => opens bar فقط */
+  const [manualOpen, setManualOpen] = useState(false);
+
+  const openSaveBar = () => {
+    if (!isDirty) return;
+    if (typeof guard?.manualSave === "function") guard.manualSave();
+    else setManualOpen(true);
+  };
+
+  const saveBarOpen = guard.open || manualOpen;
+
+  const onSaveConfirm = async () => {
+    const ok = await guard.onSave();
+    if (ok) setManualOpen(false);
+    return ok;
+  };
+
+  const onCancelConfirm = () => {
+    if (manualOpen && !guard.open) setManualOpen(false);
+    else guard.onCancel();
+  };
+
+  const onDiscardConfirm = () => {
+    if (manualOpen && !guard.open) setManualOpen(false);
+    else guard.onDiscard();
+  };
 
   useEffect(() => {
     const handleMessage = (event) => {
@@ -1480,7 +1520,6 @@ export default function Section3Sheets() {
           const nextId = data.config?.sheet?.spreadsheetId;
           if (nextId) loadSpreadsheetTabs(nextId);
         } else {
-          // no config -> snapshot default
           markSaved(cfg);
         }
       } else {
@@ -1786,27 +1825,30 @@ export default function Section3Sheets() {
 
   return (
     <>
-      {/* ✅ Header commun (drapeaux identiques partout) */}
+      {/* ✅ Header commun: rightSlot = SAVE فقط (selector محذوف) */}
       <TFSectionHeader
         title={t("section3.header.title")}
         subtitle={t("section3.header.subtitle")}
-        rightSlot={<LanguageSelector />}
+        rightSlot={
+          <Button variant="primary" onClick={openSaveBar} disabled={!isDirty || guard.saving}>
+            {t("common.save")}
+          </Button>
+        }
       />
 
-      {/* ✅ Barre unique: s’affiche UNIQUEMENT quand l’utilisateur veut quitter la section (route) */}
+      {/* ✅ UnsavedSaveBar: الحقيقي save داخلها */}
       <UnsavedSaveBar
-        open={guard.open}
-        dirty={guard.dirty}
+        open={saveBarOpen}
+        dirty={isDirty}
         saving={guard.saving}
         mode={guard.mode}
-        onSave={guard.onSave}
-        onDiscard={guard.onDiscard}
-        onCancel={guard.onCancel}
+        onSave={onSaveConfirm}
+        onDiscard={onDiscardConfirm}
+        onCancel={onCancelConfirm}
         t={t}
       />
 
       <div className="tf-shell">
-        {/* NAV TOP (switch panels inside same section) */}
         <div className="tf-topnav">
           <Tabs
             tabs={topTabs}
@@ -1820,8 +1862,8 @@ export default function Section3Sheets() {
         </div>
 
         <div className="tf-editor">
-          {/* MAIN */}
           <div className="tf-main-col">
+            {/* ===== VIEW: SHEETS ===== */}
             {view === "sheets" && (
               <div className="tf-panel">
                 <BlockStack gap="400">
@@ -1840,9 +1882,7 @@ export default function Section3Sheets() {
                               </Text>
                               <Text tone="subdued" as="p">
                                 {t("section3.connection.mainSheet")}{" "}
-                                <b>
-                                  {googleStatus.mainSheetName || cfg.sheet.tabName || t("section3.connection.notDefined")}
-                                </b>
+                                <b>{googleStatus.mainSheetName || cfg.sheet.tabName || t("section3.connection.notDefined")}</b>
                                 {cfg.sheet.spreadsheetId ? ` · ${t("section3.connection.id")}: ${cfg.sheet.spreadsheetId}` : ""}
                               </Text>
                               <Text tone="subdued" as="p">
@@ -1863,7 +1903,9 @@ export default function Section3Sheets() {
                               <InlineStack gap="100" blockAlign="center">
                                 <GoogleIcon />
                                 <span>
-                                  {googleStatus.connected ? t("section3.connection.changeSheet") : t("section3.connection.connect")}
+                                  {googleStatus.connected
+                                    ? t("section3.connection.changeSheet")
+                                    : t("section3.connection.connect")}
                                 </span>
                               </InlineStack>
                             </Button>
@@ -1916,7 +1958,10 @@ export default function Section3Sheets() {
                             sheetConfig={cfg.abandonedSheet}
                             onConfigChange={(newSheetConfig) => {
                               setCfg((c) => ({ ...c, abandonedSheet: newSheetConfig }));
-                              if (newSheetConfig.spreadsheetId && newSheetConfig.spreadsheetId !== cfg.abandonedSheet.spreadsheetId) {
+                              if (
+                                newSheetConfig.spreadsheetId &&
+                                newSheetConfig.spreadsheetId !== cfg.abandonedSheet.spreadsheetId
+                              ) {
                                 loadSpreadsheetTabs(newSheetConfig.spreadsheetId);
                               }
                             }}
@@ -2077,6 +2122,7 @@ export default function Section3Sheets() {
               </div>
             )}
 
+            {/* ===== VIEW: ABANDONS ===== */}
             {view === "abandons" && (
               <div className="tf-panel">
                 <BlockStack gap="300">
@@ -2096,9 +2142,13 @@ export default function Section3Sheets() {
                               <Text tone="subdued" as="p">
                                 {t("section3.abandoned.selectedSheet")}{" "}
                                 <b>
-                                  {googleStatus.abandonedSheetName || cfg.abandonedSheet.tabName || t("section3.connection.notDefined")}
+                                  {googleStatus.abandonedSheetName ||
+                                    cfg.abandonedSheet.tabName ||
+                                    t("section3.connection.notDefined")}
                                 </b>
-                                {cfg.abandonedSheet.spreadsheetId ? ` · ${t("section3.connection.id")}: ${cfg.abandonedSheet.spreadsheetId}` : ""}
+                                {cfg.abandonedSheet.spreadsheetId
+                                  ? ` · ${t("section3.connection.id")}: ${cfg.abandonedSheet.spreadsheetId}`
+                                  : ""}
                               </Text>
                               <Text tone="subdued" as="p">
                                 {t("section3.abandoned.description")}
@@ -2106,7 +2156,8 @@ export default function Section3Sheets() {
                             </>
                           ) : (
                             <>
-                              <Text as bati="p">{t("section3.abandoned.useSecondSheet")}</Text>
+                              {/* ✅ fixed typo */}
+                              <Text as="p">{t("section3.abandoned.useSecondSheet")}</Text>
                               <Text tone="subdued" as="p">
                                 {t("section3.abandoned.whenAbandoned")}
                               </Text>
@@ -2118,7 +2169,9 @@ export default function Section3Sheets() {
                               <InlineStack gap="100" blockAlign="center">
                                 <GoogleIcon />
                                 <span>
-                                  {googleStatus.connected ? t("section3.abandoned.changeSheet") : t("section3.connection.connect")}
+                                  {googleStatus.connected
+                                    ? t("section3.abandoned.changeSheet")
+                                    : t("section3.connection.connect")}
                                 </span>
                               </InlineStack>
                             </Button>
@@ -2246,6 +2299,7 @@ export default function Section3Sheets() {
               </div>
             )}
 
+            {/* ===== VIEW: REALTIME ===== */}
             {view === "realtime" && (
               <div className="tf-panel">
                 <div className="tf-group-title">{t("section3.realtime.title")}</div>
@@ -2306,6 +2360,7 @@ export default function Section3Sheets() {
               </div>
             )}
 
+            {/* ===== VIEW: WHATSAPP ===== */}
             {view === "whatsapp" && (
               <div className="tf-panel">
                 <SimpleWhatsAppConfig />
@@ -2316,19 +2371,11 @@ export default function Section3Sheets() {
           {/* RIGHT */}
           <div className="tf-side-col">
             <div className="tf-side-card">
+              {/* ✅ Save f rail محذوف */}
               <InlineStack align="space-between" blockAlign="center">
                 <Text as="h3" variant="headingSm">
                   {t("section3.guide.title")}
                 </Text>
-
-                  <Button
-                    variant="primary"
-                    onClick={navGuard.manualSave}
-                    loading={navGuard.saving}
-                    disabled={!dirty || navGuard.saving}
-                    >    
-                    {t("common.save")}
-                </Button>
               </InlineStack>
 
               <BlockStack gap="150" className="tf-guide-text" style={{ marginTop: 8, fontSize: 13, lineHeight: 1.5 }}>
