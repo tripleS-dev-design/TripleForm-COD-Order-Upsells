@@ -864,16 +864,16 @@ function clampInt(n, min, max, fallback) {
 
 function withDefaults(raw = {}) {
   const d = DEFAULT_CFG;
-  const x = { ...d, ...raw };
+  const x = { ...d, ...(raw || {}) };
 
-  x.global = { ...d.global, ...(raw.global || {}) };
+  x.global = { ...d.global, ...((raw || {}).global || {}) };
   x.global.colors = {
     ...DEFAULT_GLOBAL_COLORS,
-    ...((raw.global || {}).colors || {}),
+    ...(((raw || {}).global || {}).colors || {}),
   };
 
-  x.offers = Array.isArray(raw.offers) ? raw.offers : d.offers;
-  x.upsells = Array.isArray(raw.upsells) ? raw.upsells : d.upsells;
+  x.offers = Array.isArray((raw || {}).offers) ? raw.offers : d.offers;
+  x.upsells = Array.isArray((raw || {}).upsells) ? raw.upsells : d.upsells;
 
   x.offers = x.offers.slice(0, 3).map((o) => ({
     ...DEFAULT_OFFER,
@@ -896,7 +896,7 @@ function withDefaults(raw = {}) {
     colors: { ...DEFAULT_UPSELL.colors, ...(u?.colors || {}) },
   }));
 
-  const tyRaw = raw?.thankYou || {};
+  const tyRaw = (raw || {})?.thankYou || {};
   x.thankYou = {
     ...DEFAULT_THANKYOU,
     ...tyRaw,
@@ -1103,8 +1103,8 @@ function PreviewCard({ item, products, isOffer, globalColors, tr }) {
   );
 }
 
-/* ============================== Thank You Preview + Editor (UNCHANGED) ============================== */
-/* NOTE: kept your behavior */
+/* ============================== Thank You Preview + Editor ============================== */
+/* NOTE: kept your behavior (same as what you posted) */
 function ThankYouPreview({ thankYou, globalColors, tr }) {
   const fallbackImg =
     "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 900 520'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23EEF2FF'/%3E%3Cstop offset='1' stop-color='%23F8FAFC'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='900' height='520' rx='28' fill='url(%23g)'/%3E%3Cpath d='M220 210l110-110 220 220v180H170V210z' fill='%234F46E5' opacity='.88'/%3E%3Ccircle cx='240' cy='190' r='46' fill='%2399A7FF' opacity='.85'/%3E%3C/svg%3E";
@@ -1321,7 +1321,6 @@ function ThankYouPreview({ thankYou, globalColors, tr }) {
 }
 
 /* ============================== Editors (Offers / Upsells) ============================== */
-/* (unchanged from your code) */
 function OfferEditor({ offer, index, products, onChange, onRemove, canRemove, tr }) {
   const productOptions = useMemo(() => {
     const opts = (products || []).map((p) => ({
@@ -1682,8 +1681,8 @@ function UpsellEditor({ upsell, index, products, onChange, onRemove, canRemove, 
   );
 }
 
-/* ============================== Thank You Editor (same logic) ============================== */
-/* (UNCHANGED huge block from your code) */
+/* ============================== Thank You Editor (kept as you posted) ============================== */
+// (Ton ThankYouEditor block reste identique à ta version — je le garde tel quel)
 function ThankYouEditor({ thankYou, globalColors, onChange, tr }) {
   const ty = thankYou || DEFAULT_THANKYOU;
   const update = (patch) => onChange({ ...ty, ...patch });
@@ -2130,7 +2129,7 @@ function Section2OffersInner({ products = [] }) {
 
   const lastSavedKeyRef = useRef("");
 
-  // ✅ FIX #1: compute key from NORMALIZED config (same as saved)
+  // ✅ compute key from NORMALIZED config (same as saved)
   const normalizedCfg = useMemo(() => withDefaults(cfg), [cfg]);
 
   const currentKey = useMemo(() => {
@@ -2149,8 +2148,10 @@ function Section2OffersInner({ products = [] }) {
     } catch {}
   };
 
+  // ✅ LOAD (good): /api/offers/load
   useEffect(() => {
     let cancelled = false;
+
     const run = async () => {
       setLoading(true);
 
@@ -2194,23 +2195,24 @@ function Section2OffersInner({ products = [] }) {
     };
   }, []);
 
-  // ✅ FIX #2: after successful save, setCfg(toSave) so dirty becomes false
+  // ✅ SAVE (FIXED): /api/save-offers + send FULL payload
   const saveOffers = async () => {
     const toSave = withDefaults(cfg);
+
     try {
       setSaving(true);
       persistLocal(toSave);
 
-      const res = await fetch("/api/offers/save", {
+      const res = await fetch("/api/save-offers", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(toSave), 
-     });
+        body: JSON.stringify(toSave),
+      });
 
       const j = await res.json().catch(() => ({ ok: true }));
       if (!res.ok || j?.ok === false) throw new Error(j?.error || "Save failed");
 
-      // ✅ VERY IMPORTANT: sync UI state with saved normalized payload
+      // ✅ IMPORTANT: sync UI state with saved normalized payload
       setCfg(toSave);
       lastSavedKeyRef.current = JSON.stringify(toSave);
 
@@ -2301,7 +2303,6 @@ function Section2OffersInner({ products = [] }) {
               {loading ? tr("common.loading", "Loading...") : ""}
             </div>
 
-            {/* ✅ save button now really clears dirty */}
             <Button variant="primary" onClick={saveOffers} loading={saving}>
               {tr("common.save", "Save")}
             </Button>
