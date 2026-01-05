@@ -1,7 +1,11 @@
 // ===== File: app/sections/Section3Sheets.jsx =====
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import CountryFlagsBar from "../components/CountryFlagsBar";
+import { useNavigate } from "@remix-run/react";
+
 import LanguageSelector from "../components/LanguageSelector";
+import TFSectionHeader from "../components/TFSectionHeader";
+import UnsavedSaveBar from "../components/UnsavedSaveBar";
+import { useUnsavedNavigationGuard } from "../hooks/useUnsavedNavigationGuard";
 
 import {
   Card,
@@ -30,7 +34,7 @@ const LAYOUT_CSS = `
   }
   .Polaris-TextField, .Polaris-Select, .Polaris-Labelled__LabelWrapper { min-width:0; }
 
-  /* ✅ HEADER (slim row like Section0) */
+  /* ✅ HEADER (same wrapper everywhere via TFSectionHeader) */
   .tf-header {
     background:linear-gradient(90deg,#0B3B82,#7D0031);
     border-bottom:none;
@@ -76,7 +80,7 @@ const LAYOUT_CSS = `
     text-overflow:ellipsis;
   }
 
-  /* =================== FLAGS BAR (same as Section0 style) =================== */
+  /* ✅ FLAGS WRAP (CountryFlagsBar inside TFSectionHeader) */
   .tf-flags-wrap{
     display:flex;
     justify-content:center;
@@ -84,7 +88,7 @@ const LAYOUT_CSS = `
     width:100%;
     min-width:0;
   }
-  .tf-flags{
+  .tf-flags-wrap > *{
     display:flex;
     align-items:center;
     gap:10px;
@@ -98,7 +102,7 @@ const LAYOUT_CSS = `
     background:rgba(255,255,255,0.09);
     border:1px solid rgba(255,255,255,0.18);
   }
-  .tf-flags::-webkit-scrollbar{ display:none; }
+  .tf-flags-wrap > *::-webkit-scrollbar{ display:none; }
 
   .tf-header-right{
     display:flex;
@@ -128,93 +132,6 @@ const LAYOUT_CSS = `
     padding:8px 10px;
   }
 
-  /* ✅ SAVE BAR (slim, professional, animated) */
-  .tf-savebar{
-    position:sticky;
-    top:56px; /* below header slim */
-    z-index:55;
-    margin:0 16px 12px;
-    border-radius:999px;
-    overflow:hidden;
-    border:1px solid #E5E7EB;
-    box-shadow:0 10px 24px rgba(15,23,42,0.10);
-    background:#ffffff;
-  }
-  .tf-savebar-inner{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:10px;
-    padding:8px 12px;
-    min-height:40px;
-  }
-  .tf-savebar-left{
-    display:flex;
-    align-items:center;
-    gap:10px;
-    min-width:0;
-  }
-  .tf-savebar-dot{
-    width:10px; height:10px; border-radius:999px;
-    background:#F59E0B;
-    box-shadow:0 0 0 4px rgba(245,158,11,0.15);
-    flex:0 0 auto;
-  }
-  .tf-savebar-text{
-    min-width:0;
-    display:flex;
-    flex-direction:column;
-    gap:2px;
-  }
-  .tf-savebar-title{
-    font-size:12px;
-    font-weight:900;
-    color:#0F172A;
-    white-space:nowrap;
-    overflow:hidden;
-    text-overflow:ellipsis;
-  }
-  .tf-savebar-sub{
-    font-size:11px;
-    color:#6B7280;
-    white-space:nowrap;
-    overflow:hidden;
-    text-overflow:ellipsis;
-  }
-  .tf-savebar-actions{
-    display:flex;
-    align-items:center;
-    gap:8px;
-    flex:0 0 auto;
-  }
-  .tf-savebar[data-tone="success"] .tf-savebar-dot{
-    background:#22C55E;
-    box-shadow:0 0 0 4px rgba(34,197,94,0.15);
-  }
-  .tf-savebar[data-tone="critical"] .tf-savebar-dot{
-    background:#EF4444;
-    box-shadow:0 0 0 4px rgba(239,68,68,0.15);
-  }
-
-  /* 🔥 nudge animation when user tries to leave without saving */
-  @keyframes tf-shake {
-    0% { transform: translateX(0); }
-    18% { transform: translateX(-6px); }
-    36% { transform: translateX(6px); }
-    54% { transform: translateX(-4px); }
-    72% { transform: translateX(4px); }
-    100% { transform: translateX(0); }
-  }
-  @keyframes tf-glow {
-    0% { box-shadow:0 10px 24px rgba(15,23,42,0.10); }
-    50% { box-shadow:0 14px 34px rgba(245,158,11,0.22); }
-    100% { box-shadow:0 10px 24px rgba(15,23,42,0.10); }
-  }
-  .tf-savebar.nudge{
-    animation: tf-shake .45s ease-out 1, tf-glow .9s ease-out 1;
-    border-color: rgba(245,158,11,0.75);
-  }
-
   /* 2 columns: main + right */
   .tf-editor{
     display:grid;
@@ -222,13 +139,11 @@ const LAYOUT_CSS = `
     gap:16px;
     align-items:start;
   }
-
   .tf-main-col {
     display:grid;
     gap:16px;
     min-width:0;
   }
-
   .tf-panel {
     background:#fff;
     border:1px solid #E5E7EB;
@@ -236,7 +151,6 @@ const LAYOUT_CSS = `
     padding:12px;
     min-width:0;
   }
-
   .tf-side-col{
     position:sticky;
     top:84px;
@@ -246,7 +160,6 @@ const LAYOUT_CSS = `
     width:340px;
     flex:none;
   }
-
   .tf-side-card {
     background:#fff;
     border:1px solid #E5E7EB;
@@ -482,11 +395,10 @@ const LAYOUT_CSS = `
     .tf-editor { grid-template-columns: 1fr; }
     .tf-side-col { position:static; max-height:none; width:auto; }
 
-    .tf-flags{ max-width:240px; gap:8px; padding:6px 10px; }
+    .tf-flags-wrap > *{ max-width:240px; gap:8px; padding:6px 10px; }
     .tf-pill{ display:none; }
     .tf-brand-sub{ display:none; }
 
-    .tf-savebar{ margin:0 12px 12px; top:56px; }
     .whatsapp-qr-box { width: 240px; height: 240px; }
   }
 `;
@@ -662,60 +574,6 @@ function GoogleIcon() {
     >
       G
     </span>
-  );
-}
-
-/* ====== HEADER + FLAGS ====== */
-function PageShell({ children, titleKey, subtitleKey, pillKey }) {
-  const { t } = useI18n();
-  return (
-    <>
-      <div className="tf-header">
-        <div className="tf-header-row">
-          {/* LEFT */}
-          <div className="tf-brand">
-            <div
-              style={{
-                width: 40,
-                height: 40,
-                borderRadius: 12,
-                overflow: "hidden",
-                boxShadow: "0 10px 28px rgba(11,59,130,0.55)",
-                border: "1px solid rgba(255,255,255,0.35)",
-                background: "linear-gradient(135deg,#0B3B82,#7D0031)",
-                flex: "0 0 auto",
-              }}
-            >
-              <img
-                src="/tripleform-cod-icon.png"
-                alt="TripleForm COD"
-                style={{ width: "100%", height: "100%", display: "block", objectFit: "cover" }}
-              />
-            </div>
-
-            <div className="tf-brand-text">
-              <div className="tf-brand-title">{t(titleKey)}</div>
-              <div className="tf-brand-sub">{t(subtitleKey)}</div>
-            </div>
-          </div>
-
-          {/* CENTER (FLAGS) */}
-          <div className="tf-flags-wrap">
-            <div className="tf-flags">
-              <CountryFlagsBar />
-            </div>
-          </div>
-
-          {/* RIGHT */}
-          <div className="tf-header-right">
-            <span className="tf-pill">{t(pillKey)}</span>
-            <LanguageSelector />
-          </div>
-        </div>
-      </div>
-
-      <div className="tf-shell">{children}</div>
-    </>
   );
 }
 
@@ -1456,9 +1314,18 @@ function SimpleWhatsAppConfig() {
 
 export default function Section3Sheets() {
   const { t } = useI18n();
+  const navigate = useNavigate();
   useInjectCss();
 
-  const [cfg, setCfg] = useState(defaultCfg);
+  const stableStringify = (obj) => {
+    try {
+      return JSON.stringify(obj);
+    } catch {
+      return String(obj);
+    }
+  };
+
+  const [cfg, setCfg] = useState(() => defaultCfg());
   const [view, setView] = useState("sheets");
 
   const [dash, setDash] = useState({ points: [], latest: [], totals: null });
@@ -1490,67 +1357,60 @@ export default function Section3Sheets() {
     { id: "abandoned", content: t("section3.sheetsTabs.abandoned"), accessibilityLabel: t("section3.sheetsTabs.abandoned"), panelID: "abandoned-panel" },
   ];
 
-  /* ===================== SAVE LOGIC (PRO) ===================== */
-  const savedSnapshotRef = useRef("");
-  const [savebar, setSavebar] = useState({
-    show: false,
-    tone: "warning", // warning | success | critical
-    title: "",
-    sub: "",
-    nudge: false,
-  });
-
-  // stable stringify (simple, enough for config object)
-  const stableStringify = (obj) => {
-    try {
-      return JSON.stringify(obj);
-    } catch {
-      return String(obj);
-    }
-  };
+  /* ===================== DIRTY SNAPSHOT (NO SPAM UI) ===================== */
+  const savedSnapshotRef = useRef(stableStringify(defaultCfg()));
 
   const isDirty = useMemo(() => {
     const cur = stableStringify(cfg);
-    return savedSnapshotRef.current && cur !== savedSnapshotRef.current;
+    return cur !== savedSnapshotRef.current;
   }, [cfg]);
 
-  const triggerNudge = () => {
-    setSavebar((p) => ({ ...p, show: true, tone: "warning", nudge: true }));
-    window.setTimeout(() => {
-      setSavebar((p) => ({ ...p, nudge: false }));
-    }, 650);
-  };
-
-  const showSavebar = (tone, title, sub) => {
-    setSavebar({ show: true, tone, title, sub, nudge: false });
-  };
-
-  const hideSavebar = () => {
-    setSavebar((p) => ({ ...p, show: false, nudge: false }));
-  };
-
-  // mark initial snapshot after first load (once cfg gets loaded from api/load-sheets)
   const markSaved = (newCfg) => {
     savedSnapshotRef.current = stableStringify(newCfg || cfg);
   };
 
-  // when user edits داخل نفس section -> no alert
-  // we only show savebar when user tries to switch view and isDirty
+  /* ===================== GUARD: ONLY WHEN LEAVING ROUTE ===================== */
+  const handleSaveRemote = async () => {
+    try {
+      setSaving(true);
+      const res = await fetch("/api/save-sheets", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ sheets: cfg }),
+      });
+      const j = await res.json().catch(() => ({ ok: true }));
+      if (!res.ok || j?.ok === false) throw new Error(j?.error || "Save failed");
+
+      markSaved(cfg);
+      return true;
+    } catch (e) {
+      console.error("save-sheets error", e);
+      return false;
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const guard = useUnsavedNavigationGuard({
+    dirty: isDirty,
+    onSave: handleSaveRemote,
+    navigate: (href) => navigate(href),
+    isInternalHref: (href) => {
+      if (!href) return false;
+      if (href.startsWith("#")) return false;
+      if (/^https?:\/\//i.test(href)) return false;
+      return true;
+    },
+  });
 
   useEffect(() => {
     const handleMessage = (event) => {
       if (event.data && event.data.type === "GOOGLE_OAUTH_SUCCESS") {
         fetchGoogleStatus();
         loadGoogleSpreadsheets();
-      } else if (event.data && event.data.type === "GOOGLE_OAUTH_ERROR") {
-        showSavebar(
-          "critical",
-          t("section3.connection.testError", { error: event.data.error }),
-          t("section3.save.unknownError")
-        );
       }
     };
-
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1574,37 +1434,6 @@ export default function Section3Sheets() {
     }
   };
 
-  const loadGoogleSpreadsheets = async () => {
-    setLoadingSpreadsheets(true);
-    try {
-      const res = await fetch("/api/load-sheets", { credentials: "include" });
-      const data = await res.json();
-
-      if (data.ok) {
-        setGoogleSpreadsheets(data.spreadsheets || []);
-
-        if (data.config) {
-          setCfg((prev) => ({ ...prev, ...data.config }));
-          // ✅ set snapshot to loaded config -> not dirty
-          markSaved({ ...cfg, ...data.config });
-
-          if (data.config.sheet?.spreadsheetId) {
-            loadSpreadsheetTabs(data.config.sheet.spreadsheetId);
-          }
-        } else {
-          // no config: snapshot current default
-          markSaved(cfg);
-        }
-      } else {
-        console.error("Erreur /api/load-sheets:", data.error);
-      }
-    } catch (error) {
-      console.error("Erreur lors du chargement des sheets:", error);
-    } finally {
-      setLoadingSpreadsheets(false);
-    }
-  };
-
   const loadSpreadsheetTabs = async (spreadsheetId) => {
     if (!spreadsheetId) return;
     setLoadingTabs(true);
@@ -1617,9 +1446,12 @@ export default function Section3Sheets() {
       if (data.ok && data.tabs) {
         setAvailableTabs(data.tabs);
 
-        if (!cfg.sheet.tabName && data.tabs.length > 0) {
-          setCfg((prev) => ({ ...prev, sheet: { ...prev.sheet, tabName: data.tabs[0].name } }));
-        }
+        setCfg((prev) => {
+          if (prev.sheet.tabName) return prev;
+          if (!data.tabs.length) return prev;
+          const next = { ...prev, sheet: { ...prev.sheet, tabName: data.tabs[0].name } };
+          return next;
+        });
       }
     } catch (error) {
       console.error("Erreur lors du chargement des onglets:", error);
@@ -1627,6 +1459,39 @@ export default function Section3Sheets() {
     } finally {
       setLoadingTabs(false);
     }
+  };
+
+  const loadGoogleSpreadsheets = async () => {
+    setLoadingSpreadsheets(true);
+    try {
+      const res = await fetch("/api/load-sheets", { credentials: "include" });
+      const data = await res.json();
+
+      if (data.ok) {
+        setGoogleSpreadsheets(data.spreadsheets || []);
+
+        if (data.config) {
+          setCfg((prev) => {
+            const merged = { ...prev, ...data.config };
+            markSaved(merged); // ✅ snapshot = loaded config
+            return merged;
+          });
+
+          const nextId = data.config?.sheet?.spreadsheetId;
+          if (nextId) loadSpreadsheetTabs(nextId);
+        } else {
+          // no config -> snapshot default
+          markSaved(cfg);
+        }
+      } else {
+        console.error("Erreur /api/load-sheets:", data.error);
+      }
+    } catch (error) {
+      console.error("Erreur lors du chargement des sheets:", error);
+    } finally {
+      setLoadingSpreadsheets(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   };
 
   useEffect(() => {
@@ -1657,35 +1522,6 @@ export default function Section3Sheets() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [periodDays, codOnly]);
 
-  const handleSaveRemote = async () => {
-    try {
-      setSaving(true);
-      const res = await fetch("/api/save-sheets", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ sheets: cfg }),
-      });
-      const j = await res.json().catch(() => ({ ok: true }));
-      if (!res.ok || j?.ok === false) throw new Error(j?.error || "Save failed");
-
-      // ✅ mark saved snapshot and show success bar
-      markSaved(cfg);
-      showSavebar("success", t("section3.save.success"), t("section3.header.subtitle"));
-      window.setTimeout(() => hideSavebar(), 2200);
-    } catch (e) {
-      showSavebar(
-        "critical",
-        t("section3.save.error", {
-          error: e?.message || t("section3.save.unknownError"),
-        }),
-        t("section3.save.unknownError")
-      );
-    } finally {
-      setSaving(false);
-    }
-  };
-
   const startGoogleConnect = async (target) => {
     try {
       const response = await fetch(`/api/google/connect?target=${encodeURIComponent(target || "orders")}`, {
@@ -1696,11 +1532,7 @@ export default function Section3Sheets() {
 
       const data = await response.json();
       if (!response.ok) {
-        if (data.requiresReauth) {
-          showSavebar("critical", t("section3.errors.sessionExpired"), t("section3.save.unknownError"));
-          window.location.reload();
-          return;
-        }
+        if (data.requiresReauth) window.location.reload();
         throw new Error(data.error || "Google connect error");
       }
 
@@ -1712,10 +1544,7 @@ export default function Section3Sheets() {
         "width=600,height=700,menubar=no,toolbar=no,location=yes,status=no,scrollbars=yes,resizable=yes"
       );
 
-      if (!popup) {
-        showSavebar("critical", t("section3.connection.popupBlocked"), t("section3.save.unknownError"));
-        return;
-      }
+      if (!popup) return;
 
       const popupCheck = setInterval(() => {
         if (popup.closed) {
@@ -1728,7 +1557,6 @@ export default function Section3Sheets() {
       }, 500);
     } catch (error) {
       console.error("Erreur lors de la connexion Google:", error);
-      showSavebar("critical", t("section3.connection.error", { error: error.message }), t("section3.save.unknownError"));
     }
   };
 
@@ -1736,10 +1564,7 @@ export default function Section3Sheets() {
     setTesting(true);
     try {
       await fetchGoogleStatus();
-      if (!googleStatus.connected) {
-        showSavebar("critical", t("section3.connection.notConnected"), t("section3.save.unknownError"));
-        return;
-      }
+      if (!googleStatus.connected) return;
 
       const res = await fetch("/api/google-sheets/test", {
         method: "POST",
@@ -1747,11 +1572,9 @@ export default function Section3Sheets() {
         credentials: "include",
         body: JSON.stringify({ sheet, kind }),
       });
-      const j = await res.json();
-      if (j.ok) showSavebar("success", t("section3.sheetsConfiguration.testSuccess"), t("section3.header.subtitle"));
-      else showSavebar("critical", t("section3.sheetsConfiguration.testError", { error: j.error }), t("section3.save.unknownError"));
+      await res.json().catch(() => null);
     } catch (e) {
-      showSavebar("critical", t("section3.sheetsConfiguration.testError", { error: e.message }), t("section3.save.unknownError"));
+      console.error("test sheet error", e);
     } finally {
       setTesting(false);
     }
@@ -1759,14 +1582,12 @@ export default function Section3Sheets() {
 
   const openSheet = (spreadsheetId) => {
     if (spreadsheetId) window.open(`https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit`, "_blank");
-    else showSavebar("critical", t("section3.sheetsConfiguration.noSpreadsheetId"), t("section3.save.unknownError"));
   };
 
   const disconnectGoogle = async () => {
     if (confirm(t("section3.sheetsConfiguration.disconnectConfirm"))) {
       try {
         await fetch("/api/google/disconnect", { method: "POST", credentials: "include" });
-
         setGoogleStatus({
           loading: false,
           connected: false,
@@ -1774,13 +1595,10 @@ export default function Section3Sheets() {
           mainSheetName: null,
           abandonedSheetName: null,
         });
-
         setGoogleSpreadsheets([]);
         setAvailableTabs([]);
-
-        showSavebar("success", t("section3.sheetsConfiguration.disconnected"), t("section3.header.subtitle"));
       } catch (error) {
-        showSavebar("critical", t("section3.sheetsConfiguration.disconnectError", { error: error.message }), t("section3.save.unknownError"));
+        console.error("disconnect google error", error);
       }
     }
   };
@@ -1951,13 +1769,6 @@ export default function Section3Sheets() {
     });
   };
 
-  const totalOrders = dash.totals?.count || 0;
-  const totalAmountCents = dash.totals?.totalCents || 0;
-  const totalCurrency = dash.totals?.currency || cfg.formats.currency || "MAD";
-
-  const formatMoney = (cents) =>
-    new Intl.NumberFormat("fr-FR", { style: "currency", currency: totalCurrency }).format((cents || 0) / 100);
-
   const topTabs = [
     { id: "sheets", content: t("section3.rail.panels.sheets"), panelID: "p-sheets" },
     { id: "abandons", content: t("section3.rail.panels.abandons"), panelID: "p-abandons" },
@@ -1966,670 +1777,638 @@ export default function Section3Sheets() {
   ];
   const topSelected = ["sheets", "abandons", "realtime", "whatsapp"].indexOf(view);
 
-  const SaveIconSrc = PolarisIcons.SaveIcon || PolarisIcons.FloppyDiskIcon || PolarisIcons.TickIcon;
-  const CloseSrc = PolarisIcons.XIcon || PolarisIcons.CancelSmallIcon || PolarisIcons.CancelIcon;
+  const totalOrders = dash.totals?.count || 0;
+  const totalAmountCents = dash.totals?.totalCents || 0;
+  const totalCurrency = dash.totals?.currency || cfg.formats.currency || "MAD";
+
+  const formatMoney = (cents) =>
+    new Intl.NumberFormat("fr-FR", { style: "currency", currency: totalCurrency }).format((cents || 0) / 100);
 
   return (
-    <PageShell
-      titleKey="section3.header.title"
-      subtitleKey="section3.header.subtitle"
-      pillKey="section3.header.pill"
-    >
-      {/* ✅ SAVE BAR (only shows when: user tries to move + dirty, or after save success/error) */}
-      {savebar.show && (
-        <div className={`tf-savebar ${savebar.nudge ? "nudge" : ""}`} data-tone={savebar.tone || "warning"}>
-          <div className="tf-savebar-inner">
-            <div className="tf-savebar-left">
-              <div className="tf-savebar-dot" />
-              <div className="tf-savebar-text">
-                <div className="tf-savebar-title">{savebar.title || t("common.unsavedChanges")}</div>
-                <div className="tf-savebar-sub">
-                  {savebar.sub || t("common.saveBeforeLeaving")}
+    <>
+      {/* ✅ Header commun (drapeaux identiques partout) */}
+      <TFSectionHeader
+        title={t("section3.header.title")}
+        subtitle={t("section3.header.subtitle")}
+        rightSlot={<LanguageSelector />}
+      />
+
+      {/* ✅ Barre unique: s’affiche UNIQUEMENT quand l’utilisateur veut quitter la section (route) */}
+      <UnsavedSaveBar
+        open={guard.open}
+        dirty={guard.dirty}
+        saving={guard.saving}
+        mode={guard.mode}
+        onSave={guard.onSave}
+        onDiscard={guard.onDiscard}
+        onCancel={guard.onCancel}
+        t={t}
+      />
+
+      <div className="tf-shell">
+        {/* NAV TOP (switch panels inside same section) */}
+        <div className="tf-topnav">
+          <Tabs
+            tabs={topTabs}
+            selected={topSelected < 0 ? 0 : topSelected}
+            onSelect={(idx) => {
+              const map = ["sheets", "abandons", "realtime", "whatsapp"];
+              const next = map[idx] || "sheets";
+              setView(next);
+            }}
+          />
+        </div>
+
+        <div className="tf-editor">
+          {/* MAIN */}
+          <div className="tf-main-col">
+            {view === "sheets" && (
+              <div className="tf-panel">
+                <BlockStack gap="400">
+                  <GroupCard title="section3.connection.title">
+                    <BlockStack gap="150">
+                      {googleStatus.loading ? (
+                        <Text tone="subdued" as="p">
+                          {t("section3.connection.loading")}
+                        </Text>
+                      ) : (
+                        <>
+                          {googleStatus.connected ? (
+                            <>
+                              <Text as="p">
+                                {t("section3.connection.accountConnected")} <b>{googleStatus.accountEmail}</b>
+                              </Text>
+                              <Text tone="subdued" as="p">
+                                {t("section3.connection.mainSheet")}{" "}
+                                <b>
+                                  {googleStatus.mainSheetName || cfg.sheet.tabName || t("section3.connection.notDefined")}
+                                </b>
+                                {cfg.sheet.spreadsheetId ? ` · ${t("section3.connection.id")}: ${cfg.sheet.spreadsheetId}` : ""}
+                              </Text>
+                              <Text tone="subdued" as="p">
+                                {t("section3.connection.revocable")}
+                              </Text>
+                            </>
+                          ) : (
+                            <>
+                              <Text as="p">{t("section3.connection.description")}</Text>
+                              <Text tone="subdued" as="p">
+                                {t("section3.connection.authorization")}
+                              </Text>
+                            </>
+                          )}
+
+                          <InlineStack gap="200">
+                            <Button variant="primary" onClick={() => startGoogleConnect("orders")}>
+                              <InlineStack gap="100" blockAlign="center">
+                                <GoogleIcon />
+                                <span>
+                                  {googleStatus.connected ? t("section3.connection.changeSheet") : t("section3.connection.connect")}
+                                </span>
+                              </InlineStack>
+                            </Button>
+
+                            {googleStatus.connected && (
+                              <>
+                                <Button onClick={fetchGoogleStatus} disabled={googleStatus.loading}>
+                                  {t("section3.connection.refresh")}
+                                </Button>
+                                <Button tone="critical" onClick={disconnectGoogle}>
+                                  {t("section3.sheetsConfiguration.disconnect")}
+                                </Button>
+                              </>
+                            )}
+                          </InlineStack>
+                        </>
+                      )}
+                    </BlockStack>
+                  </GroupCard>
+
+                  <GroupCard title="section3.sheetsConfiguration.title">
+                    <Tabs tabs={sheetTabs} selected={sheetTab} onSelect={setSheetTab}>
+                      {sheetTab === 0 && (
+                        <div style={{ marginTop: "16px" }}>
+                          <SheetConfigSection
+                            title="section3.sheetsConfiguration.ordersSheet"
+                            sheetConfig={cfg.sheet}
+                            onConfigChange={(newSheetConfig) => {
+                              setCfg((c) => ({ ...c, sheet: newSheetConfig }));
+                              if (newSheetConfig.spreadsheetId && newSheetConfig.spreadsheetId !== cfg.sheet.spreadsheetId) {
+                                loadSpreadsheetTabs(newSheetConfig.spreadsheetId);
+                              }
+                            }}
+                            onTest={() => testSheetConnection(cfg.sheet, "orders")}
+                            onOpen={() => openSheet(cfg.sheet.spreadsheetId)}
+                            isConnected={googleStatus.connected}
+                            isLoading={testing}
+                            googleSpreadsheets={googleSpreadsheets}
+                            availableTabs={availableTabs}
+                            loadingSpreadsheets={loadingSpreadsheets}
+                            loadingTabs={loadingTabs}
+                          />
+                        </div>
+                      )}
+
+                      {sheetTab === 1 && (
+                        <div style={{ marginTop: "16px" }}>
+                          <SheetConfigSection
+                            title="section3.sheetsConfiguration.abandonedSheet"
+                            sheetConfig={cfg.abandonedSheet}
+                            onConfigChange={(newSheetConfig) => {
+                              setCfg((c) => ({ ...c, abandonedSheet: newSheetConfig }));
+                              if (newSheetConfig.spreadsheetId && newSheetConfig.spreadsheetId !== cfg.abandonedSheet.spreadsheetId) {
+                                loadSpreadsheetTabs(newSheetConfig.spreadsheetId);
+                              }
+                            }}
+                            onTest={() => testSheetConnection(cfg.abandonedSheet, "abandons")}
+                            onOpen={() => openSheet(cfg.abandonedSheet.spreadsheetId)}
+                            isConnected={googleStatus.connected}
+                            isLoading={testing}
+                            googleSpreadsheets={googleSpreadsheets}
+                            availableTabs={availableTabs}
+                            loadingSpreadsheets={loadingSpreadsheets}
+                            loadingTabs={loadingTabs}
+                          />
+                        </div>
+                      )}
+                    </Tabs>
+                  </GroupCard>
+
+                  <GroupCard title="section3.mapping.title">
+                    <InlineStack gap="200" wrap={false}>
+                      <Select
+                        label={t("section3.mapping.selectField")}
+                        placeholder={t("section3.mapping.selectPlaceholder")}
+                        options={APP_FIELDS.map((f) => ({ label: t(f.label), value: f.value }))}
+                        value=""
+                        onChange={(v) => quickAdd(v)}
+                      />
+                      <Button onClick={() => quickAdd("customer.name")}>{t("section3.mapping.exampleName")}</Button>
+                    </InlineStack>
+
+                    <Text tone="subdued" as="p">
+                      {t("section3.mapping.description")}
+                    </Text>
+
+                    <div className="tf-group-title" style={{ marginTop: 8, marginBottom: 6 }}>
+                      {t("section3.mapping.configuredColumns")}
+                    </div>
+
+                    <div className="col-board-wrap">
+                      <div className="edge-left" />
+                      <div className="edge-right" />
+
+                      <button
+                        className="board-nav-btn board-nav-left"
+                        onClick={scrollLeft}
+                        disabled={atStart}
+                        aria-label={t("section3.mapping.previous")}
+                      >
+                        ‹
+                      </button>
+                      <button
+                        className="board-nav-btn board-nav-right"
+                        onClick={scrollRight}
+                        disabled={atEnd}
+                        aria-label={t("section3.mapping.next")}
+                      >
+                        ›
+                      </button>
+
+                      <div ref={boardRef} className="col-board">
+                        {sortedCols.map((col, i) => (
+                          <div key={col.id} className="col-card">
+                            <InlineStack align="space-between" blockAlign="center">
+                              <InlineStack gap="150" blockAlign="center">
+                                <Badge>
+                                  {t("section3.mapping.column")} {i + 1}
+                                </Badge>
+                                <span className="pill">{col.type}</span>
+                                <Badge tone="subdued">w: {col.width || 180}px</Badge>
+                              </InlineStack>
+                              <InlineStack gap="100">
+                                <Button size="slim" onClick={() => swapWith(-1, col.id)}>
+                                  ←
+                                </Button>
+                                <Button size="slim" onClick={() => swapWith(+1, col.id)}>
+                                  →
+                                </Button>
+                                <Button tone="critical" size="slim" onClick={() => removeCol(col.id)}>
+                                  {t("section3.mapping.delete")}
+                                </Button>
+                              </InlineStack>
+                            </InlineStack>
+
+                            <div style={{ height: 8 }} />
+
+                            <Select
+                              label={t("section3.mapping.fieldForColumn", { number: i + 1 })}
+                              options={APP_FIELDS.map((f) => ({ label: t(f.label), value: f.value }))}
+                              value={col.appField}
+                              onChange={(v) => {
+                                const tType = inferType(v);
+                                patchCol(col.id, {
+                                  appField: v,
+                                  type: tType,
+                                  header: labelFromValue(v, t),
+                                  width: tType === "datetime" ? 220 : tType === "currency" ? 160 : 180,
+                                  asLink: tType === "link" ? true : col.asLink,
+                                });
+                              }}
+                            />
+
+                            {(col.type === "link" || col.asLink) && (
+                              <>
+                                <Checkbox
+                                  label={t("section3.mapping.asLink")}
+                                  checked={!!col.asLink}
+                                  onChange={(v) => patchCol(col.id, { asLink: v })}
+                                />
+                                <TextField
+                                  label={t("section3.mapping.linkTemplate")}
+                                  helpText={t("section3.mapping.linkExample")}
+                                  value={col.linkTemplate || "{value}"}
+                                  onChange={(v) => patchCol(col.id, { linkTemplate: v })}
+                                />
+                              </>
+                            )}
+
+                            <RangeSlider
+                              label={`${t("section3.mapping.width")} (${col.width || 180}px)`}
+                              min={140}
+                              max={420}
+                              output
+                              value={col.width || 180}
+                              onChange={(v) => patchCol(col.id, { width: v })}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </GroupCard>
+
+                  <GroupCard title="section3.display.title">
+                    <Grid3>
+                      <Select
+                        label={t("section3.display.mode")}
+                        value={cfg.display.mode}
+                        onChange={(v) => setCfg((c) => ({ ...c, display: { ...c.display, mode: v } }))}
+                        options={[
+                          { label: t("section3.display.options.none"), value: "none" },
+                          { label: t("section3.display.options.link"), value: "link" },
+                          { label: t("section3.display.options.embedTop"), value: "embed_top" },
+                          { label: t("section3.display.options.embedBottom"), value: "embed_bottom" },
+                        ]}
+                      />
+                      <RangeSlider
+                        label={`${t("section3.display.height")} (${cfg.display.height}px)`}
+                        min={260}
+                        max={1000}
+                        output
+                        value={cfg.display.height}
+                        onChange={(v) => setCfg((c) => ({ ...c, display: { ...c.display, height: v } }))}
+                      />
+                    </Grid3>
+                    <Text tone="subdued" as="p">
+                      {t("section3.display.description")}
+                    </Text>
+                  </GroupCard>
+                </BlockStack>
+              </div>
+            )}
+
+            {view === "abandons" && (
+              <div className="tf-panel">
+                <BlockStack gap="300">
+                  <GroupCard title="section3.abandoned.title">
+                    <BlockStack gap="150">
+                      {googleStatus.loading ? (
+                        <Text tone="subdued" as="p">
+                          {t("section3.connection.loading")}
+                        </Text>
+                      ) : (
+                        <>
+                          {googleStatus.connected ? (
+                            <>
+                              <Text as="p">
+                                {t("section3.connection.accountConnected")} <b>{googleStatus.accountEmail}</b>
+                              </Text>
+                              <Text tone="subdued" as="p">
+                                {t("section3.abandoned.selectedSheet")}{" "}
+                                <b>
+                                  {googleStatus.abandonedSheetName || cfg.abandonedSheet.tabName || t("section3.connection.notDefined")}
+                                </b>
+                                {cfg.abandonedSheet.spreadsheetId ? ` · ${t("section3.connection.id")}: ${cfg.abandonedSheet.spreadsheetId}` : ""}
+                              </Text>
+                              <Text tone="subdued" as="p">
+                                {t("section3.abandoned.description")}
+                              </Text>
+                            </>
+                          ) : (
+                            <>
+                              <Text as bati="p">{t("section3.abandoned.useSecondSheet")}</Text>
+                              <Text tone="subdued" as="p">
+                                {t("section3.abandoned.whenAbandoned")}
+                              </Text>
+                            </>
+                          )}
+
+                          <InlineStack gap="200">
+                            <Button variant="primary" onClick={() => startGoogleConnect("abandons")}>
+                              <InlineStack gap="100" blockAlign="center">
+                                <GoogleIcon />
+                                <span>
+                                  {googleStatus.connected ? t("section3.abandoned.changeSheet") : t("section3.connection.connect")}
+                                </span>
+                              </InlineStack>
+                            </Button>
+
+                            {googleStatus.connected && (
+                              <>
+                                <Button onClick={fetchGoogleStatus} disabled={googleStatus.loading}>
+                                  {t("section3.connection.refresh")}
+                                </Button>
+                                <Button tone="critical" onClick={disconnectGoogle}>
+                                  {t("section3.sheetsConfiguration.disconnect")}
+                                </Button>
+                              </>
+                            )}
+                          </InlineStack>
+                        </>
+                      )}
+                    </BlockStack>
+                  </GroupCard>
+
+                  <GroupCard title="section3.abandoned.mappingTitle">
+                    <InlineStack gap="200" wrap={false}>
+                      <Select
+                        label={t("section3.mapping.selectField")}
+                        placeholder={t("section3.mapping.selectPlaceholder")}
+                        options={APP_FIELDS.map((f) => ({ label: t(f.label), value: f.value }))}
+                        value=""
+                        onChange={(v) => quickAddAbandoned(v)}
+                      />
+                      <Button onClick={() => quickAddAbandoned("customer.phone")}>
+                        {t("section3.abandoned.examplePhone")}
+                      </Button>
+                    </InlineStack>
+
+                    <Text tone="subdued" as="p">
+                      {t("section3.abandoned.mappingDescription")}
+                    </Text>
+
+                    <div className="tf-group-title" style={{ marginTop: 8, marginBottom: 6 }}>
+                      {t("section3.mapping.configuredColumns")}
+                    </div>
+
+                    <div className="col-board-wrap">
+                      <div className="edge-left" />
+                      <div className="edge-right" />
+
+                      <div className="col-board">
+                        {sortedAbandonedCols.map((col, i) => (
+                          <div key={col.id} className="col-card">
+                            <InlineStack align="space-between" blockAlign="center">
+                              <InlineStack gap="150" blockAlign="center">
+                                <Badge>
+                                  {t("section3.abandoned.abandonedColumn")} {i + 1}
+                                </Badge>
+                                <span className="pill">{col.type}</span>
+                                <Badge tone="subdued">w: {col.width || 180}px</Badge>
+                              </InlineStack>
+                              <InlineStack gap="100">
+                                <Button size="slim" onClick={() => swapAbandonedWith(-1, col.id)}>
+                                  ←
+                                </Button>
+                                <Button size="slim" onClick={() => swapAbandonedWith(+1, col.id)}>
+                                  →
+                                </Button>
+                                <Button tone="critical" size="slim" onClick={() => removeAbandonedCol(col.id)}>
+                                  {t("section3.mapping.delete")}
+                                </Button>
+                              </InlineStack>
+                            </InlineStack>
+
+                            <div style={{ height: 8 }} />
+
+                            <Select
+                              label={t("section3.mapping.fieldForColumn", { number: i + 1 })}
+                              options={APP_FIELDS.map((f) => ({ label: t(f.label), value: f.value }))}
+                              value={col.appField}
+                              onChange={(v) => {
+                                const tType = inferType(v);
+                                patchAbandonedCol(col.id, {
+                                  appField: v,
+                                  type: tType,
+                                  header: labelFromValue(v, t),
+                                  width: tType === "datetime" ? 220 : tType === "currency" ? 160 : 180,
+                                  asLink: tType === "link" ? true : col.asLink,
+                                });
+                              }}
+                            />
+
+                            {(col.type === "link" || col.asLink) && (
+                              <>
+                                <Checkbox
+                                  label={t("section3.mapping.asLink")}
+                                  checked={!!col.asLink}
+                                  onChange={(v) => patchAbandonedCol(col.id, { asLink: v })}
+                                />
+                                <TextField
+                                  label={t("section3.mapping.linkTemplate")}
+                                  helpText={t("section3.mapping.linkExample")}
+                                  value={col.linkTemplate || "{value}"}
+                                  onChange={(v) => patchAbandonedCol(col.id, { linkTemplate: v })}
+                                />
+                              </>
+                            )}
+
+                            <RangeSlider
+                              label={`${t("section3.mapping.width")} (${col.width || 180}px)`}
+                              min={140}
+                              max={420}
+                              output
+                              value={col.width || 180}
+                              onChange={(v) => patchAbandonedCol(col.id, { width: v })}
+                            />
+                          </div>
+                        ))}
+
+                        {!sortedAbandonedCols.length && (
+                          <Text tone="subdued" as="p">
+                            {t("section3.abandoned.noColumns")}
+                          </Text>
+                        )}
+                      </div>
+                    </div>
+                  </GroupCard>
+                </BlockStack>
+              </div>
+            )}
+
+            {view === "realtime" && (
+              <div className="tf-panel">
+                <div className="tf-group-title">{t("section3.realtime.title")}</div>
+
+                <BlockStack gap="200">
+                  {dashLoading && <Text>{t("section3.realtime.loading")}</Text>}
+
+                  {dashError && (
+                    <Text tone="critical">
+                      {t("section3.realtime.error", { error: dashError || t("section3.realtime.unknownError") })}
+                    </Text>
+                  )}
+
+                  {!dashLoading && !dashError && (
+                    <>
+                      {dash.latest && dash.latest.length ? (
+                        <div style={{ overflowX: "auto" }}>
+                          <table className="tf-orders-table">
+                            <thead>
+                              <tr>
+                                <th style={{ width: 80 }}>{t("section3.preview.columnHeaders.date")}</th>
+                                <th style={{ width: 90 }}>{t("section3.preview.columnHeaders.orderId")}</th>
+                                <th style={{ width: 160 }}>{t("section3.preview.columnHeaders.customer")}</th>
+                                <th style={{ width: 130 }}>{t("section3.preview.columnHeaders.phone")}</th>
+                                <th style={{ width: 130 }}>{t("section3.preview.columnHeaders.city")}</th>
+                                <th style={{ width: 220 }}>{t("section3.preview.columnHeaders.product")}</th>
+                                <th style={{ width: 110 }}>{t("section3.preview.columnHeaders.total")}</th>
+                                <th style={{ width: 70 }}>{t("section3.preview.columnHeaders.country")}</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {dash.latest.map((o) => (
+                                <tr key={o.id}>
+                                  <td>{o.dateLabel}</td>
+                                  <td>{o.name || o.shortId}</td>
+                                  <td>{o.customerName || t("section3.preview.empty")}</td>
+                                  <td>{o.customerPhone || t("section3.preview.empty")}</td>
+                                  <td>{o.city || t("section3.preview.empty")}</td>
+                                  <td>{o.productTitle || t("section3.preview.empty")}</td>
+                                  <td>
+                                    {new Intl.NumberFormat("fr-FR", {
+                                      style: "currency",
+                                      currency: o.currency || "MAD",
+                                    }).format((o.totalCents || 0) / 100)}
+                                  </td>
+                                  <td>{o.country || t("section3.preview.empty")}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      ) : (
+                        <Text tone="subdued">{t("section3.realtime.noOrders")}</Text>
+                      )}
+                    </>
+                  )}
+                </BlockStack>
+              </div>
+            )}
+
+            {view === "whatsapp" && (
+              <div className="tf-panel">
+                <SimpleWhatsAppConfig />
+              </div>
+            )}
+          </div>
+
+          {/* RIGHT */}
+          <div className="tf-side-col">
+            <div className="tf-side-card">
+              <InlineStack align="space-between" blockAlign="center">
+                <Text as="h3" variant="headingSm">
+                  {t("section3.guide.title")}
+                </Text>
+
+                <Button variant="primary" size="slim" onClick={handleSaveRemote} loading={saving} disabled={!isDirty}>
+                  {t("common.save")}
+                </Button>
+              </InlineStack>
+
+              <BlockStack gap="150" className="tf-guide-text" style={{ marginTop: 8, fontSize: 13, lineHeight: 1.5 }}>
+                <ul style={{ paddingLeft: "1.2rem", margin: 0 }}>
+                  <li>
+                    <b>{t("section3.guide.panelSheets")}</b> : {t("section3.guide.panelSheetsDesc")}
+                  </li>
+                  <li>
+                    <b>{t("section3.guide.panelAbandons")}</b> : {t("section3.guide.panelAbandonsDesc")}
+                  </li>
+                  <li>
+                    <b>{t("section3.guide.panelRealtime")}</b> : {t("section3.guide.panelRealtimeDesc")}
+                  </li>
+                  <li>
+                    <b>{t("section3.guide.panelWhatsapp")}</b> : {t("section3.guide.panelWhatsappDesc")}
+                  </li>
+                </ul>
+
+                {isDirty ? (
+                  <div style={{ marginTop: 10 }}>
+                    <Badge tone="attention">{t("common.unsavedChanges")}</Badge>
+                  </div>
+                ) : null}
+              </BlockStack>
+            </div>
+
+            <div className="tf-side-card">
+              <Text as="h3" variant="headingSm">
+                {t("section3.statsCard.title")}
+              </Text>
+
+              <div
+                style={{
+                  marginTop: 10,
+                  padding: "10px 12px",
+                  borderRadius: 10,
+                  background: "#F9FAFB",
+                  border: "1px solid #E5E7EB",
+                  fontSize: 13,
+                }}
+              >
+                <div>
+                  <b>{t("section3.rail.stats.period")}</b> {periodDays} {t("section3.rail.stats.days")}{" "}
+                  {codOnly ? t("section3.rail.stats.codOnly") : t("section3.rail.stats.allOrders")}
+                </div>
+                <div style={{ marginTop: 6 }}>
+                  <b>{t("section3.rail.stats.orders")}</b> {totalOrders} {" · "}
+                  <b>{t("section3.rail.stats.total")}</b> {formatMoney(totalAmountCents)}
                 </div>
               </div>
-            </div>
 
-            <div className="tf-savebar-actions">
-              {isDirty && (
-                <Button variant="primary" size="slim" onClick={handleSaveRemote} loading={saving} icon={SaveIconSrc}>
-                  {t("section3.rail.filters.save")}
-                </Button>
-              )}
-              <Button
-                size="slim"
-                onClick={() => hideSavebar()}
-                accessibilityLabel={t("common.close")}
-                icon={CloseSrc}
-              />
-            </div>
-          </div>
-        </div>
-      )}
+              <div style={{ marginTop: 12 }}>
+                <BlockStack gap="200">
+                  <Select
+                    label={t("section3.rail.filters.period")}
+                    value={String(periodDays)}
+                    onChange={(v) =>
+                      setCfg((c) => ({
+                        ...c,
+                        stats: { ...c.stats, periodDays: Number(v || 15) },
+                      }))
+                    }
+                    options={[
+                      { label: t("section3.rail.filters.periodOptions.7days"), value: "7" },
+                      { label: t("section3.rail.filters.periodOptions.15days"), value: "15" },
+                      { label: t("section3.rail.filters.periodOptions.30days"), value: "30" },
+                      { label: t("section3.rail.filters.periodOptions.60days"), value: "60" },
+                    ]}
+                  />
 
-      {/* NAV TOP */}
-      <div className="tf-topnav">
-        <Tabs
-          tabs={topTabs}
-          selected={topSelected < 0 ? 0 : topSelected}
-          onSelect={(idx) => {
-            const map = ["sheets", "abandons", "realtime", "whatsapp"];
-            const next = map[idx] || "sheets";
-
-            // ✅ ONLY when user tries to switch sections
-            if (next !== view && isDirty) {
-              // show slim warning + nudge, but allow navigation (as requested)
-              showSavebar(
-                "warning",
-                t("common.unsavedChangesTitle") || "Unsaved changes",
-                t("common.unsavedChangesBody") || "You changed settings. Save to keep your changes."
-              );
-              triggerNudge();
-            }
-
-            setView(next);
-          }}
-        />
-      </div>
-
-      <div className="tf-editor">
-        {/* MAIN */}
-        <div className="tf-main-col">
-          {view === "sheets" && (
-            <div className="tf-panel">
-              <BlockStack gap="400">
-                <GroupCard title="section3.connection.title">
-                  <BlockStack gap="150">
-                    {googleStatus.loading ? (
-                      <Text tone="subdued" as="p">
-                        {t("section3.connection.loading")}
-                      </Text>
-                    ) : (
-                      <>
-                        {googleStatus.connected ? (
-                          <>
-                            <Text as="p">
-                              {t("section3.connection.accountConnected")} <b>{googleStatus.accountEmail}</b>
-                            </Text>
-                            <Text tone="subdued" as="p">
-                              {t("section3.connection.mainSheet")}{" "}
-                              <b>
-                                {googleStatus.mainSheetName || cfg.sheet.tabName || t("section3.connection.notDefined")}
-                              </b>
-                              {cfg.sheet.spreadsheetId
-                                ? ` · ${t("section3.connection.id")}: ${cfg.sheet.spreadsheetId}`
-                                : ""}
-                            </Text>
-                            <Text tone="subdued" as="p">
-                              {t("section3.connection.revocable")}
-                            </Text>
-                          </>
-                        ) : (
-                          <>
-                            <Text as="p">{t("section3.connection.description")}</Text>
-                            <Text tone="subdued" as="p">
-                              {t("section3.connection.authorization")}
-                            </Text>
-                          </>
-                        )}
-
-                        <InlineStack gap="200">
-                          <Button variant="primary" onClick={() => startGoogleConnect("orders")}>
-                            <InlineStack gap="100" blockAlign="center">
-                              <GoogleIcon />
-                              <span>
-                                {googleStatus.connected
-                                  ? t("section3.connection.changeSheet")
-                                  : t("section3.connection.connect")}
-                              </span>
-                            </InlineStack>
-                          </Button>
-
-                          {googleStatus.connected && (
-                            <>
-                              <Button onClick={fetchGoogleStatus} disabled={googleStatus.loading}>
-                                {t("section3.connection.refresh")}
-                              </Button>
-                              <Button tone="critical" onClick={disconnectGoogle}>
-                                {t("section3.sheetsConfiguration.disconnect")}
-                              </Button>
-                            </>
-                          )}
-                        </InlineStack>
-                      </>
-                    )}
-                  </BlockStack>
-                </GroupCard>
-
-                <GroupCard title="section3.sheetsConfiguration.title">
-                  <Tabs tabs={sheetTabs} selected={sheetTab} onSelect={setSheetTab}>
-                    {sheetTab === 0 && (
-                      <div style={{ marginTop: "16px" }}>
-                        <SheetConfigSection
-                          title="section3.sheetsConfiguration.ordersSheet"
-                          sheetConfig={cfg.sheet}
-                          onConfigChange={(newSheetConfig) => {
-                            setCfg((c) => ({ ...c, sheet: newSheetConfig }));
-                            if (newSheetConfig.spreadsheetId && newSheetConfig.spreadsheetId !== cfg.sheet.spreadsheetId) {
-                              loadSpreadsheetTabs(newSheetConfig.spreadsheetId);
-                            }
-                          }}
-                          onTest={() => testSheetConnection(cfg.sheet, "orders")}
-                          onOpen={() => openSheet(cfg.sheet.spreadsheetId)}
-                          isConnected={googleStatus.connected}
-                          isLoading={testing}
-                          googleSpreadsheets={googleSpreadsheets}
-                          availableTabs={availableTabs}
-                          loadingSpreadsheets={loadingSpreadsheets}
-                          loadingTabs={loadingTabs}
-                        />
-                      </div>
-                    )}
-
-                    {sheetTab === 1 && (
-                      <div style={{ marginTop: "16px" }}>
-                        <SheetConfigSection
-                          title="section3.sheetsConfiguration.abandonedSheet"
-                          sheetConfig={cfg.abandonedSheet}
-                          onConfigChange={(newSheetConfig) => {
-                            setCfg((c) => ({ ...c, abandonedSheet: newSheetConfig }));
-                            if (
-                              newSheetConfig.spreadsheetId &&
-                              newSheetConfig.spreadsheetId !== cfg.abandonedSheet.spreadsheetId
-                            ) {
-                              loadSpreadsheetTabs(newSheetConfig.spreadsheetId);
-                            }
-                          }}
-                          onTest={() => testSheetConnection(cfg.abandonedSheet, "abandons")}
-                          onOpen={() => openSheet(cfg.abandonedSheet.spreadsheetId)}
-                          isConnected={googleStatus.connected}
-                          isLoading={testing}
-                          googleSpreadsheets={googleSpreadsheets}
-                          availableTabs={availableTabs}
-                          loadingSpreadsheets={loadingSpreadsheets}
-                          loadingTabs={loadingTabs}
-                        />
-                      </div>
-                    )}
-                  </Tabs>
-                </GroupCard>
-
-                <GroupCard title="section3.mapping.title">
-                  <InlineStack gap="200" wrap={false}>
-                    <Select
-                      label={t("section3.mapping.selectField")}
-                      placeholder={t("section3.mapping.selectPlaceholder")}
-                      options={APP_FIELDS.map((f) => ({ label: t(f.label), value: f.value }))}
-                      value=""
-                      onChange={(v) => quickAdd(v)}
-                    />
-                    <Button onClick={() => quickAdd("customer.name")}>{t("section3.mapping.exampleName")}</Button>
-                  </InlineStack>
+                  <Checkbox
+                    label={t("section3.rail.filters.codOnly")}
+                    checked={codOnly}
+                    onChange={(v) => setCfg((c) => ({ ...c, stats: { ...c.stats, codOnly: v } }))}
+                  />
 
                   <Text tone="subdued" as="p">
-                    {t("section3.mapping.description")}
+                    {t("section3.rail.filters.description")}
                   </Text>
-
-                  <div className="tf-group-title" style={{ marginTop: 8, marginBottom: 6 }}>
-                    {t("section3.mapping.configuredColumns")}
-                  </div>
-
-                  <div className="col-board-wrap">
-                    <div className="edge-left" />
-                    <div className="edge-right" />
-
-                    <button
-                      className="board-nav-btn board-nav-left"
-                      onClick={scrollLeft}
-                      disabled={atStart}
-                      aria-label={t("section3.mapping.previous")}
-                    >
-                      ‹
-                    </button>
-                    <button
-                      className="board-nav-btn board-nav-right"
-                      onClick={scrollRight}
-                      disabled={atEnd}
-                      aria-label={t("section3.mapping.next")}
-                    >
-                      ›
-                    </button>
-
-                    <div ref={boardRef} className="col-board">
-                      {sortedCols.map((col, i) => (
-                        <div key={col.id} className="col-card">
-                          <InlineStack align="space-between" blockAlign="center">
-                            <InlineStack gap="150" blockAlign="center">
-                              <Badge>
-                                {t("section3.mapping.column")} {i + 1}
-                              </Badge>
-                              <span className="pill">{col.type}</span>
-                              <Badge tone="subdued">w: {col.width || 180}px</Badge>
-                            </InlineStack>
-                            <InlineStack gap="100">
-                              <Button size="slim" onClick={() => swapWith(-1, col.id)}>
-                                ←
-                              </Button>
-                              <Button size="slim" onClick={() => swapWith(+1, col.id)}>
-                                →
-                              </Button>
-                              <Button tone="critical" size="slim" onClick={() => removeCol(col.id)}>
-                                {t("section3.mapping.delete")}
-                              </Button>
-                            </InlineStack>
-                          </InlineStack>
-
-                          <div style={{ height: 8 }} />
-
-                          <Select
-                            label={t("section3.mapping.fieldForColumn", { number: i + 1 })}
-                            options={APP_FIELDS.map((f) => ({ label: t(f.label), value: f.value }))}
-                            value={col.appField}
-                            onChange={(v) => {
-                              const tType = inferType(v);
-                              patchCol(col.id, {
-                                appField: v,
-                                type: tType,
-                                header: labelFromValue(v, t),
-                                width: tType === "datetime" ? 220 : tType === "currency" ? 160 : 180,
-                                asLink: tType === "link" ? true : col.asLink,
-                              });
-                            }}
-                          />
-
-                          {(col.type === "link" || col.asLink) && (
-                            <>
-                              <Checkbox
-                                label={t("section3.mapping.asLink")}
-                                checked={!!col.asLink}
-                                onChange={(v) => patchCol(col.id, { asLink: v })}
-                              />
-                              <TextField
-                                label={t("section3.mapping.linkTemplate")}
-                                helpText={t("section3.mapping.linkExample")}
-                                value={col.linkTemplate || "{value}"}
-                                onChange={(v) => patchCol(col.id, { linkTemplate: v })}
-                              />
-                            </>
-                          )}
-
-                          <RangeSlider
-                            label={`${t("section3.mapping.width")} (${col.width || 180}px)`}
-                            min={140}
-                            max={420}
-                            output
-                            value={col.width || 180}
-                            onChange={(v) => patchCol(col.id, { width: v })}
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </GroupCard>
-
-                <GroupCard title="section3.display.title">
-                  <Grid3>
-                    <Select
-                      label={t("section3.display.mode")}
-                      value={cfg.display.mode}
-                      onChange={(v) => setCfg((c) => ({ ...c, display: { ...c.display, mode: v } }))}
-                      options={[
-                        { label: t("section3.display.options.none"), value: "none" },
-                        { label: t("section3.display.options.link"), value: "link" },
-                        { label: t("section3.display.options.embedTop"), value: "embed_top" },
-                        { label: t("section3.display.options.embedBottom"), value: "embed_bottom" },
-                      ]}
-                    />
-                    <RangeSlider
-                      label={`${t("section3.display.height")} (${cfg.display.height}px)`}
-                      min={260}
-                      max={1000}
-                      output
-                      value={cfg.display.height}
-                      onChange={(v) => setCfg((c) => ({ ...c, display: { ...c.display, height: v } }))}
-                    />
-                  </Grid3>
-                  <Text tone="subdued" as="p">
-                    {t("section3.display.description")}
-                  </Text>
-                </GroupCard>
-              </BlockStack>
-            </div>
-          )}
-
-          {view === "abandons" && (
-            <div className="tf-panel">
-              <BlockStack gap="300">
-                <GroupCard title="section3.abandoned.title">
-                  <BlockStack gap="150">
-                    {googleStatus.loading ? (
-                      <Text tone="subdued" as="p">
-                        {t("section3.connection.loading")}
-                      </Text>
-                    ) : (
-                      <>
-                        {googleStatus.connected ? (
-                          <>
-                            <Text as="p">
-                              {t("section3.connection.accountConnected")} <b>{googleStatus.accountEmail}</b>
-                            </Text>
-                            <Text tone="subdued" as="p">
-                              {t("section3.abandoned.selectedSheet")}{" "}
-                              <b>
-                                {googleStatus.abandonedSheetName ||
-                                  cfg.abandonedSheet.tabName ||
-                                  t("section3.connection.notDefined")}
-                              </b>
-                              {cfg.abandonedSheet.spreadsheetId
-                                ? ` · ${t("section3.connection.id")}: ${cfg.abandonedSheet.spreadsheetId}`
-                                : ""}
-                            </Text>
-                            <Text tone="subdued" as="p">
-                              {t("section3.abandoned.description")}
-                            </Text>
-                          </>
-                        ) : (
-                          <>
-                            <Text as="p">{t("section3.abandoned.useSecondSheet")}</Text>
-                            <Text tone="subdued" as="p">
-                              {t("section3.abandoned.whenAbandoned")}
-                            </Text>
-                          </>
-                        )}
-
-                        <InlineStack gap="200">
-                          <Button variant="primary" onClick={() => startGoogleConnect("abandons")}>
-                            <InlineStack gap="100" blockAlign="center">
-                              <GoogleIcon />
-                              <span>
-                                {googleStatus.connected
-                                  ? t("section3.abandoned.changeSheet")
-                                  : t("section3.connection.connect")}
-                              </span>
-                            </InlineStack>
-                          </Button>
-
-                          {googleStatus.connected && (
-                            <>
-                              <Button onClick={fetchGoogleStatus} disabled={googleStatus.loading}>
-                                {t("section3.connection.refresh")}
-                              </Button>
-                              <Button tone="critical" onClick={disconnectGoogle}>
-                                {t("section3.sheetsConfiguration.disconnect")}
-                              </Button>
-                            </>
-                          )}
-                        </InlineStack>
-                      </>
-                    )}
-                  </BlockStack>
-                </GroupCard>
-
-                <GroupCard title="section3.abandoned.mappingTitle">
-                  <InlineStack gap="200" wrap={false}>
-                    <Select
-                      label={t("section3.mapping.selectField")}
-                      placeholder={t("section3.mapping.selectPlaceholder")}
-                      options={APP_FIELDS.map((f) => ({ label: t(f.label), value: f.value }))}
-                      value=""
-                      onChange={(v) => quickAddAbandoned(v)}
-                    />
-                    <Button onClick={() => quickAddAbandoned("customer.phone")}>
-                      {t("section3.abandoned.examplePhone")}
-                    </Button>
-                  </InlineStack>
-
-                  <Text tone="subdued" as="p">
-                    {t("section3.abandoned.mappingDescription")}
-                  </Text>
-
-                  <div className="tf-group-title" style={{ marginTop: 8, marginBottom: 6 }}>
-                    {t("section3.mapping.configuredColumns")}
-                  </div>
-
-                  <div className="col-board-wrap">
-                    <div className="edge-left" />
-                    <div className="edge-right" />
-
-                    <div className="col-board">
-                      {sortedAbandonedCols.map((col, i) => (
-                        <div key={col.id} className="col-card">
-                          <InlineStack align="space-between" blockAlign="center">
-                            <InlineStack gap="150" blockAlign="center">
-                              <Badge>
-                                {t("section3.abandoned.abandonedColumn")} {i + 1}
-                              </Badge>
-                              <span className="pill">{col.type}</span>
-                              <Badge tone="subdued">w: {col.width || 180}px</Badge>
-                            </InlineStack>
-                            <InlineStack gap="100">
-                              <Button size="slim" onClick={() => swapAbandonedWith(-1, col.id)}>
-                                ←
-                              </Button>
-                              <Button size="slim" onClick={() => swapAbandonedWith(+1, col.id)}>
-                                →
-                              </Button>
-                              <Button tone="critical" size="slim" onClick={() => removeAbandonedCol(col.id)}>
-                                {t("section3.mapping.delete")}
-                              </Button>
-                            </InlineStack>
-                          </InlineStack>
-
-                          <div style={{ height: 8 }} />
-
-                          <Select
-                            label={t("section3.mapping.fieldForColumn", { number: i + 1 })}
-                            options={APP_FIELDS.map((f) => ({ label: t(f.label), value: f.value }))}
-                            value={col.appField}
-                            onChange={(v) => {
-                              const tType = inferType(v);
-                              patchAbandonedCol(col.id, {
-                                appField: v,
-                                type: tType,
-                                header: labelFromValue(v, t),
-                                width: tType === "datetime" ? 220 : tType === "currency" ? 160 : 180,
-                                asLink: tType === "link" ? true : col.asLink,
-                              });
-                            }}
-                          />
-
-                          {(col.type === "link" || col.asLink) && (
-                            <>
-                              <Checkbox
-                                label={t("section3.mapping.asLink")}
-                                checked={!!col.asLink}
-                                onChange={(v) => patchAbandonedCol(col.id, { asLink: v })}
-                              />
-                              <TextField
-                                label={t("section3.mapping.linkTemplate")}
-                                helpText={t("section3.mapping.linkExample")}
-                                value={col.linkTemplate || "{value}"}
-                                onChange={(v) => patchAbandonedCol(col.id, { linkTemplate: v })}
-                              />
-                            </>
-                          )}
-
-                          <RangeSlider
-                            label={`${t("section3.mapping.width")} (${col.width || 180}px)`}
-                            min={140}
-                            max={420}
-                            output
-                            value={col.width || 180}
-                            onChange={(v) => patchAbandonedCol(col.id, { width: v })}
-                          />
-                        </div>
-                      ))}
-
-                      {!sortedAbandonedCols.length && (
-                        <Text tone="subdued" as="p">
-                          {t("section3.abandoned.noColumns")}
-                        </Text>
-                      )}
-                    </div>
-                  </div>
-                </GroupCard>
-              </BlockStack>
-            </div>
-          )}
-
-          {view === "realtime" && (
-            <div className="tf-panel">
-              <div className="tf-group-title">{t("section3.realtime.title")}</div>
-
-              <BlockStack gap="200">
-                {dashLoading && <Text>{t("section3.realtime.loading")}</Text>}
-
-                {dashError && (
-                  <Text tone="critical">
-                    {t("section3.realtime.error", { error: dashError || t("section3.realtime.unknownError") })}
-                  </Text>
-                )}
-
-                {!dashLoading && !dashError && (
-                  <>
-                    {dash.latest && dash.latest.length ? (
-                      <div style={{ overflowX: "auto" }}>
-                        <table className="tf-orders-table">
-                          <thead>
-                            <tr>
-                              <th style={{ width: 80 }}>{t("section3.preview.columnHeaders.date")}</th>
-                              <th style={{ width: 90 }}>{t("section3.preview.columnHeaders.orderId")}</th>
-                              <th style={{ width: 160 }}>{t("section3.preview.columnHeaders.customer")}</th>
-                              <th style={{ width: 130 }}>{t("section3.preview.columnHeaders.phone")}</th>
-                              <th style={{ width: 130 }}>{t("section3.preview.columnHeaders.city")}</th>
-                              <th style={{ width: 220 }}>{t("section3.preview.columnHeaders.product")}</th>
-                              <th style={{ width: 110 }}>{t("section3.preview.columnHeaders.total")}</th>
-                              <th style={{ width: 70 }}>{t("section3.preview.columnHeaders.country")}</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {dash.latest.map((o) => (
-                              <tr key={o.id}>
-                                <td>{o.dateLabel}</td>
-                                <td>{o.name || o.shortId}</td>
-                                <td>{o.customerName || t("section3.preview.empty")}</td>
-                                <td>{o.customerPhone || t("section3.preview.empty")}</td>
-                                <td>{o.city || t("section3.preview.empty")}</td>
-                                <td>{o.productTitle || t("section3.preview.empty")}</td>
-                                <td>
-                                  {new Intl.NumberFormat("fr-FR", {
-                                    style: "currency",
-                                    currency: o.currency || "MAD",
-                                  }).format((o.totalCents || 0) / 100)}
-                                </td>
-                                <td>{o.country || t("section3.preview.empty")}</td>
-                              </tr>
-                            ))}
-
-                            {!dash.latest.length && (
-                              <tr>
-                                <td colSpan={8} style={{ textAlign: "center" }}>
-                                  <Text tone="subdued" as="span">
-                                    {t("section3.realtime.noOrders")}
-                                  </Text>
-                                </td>
-                              </tr>
-                            )}
-                          </tbody>
-                        </table>
-                      </div>
-                    ) : (
-                      <Text tone="subdued">{t("section3.realtime.noOrders")}</Text>
-                    )}
-                  </>
-                )}
-              </BlockStack>
-            </div>
-          )}
-
-          {view === "whatsapp" && (
-            <div className="tf-panel">
-              <SimpleWhatsAppConfig />
-            </div>
-          )}
-        </div>
-
-        {/* RIGHT */}
-        <div className="tf-side-col">
-          <div className="tf-side-card">
-            <Text as="h3" variant="headingSm">
-              {t("section3.guide.title")}
-            </Text>
-            <BlockStack gap="150" className="tf-guide-text" style={{ marginTop: 8, fontSize: 13, lineHeight: 1.5 }}>
-              <ul style={{ paddingLeft: "1.2rem", margin: 0 }}>
-                <li>
-                  <b>{t("section3.guide.panelSheets")}</b> : {t("section3.guide.panelSheetsDesc")}
-                </li>
-                <li>
-                  <b>{t("section3.guide.panelAbandons")}</b> : {t("section3.guide.panelAbandonsDesc")}
-                </li>
-                <li>
-                  <b>{t("section3.guide.panelRealtime")}</b> : {t("section3.guide.panelRealtimeDesc")}
-                </li>
-                <li>
-                  <b>{t("section3.guide.panelWhatsapp")}</b> : {t("section3.guide.panelWhatsappDesc")}
-                </li>
-              </ul>
-            </BlockStack>
-          </div>
-
-          <div className="tf-side-card">
-            <Text as="h3" variant="headingSm">
-              {t("section3.statsCard.title")}
-            </Text>
-
-            <div
-              style={{
-                marginTop: 10,
-                padding: "10px 12px",
-                borderRadius: 10,
-                background: "#F9FAFB",
-                border: "1px solid #E5E7EB",
-                fontSize: 13,
-              }}
-            >
-              <div>
-                <b>{t("section3.rail.stats.period")}</b> {periodDays} {t("section3.rail.stats.days")}{" "}
-                {codOnly ? t("section3.rail.stats.codOnly") : t("section3.rail.stats.allOrders")}
+                </BlockStack>
               </div>
-              <div style={{ marginTop: 6 }}>
-                <b>{t("section3.rail.stats.orders")}</b> {totalOrders} {" · "}
-                <b>{t("section3.rail.stats.total")}</b> {formatMoney(totalAmountCents)}
-              </div>
-            </div>
-
-            <div style={{ marginTop: 12 }}>
-              <BlockStack gap="200">
-                <Select
-                  label={t("section3.rail.filters.period")}
-                  value={String(periodDays)}
-                  onChange={(v) =>
-                    setCfg((c) => ({
-                      ...c,
-                      stats: { ...c.stats, periodDays: Number(v || 15) },
-                    }))
-                  }
-                  options={[
-                    { label: t("section3.rail.filters.periodOptions.7days"), value: "7" },
-                    { label: t("section3.rail.filters.periodOptions.15days"), value: "15" },
-                    { label: t("section3.rail.filters.periodOptions.30days"), value: "30" },
-                    { label: t("section3.rail.filters.periodOptions.60days"), value: "60" },
-                  ]}
-                />
-
-                <Checkbox
-                  label={t("section3.rail.filters.codOnly")}
-                  checked={codOnly}
-                  onChange={(v) => setCfg((c) => ({ ...c, stats: { ...c.stats, codOnly: v } }))}
-                />
-
-                <Text tone="subdued" as="p">
-                  {t("section3.rail.filters.description")}
-                </Text>
-              </BlockStack>
             </div>
           </div>
         </div>
       </div>
-    </PageShell>
+    </>
   );
 }

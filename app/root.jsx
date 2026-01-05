@@ -17,6 +17,7 @@ import en from "@shopify/polaris/locales/en.json";
 import es from "@shopify/polaris/locales/es.json";
 
 import "@shopify/polaris/build/esm/styles.css";
+import "./styles/tripleform.css";
 
 import { getRequestLocale } from "./i18n/i18n.server.js";
 import { I18nProvider } from "./i18n/react.jsx";

@@ -14,9 +14,15 @@ import {
   Icon,
 } from "@shopify/polaris";
 import * as PI from "@shopify/polaris-icons";
+import { useNavigate } from "@remix-run/react";
+
 import { useI18n } from "../i18n/react";
 import { COUNTRY_DATA } from "../data/countryData";
-import CountryFlagsBar from "../components/CountryFlagsBar";
+
+/* ✅ NEW shared system */
+import TFSectionHeader from "../components/TFSectionHeader";
+import UnsavedSaveBar from "../components/UnsavedSaveBar";
+import { useUnsavedNavigationGuard } from "../hooks/useUnsavedNavigationGuard";
 
 /* ======================= SAFE ICON helper ======================= */
 function SafeIcon({ name, fallback = "AppsIcon", tone }) {
@@ -37,7 +43,10 @@ function useT() {
     return fallback || key;
   };
 
-  return { t, tr };
+  // adapter for shared components expecting t(key, vars?)
+  const tAdapter = (key, vars) => tr(key, key, vars);
+
+  return { t, tr, tAdapter };
 }
 
 /* ======================= CSS / layout (NO backticks) ======================= */
@@ -46,34 +55,10 @@ const LAYOUT_CSS = [
   ".Polaris-Page, .Polaris-Page__Content { max-width:none!important; padding-left:0!important; padding-right:0!important; }",
   ".Polaris-TextField, .Polaris-Select, .Polaris-Labelled__LabelWrapper { min-width:0; }",
 
-  "/* ✅ HEADER (same spirit as Section1/2) */",
-  ".tf-header{ background:linear-gradient(90deg,#0B3B82,#7D0031); padding:6px 10px; position:sticky; top:0; z-index:60; box-shadow:0 10px 28px rgba(11,59,130,0.45); }",
-  ".tf-header-row{ display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:10px; min-height:44px; }",
-  ".tf-brand{ display:flex; align-items:center; gap:10px; min-width:0; }",
-  ".tf-brand-text{ display:flex; flex-direction:column; min-width:0; line-height:1.05; }",
-  ".tf-brand-title{ font-weight:950; color:#F9FAFB; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }",
-  ".tf-brand-sub{ font-size:11px; color:rgba(249,250,251,0.78); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }",
-  ".tf-flags-wrap{ display:flex; justify-content:center; align-items:center; width:100%; min-width:0; }",
-  ".tf-header-right{ display:flex; align-items:center; justify-content:flex-end; gap:10px; min-width:0; flex-wrap:wrap; }",
-
-  "/* ✅ Slim SaveBar (shows only when leaving panel with unsaved changes OR notice) */",
-  ".tf-savebar{ position:sticky; top:56px; z-index:55; padding:8px 10px; background:rgba(255,255,255,0.86); backdrop-filter: blur(10px); border-bottom:1px solid #E5E7EB; }",
-  ".tf-savebar-inner{ max-width:1100px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 12px; border-radius:14px; border:1px solid #E5E7EB; box-shadow:0 10px 24px rgba(15,23,42,.06); }",
-  ".tf-savebar-left{ display:flex; align-items:center; gap:10px; min-width:0; }",
-  ".tf-savebadge{ font-size:12px; font-weight:900; padding:6px 10px; border-radius:999px; border:1px solid #E5E7EB; background:#F8FAFC; white-space:nowrap; }",
-  ".tf-savebar-text{ display:flex; flex-direction:column; min-width:0; line-height:1.15; }",
-  ".tf-savemsg{ font-size:13px; font-weight:800; color:#0F172A; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }",
-  ".tf-savesub{ font-size:12px; color:#64748B; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }",
-
-  "@keyframes tfBarBlink { 0%,100%{filter:none} 50%{filter:brightness(1.15)} }",
-  "@keyframes tfBarSlide { 0%{transform:translateX(0)} 50%{transform:translateX(10px)} 100%{transform:translateX(0)} }",
-  ".tf-attention{ animation: tfBarBlink .9s ease-in-out 2, tfBarSlide .9s ease-in-out 2; border-color:rgba(249,115,22,.70)!important; box-shadow:0 10px 24px rgba(249,115,22,.18); }",
-
   ".tf-shell{ padding:16px; }",
 
   "/* layout */",
   ".tf-editor{ display:grid; grid-template-columns: 260px minmax(0,1fr) 320px; gap:16px; align-items:start; }",
-
   ".tf-rail{ position:sticky; top:116px; max-height:calc(100vh - 132px); overflow:auto; }",
   ".tf-rail-card{ background:#fff; border:1px solid #E5E7EB; border-radius:12px; margin-bottom:12px; }",
   ".tf-rail-head{ padding:10px 12px; border-bottom:1px solid #E5E7EB; font-weight:800; }",
@@ -98,8 +83,6 @@ const LAYOUT_CSS = [
   "@media (max-width: 980px) {",
   "  .tf-editor{ grid-template-columns: 1fr; }",
   "  .tf-rail, .tf-side-col{ position:static; max-height:none; width:auto; }",
-  "  .tf-brand-sub{ display:none; }",
-  "  .tf-flags-wrap{ display:none; }",
   "}",
 ].join("\n");
 
@@ -112,68 +95,6 @@ function useInjectCss() {
     s.appendChild(document.createTextNode(LAYOUT_CSS));
     document.head.appendChild(s);
   }, []);
-}
-
-/* ============================== SaveBarSlim ============================== */
-function SaveBarSlim({ dirty, saving, notice, attention, onSave, tr }) {
-  if (!dirty && !notice) return null;
-
-  const isError = notice?.type === "error";
-  const isSuccess = notice?.type === "success";
-
-  const badgeText = isError
-    ? tr("common.savebar.badgeError", "Error")
-    : isSuccess
-    ? tr("common.savebar.badgeSaved", "Saved")
-    : dirty
-    ? tr("common.savebar.badgeUnsaved", "Unsaved")
-    : tr("common.savebar.badgeInfo", "Info");
-
-  const badgeStyle = isError
-    ? { background: "#FEF2F2", borderColor: "#FCA5A5", color: "#991B1B" }
-    : isSuccess
-    ? { background: "#ECFDF5", borderColor: "#86EFAC", color: "#065F46" }
-    : dirty
-    ? { background: "#FFF7ED", borderColor: "#FDBA74", color: "#9A3412" }
-    : {};
-
-  const mainMsg =
-    notice?.msg ||
-    (dirty
-      ? tr("common.savebar.unsaved", "You have unsaved changes.")
-      : tr("common.savebar.info", "Info"));
-
-  const subMsg = dirty
-    ? tr(
-        "common.savebar.sub",
-        "Save before leaving this section to avoid losing changes."
-      )
-    : "";
-
-  return (
-    <div className="tf-savebar">
-      <div className={`tf-savebar-inner ${attention ? "tf-attention" : ""}`}>
-        <div className="tf-savebar-left">
-          <span className="tf-savebadge" style={badgeStyle}>
-            {badgeText}
-          </span>
-
-          <div className="tf-savebar-text">
-            <div className="tf-savemsg">{mainMsg}</div>
-            {subMsg ? <div className="tf-savesub">{subMsg}</div> : null}
-          </div>
-        </div>
-
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          {dirty ? (
-            <Button variant="primary" onClick={onSave} loading={saving}>
-              {tr("common.save", "Save")}
-            </Button>
-          ) : null}
-        </div>
-      </div>
-    </div>
-  );
 }
 
 /* ============================== UI helpers ============================== */
@@ -304,7 +225,7 @@ function TokenEditor({
             </button>
           </span>
         ))}
-        {(!items || items.length === 0) ? (
+        {!items || items.length === 0 ? (
           <Text tone="subdued" as="span">
             {emptyLabel}
           </Text>
@@ -406,14 +327,12 @@ function getProvinceLabel(cc, prov) {
 
 export default function Section5Antibot() {
   useInjectCss();
-  const { tr } = useT();
+
+  const navigate = useNavigate();
+  const { tr, tAdapter } = useT();
 
   const [cfg, setCfg] = useState(() => defaultCfg());
   const [sel, setSel] = useState("overview");
-
-  const [saving, setSaving] = useState(false);
-  const [notice, setNotice] = useState(null); // {type:'success'|'error'|'info', msg}
-  const [attention, setAttention] = useState(false);
 
   // ✅ last saved snapshot (for dirty comparison)
   const lastSavedRef = useRef(stableStringify(normalizeAntibotCfg(defaultCfg())));
@@ -424,15 +343,11 @@ export default function Section5Antibot() {
   const [geoCity, setGeoCity] = useState("");
 
   const normalizedCfg = useMemo(() => normalizeAntibotCfg(cfg), [cfg]);
+
   const dirty = useMemo(() => {
     const now = stableStringify(normalizedCfg);
     return now !== (lastSavedRef.current || "");
   }, [normalizedCfg]);
-
-  const blinkAttention = () => {
-    setAttention(true);
-    setTimeout(() => setAttention(false), 950);
-  };
 
   /* -------------------- local load (fallback) -------------------- */
   useEffect(() => {
@@ -467,10 +382,8 @@ export default function Section5Antibot() {
           const fixed = normalizeAntibotCfg({ ...defaultCfg(), ...j.antibot });
           setCfg(fixed);
           lastSavedRef.current = stableStringify(fixed);
-          setNotice(null);
         }
       } catch (e) {
-        // no noisy alerts
         console.error("Erreur load antibot (remote):", e);
       }
     })();
@@ -488,12 +401,9 @@ export default function Section5Antibot() {
     } catch {}
   }, [normalizedCfg]);
 
-  /* -------------------- save remote (same UX) -------------------- */
+  /* -------------------- save remote (single source of truth) -------------------- */
   const handleSaveRemote = async () => {
     try {
-      setSaving(true);
-      setNotice(null);
-
       const payload = normalizeAntibotCfg(cfg);
 
       const res = await fetch("/api/antibot/save", {
@@ -509,49 +419,23 @@ export default function Section5Antibot() {
       }
 
       lastSavedRef.current = stableStringify(payload);
-      setNotice({
-        type: "success",
-        msg: tr("section5.save.success", "Saved successfully."),
-      });
-
-      // auto hide success after a moment
-      setTimeout(() => setNotice(null), 2200);
+      return true;
     } catch (e) {
-      setNotice({
-        type: "error",
-        msg: tr("section5.save.error", "Save failed: {{error}}", {
-          error: (e && e.message) || "Unknown",
-        }),
-      });
-      blinkAttention();
-    } finally {
-      setSaving(false);
+      console.error("Erreur save antibot:", e);
+      return false;
     }
   };
 
-  /* -------------------- “leave panel” logic (NO alerts while editing) -------------------- */
-  const goPanel = (next) => {
-    if (next === sel) return;
-
-    // ✅ only warn when user tries to navigate away while dirty
-    if (dirty) {
-      setNotice({
-        type: "info",
-        msg: tr(
-          "common.savebar.leaveWarn",
-          "You have unsaved changes. Please save before leaving."
-        ),
-      });
-      blinkAttention();
-    }
-
-    setSel(next);
-  };
+  /* -------------------- ✅ unified guard (only on leaving the section route) -------------------- */
+  const guard = useUnsavedNavigationGuard({
+    dirty,
+    onSave: handleSaveRemote,
+    navigate,
+  });
 
   /* -------------------- setters -------------------- */
   const setIP = (p) => setCfg((c) => ({ ...c, ipBlock: { ...c.ipBlock, ...p } }));
-  const setTEL = (p) =>
-    setCfg((c) => ({ ...c, phoneBlock: { ...c.phoneBlock, ...p } }));
+  const setTEL = (p) => setCfg((c) => ({ ...c, phoneBlock: { ...c.phoneBlock, ...p } }));
   const setCTRY = (p) =>
     setCfg((c) => ({ ...c, countryBlock: { ...c.countryBlock, ...p } }));
   const setRC = (p) =>
@@ -559,8 +443,7 @@ export default function Section5Antibot() {
       ...c,
       recaptcha: { ...c.recaptcha, ...p, version: "v2" },
     }));
-  const setHP = (p) =>
-    setCfg((c) => ({ ...c, honeypot: { ...c.honeypot, ...p } }));
+  const setHP = (p) => setCfg((c) => ({ ...c, honeypot: { ...c.honeypot, ...p } }));
 
   const addItems = (arr, items) => {
     const set = new Set(arr || []);
@@ -582,8 +465,7 @@ export default function Section5Antibot() {
     { key: "honeypot", label: tr("section5.rail.panels.honeypot", "Honeypot") },
   ];
 
-  const countIPs =
-    (cfg.ipBlock.allowList?.length || 0) + (cfg.ipBlock.denyList?.length || 0);
+  const countIPs = (cfg.ipBlock.allowList?.length || 0) + (cfg.ipBlock.denyList?.length || 0);
   const countPhones =
     (cfg.phoneBlock.blockedNumbers?.length || 0) +
     (cfg.phoneBlock.blockedPatterns?.length || 0);
@@ -591,9 +473,7 @@ export default function Section5Antibot() {
 
   const statusBadge = (enabled) => (
     <Badge tone={enabled ? "success" : "critical"}>
-      {enabled
-        ? tr("section5.status.on", "On")
-        : tr("section5.status.off", "Off")}
+      {enabled ? tr("section5.status.on", "On") : tr("section5.status.off", "Off")}
     </Badge>
   );
 
@@ -622,12 +502,9 @@ export default function Section5Antibot() {
   const cityOptions = useMemo(() => {
     const c = COUNTRY_DATA && COUNTRY_DATA[geoCountry];
     const provinces = (c && c.provinces) || {};
-    if (!geoProvince || !provinces[geoProvince])
-      return [{ label: "Any city", value: "" }];
+    if (!geoProvince || !provinces[geoProvince]) return [{ label: "Any city", value: "" }];
     const cities = provinces[geoProvince].cities || [];
-    return [{ label: "Any city", value: "" }].concat(
-      cities.map((x) => ({ label: x, value: x }))
-    );
+    return [{ label: "Any city", value: "" }].concat(cities.map((x) => ({ label: x, value: x })));
   }, [geoCountry, geoProvince]);
 
   const geoRulePills = useMemo(() => {
@@ -668,65 +545,27 @@ export default function Section5Antibot() {
 
   return (
     <>
-      {/* ✅ HEADER */}
-      <div className="tf-header">
-        <div className="tf-header-row">
-          <div className="tf-brand">
-            <div
-              style={{
-                width: 38,
-                height: 38,
-                borderRadius: 12,
-                overflow: "hidden",
-                boxShadow: "0 10px 28px rgba(11,59,130,0.55)",
-                border: "1px solid rgba(255,255,255,0.35)",
-                background: "linear-gradient(135deg,#0B3B82,#7D0031)",
-                flex: "0 0 auto",
-              }}
-            >
-              <img
-                src="/tripleform-cod-icon.png"
-                alt="TripleForm COD"
-                style={{ width: "100%", height: "100%", display: "block", objectFit: "cover" }}
-              />
-            </div>
+      {/* ✅ COMMON HEADER (same everywhere + flags fixed) */}
+      <TFSectionHeader
+        title={tr("section5.header.appTitle", "TripleForm — AntiBot")}
+        subtitle={tr("section5.header.appSubtitle", "Protect your COD form from spam orders")}
+        rightSlot={
+          <Button variant="primary" size="slim" onClick={guard.onSave} loading={guard.saving}>
+            {tr("common.save", "Save")}
+          </Button>
+        }
+      />
 
-            <div className="tf-brand-text">
-              <div className="tf-brand-title">
-                {tr("section5.header.appTitle", "TripleForm — AntiBot")}
-              </div>
-              <div className="tf-brand-sub">
-                {tr("section5.header.appSubtitle", "Protect your COD form from spam orders")}
-              </div>
-            </div>
-          </div>
-
-          {/* ✅ FLAGS center */}
-          <div className="tf-flags-wrap">
-            <CountryFlagsBar />
-          </div>
-
-          {/* actions right */}
-          <div className="tf-header-right">
-            <div style={{ fontSize: 12, color: "rgba(249,250,251,0.9)", fontWeight: 800 }}>
-              {tr("section5.header.pill", "Security settings")}
-            </div>
-
-            <Button variant="primary" size="slim" onClick={handleSaveRemote} loading={saving}>
-              {tr("common.save", "Save")}
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      {/* ✅ Slim SaveBar (only on leave + notice) */}
-      <SaveBarSlim
+      {/* ✅ Unified Save Bar (only when user tries to leave the section route with unsaved changes) */}
+      <UnsavedSaveBar
+        open={guard.open}
         dirty={dirty}
-        saving={saving}
-        notice={notice}
-        attention={attention}
-        onSave={handleSaveRemote}
-        tr={tr}
+        saving={guard.saving}
+        mode={guard.mode}
+        onSave={guard.onSave}
+        onDiscard={guard.onDiscard}
+        onCancel={guard.onCancel}
+        t={tAdapter}
       />
 
       <div className="tf-shell">
@@ -741,7 +580,7 @@ export default function Section5Antibot() {
                     key={it.key}
                     className="tf-rail-item"
                     data-sel={sel === it.key ? 1 : 0}
-                    onClick={() => goPanel(it.key)}
+                    onClick={() => setSel(it.key)}
                   >
                     <span style={{ fontWeight: 800 }}>{it.label}</span>
                     <span style={{ opacity: 0.75 }}>
@@ -795,7 +634,9 @@ export default function Section5Antibot() {
               <div className="tf-panel">
                 <GroupCard title="section5.overview.title" tr={tr}>
                   <BlockStack gap="200">
-                    <Text as="p">{tr("section5.overview.description", "Configure antibot protections.")}</Text>
+                    <Text as="p">
+                      {tr("section5.overview.description", "Configure antibot protections.")}
+                    </Text>
                     <Text tone="subdued" as="p">
                       ✅ Smart GEO dropdown (Country/Province/City). ✅ IP/Phone UI clean. ✅ reCAPTCHA v2 only.
                     </Text>
@@ -977,9 +818,7 @@ export default function Section5Antibot() {
                   </Grid3>
 
                   <InlineStack gap="200" wrap>
-                    <Button onClick={addGeoRule}>
-                      {tr("section5.buttons.add", "Add")}
-                    </Button>
+                    <Button onClick={addGeoRule}>{tr("section5.buttons.add", "Add")}</Button>
                     <Text tone="subdued" as="span">
                       Country only = whole country. Province/City = precise rule.
                     </Text>
@@ -997,7 +836,7 @@ export default function Section5Antibot() {
                         </button>
                       </span>
                     ))}
-                    {(!geoRulePills || geoRulePills.length === 0) ? (
+                    {!geoRulePills || geoRulePills.length === 0 ? (
                       <Text tone="subdued" as="span">
                         {tr("section5.empty", "Empty")}
                       </Text>
@@ -1017,9 +856,7 @@ export default function Section5Antibot() {
                     onAddItems={(arr) =>
                       setCTRY({ allowList: addItems(cfg.countryBlock.allowList, arr) })
                     }
-                    onRemoveAt={(i) =>
-                      setCTRY({ allowList: removeAt(cfg.countryBlock.allowList, i) })
-                    }
+                    onRemoveAt={(i) => setCTRY({ allowList: removeAt(cfg.countryBlock.allowList, i) })}
                   />
 
                   <TokenEditor
@@ -1033,9 +870,7 @@ export default function Section5Antibot() {
                     onAddItems={(arr) =>
                       setCTRY({ denyList: addItems(cfg.countryBlock.denyList, arr) })
                     }
-                    onRemoveAt={(i) =>
-                      setCTRY({ denyList: removeAt(cfg.countryBlock.denyList, i) })
-                    }
+                    onRemoveAt={(i) => setCTRY({ denyList: removeAt(cfg.countryBlock.denyList, i) })}
                   />
                 </GroupCard>
               </div>
@@ -1161,22 +996,20 @@ export default function Section5Antibot() {
                 <p>{tr("section5.guide.step2", "Add allow/deny lists carefully.")}</p>
                 <p>{tr("section5.guide.step3", "Use GEO rules for precise targeting.")}</p>
                 <p>{tr("section5.guide.step4", "Use reCAPTCHA v2 only if necessary.")}</p>
-                <p>{tr("section5.guide.step5", "Always Save before leaving panels.")}</p>
+                <p>{tr("section5.guide.step5", "Always Save before leaving this section.")}</p>
               </BlockStack>
             </div>
 
             {dirty ? (
               <div className="tf-side-card">
                 <InlineStack gap="200" blockAlign="center">
-                  <Badge tone="warning">
-                    {tr("common.savebar.badgeUnsaved", "Unsaved")}
-                  </Badge>
+                  <Badge tone="warning">{tr("common.savebar.badgeUnsaved", "Unsaved")}</Badge>
                   <Text as="span" fontWeight="bold">
                     {tr("common.savebar.unsaved", "You have unsaved changes.")}
                   </Text>
                 </InlineStack>
                 <div style={{ marginTop: 10 }}>
-                  <Button variant="primary" fullWidth onClick={handleSaveRemote} loading={saving}>
+                  <Button variant="primary" fullWidth onClick={guard.onSave} loading={guard.saving}>
                     {tr("common.save", "Save")}
                   </Button>
                 </div>

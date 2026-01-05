@@ -3,10 +3,6 @@ import React from "react";
 import { Button } from "@shopify/polaris";
 import CountryFlagsBar from "./CountryFlagsBar";
 
-/**
- * Header commun pour TOUTES les sections (même design + mêmes drapeaux).
- * -> Résout le souci des drapeaux "condensés" car wrapper identique partout.
- */
 export default function TFSectionHeader({
   title,
   subtitle,
@@ -33,7 +29,12 @@ export default function TFSectionHeader({
             <img
               src="/tripleform-cod-icon.png"
               alt="TripleForm COD"
-              style={{ width: "100%", height: "100%", display: "block", objectFit: "cover" }}
+              style={{
+                width: "100%",
+                height: "100%",
+                display: "block",
+                objectFit: "cover",
+              }}
             />
           </div>
 
@@ -43,8 +44,11 @@ export default function TFSectionHeader({
           </div>
         </div>
 
+        {/* ✅ IMPORTANT: même structure que Section0Home */}
         <div className="tf-flags-wrap">
-          <CountryFlagsBar />
+          <div className="tf-flags">
+            <CountryFlagsBar />
+          </div>
         </div>
 
         <div className="tf-header-right">

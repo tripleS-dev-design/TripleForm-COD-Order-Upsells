@@ -12,13 +12,16 @@ import {
   Icon,
   Badge,
   Tabs,
-  Modal,
   Divider,
   RangeSlider,
 } from "@shopify/polaris";
 import * as PI from "@shopify/polaris-icons";
+import { useNavigate } from "@remix-run/react";
 import { useI18n } from "../i18n/react";
-import CountryFlagsBar from "../components/CountryFlagsBar";
+
+import TFSectionHeader from "../components/TFSectionHeader";
+import UnsavedSaveBar from "../components/UnsavedSaveBar";
+import { useUnsavedNavigationGuard } from "../hooks/useUnsavedNavigationGuard";
 
 /* ======================= SAFE ICON helper ======================= */
 function SafeIcon({ name, fallback = "AppsIcon", tone }) {
@@ -52,6 +55,7 @@ const LAYOUT_CSS = `
   }
   .Polaris-TextField, .Polaris-Select, .Polaris-Labelled__LabelWrapper { min-width:0; }
 
+  /* ✅ Header styles used by TFSectionHeader */
   .tf-header {
     background:linear-gradient(90deg,#0B3B82,#7D0031);
     padding:12px 16px;
@@ -60,8 +64,6 @@ const LAYOUT_CSS = `
     z-index:40;
     box-shadow:0 10px 28px rgba(11,59,130,0.45);
   }
-
-  /* ✅ same header layout as Section 1 (brand / flags / actions) */
   .tf-header-row{
     display:grid;
     grid-template-columns:auto 1fr auto;
@@ -99,74 +101,6 @@ const LAYOUT_CSS = `
     flex-wrap:wrap;
   }
 
-  /* ✅ Slim SaveBar (same logic + design) */
-  .tf-savebar{
-    position:sticky;
-    top:64px; /* under header */
-    z-index:39;
-    padding:10px 16px 0;
-    background:transparent;
-  }
-  .tf-savebar-inner{
-    background:#FFFFFF;
-    border:1px solid #E5E7EB;
-    border-radius:14px;
-    padding:10px 12px;
-    box-shadow:0 10px 26px rgba(15,23,42,0.08);
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:12px;
-  }
-  .tf-savebar-left{
-    display:flex;
-    align-items:flex-start;
-    gap:10px;
-    min-width:0;
-  }
-  .tf-savebadge{
-    font-size:11px;
-    font-weight:950;
-    letter-spacing:.06em;
-    text-transform:uppercase;
-    padding:4px 8px;
-    border-radius:999px;
-    border:1px solid #E5E7EB;
-    background:#F8FAFC;
-    color:#0F172A;
-    white-space:nowrap;
-    flex:0 0 auto;
-  }
-  .tf-savebar-text{ min-width:0; }
-  .tf-savemsg{
-    font-size:13px;
-    font-weight:900;
-    color:#0F172A;
-    white-space:nowrap;
-    overflow:hidden;
-    text-overflow:ellipsis;
-  }
-  .tf-savesub{
-    font-size:12px;
-    color:#64748B;
-    white-space:nowrap;
-    overflow:hidden;
-    text-overflow:ellipsis;
-    margin-top:2px;
-  }
-  @keyframes tfBlink {
-    0%{ transform:translateX(0); box-shadow:0 10px 26px rgba(15,23,42,0.08); }
-    20%{ transform:translateX(-4px); }
-    40%{ transform:translateX(4px); }
-    60%{ transform:translateX(-3px); }
-    80%{ transform:translateX(3px); box-shadow:0 10px 26px rgba(239,68,68,0.20); }
-    100%{ transform:translateX(0); }
-  }
-  .tf-attention{
-    animation: tfBlink .9s ease-in-out 1;
-    border-color: rgba(239,68,68,.35);
-  }
-
   .tf-shell { padding:16px; }
 
   .tf-topnav{
@@ -184,14 +118,13 @@ const LAYOUT_CSS = `
   }
   .tf-topnav-center > div{ width:fit-content; }
 
-  /* ✅ editor: left content + right preview (NOT for thankyou) */
   .tf-editor {
     display:grid;
     grid-template-columns: minmax(0,1fr) 460px;
     gap:16px;
     align-items:start;
   }
-  .tf-editor--full{ grid-template-columns: 1fr; } /* for thankyou */
+  .tf-editor--full{ grid-template-columns: 1fr; }
 
   .tf-main-col{ display:grid; gap:16px; min-width:0; }
 
@@ -225,7 +158,7 @@ const LAYOUT_CSS = `
 
   .tf-preview-col {
     position:sticky;
-    top:124px; /* header + savebar */
+    top:124px;
     max-height:calc(100vh - 140px);
     overflow:auto;
   }
@@ -392,7 +325,7 @@ const LAYOUT_CSS = `
     background:#F9FAFB;
   }
 
-  /* ===================== THANK YOU (admin preview) ===================== */
+  /* THANK YOU builder css kept (unchanged) */
   .tf-ty-preview-wrap{
     position:relative;
     border-radius:14px;
@@ -454,8 +387,6 @@ const LAYOUT_CSS = `
     align-items:center;
     gap:6px;
   }
-
-  /* ✅ Make popup preview more realistic */
   .tf-ty-modal-overlay{
     position:absolute;
     inset:0;
@@ -473,8 +404,6 @@ const LAYOUT_CSS = `
     box-shadow:0 18px 40px rgba(0,0,0,.35);
   }
   .tf-ty-modal-inner{ padding:14px; display:grid; gap:10px; }
-
-  /* ===================== THANK YOU BUILDER (Paint/Canva style) ===================== */
   .tf-ty-builder{
     border:1px solid #E5E7EB;
     border-radius:14px;
@@ -482,14 +411,11 @@ const LAYOUT_CSS = `
     background:#fff;
     box-shadow:0 10px 24px rgba(15,23,42,0.06);
   }
-
-  /* ✅ LEFT tools + MIDDLE preview + RIGHT settings */
   .tf-ty-body{
     display:grid;
     grid-template-columns: 260px minmax(0,1fr) 420px;
     min-height: 580px;
   }
-
   .tf-ty-rail{
     border-right:1px solid #E5E7EB;
     background:#F8FAFC;
@@ -498,7 +424,6 @@ const LAYOUT_CSS = `
     flex-direction:column;
     gap:8px;
   }
-
   .tf-ty-stage{
     background:#FFFFFF;
     padding:14px;
@@ -511,13 +436,11 @@ const LAYOUT_CSS = `
     width:100%;
     max-width:none;
   }
-
   .tf-ty-settings{
     background:#FFFFFF;
     padding:12px;
     overflow:auto;
   }
-
   .tf-ty-toolbtn{
     width:100%;
     display:flex;
@@ -538,7 +461,6 @@ const LAYOUT_CSS = `
   }
   .tf-ty-toolname{ font-weight:950; font-size:12px; color:#111827; }
   .tf-ty-tooldesc{ font-size:11px; color:#6B7280; margin-top:2px; }
-
   .tf-ty-controls-card{
     border:1px solid #E5E7EB;
     border-radius:14px;
@@ -546,15 +468,12 @@ const LAYOUT_CSS = `
     padding:12px;
     box-shadow:0 10px 22px rgba(15,23,42,0.05);
   }
-
   .tf-ty-minirow3{
     display:grid;
     grid-template-columns: 1fr 1fr 1fr;
     gap:12px;
     align-items:start;
   }
-
-  /* ✅ Make Polaris modal look modern (rounded + shadow) */
   .Polaris-Modal-Dialog__Modal{
     border-radius:16px!important;
     overflow:hidden!important;
@@ -584,7 +503,6 @@ const LAYOUT_CSS = `
   @media (max-width: 980px) {
     .tf-brand-sub{ display:none; }
     .tf-flags-wrap{ display:none; }
-    .tf-savebar{ top:64px; }
   }
 `;
 
@@ -602,68 +520,6 @@ function useInjectCss() {
       } catch {}
     };
   }, []);
-}
-
-/* ============================== SaveBarSlim (TOP) ============================== */
-function SaveBarSlim({ dirty, saving, notice, attention, onSave, tr }) {
-  if (!dirty && !notice) return null;
-
-  const isError = notice?.type === "error";
-  const isSuccess = notice?.type === "success";
-
-  const badgeText = isError
-    ? tr("common.savebar.badgeError", "Error")
-    : isSuccess
-    ? tr("common.savebar.badgeSaved", "Saved")
-    : dirty
-    ? tr("common.savebar.badgeUnsaved", "Unsaved")
-    : tr("common.savebar.badgeInfo", "Info");
-
-  const badgeStyle = isError
-    ? { background: "#FEF2F2", borderColor: "#FCA5A5", color: "#991B1B" }
-    : isSuccess
-    ? { background: "#ECFDF5", borderColor: "#86EFAC", color: "#065F46" }
-    : dirty
-    ? { background: "#FFF7ED", borderColor: "#FDBA74", color: "#9A3412" }
-    : {};
-
-  const mainMsg =
-    notice?.msg ||
-    (dirty
-      ? tr("common.savebar.unsaved", "You have unsaved changes.")
-      : tr("common.savebar.info", "Info"));
-
-  const subMsg = dirty
-    ? tr(
-        "common.savebar.sub",
-        "Save before leaving this section to avoid losing changes."
-      )
-    : "";
-
-  return (
-    <div className="tf-savebar">
-      <div className={`tf-savebar-inner ${attention ? "tf-attention" : ""}`}>
-        <div className="tf-savebar-left">
-          <span className="tf-savebadge" style={badgeStyle}>
-            {badgeText}
-          </span>
-
-          <div className="tf-savebar-text">
-            <div className="tf-savemsg">{mainMsg}</div>
-            {subMsg ? <div className="tf-savesub">{subMsg}</div> : null}
-          </div>
-        </div>
-
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          {dirty ? (
-            <Button variant="primary" onClick={onSave} loading={saving}>
-              {tr("common.save", "Save")}
-            </Button>
-          ) : null}
-        </div>
-      </div>
-    </div>
-  );
 }
 
 /* ============================== UI helpers ============================== */
@@ -968,7 +824,7 @@ const DEFAULT_THANKYOU_COLORS = {
 
 const DEFAULT_THANKYOU = {
   enabled: true,
-  mode: "simple", // simple | popup
+  mode: "simple",
   autoOpenDelayMs: 250,
   title: "Thank you!",
   message:
@@ -1081,6 +937,8 @@ function PaletteSelector({ value, onChange }) {
             key={p.id}
             className={`tf-color-palette ${value === p.id ? "active" : ""}`}
             onClick={() => onChange(p.id)}
+            role="button"
+            tabIndex={0}
           >
             <div className="tf-palette-colors">
               <div style={{ background: g1 }} />
@@ -1246,7 +1104,8 @@ function PreviewCard({ item, products, isOffer, globalColors, tr }) {
   );
 }
 
-/* ============================== Thank You Preview (Admin) ============================== */
+/* ============================== Thank You Preview + Editor (UNCHANGED) ============================== */
+/* NOTE: kept exactly your code behavior, only pasted here from your file in place */
 function ThankYouPreview({ thankYou, globalColors, tr }) {
   const fallbackImg =
     "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 900 520'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23EEF2FF'/%3E%3Cstop offset='1' stop-color='%23F8FAFC'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='900' height='520' rx='28' fill='url(%23g)'/%3E%3Cpath d='M220 210l110-110 220 220v180H170V210z' fill='%234F46E5' opacity='.88'/%3E%3Ccircle cx='240' cy='190' r='46' fill='%2399A7FF' opacity='.85'/%3E%3C/svg%3E";
@@ -1889,8 +1748,7 @@ function UpsellEditor({
   );
 }
 
-/* ============================== Thank You Editor (Paint/Canva) ============================== */
-/* (unchanged — kept exactly your code) */
+/* ============================== Thank You Editor (your same logic) ============================== */
 function ThankYouEditor({ thankYou, globalColors, onChange, tr }) {
   const ty = thankYou || DEFAULT_THANKYOU;
   const update = (patch) => onChange({ ...ty, ...patch });
@@ -2318,93 +2176,12 @@ function ThankYouEditor({ thankYou, globalColors, onChange, tr }) {
   );
 }
 
-/* ============================== HEADER / SHELL ============================== */
-function PageShell({
-  children,
-  tr,
-  loading,
-  onSave,
-  saving,
-  dirty,
-  saveNotice,
-  saveAttention,
-}) {
-  return (
-    <>
-      <div className="tf-header">
-        <div className="tf-header-row">
-          {/* LEFT: brand */}
-          <div className="tf-brand">
-            <div
-              style={{
-                width: 40,
-                height: 40,
-                borderRadius: 12,
-                overflow: "hidden",
-                boxShadow: "0 10px 28px rgba(11,59,130,0.55)",
-                border: "1px solid rgba(255,255,255,0.35)",
-                background: "linear-gradient(135deg,#0B3B82,#7D0031)",
-                flex: "0 0 auto",
-              }}
-            >
-              <img
-                src="/tripleform-cod-icon.png"
-                alt="TripleForm COD"
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  display: "block",
-                  objectFit: "cover",
-                }}
-              />
-            </div>
-
-            <div className="tf-brand-text">
-              <div className="tf-brand-title">
-                {tr("section2.header.appTitle", "TripleForm COD")}
-              </div>
-              <div className="tf-brand-sub">
-                {tr("section2.header.subtitle", "Offers & Upsells — Pro settings")}
-              </div>
-            </div>
-          </div>
-
-          {/* CENTER: country flags (same as Section 0 / Home) */}
-          <div className="tf-flags-wrap">
-            <CountryFlagsBar />
-          </div>
-
-          {/* RIGHT: actions */}
-          <div className="tf-header-right">
-            <div style={{ fontSize: 12, color: "rgba(249,250,251,0.9)" }}>
-              {loading ? tr("common.loading", "Loading...") : ""}
-            </div>
-            <Button variant="primary" onClick={onSave} loading={saving}>
-              {tr("common.save", "Save")}
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      {/* ✅ slim save bar under header (NO alert on each setting change) */}
-      <SaveBarSlim
-        dirty={dirty}
-        saving={saving}
-        notice={saveNotice}
-        attention={saveAttention}
-        onSave={onSave}
-        tr={tr}
-      />
-
-      <div className="tf-shell">{children}</div>
-    </>
-  );
-}
-
 /* ============================== MAIN ============================== */
 function Section2OffersInner({ products = [] }) {
   const { tr } = useT();
   useInjectCss();
+
+  const navigate = useNavigate();
 
   const [cfg, setCfg] = useState(() => DEFAULT_CFG);
   const [loading, setLoading] = useState(false);
@@ -2421,52 +2198,17 @@ function Section2OffersInner({ products = [] }) {
     }
   }, [cfg]);
 
-  const dirty = useMemo(() => currentKey !== lastSavedKeyRef.current, [currentKey]);
-
-  /* ✅ Save notice + attention (blink) */
-  const [saveNotice, setSaveNotice] = useState(null); // {type,msg}
-  const [saveAttention, setSaveAttention] = useState(false);
-
-  const bumpAttention = () => {
-    setSaveAttention(true);
-    window.setTimeout(() => setSaveAttention(false), 900);
-  };
-
-  const pushNotice = (type, msg, ttl = 2500) => {
-    setSaveNotice({ type, msg, ts: Date.now() });
-    window.setTimeout(() => {
-      setSaveNotice((n) => (n?.ts ? null : n));
-    }, ttl);
-  };
-
-  useEffect(() => {
-    const handler = (e) => {
-      if (!dirty) return;
-      e.preventDefault();
-      e.returnValue = "";
-    };
-    window.addEventListener("beforeunload", handler);
-    return () => window.removeEventListener("beforeunload", handler);
-  }, [dirty]);
-
-  /* ✅ Unsaved modal only on TAB SWITCH (not on settings changes) */
-  const [confirmOpen, setConfirmOpen] = useState(false);
-  const pendingTabRef = useRef(null);
-
-  const tabs = useMemo(
-    () => [
-      { id: "global", content: tr("section2.tabs.global", "Global"), panelID: "tab-global", icon: "SettingsIcon" },
-      { id: "offers", content: tr("section2.tabs.offers", "Offers"), panelID: "tab-offers", icon: "DiscountIcon" },
-      { id: "upsells", content: tr("section2.tabs.upsells", "Upsells"), panelID: "tab-upsells", icon: "GiftCardIcon" },
-      { id: "thankyou", content: tr("section2.tabs.thankyou", "Thank you page"), panelID: "tab-thankyou", icon: "ImageIcon" },
-    ],
-    [tr]
+  const dirty = useMemo(
+    () => currentKey !== lastSavedKeyRef.current,
+    [currentKey]
   );
-  const selectedTabIndex = Math.max(0, tabs.findIndex((x) => x.id === tab));
 
   const persistLocal = (next) => {
     try {
-      window.localStorage.setItem("tripleform_cod_offers_v33", JSON.stringify(withDefaults(next)));
+      window.localStorage.setItem(
+        "tripleform_cod_offers_v33",
+        JSON.stringify(withDefaults(next))
+      );
     } catch {}
   };
 
@@ -2515,6 +2257,7 @@ function Section2OffersInner({ products = [] }) {
     };
   }, []);
 
+  // ✅ IMPORTANT: return boolean (for useUnsavedNavigationGuard)
   const saveOffers = async () => {
     const toSave = withDefaults(cfg);
     try {
@@ -2531,60 +2274,32 @@ function Section2OffersInner({ products = [] }) {
       if (!res.ok || j?.ok === false) throw new Error(j?.error || "Save failed");
 
       lastSavedKeyRef.current = JSON.stringify(toSave);
-      pushNotice("success", tr("common.savedOk", "Saved successfully."));
-    } catch (e) {
-      pushNotice(
-        "error",
-        tr("common.saveFailed", "Save failed: ") +
-          (e?.message || tr("common.unknown", "Unknown error")),
-        3500
-      );
-      bumpAttention();
+      return true;
+    } catch {
+      return false;
     } finally {
       setSaving(false);
     }
   };
 
-  const requestTabChange = (nextTab) => {
-    if (nextTab === tab) return;
+  // ✅ Unified “leave section” guard (NO spam on each change)
+  const navGuard = useUnsavedNavigationGuard({
+    dirty,
+    onSave: saveOffers,
+    navigate,
+  });
 
-    // ✅ no alert during setting changes; only when switching section/tab
-    if (!dirty) {
-      setTab(nextTab);
-      return;
-    }
+  const tabs = useMemo(
+    () => [
+      { id: "global", content: tr("section2.tabs.global", "Global"), panelID: "tab-global", icon: "SettingsIcon" },
+      { id: "offers", content: tr("section2.tabs.offers", "Offers"), panelID: "tab-offers", icon: "DiscountIcon" },
+      { id: "upsells", content: tr("section2.tabs.upsells", "Upsells"), panelID: "tab-upsells", icon: "GiftCardIcon" },
+      { id: "thankyou", content: tr("section2.tabs.thankyou", "Thank you page"), panelID: "tab-thankyou", icon: "ImageIcon" },
+    ],
+    [tr]
+  );
 
-    pendingTabRef.current = nextTab;
-    setConfirmOpen(true);
-
-    // ✅ blink + message bar when user tries to leave without saving
-    pushNotice(
-      "info",
-      tr(
-        "common.saveBeforeLeave",
-        "You have unsaved changes. Save before switching sections."
-      ),
-      2600
-    );
-    bumpAttention();
-  };
-
-  const applyPendingTab = () => {
-    const nextTab = pendingTabRef.current;
-    pendingTabRef.current = null;
-    if (nextTab) setTab(nextTab);
-  };
-
-  const discardChanges = () => {
-    try {
-      const saved = JSON.parse(lastSavedKeyRef.current || "{}");
-      const restored = withDefaults(saved);
-      setCfg(restored);
-      pushNotice("info", tr("common.discarded", "Changes discarded."));
-    } catch {}
-    setConfirmOpen(false);
-    applyPendingTab();
-  };
+  const selectedTabIndex = Math.max(0, tabs.findIndex((x) => x.id === tab));
 
   const addOffer = () => {
     if (cfg.offers.length >= 3) return;
@@ -2601,7 +2316,10 @@ function Section2OffersInner({ products = [] }) {
   };
   const removeOffer = (index) => {
     if (cfg.offers.length <= 1) return;
-    setCfg((prev) => ({ ...prev, offers: prev.offers.filter((_, i) => i !== index) }));
+    setCfg((prev) => ({
+      ...prev,
+      offers: prev.offers.filter((_, i) => i !== index),
+    }));
   };
 
   const addUpsell = () => {
@@ -2619,7 +2337,10 @@ function Section2OffersInner({ products = [] }) {
   };
   const removeUpsell = (index) => {
     if (cfg.upsells.length <= 1) return;
-    setCfg((prev) => ({ ...prev, upsells: prev.upsells.filter((_, i) => i !== index) }));
+    setCfg((prev) => ({
+      ...prev,
+      upsells: prev.upsells.filter((_, i) => i !== index),
+    }));
   };
 
   const globalColors = cfg.global?.colors || DEFAULT_GLOBAL_COLORS;
@@ -2631,378 +2352,401 @@ function Section2OffersInner({ products = [] }) {
   const isThankYouTab = tab === "thankyou";
 
   return (
-    <PageShell
-      tr={tr}
-      loading={loading}
-      onSave={saveOffers}
-      saving={saving}
-      dirty={dirty}
-      saveNotice={saveNotice}
-      saveAttention={saveAttention}
-    >
-      <Modal
-        open={confirmOpen}
-        onClose={() => {
-          setConfirmOpen(false);
-          bumpAttention(); // ✅ small reminder if user cancels
-        }}
-        title={tr("section2.modal.unsavedTitle", "Unsaved changes")}
-        primaryAction={{
-          content: saving
-            ? tr("section2.modal.saving", "Saving...")
-            : tr("section2.modal.saveContinue", "Save & continue"),
-          onAction: async () => {
-            await saveOffers();
-            setConfirmOpen(false);
-            applyPendingTab();
-          },
-          loading: saving,
-        }}
-        secondaryActions={[
-          {
-            content: tr("section2.modal.cancel", "Cancel"),
-            onAction: () => {
-              setConfirmOpen(false);
-              bumpAttention();
-            },
-          },
-          {
-            content: tr("section2.modal.discard", "Discard"),
-            onAction: discardChanges,
-            destructive: true,
-          },
-        ]}
-      >
-        <Modal.Section>
-          <Text as="p">
-            {tr(
-              "section2.modal.unsavedBody",
-              "You have unsaved changes. Save or discard before switching sections."
-            )}
-          </Text>
-        </Modal.Section>
-      </Modal>
+    <>
+      {/* ✅ Common header (same flags everywhere) */}
+      <TFSectionHeader
+        title={tr("section2.header.appTitle", "TripleForm COD")}
+        subtitle={tr("section2.header.subtitle", "Offers & Upsells — Pro settings")}
+        rightSlot={
+          <InlineStack gap="200" blockAlign="center">
+            <div style={{ fontSize: 12, color: "rgba(249,250,251,0.9)" }}>
+              {loading ? tr("common.loading", "Loading...") : ""}
+            </div>
+            <Button variant="primary" onClick={saveOffers} loading={saving}>
+              {tr("common.save", "Save")}
+            </Button>
+          </InlineStack>
+        }
+      />
 
-      <div className="tf-topnav">
-        <div className="tf-topnav-center">
-          <div>
-            <Tabs
-              tabs={tabs.map((x) => ({ id: x.id, content: x.content, panelID: x.panelID }))}
-              selected={selectedTabIndex}
-              onSelect={(i) => requestTabChange(tabs[i]?.id || "global")}
-            />
+      {/* ✅ The ONLY save warning UI (when user tries to LEAVE the section) */}
+      <UnsavedSaveBar
+        open={navGuard.open}
+        dirty={navGuard.dirty}
+        saving={navGuard.saving}
+        mode={navGuard.mode}
+        onSave={navGuard.onSave}
+        onDiscard={navGuard.onDiscard}
+        onCancel={navGuard.onCancel}
+        t={(key) => tr(key, key)}
+      />
+
+      <div className="tf-shell">
+        <div className="tf-topnav">
+          <div className="tf-topnav-center">
+            <div>
+              <Tabs
+                tabs={tabs.map((x) => ({
+                  id: x.id,
+                  content: x.content,
+                  panelID: x.panelID,
+                }))}
+                selected={selectedTabIndex}
+                onSelect={(i) => setTab(tabs[i]?.id || "global")}
+              />
+            </div>
           </div>
         </div>
-      </div>
 
-      <div className={`tf-editor ${isThankYouTab ? "tf-editor--full" : ""}`}>
-        <div className="tf-main-col">
-          <div className="tf-hero">
-            <InlineStack align="space-between" blockAlign="center">
-              <InlineStack gap="200" blockAlign="center">
-                <span className="tf-hero-badge">
-                  {cfg.offers.filter((o) => o.enabled).length} {tr("section2.badge.offers", "Offers")} •{" "}
-                  {cfg.upsells.filter((u) => u.enabled).length} {tr("section2.badge.upsells", "Upsells")}
-                  {" • "}
-                  {thankYou?.enabled !== false ? tr("thankyou.badge.on", "ThankYou ON") : tr("thankyou.badge.off", "ThankYou OFF")}
-                </span>
-                <div>
-                  <div style={{ fontWeight: 950, fontSize: 14 }}>
-                    {tr("section2.hero.title", "Offers & Upsells")}
+        <div className={`tf-editor ${isThankYouTab ? "tf-editor--full" : ""}`}>
+          <div className="tf-main-col">
+            <div className="tf-hero">
+              <InlineStack align="space-between" blockAlign="center">
+                <InlineStack gap="200" blockAlign="center">
+                  <span className="tf-hero-badge">
+                    {cfg.offers.filter((o) => o.enabled).length}{" "}
+                    {tr("section2.badge.offers", "Offers")} •{" "}
+                    {cfg.upsells.filter((u) => u.enabled).length}{" "}
+                    {tr("section2.badge.upsells", "Upsells")} •{" "}
+                    {thankYou?.enabled !== false
+                      ? tr("thankyou.badge.on", "ThankYou ON")
+                      : tr("thankyou.badge.off", "ThankYou OFF")}
+                  </span>
+                  <div>
+                    <div style={{ fontWeight: 950, fontSize: 14 }}>
+                      {tr("section2.hero.title", "Offers & Upsells")}
+                    </div>
+                    <div style={{ fontSize: 12, opacity: 0.9 }}>
+                      {tr("section2.hero.subtitle", "Clean settings + professional preview")}
+                    </div>
                   </div>
+                </InlineStack>
+                <InlineStack gap="200" blockAlign="center">
+                  <SafeIcon
+                    name={tabs[selectedTabIndex]?.icon || "AppsIcon"}
+                    fallback="AppsIcon"
+                  />
                   <div style={{ fontSize: 12, opacity: 0.9 }}>
-                    {tr("section2.hero.subtitle", "Clean settings + professional preview")}
+                    {tabs[selectedTabIndex]?.content}
                   </div>
-                </div>
+                </InlineStack>
               </InlineStack>
-              <InlineStack gap="200" blockAlign="center">
-                <SafeIcon name={tabs[selectedTabIndex]?.icon || "AppsIcon"} fallback="AppsIcon" />
-                <div style={{ fontSize: 12, opacity: 0.9 }}>{tabs[selectedTabIndex]?.content}</div>
-              </InlineStack>
-            </InlineStack>
-          </div>
+            </div>
 
-          <div className="tf-panel">
-            {tab === "global" && (
-              <BlockStack gap="400">
-                <GroupCard title={tr("section2.global.title", "Global")}>
-                  <Grid3>
-                    <Checkbox
-                      label={tr("section2.global.enable", "Enable Offers & Upsells")}
-                      checked={!!cfg.global.enabled}
-                      onChange={(v) =>
-                        setCfg((c) => ({ ...c, global: { ...c.global, enabled: v } }))
+            <div className="tf-panel">
+              {tab === "global" && (
+                <BlockStack gap="400">
+                  <GroupCard title={tr("section2.global.title", "Global")}>
+                    <Grid3>
+                      <Checkbox
+                        label={tr("section2.global.enable", "Enable Offers & Upsells")}
+                        checked={!!cfg.global.enabled}
+                        onChange={(v) =>
+                          setCfg((c) => ({
+                            ...c,
+                            global: { ...c.global, enabled: v },
+                          }))
+                        }
+                      />
+                      <div />
+                      <div />
+                    </Grid3>
+
+                    <Divider />
+
+                    <Text as="p" variant="bodySm" tone="subdued">
+                      {tr(
+                        "section2.global.paletteHint",
+                        "Choose a global palette (applied to all items by default)."
+                      )}
+                    </Text>
+
+                    <PaletteSelector
+                      value={globalColors.paletteId || "clean-pro"}
+                      onChange={(paletteId) =>
+                        setCfg((c) => ({
+                          ...c,
+                          global: {
+                            ...c.global,
+                            colors: applyPaletteToGlobal(
+                              c.global?.colors || DEFAULT_GLOBAL_COLORS,
+                              paletteId
+                            ),
+                          },
+                        }))
                       }
                     />
-                    <div />
-                    <div />
-                  </Grid3>
 
-                  <Divider />
+                    <Divider />
+
+                    <Text as="p" variant="bodySm" fontWeight="bold">
+                      {tr("section2.global.manualColorsTitle", "Global colors")}
+                    </Text>
+
+                    <Grid3>
+                      <ColorField
+                        label={tr("section2.colors.cardBg", "Card background")}
+                        value={globalColors.cardBg}
+                        onChange={(v) =>
+                          setCfg((c) => ({
+                            ...c,
+                            global: {
+                              ...c.global,
+                              colors: { ...globalColors, cardBg: v },
+                            },
+                          }))
+                        }
+                        placeholder="#FFFFFF"
+                      />
+                      <ColorField
+                        label={tr("section2.colors.borderColor", "Border color")}
+                        value={globalColors.borderColor}
+                        onChange={(v) =>
+                          setCfg((c) => ({
+                            ...c,
+                            global: {
+                              ...c.global,
+                              colors: { ...globalColors, borderColor: v },
+                            },
+                          }))
+                        }
+                        placeholder="#E5E7EB"
+                      />
+                      <ColorField
+                        label={tr("section2.colors.iconBg", "Icon background")}
+                        value={globalColors.iconBg}
+                        onChange={(v) =>
+                          setCfg((c) => ({
+                            ...c,
+                            global: {
+                              ...c.global,
+                              colors: { ...globalColors, iconBg: v },
+                            },
+                          }))
+                        }
+                        placeholder="#EEF2FF"
+                      />
+                    </Grid3>
+
+                    <Grid3>
+                      <ColorField
+                        label={tr("section2.colors.buttonBg", "Button background")}
+                        value={globalColors.buttonBg}
+                        onChange={(v) =>
+                          setCfg((c) => ({
+                            ...c,
+                            global: {
+                              ...c.global,
+                              colors: { ...globalColors, buttonBg: v },
+                            },
+                          }))
+                        }
+                        placeholder="#111827"
+                      />
+                      <ColorField
+                        label={tr("section2.colors.buttonText", "Button text color")}
+                        value={globalColors.buttonTextColor}
+                        onChange={(v) =>
+                          setCfg((c) => ({
+                            ...c,
+                            global: {
+                              ...c.global,
+                              colors: { ...globalColors, buttonTextColor: v },
+                            },
+                          }))
+                        }
+                        placeholder="#FFFFFF"
+                      />
+                      <ColorField
+                        label={tr("section2.colors.buttonBorder", "Button border")}
+                        value={globalColors.buttonBorder}
+                        onChange={(v) =>
+                          setCfg((c) => ({
+                            ...c,
+                            global: {
+                              ...c.global,
+                              colors: { ...globalColors, buttonBorder: v },
+                            },
+                          }))
+                        }
+                        placeholder="#111827"
+                      />
+                    </Grid3>
+                  </GroupCard>
+                </BlockStack>
+              )}
+
+              {tab === "offers" && (
+                <BlockStack gap="400">
+                  <InlineStack align="space-between" blockAlign="center">
+                    <Text as="h2" variant="headingMd">
+                      {tr("section2.offers.title", "Offers")} ({cfg.offers.length}/3)
+                    </Text>
+                    <Badge tone="subdued">
+                      {tr("section2.badge.proSettings", "Pro settings")}
+                    </Badge>
+                  </InlineStack>
+
+                  {cfg.offers.map((offer, index) => (
+                    <OfferEditor
+                      key={index}
+                      offer={offer}
+                      index={index}
+                      products={products}
+                      onChange={(updated) => updateOffer(index, updated)}
+                      onRemove={() => removeOffer(index)}
+                      canRemove={cfg.offers.length > 1}
+                      tr={tr}
+                    />
+                  ))}
+
+                  <div className="add-wrap">
+                    <div className="add-btn">
+                      <Button
+                        fullWidth
+                        onClick={addOffer}
+                        disabled={cfg.offers.length >= 3}
+                        icon={PI.CirclePlusIcon}
+                      >
+                        {tr("section2.offers.add", "Add an offer")}
+                      </Button>
+                    </div>
+                  </div>
+                </BlockStack>
+              )}
+
+              {tab === "upsells" && (
+                <BlockStack gap="400">
+                  <InlineStack align="space-between" blockAlign="center">
+                    <Text as="h2" variant="headingMd">
+                      {tr("section2.upsells.title", "Upsells")} ({cfg.upsells.length}/3)
+                    </Text>
+                    <Badge tone="subdued">
+                      {tr("section2.badge.noButton", "No button")}
+                    </Badge>
+                  </InlineStack>
+
+                  {cfg.upsells.map((upsell, index) => (
+                    <UpsellEditor
+                      key={index}
+                      upsell={upsell}
+                      index={index}
+                      products={products}
+                      onChange={(updated) => updateUpsell(index, updated)}
+                      onRemove={() => removeUpsell(index)}
+                      canRemove={cfg.upsells.length > 1}
+                      tr={tr}
+                    />
+                  ))}
+
+                  <div className="add-wrap">
+                    <div className="add-btn">
+                      <Button
+                        fullWidth
+                        onClick={addUpsell}
+                        disabled={cfg.upsells.length >= 3}
+                        icon={PI.CirclePlusIcon}
+                      >
+                        {tr("section2.upsells.add", "Add an upsell")}
+                      </Button>
+                    </div>
+                  </div>
+                </BlockStack>
+              )}
+
+              {tab === "thankyou" && (
+                <BlockStack gap="400">
+                  <InlineStack align="space-between" blockAlign="center">
+                    <Text as="h2" variant="headingMd">
+                      {tr("thankyou.tabTitle", "Thank you page")}
+                    </Text>
+                    <Badge tone="subdued">{tr("thankyou.badge.pro", "Pro tools")}</Badge>
+                  </InlineStack>
+
+                  <ThankYouEditor
+                    thankYou={thankYou}
+                    globalColors={globalColors}
+                    onChange={(nextTy) => setCfg((c) => ({ ...c, thankYou: nextTy }))}
+                    tr={tr}
+                  />
+                </BlockStack>
+              )}
+            </div>
+          </div>
+
+          {tab !== "thankyou" && (
+            <div className="tf-preview-col">
+              <div className="tf-preview-card">
+                <BlockStack gap="300">
+                  <InlineStack align="space-between" blockAlign="center">
+                    <Text as="h3" variant="headingSm">
+                      {tr("section2.preview.title", "Preview")}
+                    </Text>
+                    <Badge tone={cfg.global.enabled ? "success" : "critical"}>
+                      {cfg.global.enabled
+                        ? tr("section2.preview.active", "Active")
+                        : tr("section2.preview.inactive", "Inactive")}
+                    </Badge>
+                  </InlineStack>
 
                   <Text as="p" variant="bodySm" tone="subdued">
-                    {tr("section2.global.paletteHint", "Choose a global palette (applied to all items by default).")}
+                    {tr("section2.preview.subtitle", "Fast preview (what the customer sees).")}
                   </Text>
-
-                  <PaletteSelector
-                    value={globalColors.paletteId || "clean-pro"}
-                    onChange={(paletteId) =>
-                      setCfg((c) => ({
-                        ...c,
-                        global: {
-                          ...c.global,
-                          colors: applyPaletteToGlobal(
-                            c.global?.colors || DEFAULT_GLOBAL_COLORS,
-                            paletteId
-                          ),
-                        },
-                      }))
-                    }
-                  />
 
                   <Divider />
 
                   <Text as="p" variant="bodySm" fontWeight="bold">
-                    {tr("section2.global.manualColorsTitle", "Global colors")}
+                    {tr("section2.preview.offersTitle", "Offers")}
                   </Text>
+                  {activeOffers.length ? (
+                    <BlockStack gap="200">
+                      {activeOffers.map((o, idx) => (
+                        <PreviewCard
+                          key={`o-${idx}`}
+                          item={o}
+                          products={products}
+                          isOffer
+                          globalColors={globalColors}
+                          tr={tr}
+                        />
+                      ))}
+                    </BlockStack>
+                  ) : (
+                    <Text variant="bodySm" tone="subdued">
+                      {tr("section2.preview.noOffer", "No active offer in preview.")}
+                    </Text>
+                  )}
 
-                  <Grid3>
-                    <ColorField
-                      label={tr("section2.colors.cardBg", "Card background")}
-                      value={globalColors.cardBg}
-                      onChange={(v) =>
-                        setCfg((c) => ({
-                          ...c,
-                          global: { ...c.global, colors: { ...globalColors, cardBg: v } },
-                        }))
-                      }
-                      placeholder="#FFFFFF"
-                    />
-                    <ColorField
-                      label={tr("section2.colors.borderColor", "Border color")}
-                      value={globalColors.borderColor}
-                      onChange={(v) =>
-                        setCfg((c) => ({
-                          ...c,
-                          global: { ...c.global, colors: { ...globalColors, borderColor: v } },
-                        }))
-                      }
-                      placeholder="#E5E7EB"
-                    />
-                    <ColorField
-                      label={tr("section2.colors.iconBg", "Icon background")}
-                      value={globalColors.iconBg}
-                      onChange={(v) =>
-                        setCfg((c) => ({
-                          ...c,
-                          global: { ...c.global, colors: { ...globalColors, iconBg: v } },
-                        }))
-                      }
-                      placeholder="#EEF2FF"
-                    />
-                  </Grid3>
+                  <Divider />
 
-                  <Grid3>
-                    <ColorField
-                      label={tr("section2.colors.buttonBg", "Button background")}
-                      value={globalColors.buttonBg}
-                      onChange={(v) =>
-                        setCfg((c) => ({
-                          ...c,
-                          global: { ...c.global, colors: { ...globalColors, buttonBg: v } },
-                        }))
-                      }
-                      placeholder="#111827"
-                    />
-                    <ColorField
-                      label={tr("section2.colors.buttonText", "Button text color")}
-                      value={globalColors.buttonTextColor}
-                      onChange={(v) =>
-                        setCfg((c) => ({
-                          ...c,
-                          global: { ...c.global, colors: { ...globalColors, buttonTextColor: v } },
-                        }))
-                      }
-                      placeholder="#FFFFFF"
-                    />
-                    <ColorField
-                      label={tr("section2.colors.buttonBorder", "Button border")}
-                      value={globalColors.buttonBorder}
-                      onChange={(v) =>
-                        setCfg((c) => ({
-                          ...c,
-                          global: { ...c.global, colors: { ...globalColors, buttonBorder: v } },
-                        }))
-                      }
-                      placeholder="#111827"
-                    />
-                  </Grid3>
-                </GroupCard>
-              </BlockStack>
-            )}
-
-            {tab === "offers" && (
-              <BlockStack gap="400">
-                <InlineStack align="space-between" blockAlign="center">
-                  <Text as="h2" variant="headingMd">
-                    {tr("section2.offers.title", "Offers")} ({cfg.offers.length}/3)
+                  <Text as="p" variant="bodySm" fontWeight="bold">
+                    {tr("section2.preview.upsellsTitle", "Upsells")}
                   </Text>
-                  <Badge tone="subdued">{tr("section2.badge.proSettings", "Pro settings")}</Badge>
-                </InlineStack>
-
-                {cfg.offers.map((offer, index) => (
-                  <OfferEditor
-                    key={index}
-                    offer={offer}
-                    index={index}
-                    products={products}
-                    onChange={(updated) => updateOffer(index, updated)}
-                    onRemove={() => removeOffer(index)}
-                    canRemove={cfg.offers.length > 1}
-                    tr={tr}
-                  />
-                ))}
-
-                <div className="add-wrap">
-                  <div className="add-btn">
-                    <Button
-                      fullWidth
-                      onClick={addOffer}
-                      disabled={cfg.offers.length >= 3}
-                      icon={PI.CirclePlusIcon}
-                    >
-                      {tr("section2.offers.add", "Add an offer")}
-                    </Button>
-                  </div>
-                </div>
-              </BlockStack>
-            )}
-
-            {tab === "upsells" && (
-              <BlockStack gap="400">
-                <InlineStack align="space-between" blockAlign="center">
-                  <Text as="h2" variant="headingMd">
-                    {tr("section2.upsells.title", "Upsells")} ({cfg.upsells.length}/3)
-                  </Text>
-                  <Badge tone="subdued">{tr("section2.badge.noButton", "No button")}</Badge>
-                </InlineStack>
-
-                {cfg.upsells.map((upsell, index) => (
-                  <UpsellEditor
-                    key={index}
-                    upsell={upsell}
-                    index={index}
-                    products={products}
-                    onChange={(updated) => updateUpsell(index, updated)}
-                    onRemove={() => removeUpsell(index)}
-                    canRemove={cfg.upsells.length > 1}
-                    tr={tr}
-                  />
-                ))}
-
-                <div className="add-wrap">
-                  <div className="add-btn">
-                    <Button
-                      fullWidth
-                      onClick={addUpsell}
-                      disabled={cfg.upsells.length >= 3}
-                      icon={PI.CirclePlusIcon}
-                    >
-                      {tr("section2.upsells.add", "Add an upsell")}
-                    </Button>
-                  </div>
-                </div>
-              </BlockStack>
-            )}
-
-            {tab === "thankyou" && (
-              <BlockStack gap="400">
-                <InlineStack align="space-between" blockAlign="center">
-                  <Text as="h2" variant="headingMd">{tr("thankyou.tabTitle", "Thank you page")}</Text>
-                  <Badge tone="subdued">{tr("thankyou.badge.pro", "Pro tools")}</Badge>
-                </InlineStack>
-
-                <ThankYouEditor
-                  thankYou={thankYou}
-                  globalColors={globalColors}
-                  onChange={(nextTy) => setCfg((c) => ({ ...c, thankYou: nextTy }))}
-                  tr={tr}
-                />
-              </BlockStack>
-            )}
-          </div>
-        </div>
-
-        {tab !== "thankyou" && (
-          <div className="tf-preview-col">
-            <div className="tf-preview-card">
-              <BlockStack gap="300">
-                <InlineStack align="space-between" blockAlign="center">
-                  <Text as="h3" variant="headingSm">{tr("section2.preview.title", "Preview")}</Text>
-                  <Badge tone={cfg.global.enabled ? "success" : "critical"}>
-                    {cfg.global.enabled
-                      ? tr("section2.preview.active", "Active")
-                      : tr("section2.preview.inactive", "Inactive")}
-                  </Badge>
-                </InlineStack>
-
-                <Text as="p" variant="bodySm" tone="subdued">
-                  {tr("section2.preview.subtitle", "Fast preview (what the customer sees).")}
-                </Text>
-
-                <Divider />
-
-                <Text as="p" variant="bodySm" fontWeight="bold">
-                  {tr("section2.preview.offersTitle", "Offers")}
-                </Text>
-                {activeOffers.length ? (
-                  <BlockStack gap="200">
-                    {activeOffers.map((o, idx) => (
-                      <PreviewCard
-                        key={`o-${idx}`}
-                        item={o}
-                        products={products}
-                        isOffer
-                        globalColors={globalColors}
-                        tr={tr}
-                      />
-                    ))}
-                  </BlockStack>
-                ) : (
-                  <Text variant="bodySm" tone="subdued">
-                    {tr("section2.preview.noOffer", "No active offer in preview.")}
-                  </Text>
-                )}
-
-                <Divider />
-
-                <Text as="p" variant="bodySm" fontWeight="bold">
-                  {tr("section2.preview.upsellsTitle", "Upsells")}
-                </Text>
-                {activeUpsells.length ? (
-                  <BlockStack gap="200">
-                    {activeUpsells.map((u, idx) => (
-                      <PreviewCard
-                        key={`u-${idx}`}
-                        item={u}
-                        products={products}
-                        isOffer={false}
-                        globalColors={globalColors}
-                        tr={tr}
-                      />
-                    ))}
-                  </BlockStack>
-                ) : (
-                  <Text variant="bodySm" tone="subdued">
-                    {tr("section2.preview.noUpsell", "No active upsell in preview.")}
-                  </Text>
-                )}
-              </BlockStack>
+                  {activeUpsells.length ? (
+                    <BlockStack gap="200">
+                      {activeUpsells.map((u, idx) => (
+                        <PreviewCard
+                          key={`u-${idx}`}
+                          item={u}
+                          products={products}
+                          isOffer={false}
+                          globalColors={globalColors}
+                          tr={tr}
+                        />
+                      ))}
+                    </BlockStack>
+                  ) : (
+                    <Text variant="bodySm" tone="subdued">
+                      {tr("section2.preview.noUpsell", "No active upsell in preview.")}
+                    </Text>
+                  )}
+                </BlockStack>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
-    </PageShell>
+    </>
   );
 }
 
