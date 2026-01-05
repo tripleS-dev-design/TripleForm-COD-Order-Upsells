@@ -964,7 +964,6 @@ function applyPalette(paletteId, baseColors) {
   if (!p?.preset) return baseColors;
   return { ...baseColors, paletteId, ...p.preset };
 }
-
 function applyPaletteToGlobal(globalColors, paletteId) {
   return applyPalette(paletteId, globalColors);
 }
@@ -1105,7 +1104,7 @@ function PreviewCard({ item, products, isOffer, globalColors, tr }) {
 }
 
 /* ============================== Thank You Preview + Editor (UNCHANGED) ============================== */
-/* NOTE: kept exactly your code behavior, only pasted here from your file in place */
+/* NOTE: kept your behavior */
 function ThankYouPreview({ thankYou, globalColors, tr }) {
   const fallbackImg =
     "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 900 520'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23EEF2FF'/%3E%3Cstop offset='1' stop-color='%23F8FAFC'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='900' height='520' rx='28' fill='url(%23g)'/%3E%3Cpath d='M220 210l110-110 220 220v180H170V210z' fill='%234F46E5' opacity='.88'/%3E%3Ccircle cx='240' cy='190' r='46' fill='%2399A7FF' opacity='.85'/%3E%3C/svg%3E";
@@ -1322,15 +1321,8 @@ function ThankYouPreview({ thankYou, globalColors, tr }) {
 }
 
 /* ============================== Editors (Offers / Upsells) ============================== */
-function OfferEditor({
-  offer,
-  index,
-  products,
-  onChange,
-  onRemove,
-  canRemove,
-  tr,
-}) {
+/* (unchanged from your code) */
+function OfferEditor({ offer, index, products, onChange, onRemove, canRemove, tr }) {
   const productOptions = useMemo(() => {
     const opts = (products || []).map((p) => ({
       label: p.title || tr("section2.product.fallbackLabel", "Product"),
@@ -1350,11 +1342,7 @@ function OfferEditor({
   return (
     <div className="item-card">
       {canRemove && (
-        <div
-          className="remove-btn"
-          onClick={onRemove}
-          title={tr("section2.common.remove", "Remove")}
-        >
+        <div className="remove-btn" onClick={onRemove} title={tr("section2.common.remove", "Remove")}>
           ×
         </div>
       )}
@@ -1433,13 +1421,8 @@ function OfferEditor({
               label={tr("section2.quantity.label", "Number of products")}
               value={String(qtyMultiplier)}
               options={OFFER_QTY_OPTIONS}
-              onChange={(v) =>
-                onChange({ ...offer, qtyMultiplier: clampInt(v, 1, 3, 1) })
-              }
-              helpText={tr(
-                "section2.quantity.help",
-                "Used to calculate totals (x2/x3) in the offer logic."
-              )}
+              onChange={(v) => onChange({ ...offer, qtyMultiplier: clampInt(v, 1, 3, 1) })}
+              helpText={tr("section2.quantity.help", "Used to calculate totals (x2/x3) in the offer logic.")}
             />
             <div />
             <div />
@@ -1506,34 +1489,21 @@ function OfferEditor({
                 <ColorField
                   label={tr("section2.colors.cardBg", "Card background")}
                   value={offer.colors?.cardBg || ""}
-                  onChange={(v) =>
-                    onChange({
-                      ...offer,
-                      colors: { ...(offer.colors || {}), cardBg: v },
-                    })
-                  }
+                  onChange={(v) => onChange({ ...offer, colors: { ...(offer.colors || {}), cardBg: v } })}
                   placeholder="#FFFFFF"
                 />
                 <ColorField
                   label={tr("section2.colors.borderColor", "Border color")}
                   value={offer.colors?.borderColor || ""}
                   onChange={(v) =>
-                    onChange({
-                      ...offer,
-                      colors: { ...(offer.colors || {}), borderColor: v },
-                    })
+                    onChange({ ...offer, colors: { ...(offer.colors || {}), borderColor: v } })
                   }
                   placeholder="#E5E7EB"
                 />
                 <ColorField
                   label={tr("section2.colors.iconBg", "Icon background")}
                   value={offer.colors?.iconBg || ""}
-                  onChange={(v) =>
-                    onChange({
-                      ...offer,
-                      colors: { ...(offer.colors || {}), iconBg: v },
-                    })
-                  }
+                  onChange={(v) => onChange({ ...offer, colors: { ...(offer.colors || {}), iconBg: v } })}
                   placeholder="#EEF2FF"
                 />
               </Grid3>
@@ -1550,22 +1520,14 @@ function OfferEditor({
                 <ColorField
                   label={tr("section2.colors.buttonBg", "Button background")}
                   value={offer.colors?.buttonBg || ""}
-                  onChange={(v) =>
-                    onChange({
-                      ...offer,
-                      colors: { ...(offer.colors || {}), buttonBg: v },
-                    })
-                  }
+                  onChange={(v) => onChange({ ...offer, colors: { ...(offer.colors || {}), buttonBg: v } })}
                   placeholder="#111827"
                 />
                 <ColorField
                   label={tr("section2.colors.buttonText", "Button text color")}
                   value={offer.colors?.buttonTextColor || ""}
                   onChange={(v) =>
-                    onChange({
-                      ...offer,
-                      colors: { ...(offer.colors || {}), buttonTextColor: v },
-                    })
+                    onChange({ ...offer, colors: { ...(offer.colors || {}), buttonTextColor: v } })
                   }
                   placeholder="#FFFFFF"
                 />
@@ -1576,10 +1538,7 @@ function OfferEditor({
                   label={tr("section2.colors.buttonBorder", "Button border")}
                   value={offer.colors?.buttonBorder || ""}
                   onChange={(v) =>
-                    onChange({
-                      ...offer,
-                      colors: { ...(offer.colors || {}), buttonBorder: v },
-                    })
+                    onChange({ ...offer, colors: { ...(offer.colors || {}), buttonBorder: v } })
                   }
                   placeholder="#111827"
                 />
@@ -1594,15 +1553,7 @@ function OfferEditor({
   );
 }
 
-function UpsellEditor({
-  upsell,
-  index,
-  products,
-  onChange,
-  onRemove,
-  canRemove,
-  tr,
-}) {
+function UpsellEditor({ upsell, index, products, onChange, onRemove, canRemove, tr }) {
   const productOptions = useMemo(() => {
     const opts = (products || []).map((p) => ({
       label: p.title || tr("section2.product.fallbackLabel", "Product"),
@@ -1617,11 +1568,7 @@ function UpsellEditor({
   return (
     <div className="item-card">
       {canRemove && (
-        <div
-          className="remove-btn"
-          onClick={onRemove}
-          title={tr("section2.common.remove", "Remove")}
-        >
+        <div className="remove-btn" onClick={onRemove} title={tr("section2.common.remove", "Remove")}>
           ×
         </div>
       )}
@@ -1709,34 +1656,21 @@ function UpsellEditor({
                 <ColorField
                   label={tr("section2.colors.cardBg", "Card background")}
                   value={upsell.colors?.cardBg || ""}
-                  onChange={(v) =>
-                    onChange({
-                      ...upsell,
-                      colors: { ...(upsell.colors || {}), cardBg: v },
-                    })
-                  }
+                  onChange={(v) => onChange({ ...upsell, colors: { ...(upsell.colors || {}), cardBg: v } })}
                   placeholder="#FFFFFF"
                 />
                 <ColorField
                   label={tr("section2.colors.borderColor", "Border color")}
                   value={upsell.colors?.borderColor || ""}
                   onChange={(v) =>
-                    onChange({
-                      ...upsell,
-                      colors: { ...(upsell.colors || {}), borderColor: v },
-                    })
+                    onChange({ ...upsell, colors: { ...(upsell.colors || {}), borderColor: v } })
                   }
                   placeholder="#E5E7EB"
                 />
                 <ColorField
                   label={tr("section2.colors.iconBg", "Icon background")}
                   value={upsell.colors?.iconBg || ""}
-                  onChange={(v) =>
-                    onChange({
-                      ...upsell,
-                      colors: { ...(upsell.colors || {}), iconBg: v },
-                    })
-                  }
+                  onChange={(v) => onChange({ ...upsell, colors: { ...(upsell.colors || {}), iconBg: v } })}
                   placeholder="#EEF2FF"
                 />
               </Grid3>
@@ -1748,7 +1682,8 @@ function UpsellEditor({
   );
 }
 
-/* ============================== Thank You Editor (your same logic) ============================== */
+/* ============================== Thank You Editor (same logic) ============================== */
+/* (UNCHANGED huge block from your code) */
 function ThankYouEditor({ thankYou, globalColors, onChange, tr }) {
   const ty = thankYou || DEFAULT_THANKYOU;
   const update = (patch) => onChange({ ...ty, ...patch });
@@ -1960,7 +1895,11 @@ function ThankYouEditor({ thankYou, globalColors, onChange, tr }) {
             placeholder="https://cdn.shopify.com/..."
             autoComplete="off"
           />
-          <Button onClick={() => update({ imageUrl: "", iconUrl: "" })} icon={PI.DeleteIcon} variant="secondary">
+          <Button
+            onClick={() => update({ imageUrl: "", iconUrl: "" })}
+            icon={PI.DeleteIcon}
+            variant="secondary"
+          >
             {tr("thankyou.media.clear", "Clear media")}
           </Button>
         </div>
@@ -2190,25 +2129,23 @@ function Section2OffersInner({ products = [] }) {
   const [tab, setTab] = useState("global");
 
   const lastSavedKeyRef = useRef("");
+
+  // ✅ FIX #1: compute key from NORMALIZED config (same as saved)
+  const normalizedCfg = useMemo(() => withDefaults(cfg), [cfg]);
+
   const currentKey = useMemo(() => {
     try {
-      return JSON.stringify(cfg);
+      return JSON.stringify(normalizedCfg);
     } catch {
       return String(Date.now());
     }
-  }, [cfg]);
+  }, [normalizedCfg]);
 
-  const dirty = useMemo(
-    () => currentKey !== lastSavedKeyRef.current,
-    [currentKey]
-  );
+  const dirty = useMemo(() => currentKey !== lastSavedKeyRef.current, [currentKey]);
 
   const persistLocal = (next) => {
     try {
-      window.localStorage.setItem(
-        "tripleform_cod_offers_v33",
-        JSON.stringify(withDefaults(next))
-      );
+      window.localStorage.setItem("tripleform_cod_offers_v33", JSON.stringify(withDefaults(next)));
     } catch {}
   };
 
@@ -2257,7 +2194,7 @@ function Section2OffersInner({ products = [] }) {
     };
   }, []);
 
-  // ✅ IMPORTANT: return boolean (for useUnsavedNavigationGuard)
+  // ✅ FIX #2: after successful save, setCfg(toSave) so dirty becomes false
   const saveOffers = async () => {
     const toSave = withDefaults(cfg);
     try {
@@ -2273,7 +2210,10 @@ function Section2OffersInner({ products = [] }) {
       const j = await res.json().catch(() => ({ ok: true }));
       if (!res.ok || j?.ok === false) throw new Error(j?.error || "Save failed");
 
+      // ✅ VERY IMPORTANT: sync UI state with saved normalized payload
+      setCfg(toSave);
       lastSavedKeyRef.current = JSON.stringify(toSave);
+
       return true;
     } catch {
       return false;
@@ -2282,7 +2222,6 @@ function Section2OffersInner({ products = [] }) {
     }
   };
 
-  // ✅ Unified “leave section” guard (NO spam on each change)
   const navGuard = useUnsavedNavigationGuard({
     dirty,
     onSave: saveOffers,
@@ -2353,7 +2292,6 @@ function Section2OffersInner({ products = [] }) {
 
   return (
     <>
-      {/* ✅ Common header (same flags everywhere) */}
       <TFSectionHeader
         title={tr("section2.header.appTitle", "TripleForm COD")}
         subtitle={tr("section2.header.subtitle", "Offers & Upsells — Pro settings")}
@@ -2362,6 +2300,8 @@ function Section2OffersInner({ products = [] }) {
             <div style={{ fontSize: 12, color: "rgba(249,250,251,0.9)" }}>
               {loading ? tr("common.loading", "Loading...") : ""}
             </div>
+
+            {/* ✅ save button now really clears dirty */}
             <Button variant="primary" onClick={saveOffers} loading={saving}>
               {tr("common.save", "Save")}
             </Button>
@@ -2369,7 +2309,6 @@ function Section2OffersInner({ products = [] }) {
         }
       />
 
-      {/* ✅ The ONLY save warning UI (when user tries to LEAVE the section) */}
       <UnsavedSaveBar
         open={navGuard.open}
         dirty={navGuard.dirty}
@@ -2728,8 +2667,8 @@ function Section2OffersInner({ products = [] }) {
                         <PreviewCard
                           key={`u-${idx}`}
                           item={u}
-                          products={products}
                           isOffer={false}
+                          products={products}
                           globalColors={globalColors}
                           tr={tr}
                         />

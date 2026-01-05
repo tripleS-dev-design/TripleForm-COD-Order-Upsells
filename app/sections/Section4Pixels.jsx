@@ -318,25 +318,40 @@ export default function Section4Pixels() {
   const cfgSig = useMemo(() => stableStringify(cfg), [cfg]);
   const [dirty, setDirty] = useState(false);
 
-  useEffect(() => {
-    setDirty(cfgSig !== lastSavedRef.current);
-  }, [cfgSig]);
+  // ✅ IMPORTANT: don't compute dirty until initial data is loaded (prevents false alert on open)
+  const [hydrated, setHydrated] = useState(false);
 
-  // ===== load from localStorage =====
+  useEffect(() => {
+    if (!hydrated) return;
+    setDirty(cfgSig !== lastSavedRef.current);
+  }, [cfgSig, hydrated]);
+
+  // ===== load from localStorage (FIX: set baseline lastSavedRef) =====
   useEffect(() => {
     if (typeof window === "undefined") return;
+
     try {
       const s = window.localStorage.getItem("tripleform_cod_pixels_v1");
-      if (s) {
-        const parsed = JSON.parse(s);
-        setCfg((prev) => ({ ...prev, ...parsed }));
-      }
+      if (!s) return;
+
+      const parsed = JSON.parse(s);
+
+      setCfg((prev) => {
+        const next = { ...prev, ...parsed };
+
+        // ✅ baseline = loaded config
+        lastSavedRef.current = stableStringify(next);
+
+        return next;
+      });
+
+      setDirty(false);
     } catch (e) {
       console.error("load pixels localStorage:", e);
     }
   }, []);
 
-  // ===== load from store (metafield) =====
+  // ===== load from store (metafield) (remote wins) =====
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -350,7 +365,10 @@ export default function Section4Pixels() {
         if (j?.ok && j.pixels) {
           setCfg((prev) => {
             const next = { ...prev, ...j.pixels };
+
+            // ✅ baseline = remote config (source of truth)
             lastSavedRef.current = stableStringify(next);
+
             return next;
           });
 
@@ -360,9 +378,14 @@ export default function Section4Pixels() {
               JSON.stringify(j.pixels)
             );
           } catch {}
+
+          setDirty(false);
         }
       } catch (e) {
         console.error("Error loading pixels (remote):", e);
+      } finally {
+        // ✅ mark hydrated after remote attempt (success or fail)
+        if (!cancelled) setHydrated(true);
       }
     })();
 
@@ -397,6 +420,7 @@ export default function Section4Pixels() {
       const j = await res.json().catch(() => ({ ok: true }));
       if (!res.ok || j?.ok === false) throw new Error(j?.error || "Save failed");
 
+      // ✅ baseline becomes current cfg
       lastSavedRef.current = stableStringify(cfg);
       setDirty(false);
       return true;
@@ -409,6 +433,7 @@ export default function Section4Pixels() {
   };
 
   // ✅ unified navigation guard (only when user tries to leave section)
+  // IMPORTANT: guard must depend on "dirty" which is now correct
   const guard = useUnsavedNavigationGuard({
     dirty,
     onSave: saveToShop,
@@ -441,11 +466,15 @@ export default function Section4Pixels() {
   };
 
   /* ===== simple setters ===== */
-  const setGoogle = (p) => setCfg((c) => ({ ...c, google: { ...c.google, ...p } }));
+  const setGoogle = (p) =>
+    setCfg((c) => ({ ...c, google: { ...c.google, ...p } }));
   const setFB = (p) => setCfg((c) => ({ ...c, fb: { ...c.fb, ...p } }));
-  const setCAPIFB = (p) => setCfg((c) => ({ ...c, capi_fb: { ...c.capi_fb, ...p } }));
-  const setTT = (p) => setCfg((c) => ({ ...c, tiktok: { ...c.tiktok, ...p } }));
-  const setTTAPI = (p) => setCfg((c) => ({ ...c, tiktok_api: { ...c.tiktok_api, ...p } }));
+  const setCAPIFB = (p) =>
+    setCfg((c) => ({ ...c, capi_fb: { ...c.capi_fb, ...p } }));
+  const setTT = (p) =>
+    setCfg((c) => ({ ...c, tiktok: { ...c.tiktok, ...p } }));
+  const setTTAPI = (p) =>
+    setCfg((c) => ({ ...c, tiktok_api: { ...c.tiktok_api, ...p } }));
 
   /* ===== rail menu ===== */
   const panels = [
@@ -561,19 +590,24 @@ export default function Section4Pixels() {
                     <Text as="p">{t("section4.overview.description")}</Text>
                     <ul style={{ paddingLeft: "1.2rem", margin: 0, fontSize: 13 }}>
                       <li>
-                        <b>{t("section4.platforms.google")}</b>: {t("section4.overview.googleDesc")}
+                        <b>{t("section4.platforms.google")}</b>:{" "}
+                        {t("section4.overview.googleDesc")}
                       </li>
                       <li>
-                        <b>{t("section4.platforms.fbPixel")}</b>: {t("section4.overview.fbPixelDesc")}
+                        <b>{t("section4.platforms.fbPixel")}</b>:{" "}
+                        {t("section4.overview.fbPixelDesc")}
                       </li>
                       <li>
-                        <b>{t("section4.platforms.fbCAPI")}</b>: {t("section4.overview.fbCAPIDesc")}
+                        <b>{t("section4.platforms.fbCAPI")}</b>:{" "}
+                        {t("section4.overview.fbCAPIDesc")}
                       </li>
                       <li>
-                        <b>{t("section4.platforms.tiktokPixel")}</b>: {t("section4.overview.tiktokPixelDesc")}
+                        <b>{t("section4.platforms.tiktokPixel")}</b>:{" "}
+                        {t("section4.overview.tiktokPixelDesc")}
                       </li>
                       <li>
-                        <b>{t("section4.platforms.tiktokAPI")}</b>: {t("section4.overview.tiktokAPIDesc")}
+                        <b>{t("section4.platforms.tiktokAPI")}</b>:{" "}
+                        {t("section4.overview.tiktokAPIDesc")}
                       </li>
                     </ul>
                   </BlockStack>
@@ -881,7 +915,11 @@ export default function Section4Pixels() {
                       </ul>
 
                       <InlineStack gap="200" align="start">
-                        <Button variant="primary" onClick={handleTestRemote} loading={testLoading}>
+                        <Button
+                          variant="primary"
+                          onClick={handleTestRemote}
+                          loading={testLoading}
+                        >
                           {t("section4.tests.testButton")}
                         </Button>
                       </InlineStack>
@@ -908,7 +946,9 @@ export default function Section4Pixels() {
                               {readyBadge(!!testResult.fbClientReady)}
                             </InlineStack>
                             <InlineStack align="space-between">
-                              <Text as="span">{t("section4.tests.result.tiktokPixel")}</Text>
+                              <Text as="span">
+                                {t("section4.tests.result.tiktokPixel")}
+                              </Text>
                               {readyBadge(!!testResult.tiktokClientReady)}
                             </InlineStack>
                             <InlineStack align="space-between">

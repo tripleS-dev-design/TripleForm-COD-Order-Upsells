@@ -1683,8 +1683,17 @@ const EN = {
 // Preview
 "section2.ui.thankyou.preview.title": "Thank you page preview",
 "section2.ui.thankyou.preview.openPopup": "Open popup preview",
-"section2.ui.thankyou.preview.empty": "No elements yet. Add text, image or button to start."
+"section2.ui.thankyou.preview.empty": "No elements yet. Add text, image or button to start.",
 
+// Ajouter dans l'objet EN, après les autres clés "common" si elles existent
+"common.save.unsaved": "You have unsaved changes.",
+"common.save.leaveSub": "Are you sure you want to leave? Changes you made will be lost.",
+"common.save.btnSave": "Save",
+"common.save.btnDiscard": "Discard",
+"common.save.btnStay": "Stay",
+
+// Ajouter dans la section 3, après "section3.sheetsConfiguration.selectSpreadsheetHelp"
+"section3.sheetsConfiguration.chooseSpreadsheet": "Choose a spreadsheet"
 
 
 
@@ -3351,7 +3360,18 @@ const FR = {
 // Preview
 "section2.ui.thankyou.preview.title": "Aperçu de la page de remerciement",
 "section2.ui.thankyou.preview.openPopup": "Ouvrir l’aperçu du popup",
-"section2.ui.thankyou.preview.empty": "Aucun élément. Ajoutez du contenu pour commencer."
+"section2.ui.thankyou.preview.empty": "Aucun élément. Ajoutez du contenu pour commencer.",
+
+// Ajouter dans l'objet FR, après les autres clés "common" si elles existent
+"common.save.unsaved": "Vous avez des modifications non enregistrées.",
+"common.save.leaveSub": "Êtes-vous sûr de vouloir quitter ? Les modifications que vous avez apportées seront perdues.",
+"common.save.btnSave": "Enregistrer",
+"common.save.btnDiscard": "Annuler",
+"common.save.btnStay": "Rester",
+
+// Ajouter dans la section 3, après "section3.sheetsConfiguration.selectSpreadsheetHelp"
+"section3.sheetsConfiguration.chooseSpreadsheet": "Choisir une feuille de calcul"
+
 
 
 
@@ -5020,7 +5040,17 @@ const ES = {
 
 "section2.ui.thankyou.preview.title": "Vista previa de agradecimiento",
 "section2.ui.thankyou.preview.openPopup": "Abrir vista previa del popup",
-"section2.ui.thankyou.preview.empty": "Aún no hay elementos. Agrega contenido para empezar."
+"section2.ui.thankyou.preview.empty": "Aún no hay elementos. Agrega contenido para empezar.",
+
+// Ajouter dans l'objet ES, après les autres clés "common" si elles existent
+"common.save.unsaved": "Tienes cambios sin guardar.",
+"common.save.leaveSub": "¿Estás seguro de que quieres salir? Los cambios que has hecho se perderán.",
+"common.save.btnSave": "Guardar",
+"common.save.btnDiscard": "Descartar",
+"common.save.btnStay": "Permanecer",
+
+// Ajouter dans la section 3, après "section3.sheetsConfiguration.selectSpreadsheetHelp"
+"section3.sheetsConfiguration.chooseSpreadsheet": "Elegir una hoja de cálculo"
 
 
 };
@@ -6687,8 +6717,14 @@ const AR = {
 
 "section2.ui.thankyou.preview.title": "معاينة صفحة الشكر",
 "section2.ui.thankyou.preview.openPopup": "فتح معاينة النافذة",
-"section2.ui.thankyou.preview.empty": "لا توجد عناصر بعد. أضف محتوى للبدء."
+"section2.ui.thankyou.preview.empty": "لا توجد عناصر بعد. أضف محتوى للبدء.",
 
+"common.save.unsaved": "لديك تغييرات غير محفوظة.",
+"common.save.leaveSub": "هل أنت متأكد من أنك تريد المغادرة؟ سيتم فقدان التغييرات التي أجريتها.",
+"common.save.btnSave": "حفظ",
+"common.save.btnDiscard": "تجاهل",
+"common.save.btnStay": "البقاء",
+"section3.sheetsConfiguration.chooseSpreadsheet": "اختر جدول بيانات"
 
 };
 
