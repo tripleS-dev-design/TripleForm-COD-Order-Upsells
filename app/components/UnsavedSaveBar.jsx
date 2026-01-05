@@ -121,7 +121,8 @@ export default function UnsavedSaveBar({
       ? ""
       : isError
       ? (t?.("common.save.errorSub") || "Vérifie ta connexion puis clique sur Enregistrer.")
-      : (t?.("common.save.leaveSub") || "Enregistre avant de changer de section, sinon tu vas perdre tes changements.");
+      : (t?.("common.save.leaveSub") ||
+          "Enregistre avant de changer de section, sinon tu vas perdre tes changements.");
 
   return (
     <div className="tf-unsaved-wrap">
@@ -131,8 +132,24 @@ export default function UnsavedSaveBar({
             {badgeText}
           </span>
 
-          <span style={{ width: 18, height: 18, display: "inline-flex", alignItems: "center" }}>
-            <Icon source={isError ? PI.AlertCircleIcon : isSuccess ? PI.CheckCircleIcon : PI.CircleAlertIcon} />
+          <span
+            style={{
+              width: 18,
+              height: 18,
+              display: "inline-flex",
+              alignItems: "center",
+            }}
+          >
+            {/* ✅ FIX: CircleAlertIcon -> AlertCircleIcon */}
+            <Icon
+              source={
+                isError
+                  ? PI.AlertCircleIcon
+                  : isSuccess
+                  ? PI.CheckCircleIcon
+                  : PI.AlertCircleIcon
+              }
+            />
           </span>
 
           <div className="tf-unsaved-text">

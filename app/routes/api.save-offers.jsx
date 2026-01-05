@@ -6,19 +6,21 @@ export const action = async ({ request }) => {
   try {
     const { admin } = await authenticate.admin(request);
 
-    // ⬅️ ON SAUVEGARDE TOUT LE CONFIG
-    const payload = await request.json();
+    // ✅ receive FULL config (global + offers + upsells + thankYou + meta)
+    const payload = await request.json().catch(() => null);
+    if (!payload || typeof payload !== "object") {
+      return json({ ok: false, error: "Invalid JSON payload" }, { status: 400 });
+    }
 
     const shopRes = await admin.graphql(`{ shop { id } }`);
     const shopJson = await shopRes.json();
     const shopId = shopJson?.data?.shop?.id;
-    if (!shopId) {
-      return json({ ok: false, error: "No shopId" }, { status: 400 });
-    }
+    if (!shopId) return json({ ok: false, error: "No shopId" }, { status: 400 });
 
     const mfRes = await admin.graphql(
       `mutation metafieldsSet($metafields:[MetafieldsSetInput!]!) {
         metafieldsSet(metafields:$metafields) {
+          metafields { id key namespace }
           userErrors { field message }
         }
       }`,
@@ -29,7 +31,7 @@ export const action = async ({ request }) => {
               namespace: "tripleform_cod",
               key: "offers",
               type: "json",
-              value: JSON.stringify(payload), // ✅ TOUT LE CONFIG
+              value: JSON.stringify(payload),
               ownerId: shopId,
             },
           ],
@@ -38,16 +40,11 @@ export const action = async ({ request }) => {
     );
 
     const mfJson = await mfRes.json();
-    const errors = mfJson?.data?.metafieldsSet?.userErrors || [];
-    if (errors.length) {
-      return json({ ok: false, errors }, { status: 400 });
-    }
+    const errs = mfJson?.data?.metafieldsSet?.userErrors || [];
+    if (errs.length) return json({ ok: false, errors: errs }, { status: 400 });
 
     return json({ ok: true });
   } catch (e) {
-    return json(
-      { ok: false, error: String(e?.message || e) },
-      { status: 500 }
-    );
+    return json({ ok: false, error: String(e?.message || e) }, { status: 500 });
   }
 };
