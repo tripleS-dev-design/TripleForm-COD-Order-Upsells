@@ -1,5 +1,4 @@
 // ===== File: app/sections/Section1FormsLayout.jsx =====
-
 import React, {
   createContext,
   useContext,
@@ -25,7 +24,9 @@ import * as PI from "@shopify/polaris-icons";
 import { useNavigate, useRouteLoaderData } from "@remix-run/react";
 import { useI18n } from "../i18n/react";
 
-import CountryFlagsBar from "../components/CountryFlagsBar";
+import TFSectionHeader from "../components/TFSectionHeader";
+import UnsavedSaveBar from "../components/UnsavedSaveBar";
+import { useUnsavedNavigationGuard } from "../hooks/useUnsavedNavigationGuard";
 
 import {
   COUNTRY_DATA,
@@ -38,7 +39,6 @@ import {
 const iconCache = new Map();
 
 function getIconSource(iconName, fallbackIcon = "AppsIcon") {
-  // ✅ supports "NONE"
   if (!iconName) return null;
 
   if (typeof iconName !== "string") {
@@ -86,7 +86,6 @@ function getIconSource(iconName, fallbackIcon = "AppsIcon") {
   const commonMappings = {
     cart: "CartIcon",
     shoppingcart: "CartIcon",
-    // ✅ removed bag/products/truck/gift/map as requested
     person: "PersonIcon",
     user: "PersonIcon",
     phone: "PhoneIcon",
@@ -188,12 +187,13 @@ function buildThemeEditorUrl({
 }
 
 /* ======================= CSS / layout ======================= */
+/* ✅ Note: header+flags CSS stays here so TFSectionHeader renders identically (same wrapper) */
 const LAYOUT_CSS = `
   html, body { margin:0; background:#F6F7F9; }
   .Polaris-Page, .Polaris-Page__Content { max-width:none!important; padding-left:0!important; padding-right:0!important; }
   .Polaris-TextField, .Polaris-Select, .Polaris-Labelled__LabelWrapper { min-width:0; }
 
-  /* ✅ HEADER SLIM + FLAGS */
+  /* ✅ HEADER — shared wrapper for flags (no condensation) */
   .tf-header{
     background:linear-gradient(90deg,#0B3B82,#7D0031);
     border-bottom:none;
@@ -250,74 +250,6 @@ const LAYOUT_CSS = `
     justify-content:flex-end;
     gap:10px;
     min-width:0;
-  }
-
-  /* ✅ SAVE BAR (slim, pro) */
-  .tf-savebar{
-    position:sticky;
-    top:56px;
-    z-index:55;
-    padding:8px 10px;
-    background:rgba(255,255,255,0.86);
-    backdrop-filter: blur(10px);
-    border-bottom:1px solid #E5E7EB;
-  }
-  .tf-savebar-inner{
-    max-width:1100px;
-    margin:0 auto;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:12px;
-    padding:10px 12px;
-    border-radius:14px;
-    border:1px solid #E5E7EB;
-    box-shadow:0 10px 24px rgba(15,23,42,.06);
-  }
-  .tf-savebar-left{
-    display:flex;
-    align-items:center;
-    gap:10px;
-    min-width:0;
-  }
-  .tf-savebadge{
-    font-size:12px;
-    font-weight:900;
-    padding:6px 10px;
-    border-radius:999px;
-    border:1px solid #E5E7EB;
-    background:#F8FAFC;
-    white-space:nowrap;
-  }
-  .tf-savebar-text{
-    display:flex;
-    flex-direction:column;
-    min-width:0;
-    line-height:1.15;
-  }
-  .tf-savemsg{
-    font-size:13px;
-    font-weight:700;
-    color:#0F172A;
-    overflow:hidden;
-    text-overflow:ellipsis;
-    white-space:nowrap;
-  }
-  .tf-savesub{
-    font-size:12px;
-    color:#64748B;
-    font-weight:600;
-    overflow:hidden;
-    text-overflow:ellipsis;
-    white-space:nowrap;
-  }
-
-  @keyframes tfBarBlink { 0%,100%{filter:none} 50%{filter:brightness(1.15)} }
-  @keyframes tfBarSlide { 0%{transform:translateX(0)} 50%{transform:translateX(10px)} 100%{transform:translateX(0)} }
-  .tf-attention{
-    animation: tfBarBlink .9s ease-in-out 2, tfBarSlide .9s ease-in-out 2;
-    border-color:#F97316 !important;
-    box-shadow:0 10px 24px rgba(249,115,22,.18);
   }
 
   .tf-shell { padding:16px; }
@@ -474,8 +406,11 @@ const LAYOUT_CSS = `
 
 function useInjectCss() {
   useEffect(() => {
+    const id = "tf-layout-css-section1";
+    const existing = document.getElementById(id);
+    if (existing) return;
     const t = document.createElement("style");
-    t.id = "tf-layout-css";
+    t.id = id;
     t.appendChild(document.createTextNode(LAYOUT_CSS));
     document.head.appendChild(t);
     return () => t.remove();
@@ -719,7 +654,6 @@ const DESIGN_PRESETS = {
     cartTextColor: "#374151",
   },
 
-  /* ✅ event presets */
   BlackFriday: {
     bg: "#0B1220",
     text: "#F8FAFC",
@@ -858,33 +792,131 @@ const ICON_LIBRARY = {
     { value: "PinIcon", label: "Épingle" },
     { value: "HomeIcon", label: "Maison" },
   ],
-  pincode2: [NONE_ICON, { value: "LocationIcon", label: "Localisation" }, { value: "GlobeIcon", label: "Globe" }],
-  pincode3: [NONE_ICON, { value: "HashtagIcon", label: "Hashtag" }, { value: "CircleInformationIcon", label: "Information" }, { value: "LocationIcon", label: "Marqueur" }],
+  pincode2: [
+    NONE_ICON,
+    { value: "LocationIcon", label: "Localisation" },
+    { value: "GlobeIcon", label: "Globe" },
+  ],
+  pincode3: [
+    NONE_ICON,
+    { value: "HashtagIcon", label: "Hashtag" },
+    { value: "CircleInformationIcon", label: "Information" },
+    { value: "LocationIcon", label: "Marqueur" },
+  ],
   email: [NONE_ICON, { value: "EmailIcon", label: "Email" }],
   company: [NONE_ICON, { value: "StoreIcon", label: "Magasin" }],
   birthday: [NONE_ICON, { value: "CalendarIcon", label: "Calendrier" }],
-  address: [NONE_ICON, { value: "HomeIcon", label: "Maison" }, { value: "LocationIcon", label: "Localisation" }, { value: "PinIcon", label: "Épingle" }],
-  city: [NONE_ICON, { value: "LocationIcon", label: "Localisation" }, { value: "GlobeIcon", label: "Globe" }],
-  province: [NONE_ICON, { value: "GlobeIcon", label: "Globe" }, { value: "LocationIcon", label: "Localisation" }],
-  notes: [NONE_ICON, { value: "NoteIcon", label: "Note" }, { value: "ClipboardIcon", label: "Presse-papier" }, { value: "TextIcon", label: "Texte" }],
-  button: [NONE_ICON, { value: "CartIcon", label: "Panier" }, { value: "CheckCircleIcon", label: "Valider" }, { value: "ArrowRightIcon", label: "Flèche droite" }, { value: "PlayIcon", label: "Play" }],
+  address: [
+    NONE_ICON,
+    { value: "HomeIcon", label: "Maison" },
+    { value: "LocationIcon", label: "Localisation" },
+    { value: "PinIcon", label: "Épingle" },
+  ],
+  city: [
+    NONE_ICON,
+    { value: "LocationIcon", label: "Localisation" },
+    { value: "GlobeIcon", label: "Globe" },
+  ],
+  province: [
+    NONE_ICON,
+    { value: "GlobeIcon", label: "Globe" },
+    { value: "LocationIcon", label: "Localisation" },
+  ],
+  notes: [
+    NONE_ICON,
+    { value: "NoteIcon", label: "Note" },
+    { value: "ClipboardIcon", label: "Presse-papier" },
+    { value: "TextIcon", label: "Texte" },
+  ],
+  button: [
+    NONE_ICON,
+    { value: "CartIcon", label: "Panier" },
+    { value: "CheckCircleIcon", label: "Valider" },
+    { value: "ArrowRightIcon", label: "Flèche droite" },
+    { value: "PlayIcon", label: "Play" },
+  ],
 };
 
 /* ============================== Color palettes ============================== */
 const COLOR_PALETTES = [
-  { id: "blue-gradient", name: "Gradient Bleu", colors: ["#0B3B82", "#7D0031", "#00A7A3", "#F0F9FF", "#0C4A6E"], preset: "SkyBlueUI" },
-  { id: "clean-white", name: "Blanc Pro", colors: ["#111827", "#FFFFFF", "#E5E7EB", "#F9FAFB", "#00A7A3"], preset: "CleanWhite" },
-  { id: "dark-modern", name: "Dark Modern", colors: ["#0B1220", "#2563EB", "#1F2A44", "#101828", "#E5F0FF"], preset: "BoldDark" },
-  { id: "green-nature", name: "Green Nature", colors: ["#10B981", "#065F46", "#D1FAE5", "#ECFDF5", "#F0FDF4"], preset: "GreenNature" },
-  { id: "sunset-orange", name: "Sunset", colors: ["#F97316", "#9A3412", "#FDBA74", "#FFEDD5", "#FFF7ED"], preset: "SunsetOrange" },
-  { id: "purple-elegant", name: "Purple Elegant", colors: ["#8B5CF6", "#5B21B6", "#E9D5FF", "#F5F3FF", "#FAF5FF"], preset: "PurpleElegant" },
-  { id: "luxury-gold", name: "Luxury Gold", colors: ["#D97706", "#854D0E", "#FDE68A", "#FEF3C7", "#FEFCE8"], preset: "LuxuryGold" },
-  { id: "ocean-deep", name: "Ocean", colors: ["#0891B2", "#0E7490", "#A5F3FC", "#CFFAFE", "#ECFEFF"], preset: "OceanDeep" },
-  { id: "minimal-gray", name: "Minimal Gray", colors: ["#4B5563", "#111827", "#D1D5DB", "#F9FAFB", "#FFFFFF"], preset: "MinimalGray" },
-  { id: "black-friday", name: "Black Friday", colors: ["#0B1220", "#EF4444", "#F97316", "#111827", "#F8FAFC"], preset: "BlackFriday" },
-  { id: "ramadan", name: "Ramadan", colors: ["#10B981", "#0EA5E9", "#BBF7D0", "#ECFDF5", "#064E3B"], preset: "Ramadan" },
-  { id: "valentine", name: "Valentine", colors: ["#EC4899", "#F43F5E", "#FECDD3", "#FFF1F2", "#9F1239"], preset: "Valentine" },
-  { id: "new-year", name: "New Year", colors: ["#0B3B82", "#7D0031", "#00A7A3", "#F8FAFC", "#0F172A"], preset: "NewYear" },
+  {
+    id: "blue-gradient",
+    name: "Gradient Bleu",
+    colors: ["#0B3B82", "#7D0031", "#00A7A3", "#F0F9FF", "#0C4A6E"],
+    preset: "SkyBlueUI",
+  },
+  {
+    id: "clean-white",
+    name: "Blanc Pro",
+    colors: ["#111827", "#FFFFFF", "#E5E7EB", "#F9FAFB", "#00A7A3"],
+    preset: "CleanWhite",
+  },
+  {
+    id: "dark-modern",
+    name: "Dark Modern",
+    colors: ["#0B1220", "#2563EB", "#1F2A44", "#101828", "#E5F0FF"],
+    preset: "BoldDark",
+  },
+  {
+    id: "green-nature",
+    name: "Green Nature",
+    colors: ["#10B981", "#065F46", "#D1FAE5", "#ECFDF5", "#F0FDF4"],
+    preset: "GreenNature",
+  },
+  {
+    id: "sunset-orange",
+    name: "Sunset",
+    colors: ["#F97316", "#9A3412", "#FDBA74", "#FFEDD5", "#FFF7ED"],
+    preset: "SunsetOrange",
+  },
+  {
+    id: "purple-elegant",
+    name: "Purple Elegant",
+    colors: ["#8B5CF6", "#5B21B6", "#E9D5FF", "#F5F3FF", "#FAF5FF"],
+    preset: "PurpleElegant",
+  },
+  {
+    id: "luxury-gold",
+    name: "Luxury Gold",
+    colors: ["#D97706", "#854D0E", "#FDE68A", "#FEF3C7", "#FEFCE8"],
+    preset: "LuxuryGold",
+  },
+  {
+    id: "ocean-deep",
+    name: "Ocean",
+    colors: ["#0891B2", "#0E7490", "#A5F3FC", "#CFFAFE", "#ECFEFF"],
+    preset: "OceanDeep",
+  },
+  {
+    id: "minimal-gray",
+    name: "Minimal Gray",
+    colors: ["#4B5563", "#111827", "#D1D5DB", "#F9FAFB", "#FFFFFF"],
+    preset: "MinimalGray",
+  },
+  {
+    id: "black-friday",
+    name: "Black Friday",
+    colors: ["#0B1220", "#EF4444", "#F97316", "#111827", "#F8FAFC"],
+    preset: "BlackFriday",
+  },
+  {
+    id: "ramadan",
+    name: "Ramadan",
+    colors: ["#10B981", "#0EA5E9", "#BBF7D0", "#ECFDF5", "#064E3B"],
+    preset: "Ramadan",
+  },
+  {
+    id: "valentine",
+    name: "Valentine",
+    colors: ["#EC4899", "#F43F5E", "#FECDD3", "#FFF1F2", "#9F1239"],
+    preset: "Valentine",
+  },
+  {
+    id: "new-year",
+    name: "New Year",
+    colors: ["#0B3B82", "#7D0031", "#00A7A3", "#F8FAFC", "#0F172A"],
+    preset: "NewYear",
+  },
 ];
 
 /* ============================== Sanitizer ============================== */
@@ -938,7 +970,12 @@ function getGlowColor(design) {
 }
 
 /* ============================== PolarisIcon component ============================== */
-function PolarisIcon({ iconName, size = 20, color = "currentColor", accessibilityLabel }) {
+function PolarisIcon({
+  iconName,
+  size = 20,
+  color = "currentColor",
+  accessibilityLabel,
+}) {
   if (!iconName) return null;
   const source = getIconSource(iconName);
   if (!source) return null;
@@ -961,141 +998,11 @@ function PolarisIcon({ iconName, size = 20, color = "currentColor", accessibilit
   );
 }
 
-/* ============================== SaveBarSlim (TOP) ============================== */
-function SaveBarSlim({ dirty, saving, notice, attention, onSave, t }) {
-  if (!dirty && !notice) return null;
-
-  const isError = notice?.type === "error";
-  const isSuccess = notice?.type === "success";
-
-  const badgeText = isError ? "Error" : isSuccess ? "Saved" : dirty ? "Unsaved" : "Info";
-  const badgeStyle = isError
-    ? { background: "#FEF2F2", borderColor: "#FCA5A5", color: "#991B1B" }
-    : isSuccess
-    ? { background: "#ECFDF5", borderColor: "#86EFAC", color: "#065F46" }
-    : dirty
-    ? { background: "#FFF7ED", borderColor: "#FDBA74", color: "#9A3412" }
-    : {};
-
-  const mainMsg =
-    notice?.msg ||
-    (dirty ? (t?.("section1.savebar.unsaved") || "You have unsaved changes.") : "");
-
-  const subMsg =
-    dirty
-      ? (t?.("section1.savebar.sub") || "Save before leaving this section to avoid losing changes.")
-      : "";
-
-  return (
-    <div className="tf-savebar">
-      <div className={`tf-savebar-inner ${attention ? "tf-attention" : ""}`}>
-        <div className="tf-savebar-left">
-          <span className="tf-savebadge" style={badgeStyle}>
-            {badgeText}
-          </span>
-
-          <div className="tf-savebar-text">
-            <div className="tf-savemsg">{mainMsg}</div>
-            {subMsg ? <div className="tf-savesub">{subMsg}</div> : null}
-          </div>
-        </div>
-
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          {dirty ? (
-            <Button variant="primary" onClick={onSave} loading={saving}>
-              {t?.("section1.header.btnSave") || "Save"}
-            </Button>
-          ) : null}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ============================== Shell ============================== */
-function PageShell({
-  themeLink,
-  onOpenPreview,
-  onSave,
-  saving,
-  t,
-  dirty,
-  saveNotice,
-  saveAttention,
-}) {
-  return (
-    <>
-      <div className="tf-header">
-        <div className="tf-header-row">
-          {/* LEFT: brand */}
-          <div className="tf-brand">
-            <div
-              style={{
-                width: 38,
-                height: 38,
-                borderRadius: 12,
-                overflow: "hidden",
-                boxShadow: "0 10px 28px rgba(11,59,130,0.55)",
-                border: "1px solid rgba(255,255,255,0.35)",
-                background: "linear-gradient(135deg,#0B3B82,#7D0031)",
-                flex: "0 0 auto",
-              }}
-            >
-              <img
-                src="/tripleform-cod-icon.png"
-                alt="TripleForm COD"
-                style={{ width: "100%", height: "100%", display: "block", objectFit: "cover" }}
-              />
-            </div>
-
-            <div className="tf-brand-text">
-              <div className="tf-brand-title">{t("section1.header.appTitle")}</div>
-              <div className="tf-brand-sub">{t("section1.header.appSubtitle")}</div>
-            </div>
-          </div>
-
-          {/* CENTER: flags */}
-          <div className="tf-flags-wrap">
-            <CountryFlagsBar />
-          </div>
-
-          {/* RIGHT: actions */}
-          <div className="tf-header-right">
-            <Button url={themeLink} external target="_blank">
-              {t("section1.header.btnAddToTheme")}
-            </Button>
-            <Button onClick={onOpenPreview}>{t("section1.header.btnPreview")}</Button>
-            <Button variant="primary" onClick={onSave} loading={saving}>
-              {t("section1.header.btnSave")}
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      {/* ✅ slim save bar under header */}
-      <SaveBarSlim
-        dirty={dirty}
-        saving={saving}
-        notice={saveNotice}
-        attention={saveAttention}
-        onSave={onSave}
-        t={t}
-      />
-
-      <div className="tf-shell">
-        <div className="tf-editor">
-          <OutletEditor />
-        </div>
-      </div>
-    </>
-  );
-}
-
 /* ============================== Page ============================== */
 function Section1FormsLayoutInner() {
   useInjectCss();
 
-  const navigate = useNavigate();
+  const remixNavigate = useNavigate();
   const { t } = useI18n();
   const rootData = useRouteLoaderData("root");
   const apiKey = rootData?.apiKey;
@@ -1169,7 +1076,6 @@ function Section1FormsLayoutInner() {
       country: "MA",
       provinceKey: "",
       cityKey: "",
-      // ✅ button animation
       buttonMotion: "none", // none | x | y | pulse | shake
     },
     fields: {
@@ -1205,39 +1111,9 @@ function Section1FormsLayoutInner() {
   const [showPreview, setShowPreview] = useState(false);
   const [loadingInitial, setLoadingInitial] = useState(true);
 
-  // ✅ Dirty guard
+  // ✅ Dirty tracking (no spam)
   const [dirty, setDirty] = useState(false);
   const lastSavedRef = useRef("");
-  const [navGuardOpen, setNavGuardOpen] = useState(false);
-  const pendingHrefRef = useRef(null);
-
-  // ✅ Save bar state
-  const [saveNotice, setSaveNotice] = useState(null); // {type,msg}
-  const [saveAttention, setSaveAttention] = useState(false);
-  const attentionTimerRef = useRef(null);
-  const noticeTimerRef = useRef(null);
-
-  const bumpAttention = () => {
-    setSaveAttention(true);
-    try {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    } catch {}
-    if (attentionTimerRef.current) clearTimeout(attentionTimerRef.current);
-    attentionTimerRef.current = setTimeout(() => setSaveAttention(false), 1600);
-  };
-
-  const pushNotice = (type, msg) => {
-    setSaveNotice({ type, msg });
-    if (noticeTimerRef.current) clearTimeout(noticeTimerRef.current);
-    noticeTimerRef.current = setTimeout(() => setSaveNotice(null), 2600);
-  };
-
-  useEffect(() => {
-    return () => {
-      if (attentionTimerRef.current) clearTimeout(attentionTimerRef.current);
-      if (noticeTimerRef.current) clearTimeout(noticeTimerRef.current);
-    };
-  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -1301,56 +1177,13 @@ function Section1FormsLayoutInner() {
     };
   }, []);
 
-  // ✅ compute dirty
+  // ✅ compute dirty (silent)
   useEffect(() => {
     if (loadingInitial) return;
     const cur = JSON.stringify(config);
     const base = lastSavedRef.current || "";
     setDirty(cur !== base);
   }, [config, loadingInitial]);
-
-  // ✅ browser unload guard
-  useEffect(() => {
-    const handler = (e) => {
-      if (!dirty) return;
-      e.preventDefault();
-      e.returnValue = "";
-    };
-    window.addEventListener("beforeunload", handler);
-    return () => window.removeEventListener("beforeunload", handler);
-  }, [dirty]);
-
-  // ✅ internal link guard (ONLY when leaving this route/section)
-  useEffect(() => {
-    const onClick = (e) => {
-      if (!dirty) return;
-
-      const a = e.target?.closest?.("a");
-      if (!a) return;
-
-      const href = a.getAttribute("href") || "";
-      const target = a.getAttribute("target");
-
-      if (!href || href.startsWith("#") || target === "_blank") return;
-      if (/^https?:\/\//i.test(href)) return;
-
-      const currentPath = window.location.pathname;
-      const nextPath = href.startsWith("/") ? href.split("?")[0] : href;
-
-      if (!nextPath || nextPath === currentPath) return;
-
-      e.preventDefault();
-
-      // ✅ blink + move save bar (pro)
-      bumpAttention();
-
-      pendingHrefRef.current = href;
-      setNavGuardOpen(true);
-    };
-
-    document.addEventListener("click", onClick, true);
-    return () => document.removeEventListener("click", onClick, true);
-  }, [dirty]);
 
   const persistLocal = () => {
     try {
@@ -1403,7 +1236,6 @@ function Section1FormsLayoutInner() {
     [config.design, eff, glowPx, glowCol, direction, baseFontSize]
   );
 
-  // ✅ base input style WITHOUT icon padding
   const inputBase = useMemo(
     () => ({
       width: "100%",
@@ -1478,7 +1310,9 @@ function Section1FormsLayoutInner() {
     [config.design, eff, glowPx, glowCol, baseFontSize]
   );
 
+  // ✅ save (used by header button + navigation guard)
   const saveToShop = async () => {
+    if (saving) return false;
     setSaving(true);
     try {
       persistLocal();
@@ -1493,31 +1327,27 @@ function Section1FormsLayoutInner() {
       } catch {}
 
       if (!res.ok || !j.ok) {
-        const msg = j?.errors?.[0]?.message || j?.error || t("section1.save.errorGeneric");
+        const msg = j?.errors?.[0]?.message || j?.error || "Save failed";
         throw new Error(msg);
       }
 
       lastSavedRef.current = JSON.stringify(config);
       setDirty(false);
-
-      pushNotice("success", t("section1.save.success"));
       return true;
     } catch (e) {
       console.error(e);
-      const fallbackMessage = t("section1.save.unknownError");
-      pushNotice("error", t("section1.save.failedPrefix") + (e?.message || fallbackMessage));
       return false;
     } finally {
       setSaving(false);
     }
   };
 
-  const proceedPendingNav = () => {
-    const href = pendingHrefRef.current;
-    pendingHrefRef.current = null;
-    setNavGuardOpen(false);
-    if (href) navigate(href);
-  };
+  // ✅ Unified navigation guard (no modal, no spam)
+  const guard = useUnsavedNavigationGuard({
+    dirty,
+    onSave: saveToShop,
+    navigate: (href) => remixNavigate(href),
+  });
 
   if (loadingInitial) {
     return (
@@ -1555,18 +1385,38 @@ function Section1FormsLayoutInner() {
         t,
       }}
     >
-      <PageShell
+      {/* ✅ Common header + flags via shared component */}
+      <TFSectionHeader
+        title={t("section1.header.appTitle")}
+        subtitle={t("section1.header.appSubtitle")}
         themeLink={themeDeepLink}
-        onOpenPreview={() => setShowPreview(true)}
-        onSave={saveToShop}
-        saving={saving}
-        t={t}
-        dirty={dirty}
-        saveNotice={saveNotice}
-        saveAttention={saveAttention}
+        onPreview={() => setShowPreview(true)}
+        rightSlot={
+          <Button variant="primary" onClick={saveToShop} loading={saving}>
+            {t("section1.header.btnSave") || "Enregistrer"}
+          </Button>
+        }
       />
 
-      {/* ✅ modal preview */}
+      {/* ✅ Slim save bar ONLY on leave attempt */}
+      <UnsavedSaveBar
+        open={guard.open}
+        dirty={guard.dirty}
+        saving={guard.saving}
+        mode={guard.mode}
+        onSave={guard.onSave}
+        onDiscard={guard.onDiscard}
+        onCancel={guard.onCancel}
+        t={t}
+      />
+
+      <div className="tf-shell">
+        <div className="tf-editor">
+          <OutletEditor />
+        </div>
+      </div>
+
+      {/* ✅ modal preview (kept) */}
       <Modal
         open={showPreview}
         onClose={() => setShowPreview(false)}
@@ -1579,46 +1429,6 @@ function Section1FormsLayoutInner() {
       >
         <Modal.Section>
           <PreviewPanel />
-        </Modal.Section>
-      </Modal>
-
-      {/* ✅ modal guard unsaved */}
-      <Modal
-        open={navGuardOpen}
-        onClose={() => {
-          pendingHrefRef.current = null;
-          setNavGuardOpen(false);
-        }}
-        title="Unsaved changes"
-        primaryAction={{
-          content: "Save & continue",
-          loading: saving,
-          onAction: async () => {
-            const ok = await saveToShop();
-            if (ok) proceedPendingNav();
-            else bumpAttention();
-          },
-        }}
-        secondaryActions={[
-          {
-            content: "Leave without saving",
-            destructive: true,
-            onAction: () => proceedPendingNav(),
-          },
-          {
-            content: "Cancel",
-            onAction: () => {
-              pendingHrefRef.current = null;
-              setNavGuardOpen(false);
-              bumpAttention();
-            },
-          },
-        ]}
-      >
-        <Modal.Section>
-          <p style={{ margin: 0 }}>
-            You have unsaved settings. Please save before leaving this page.
-          </p>
         </Modal.Section>
       </Modal>
     </FormsCtx.Provider>
@@ -1690,7 +1500,9 @@ function IconSelector({ fieldKey, type = "field", onSelect, selectedIcon }) {
         {icons.map((icon) => (
           <div
             key={icon.value || "__none__"}
-            className={`tf-icon-option ${selectedIcon === icon.value ? "selected" : ""} ${icon.value === "" ? "none" : ""}`}
+            className={`tf-icon-option ${selectedIcon === icon.value ? "selected" : ""} ${
+              icon.value === "" ? "none" : ""
+            }`}
             onClick={() => onSelect(icon.value)}
             title={icon.label}
           >
@@ -1704,7 +1516,8 @@ function IconSelector({ fieldKey, type = "field", onSelect, selectedIcon }) {
 
 /* ============================== Editor (rail | settings | preview) ============================== */
 function OutletEditor() {
-  const { config, setCartT, setForm, setUiT, setField, setDesign, setBehav, setFieldsOrder, t } = useForms();
+  const { config, setCartT, setForm, setUiT, setField, setDesign, setBehav, setFieldsOrder, t } =
+    useForms();
   const [sel, setSel] = useState("cart");
 
   const keys = Object.keys(config.fields || {});
@@ -1784,7 +1597,6 @@ function OutletEditor() {
     setSel(`field:${a}`);
   };
 
-  // ✅ FIX toggle (default ON)
   const toggleField = (key) => {
     const k = key.replace(/^field:/, "");
     const st = config.fields[k] || {};
@@ -1886,12 +1698,7 @@ function OutletEditor() {
       <div className="tf-right-col">
         <div className="tf-panel">
           <div style={{ marginBottom: 12 }}>
-            <Tabs
-              tabs={tabs}
-              selected={selectedTab}
-              onSelect={(idx) => setSel(tabKeys[idx])}
-              fitted
-            />
+            <Tabs tabs={tabs} selected={selectedTab} onSelect={(idx) => setSel(tabKeys[idx])} fitted />
           </div>
 
           {sel === "cart" && (
@@ -1937,7 +1744,6 @@ function OutletEditor() {
                   <IconSelector type="button" selectedIcon={config.form.buttonIcon} onSelect={(icon) => setForm({ buttonIcon: icon })} />
                 </div>
 
-                {/* ✅ button motion options */}
                 <Select
                   label="Button animation"
                   options={[
@@ -2377,7 +2183,13 @@ function ColorField({ label, value, onChange }) {
           type="color"
           value={safeHex(value)}
           onChange={(e) => onChange(e.target.value)}
-          style={{ width: 44, height: 32, border: "1px solid #E5E7EB", borderRadius: 8, background: "#fff" }}
+          style={{
+            width: 44,
+            height: 32,
+            border: "1px solid #E5E7EB",
+            borderRadius: 8,
+            background: "#fff",
+          }}
         />
         <TextField label={t("section1.colors.hexLabel")} value={value} onChange={onChange} />
       </div>
@@ -2385,7 +2197,6 @@ function ColorField({ label, value, onChange }) {
   );
 }
 
-/* ✅ Gradient field */
 function GradientField({ label, mode, c1, c2, onChange }) {
   const { t } = useForms();
   const m = mode || "solid";
@@ -2416,9 +2227,19 @@ function GradientField({ label, mode, c1, c2, onChange }) {
                 type="color"
                 value={col1}
                 onChange={(e) => onChange({ btnBg: e.target.value })}
-                style={{ width: 44, height: 32, border: "1px solid #E5E7EB", borderRadius: 8, background: "#fff" }}
+                style={{
+                  width: 44,
+                  height: 32,
+                  border: "1px solid #E5E7EB",
+                  borderRadius: 8,
+                  background: "#fff",
+                }}
               />
-              <TextField label={t("section1.colors.hexLabel")} value={col1} onChange={(v) => onChange({ btnBg: v })} />
+              <TextField
+                label={t("section1.colors.hexLabel")}
+                value={col1}
+                onChange={(v) => onChange({ btnBg: v })}
+              />
             </div>
           </div>
 
@@ -2429,7 +2250,13 @@ function GradientField({ label, mode, c1, c2, onChange }) {
                 value={col2}
                 disabled={m !== "gradient"}
                 onChange={(e) => onChange({ btnBg2: e.target.value })}
-                style={{ width: 44, height: 32, border: "1px solid #E5E7EB", borderRadius: 8, background: "#fff" }}
+                style={{
+                  width: 44,
+                  height: 32,
+                  border: "1px solid #E5E7EB",
+                  borderRadius: 8,
+                  background: "#fff",
+                }}
               />
               <TextField
                 label={t("section1.colors.hexLabel")}
@@ -2441,7 +2268,14 @@ function GradientField({ label, mode, c1, c2, onChange }) {
           </div>
         </div>
 
-        <div style={{ height: 36, borderRadius: 10, border: "1px solid #E5E7EB", background: preview }} />
+        <div
+          style={{
+            height: 36,
+            borderRadius: 10,
+            border: "1px solid #E5E7EB",
+            background: preview,
+          }}
+        />
       </div>
     </div>
   );
@@ -2449,7 +2283,8 @@ function GradientField({ label, mode, c1, c2, onChange }) {
 
 /* ============================== Preview ============================== */
 function PreviewPanel() {
-  const { config, cardCSS, cartBoxCSS, cartRowCSS, inputBase, btnCSS, setBehav, t } = useForms();
+  const { config, cardCSS, cartBoxCSS, cartRowCSS, inputBase, btnCSS, setBehav, t } =
+    useForms();
 
   const [shippingPrice, setShippingPrice] = useState(null);
   const [shippingNote, setShippingNote] = useState("");
@@ -2459,7 +2294,8 @@ function PreviewPanel() {
   const provincesEntries = country ? Object.entries(country.provinces || {}) : [];
 
   const selectedProvinceKey = config.behavior.provinceKey || "";
-  const selectedProvince = country && selectedProvinceKey ? country.provinces[selectedProvinceKey] : null;
+  const selectedProvince =
+    country && selectedProvinceKey ? country.provinces[selectedProvinceKey] : null;
 
   const cities = selectedProvince?.cities || [];
   const titleAlign = config.design.titleAlign || "left";
@@ -2467,7 +2303,10 @@ function PreviewPanel() {
   const fieldKeys = Object.keys(config.fields || {});
   const orderedFields = useMemo(() => {
     const existing = config.meta?.fieldsOrder || [];
-    return [...existing.filter((k) => fieldKeys.includes(k)), ...fieldKeys.filter((k) => !existing.includes(k))];
+    return [
+      ...existing.filter((k) => fieldKeys.includes(k)),
+      ...fieldKeys.filter((k) => !existing.includes(k)),
+    ];
   }, [config.meta?.fieldsOrder, fieldKeys]);
 
   const productPrice = 99.99;
@@ -2507,10 +2346,22 @@ function PreviewPanel() {
         </span>
 
         {isTextarea ? (
-          <textarea style={{ ...inputWithIcon, padding: "10px 12px", minHeight: 80 }} placeholder={sStr(f.ph)} rows={3} />
+          <textarea
+            style={{ ...inputWithIcon, padding: "10px 12px", minHeight: 80 }}
+            placeholder={sStr(f.ph)}
+            rows={3}
+          />
         ) : f.type === "tel" ? (
-          <div style={{ display: "grid", gridTemplateColumns: f.prefix ? "minmax(88px,130px) 1fr" : "1fr", gap: 8 }}>
-            {f.prefix && <input style={{ ...inputBase, textAlign: "center" }} value={f.prefix} readOnly />}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: f.prefix ? "minmax(88px,130px) 1fr" : "1fr",
+              gap: 8,
+            }}
+          >
+            {f.prefix && (
+              <input style={{ ...inputBase, textAlign: "center" }} value={f.prefix} readOnly />
+            )}
             <input type="tel" style={inputWithIcon} placeholder={sStr(f.ph)} />
           </div>
         ) : (
@@ -2525,7 +2376,6 @@ function PreviewPanel() {
       </label>
     );
 
-    // ✅ no icon => no left empty space
     if (!hasIcon) {
       return (
         <div key={key} className="tf-field-no-icon">
@@ -2562,7 +2412,9 @@ function PreviewPanel() {
               <PolarisIcon iconName={config.cartTitles.cartIcon || ""} size={18} />
             </div>
           ) : null}
-          <div style={{ fontWeight: 700, color: config.design.cartTitleColor }}>{sStr(config.cartTitles.top)}</div>
+          <div style={{ fontWeight: 700, color: config.design.cartTitleColor }}>
+            {sStr(config.cartTitles.top)}
+          </div>
         </div>
 
         <div style={{ display: "grid", gap: 8 }}>
@@ -2576,7 +2428,9 @@ function PreviewPanel() {
           <div style={cartRowCSS}>
             <div>
               <div>{sStr(config.cartTitles.shipping)}</div>
-              {shippingNote && <div style={{ fontSize: 10, opacity: 0.8, marginTop: 2 }}>{shippingNote}</div>}
+              {shippingNote && (
+                <div style={{ fontSize: 10, opacity: 0.8, marginTop: 2 }}>{shippingNote}</div>
+              )}
             </div>
             <div style={{ fontWeight: 700 }}>{shippingDisplay}</div>
           </div>
@@ -2738,7 +2592,15 @@ function PreviewPanel() {
     <Card>
       <BlockStack gap="250">
         <div style={{ width: "100%" }}>
-          <div style={{ borderRadius: 16, background: "#F9FAFB", border: "1px solid #E5E7EB", padding: 16, boxSizing: "border-box" }}>
+          <div
+            style={{
+              borderRadius: 16,
+              background: "#F9FAFB",
+              border: "1px solid #E5E7EB",
+              padding: 16,
+              boxSizing: "border-box",
+            }}
+          >
             <div style={{ display: "grid", gap: 12 }}>
               {renderCartBox()}
               {renderFormCard()}
