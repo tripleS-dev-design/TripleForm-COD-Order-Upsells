@@ -1,13 +1,23 @@
-/* ✅ HEADER SLIM */
+/* ✅ HEADER SLIM (FIX CLICK) */
 .tf-header{
   background:linear-gradient(90deg,#0B3B82,#7D0031);
   border-bottom:none;
   padding:6px 10px;
   position:sticky;
   top:0;
-  z-index:40;
+
+  /* ✅ IMPORTANT FIX */
+  z-index: 9998;          /* était 40 */
+  pointer-events: auto;   /* force clic */
+
   box-shadow:0 10px 28px rgba(11,59,130,0.35);
 }
+
+/* ✅ assure que tout ce qu'il contient reste cliquable */
+.tf-header *{
+  pointer-events: auto;
+}
+
 
 /* ✅ 1 seule ligne: left | center | right */
 .tf-header-row{
