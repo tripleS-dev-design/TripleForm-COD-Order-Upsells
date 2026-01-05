@@ -1,3 +1,45 @@
+/* Base font (déjà chez toi) */
 #tripleform-cod {
   font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif;
+}
+
+/* ===============================
+   reCAPTCHA v2 – aligné à la form
+   =============================== */
+
+#tripleform-cod .tf-recaptcha-v2{
+  width: 100%;
+  margin-top: 12px;
+  overflow: hidden; /* évite débordement */
+}
+
+/* conteneur interne Google */
+#tripleform-cod .tf-recaptcha-v2 > div{
+  transform-origin: left top;
+}
+
+/* Desktop – élargir pour matcher la form */
+@media (min-width: 900px){
+  #tripleform-cod .tf-recaptcha-v2 > div{
+    transform: scale(1.25); /* واضح ومتوازن */
+  }
+}
+
+/* Tablet */
+@media (min-width: 600px) and (max-width: 899px){
+  #tripleform-cod .tf-recaptcha-v2 > div{
+    transform: scale(1.15);
+  }
+}
+
+/* Mobile – garder taille normale + centré */
+@media (max-width: 599px){
+  #tripleform-cod .tf-recaptcha-v2{
+    display: flex;
+    justify-content: center;
+  }
+
+  #tripleform-cod .tf-recaptcha-v2 > div{
+    transform: scale(1);
+  }
 }

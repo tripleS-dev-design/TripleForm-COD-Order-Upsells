@@ -318,7 +318,7 @@ export default function Section4Pixels() {
   const cfgSig = useMemo(() => stableStringify(cfg), [cfg]);
   const [dirty, setDirty] = useState(false);
 
-  // ✅ IMPORTANT: don't compute dirty until initial data is loaded (prevents false alert on open)
+  // ✅ IMPORTANT: don't compute dirty until initial data is loaded
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
@@ -338,10 +338,7 @@ export default function Section4Pixels() {
 
       setCfg((prev) => {
         const next = { ...prev, ...parsed };
-
-        // ✅ baseline = loaded config
-        lastSavedRef.current = stableStringify(next);
-
+        lastSavedRef.current = stableStringify(next); // baseline = loaded config
         return next;
       });
 
@@ -365,10 +362,7 @@ export default function Section4Pixels() {
         if (j?.ok && j.pixels) {
           setCfg((prev) => {
             const next = { ...prev, ...j.pixels };
-
-            // ✅ baseline = remote config (source of truth)
-            lastSavedRef.current = stableStringify(next);
-
+            lastSavedRef.current = stableStringify(next); // baseline = remote config
             return next;
           });
 
@@ -384,7 +378,6 @@ export default function Section4Pixels() {
       } catch (e) {
         console.error("Error loading pixels (remote):", e);
       } finally {
-        // ✅ mark hydrated after remote attempt (success or fail)
         if (!cancelled) setHydrated(true);
       }
     })();
@@ -404,7 +397,7 @@ export default function Section4Pixels() {
     }
   }, [cfg]);
 
-  /* === SAVE to store (returns boolean for the guard) === */
+  /* === SAVE to store (returns boolean) === */
   const saveToShop = async () => {
     try {
       setSaving(true);
@@ -420,7 +413,6 @@ export default function Section4Pixels() {
       const j = await res.json().catch(() => ({ ok: true }));
       if (!res.ok || j?.ok === false) throw new Error(j?.error || "Save failed");
 
-      // ✅ baseline becomes current cfg
       lastSavedRef.current = stableStringify(cfg);
       setDirty(false);
       return true;
@@ -433,12 +425,81 @@ export default function Section4Pixels() {
   };
 
   // ✅ unified navigation guard (only when user tries to leave section)
-  // IMPORTANT: guard must depend on "dirty" which is now correct
   const guard = useUnsavedNavigationGuard({
     dirty,
     onSave: saveToShop,
     navigate,
   });
+
+  /* ===================== NEW: Header Save opens confirmation bar ===================== */
+  const [manualOpen, setManualOpen] = useState(false);
+  const [manualMode, setManualMode] = useState("idle"); // idle | attention | success | error
+  const manualCloseTimerRef = useRef(null);
+
+  const openManualConfirm = () => {
+    // header save => just open the alert, no save مباشرة
+    if (manualCloseTimerRef.current) clearTimeout(manualCloseTimerRef.current);
+    setManualMode("attention");
+    setManualOpen(true);
+    try {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch {}
+  };
+
+  const manualOnSave = async () => {
+    // real save happens هنا (button inside alert)
+    if (saving) return false;
+
+    setManualMode("attention");
+    setManualOpen(true);
+
+    const ok = await saveToShop();
+
+    if (ok) {
+      setManualMode("success");
+      if (manualCloseTimerRef.current) clearTimeout(manualCloseTimerRef.current);
+      manualCloseTimerRef.current = setTimeout(() => {
+        setManualOpen(false);
+        setManualMode("idle");
+      }, 600);
+      return true;
+    }
+
+    setManualMode("error");
+    setManualOpen(true);
+    return false;
+  };
+
+  const manualOnDiscard = () => {
+    // في حالة header prompt: "Annuler" = fermer l'alert (pas de navigation)
+    if (manualCloseTimerRef.current) clearTimeout(manualCloseTimerRef.current);
+    setManualOpen(false);
+    setManualMode("idle");
+  };
+
+  const manualOnCancel = () => {
+    // "Rester" / "OK" = fermer l'alert
+    if (manualCloseTimerRef.current) clearTimeout(manualCloseTimerRef.current);
+    setManualOpen(false);
+    setManualMode("idle");
+  };
+
+  useEffect(() => {
+    return () => {
+      if (manualCloseTimerRef.current) clearTimeout(manualCloseTimerRef.current);
+    };
+  }, []);
+
+  // ===== Bar props: if guard is open (leaving) => guard controls it; else manual (header)
+  const barIsGuard = !!guard.open;
+
+  const barOpen = barIsGuard ? guard.open : manualOpen;
+  const barMode = barIsGuard ? guard.mode : manualMode;
+  const barSaving = barIsGuard ? guard.saving : saving;
+
+  const barOnSave = barIsGuard ? guard.onSave : manualOnSave;
+  const barOnDiscard = barIsGuard ? guard.onDiscard : manualOnDiscard;
+  const barOnCancel = barIsGuard ? guard.onCancel : manualOnCancel;
 
   /* === TEST backend button === */
   const handleTestRemote = async () => {
@@ -508,26 +569,22 @@ export default function Section4Pixels() {
         title={t("section4.header.appTitle") || "TripleForm COD"}
         subtitle={t("section4.header.appSubtitle") || "Pixels & Tracking"}
         rightSlot={
-        <Button
-          variant="primary"
-          onClick={navGuard.manualSave}
-          loading={navGuard.saving}
-          disabled={!dirty || navGuard.saving}
-        > 
-         {t("section4.buttons.saveStore") || "Save"}
+          // ✅ NEW: header Save opens the alert (no direct save)
+          <Button variant="primary" size="slim" onClick={openManualConfirm}>
+            {t("section4.buttons.saveStore") || "Save"}
           </Button>
         }
       />
 
-      {/* ✅ Save Bar unifiée (s’affiche UNIQUEMENT quand il veut quitter la section) */}
+      {/* ✅ Save Bar: shows for leaving guard OR header confirmation */}
       <UnsavedSaveBar
-        open={guard.open}
-        dirty={guard.dirty}
-        saving={guard.saving}
-        mode={guard.mode}
-        onSave={guard.onSave}
-        onDiscard={guard.onDiscard}
-        onCancel={guard.onCancel}
+        open={barOpen}
+        dirty={dirty}
+        saving={barSaving}
+        mode={barMode}
+        onSave={barOnSave}
+        onDiscard={barOnDiscard}
+        onCancel={barOnCancel}
         t={t}
       />
 
