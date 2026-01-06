@@ -194,8 +194,6 @@ const LAYOUT_CSS = `
 
   .tf-shell { padding:16px; }
 
-  
-
   /* 2 columns: main + right */
   .tf-editor{
     display:grid;
@@ -320,6 +318,26 @@ const LAYOUT_CSS = `
     box-shadow:0 6px 16px rgba(11,59,130,0.18);
   }
 
+  /* ✅ Compact grids for settings (2–3 per row) */
+  .tf-form-grid{ display:grid; gap:12px; align-items:end; }
+  .tf-form-grid-3{ grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .tf-form-grid-2{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+  .tf-actions-box{
+    border:1px solid #E5E7EB;
+    border-radius:12px;
+    padding:10px;
+    background:#fff;
+    box-shadow:0 8px 22px rgba(15,23,42,0.05);
+  }
+  .tf-actions-row{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    align-items:center;
+    justify-content:flex-end;
+  }
+
   .col-board-wrap { position:relative; }
   .col-board {
     display:flex;
@@ -408,12 +426,13 @@ const LAYOUT_CSS = `
     white-space:normal;
   }
 
+  /* ✅ Sheets configuration (more compact, no "Header row") */
   .tf-sheet-config {
-    background:#f8fafc;
-    border:1px solid #e2e8f0;
-    border-radius:8px;
-    padding:16px;
-    margin-bottom:16px;
+    background:#F8FAFC;
+    border:1px solid #E2E8F0;
+    border-radius:12px;
+    padding:12px;
+    margin-bottom:12px;
   }
 
   /* WhatsApp Modern Styles - PROFESSIONNEL */
@@ -541,6 +560,10 @@ const LAYOUT_CSS = `
     .tf-brand-sub{ display:none; }
 
     .whatsapp-qr-box { width: 240px; height: 240px; }
+
+    .tf-form-grid-3{ grid-template-columns: 1fr; }
+    .tf-form-grid-2{ grid-template-columns: 1fr; }
+    .tf-actions-row{ justify-content:flex-start; }
   }
 `;
 
@@ -621,10 +644,10 @@ const labelFromValue = (v, t) => {
 
 /* ✅ defaultCfg with stable IDs (no random) */
 const defaultCfg = () => ({
-  meta: { version: 8 },
+  meta: { version: 9 }, // bumped (UI compact + removed Header Row + removed Display in App)
   sheet: { spreadsheetId: "", tabName: "Orders", headerRowIndex: 1 },
   abandonedSheet: { spreadsheetId: "", tabName: "Abandoned", headerRowIndex: 1 },
-  display: { mode: "none", height: 420 },
+  display: { mode: "none", height: 420 }, // kept in config (UI removed per request)
   formats: {
     dateFormat: "YYYY-MM-DD HH:mm",
     numberFormat: "0.00",
@@ -719,6 +742,8 @@ function GoogleIcon() {
   );
 }
 
+/* ✅ Compact sheet config (Spreadsheet + Tab + Buttons on same row) */
+/* ✅ Header Row removed from UI, forced to 1 internally */
 function SheetConfigSection({
   title,
   sheetConfig,
@@ -733,13 +758,19 @@ function SheetConfigSection({
   loadingTabs,
 }) {
   const { t } = useI18n();
+  const normalize = (next) => ({ ...(next || {}), headerRowIndex: 1 });
+
+  const showTab = !!sheetConfig.spreadsheetId;
 
   return (
     <div className="tf-sheet-config">
       <Text variant="headingMd" fontWeight="bold">
         {t(title)}
       </Text>
-      <BlockStack gap="300" marginBlockStart="300">
+
+      <div style={{ height: 10 }} />
+
+      <div className="tf-form-grid tf-form-grid-3">
         <Select
           label={t("section3.sheetsConfiguration.selectSpreadsheet")}
           helpText={t("section3.sheetsConfiguration.selectSpreadsheetHelp")}
@@ -748,11 +779,11 @@ function SheetConfigSection({
             ...(googleSpreadsheets || []).map((sheet) => ({ label: sheet.name, value: sheet.id })),
           ]}
           value={sheetConfig.spreadsheetId || ""}
-          onChange={(value) => onConfigChange({ ...sheetConfig, spreadsheetId: value })}
+          onChange={(value) => onConfigChange(normalize({ ...sheetConfig, spreadsheetId: value }))}
           disabled={!isConnected || isLoading || loadingSpreadsheets}
         />
 
-        {sheetConfig.spreadsheetId && (
+        {showTab ? (
           <Select
             label={t("section3.sheetsConfiguration.selectTab")}
             helpText={t("section3.sheetsConfiguration.selectTabHelp")}
@@ -761,42 +792,39 @@ function SheetConfigSection({
               ...(availableTabs || []).map((tab) => ({ label: tab.name, value: tab.name })),
             ]}
             value={sheetConfig.tabName || ""}
-            onChange={(value) => onConfigChange({ ...sheetConfig, tabName: value })}
+            onChange={(value) => onConfigChange(normalize({ ...sheetConfig, tabName: value }))}
             disabled={!isConnected || isLoading || loadingTabs}
           />
+        ) : (
+          <div />
         )}
 
-        <RangeSlider
-          label={`${t("section3.sheetsConfiguration.headerRow")} (${sheetConfig.headerRowIndex || 1})`}
-          helpText={t("section3.sheetsConfiguration.headerRowHelp")}
-          min={1}
-          max={10}
-          output
-          value={sheetConfig.headerRowIndex || 1}
-          onChange={(value) => onConfigChange({ ...sheetConfig, headerRowIndex: value })}
-          disabled={!isConnected || isLoading}
-        />
+        <div className="tf-actions-box">
+          <Text as="p" variant="bodySm" tone="subdued" style={{ marginBottom: 8 }}>
+            {t("section3.sheetsConfiguration.actions")}
+          </Text>
 
-        <InlineStack gap="200">
-          <Button
-            variant="primary"
-            onClick={onTest}
-            disabled={!isConnected || !sheetConfig.spreadsheetId || isLoading}
-            loading={isLoading}
-          >
-            {t("section3.sheetsConfiguration.testConnection")}
-          </Button>
+          <div className="tf-actions-row">
+            <Button
+              variant="primary"
+              onClick={onTest}
+              disabled={!isConnected || !sheetConfig.spreadsheetId || isLoading}
+              loading={isLoading}
+            >
+              {t("section3.sheetsConfiguration.testConnection")}
+            </Button>
 
-          <Button onClick={onOpen} disabled={!isConnected || !sheetConfig.spreadsheetId || isLoading}>
-            {t("section3.sheetsConfiguration.openSheet")}
-          </Button>
-        </InlineStack>
-      </BlockStack>
+            <Button onClick={onOpen} disabled={!isConnected || !sheetConfig.spreadsheetId || isLoading}>
+              {t("section3.sheetsConfiguration.openSheet")}
+            </Button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
 
-/* ====== WHATSAPP (unchanged) ====== */
+/* ====== WHATSAPP (layout compact requested) ====== */
 function SimpleWhatsAppConfig() {
   const { t } = useI18n();
 
@@ -1172,22 +1200,25 @@ function SimpleWhatsAppConfig() {
                 </div>
               </div>
 
-              <TextField
-                label={t("whatsapp.fields.phone.label")}
-                type="tel"
-                placeholder={t("whatsapp.fields.phone.placeholder")}
-                helpText={t("whatsapp.fields.phone.help")}
-                value={whatsappConfig.phoneNumber || ""}
-                onChange={(value) => setWhatsappConfig((prev) => ({ ...prev, phoneNumber: value }))}
-              />
+              {/* ✅ Compact: Phone + Business on the same row */}
+              <div className="tf-form-grid tf-form-grid-2">
+                <TextField
+                  label={t("whatsapp.fields.phone.label")}
+                  type="tel"
+                  placeholder={t("whatsapp.fields.phone.placeholder")}
+                  helpText={t("whatsapp.fields.phone.help")}
+                  value={whatsappConfig.phoneNumber || ""}
+                  onChange={(value) => setWhatsappConfig((prev) => ({ ...prev, phoneNumber: value }))}
+                />
 
-              <TextField
-                label={t("whatsapp.fields.businessName.label")}
-                placeholder={t("whatsapp.fields.businessName.placeholder")}
-                helpText={t("whatsapp.fields.businessName.help")}
-                value={whatsappConfig.businessName || ""}
-                onChange={(value) => setWhatsappConfig((prev) => ({ ...prev, businessName: value }))}
-              />
+                <TextField
+                  label={t("whatsapp.fields.businessName.label")}
+                  placeholder={t("whatsapp.fields.businessName.placeholder")}
+                  helpText={t("whatsapp.fields.businessName.help")}
+                  value={whatsappConfig.businessName || ""}
+                  onChange={(value) => setWhatsappConfig((prev) => ({ ...prev, businessName: value }))}
+                />
+              </div>
 
               <div
                 style={{
@@ -1606,7 +1637,7 @@ export default function Section3Sheets() {
         setCfg((prev) => {
           if (prev.sheet.tabName) return prev;
           if (!data.tabs.length) return prev;
-          const next = { ...prev, sheet: { ...prev.sheet, tabName: data.tabs[0].name } };
+          const next = { ...prev, sheet: { ...prev.sheet, tabName: data.tabs[0].name, headerRowIndex: 1 } };
           return next;
         });
       }
@@ -1629,9 +1660,15 @@ export default function Section3Sheets() {
 
         if (data.config) {
           setCfg((prev) => {
-            const merged = { ...prev, ...data.config };
-            markSaved(merged); // ✅ snapshot = loaded config
-            return merged;
+            // ✅ normalize: force headerRowIndex=1 (UI removed)
+            const normalized = {
+              ...prev,
+              ...data.config,
+              sheet: { ...(data.config.sheet || prev.sheet), headerRowIndex: 1 },
+              abandonedSheet: { ...(data.config.abandonedSheet || prev.abandonedSheet), headerRowIndex: 1 },
+            };
+            markSaved(normalized); // ✅ snapshot = loaded config
+            return normalized;
           });
 
           const nextId = data.config?.sheet?.spreadsheetId;
@@ -2000,7 +2037,11 @@ export default function Section3Sheets() {
               </BlockStack>
 
               <InlineStack gap="200" blockAlign="center">
-                {isDirty ? <Badge tone="attention">{t("common.unsavedChanges")}</Badge> : <Badge tone="success">{t("common.saved")}</Badge>}
+                {isDirty ? (
+                  <Badge tone="attention">{t("common.unsavedChanges")}</Badge>
+                ) : (
+                  <Badge tone="success">{t("common.saved")}</Badge>
+                )}
               </InlineStack>
             </InlineStack>
 
@@ -2062,8 +2103,6 @@ export default function Section3Sheets() {
             </div>
           </BlockStack>
         </div>
-
-      
 
         <div className="tf-editor">
           <div className="tf-main-col">
@@ -2136,12 +2175,13 @@ export default function Section3Sheets() {
                             title="section3.sheetsConfiguration.ordersSheet"
                             sheetConfig={cfg.sheet}
                             onConfigChange={(newSheetConfig) => {
-                              setCfg((c) => ({ ...c, sheet: newSheetConfig }));
-                              if (newSheetConfig.spreadsheetId && newSheetConfig.spreadsheetId !== cfg.sheet.spreadsheetId) {
-                                loadSpreadsheetTabs(newSheetConfig.spreadsheetId);
+                              const normalized = { ...newSheetConfig, headerRowIndex: 1 }; // ✅ force 1
+                              setCfg((c) => ({ ...c, sheet: normalized }));
+                              if (normalized.spreadsheetId && normalized.spreadsheetId !== cfg.sheet.spreadsheetId) {
+                                loadSpreadsheetTabs(normalized.spreadsheetId);
                               }
                             }}
-                            onTest={() => testSheetConnection(cfg.sheet, "orders")}
+                            onTest={() => testSheetConnection({ ...cfg.sheet, headerRowIndex: 1 }, "orders")}
                             onOpen={() => openSheet(cfg.sheet.spreadsheetId)}
                             isConnected={googleStatus.connected}
                             isLoading={testing}
@@ -2159,12 +2199,16 @@ export default function Section3Sheets() {
                             title="section3.sheetsConfiguration.abandonedSheet"
                             sheetConfig={cfg.abandonedSheet}
                             onConfigChange={(newSheetConfig) => {
-                              setCfg((c) => ({ ...c, abandonedSheet: newSheetConfig }));
-                              if (newSheetConfig.spreadsheetId && newSheetConfig.spreadsheetId !== cfg.abandonedSheet.spreadsheetId) {
-                                loadSpreadsheetTabs(newSheetConfig.spreadsheetId);
+                              const normalized = { ...newSheetConfig, headerRowIndex: 1 }; // ✅ force 1
+                              setCfg((c) => ({ ...c, abandonedSheet: normalized }));
+                              if (
+                                normalized.spreadsheetId &&
+                                normalized.spreadsheetId !== cfg.abandonedSheet.spreadsheetId
+                              ) {
+                                loadSpreadsheetTabs(normalized.spreadsheetId);
                               }
                             }}
-                            onTest={() => testSheetConnection(cfg.abandonedSheet, "abandons")}
+                            onTest={() => testSheetConnection({ ...cfg.abandonedSheet, headerRowIndex: 1 }, "abandons")}
                             onOpen={() => openSheet(cfg.abandonedSheet.spreadsheetId)}
                             isConnected={googleStatus.connected}
                             isLoading={testing}
@@ -2202,10 +2246,20 @@ export default function Section3Sheets() {
                       <div className="edge-left" />
                       <div className="edge-right" />
 
-                      <button className="board-nav-btn board-nav-left" onClick={scrollLeft} disabled={atStart} aria-label={t("section3.mapping.previous")}>
+                      <button
+                        className="board-nav-btn board-nav-left"
+                        onClick={scrollLeft}
+                        disabled={atStart}
+                        aria-label={t("section3.mapping.previous")}
+                      >
                         ‹
                       </button>
-                      <button className="board-nav-btn board-nav-right" onClick={scrollRight} disabled={atEnd} aria-label={t("section3.mapping.next")}>
+                      <button
+                        className="board-nav-btn board-nav-right"
+                        onClick={scrollRight}
+                        disabled={atEnd}
+                        aria-label={t("section3.mapping.next")}
+                      >
                         ›
                       </button>
 
@@ -2253,7 +2307,11 @@ export default function Section3Sheets() {
 
                             {(col.type === "link" || col.asLink) && (
                               <>
-                                <Checkbox label={t("section3.mapping.asLink")} checked={!!col.asLink} onChange={(v) => patchCol(col.id, { asLink: v })} />
+                                <Checkbox
+                                  label={t("section3.mapping.asLink")}
+                                  checked={!!col.asLink}
+                                  onChange={(v) => patchCol(col.id, { asLink: v })}
+                                />
                                 <TextField
                                   label={t("section3.mapping.linkTemplate")}
                                   helpText={t("section3.mapping.linkExample")}
@@ -2277,32 +2335,7 @@ export default function Section3Sheets() {
                     </div>
                   </GroupCard>
 
-                  <GroupCard title="section3.display.title">
-                    <Grid3>
-                      <Select
-                        label={t("section3.display.mode")}
-                        value={cfg.display.mode}
-                        onChange={(v) => setCfg((c) => ({ ...c, display: { ...c.display, mode: v } }))}
-                        options={[
-                          { label: t("section3.display.options.none"), value: "none" },
-                          { label: t("section3.display.options.link"), value: "link" },
-                          { label: t("section3.display.options.embedTop"), value: "embed_top" },
-                          { label: t("section3.display.options.embedBottom"), value: "embed_bottom" },
-                        ]}
-                      />
-                      <RangeSlider
-                        label={`${t("section3.display.height")} (${cfg.display.height}px)`}
-                        min={260}
-                        max={1000}
-                        output
-                        value={cfg.display.height}
-                        onChange={(v) => setCfg((c) => ({ ...c, display: { ...c.display, height: v } }))}
-                      />
-                    </Grid3>
-                    <Text tone="subdued" as="p">
-                      {t("section3.display.description")}
-                    </Text>
-                  </GroupCard>
+                  {/* ✅ Display in App removed from UI (per request) */}
                 </BlockStack>
               </div>
             )}
@@ -2436,7 +2469,11 @@ export default function Section3Sheets() {
 
                             {(col.type === "link" || col.asLink) && (
                               <>
-                                <Checkbox label={t("section3.mapping.asLink")} checked={!!col.asLink} onChange={(v) => patchAbandonedCol(col.id, { asLink: v })} />
+                                <Checkbox
+                                  label={t("section3.mapping.asLink")}
+                                  checked={!!col.asLink}
+                                  onChange={(v) => patchAbandonedCol(col.id, { asLink: v })}
+                                />
                                 <TextField
                                   label={t("section3.mapping.linkTemplate")}
                                   helpText={t("section3.mapping.linkExample")}
@@ -2478,7 +2515,9 @@ export default function Section3Sheets() {
                   {dashLoading && <Text>{t("section3.realtime.loading")}</Text>}
 
                   {dashError && (
-                    <Text tone="critical">{t("section3.realtime.error", { error: dashError || t("section3.realtime.unknownError") })}</Text>
+                    <Text tone="critical">
+                      {t("section3.realtime.error", { error: dashError || t("section3.realtime.unknownError") })}
+                    </Text>
                   )}
 
                   {!dashLoading && !dashError && (
@@ -2508,7 +2547,9 @@ export default function Section3Sheets() {
                                   <td>{o.city || t("section3.preview.empty")}</td>
                                   <td>{o.productTitle || t("section3.preview.empty")}</td>
                                   <td>
-                                    {new Intl.NumberFormat("fr-FR", { style: "currency", currency: o.currency || "MAD" }).format((o.totalCents || 0) / 100)}
+                                    {new Intl.NumberFormat("fr-FR", { style: "currency", currency: o.currency || "MAD" }).format(
+                                      (o.totalCents || 0) / 100
+                                    )}
                                   </td>
                                   <td>{o.country || t("section3.preview.empty")}</td>
                                 </tr>
