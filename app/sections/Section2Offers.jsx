@@ -2116,7 +2116,8 @@ function Section2OffersInner({ products = [] }) {
   const [saving, setSaving] = useState(false);
 
   const [tab, setTab] = useState("global");
-  const lastSavedKeyRef = useRef("");
+    // ✅ au lieu de useRef
+  const [lastSavedKey, setLastSavedKey] = useState("");
 
   const normalizedCfg = useMemo(() => withDefaults(cfg), [cfg]);
 
@@ -2128,14 +2129,14 @@ function Section2OffersInner({ products = [] }) {
     }
   }, [normalizedCfg]);
 
-  const dirty = useMemo(() => currentKey !== lastSavedKeyRef.current, [currentKey]);
+  // ✅ important: dépend aussi de lastSavedKey
+  const dirty = useMemo(() => currentKey !== lastSavedKey, [currentKey, lastSavedKey]);
 
   const persistLocal = (next) => {
     try {
       window.localStorage.setItem("tripleform_cod_offers_v33", JSON.stringify(withDefaults(next)));
     } catch {}
   };
-
   useEffect(() => {
     let cancelled = false;
 
@@ -2147,29 +2148,32 @@ function Section2OffersInner({ products = [] }) {
         if (res.ok) {
           const j = await res.json().catch(() => null);
           const payload = j?.offers || j?.data?.offers || j?.data || j;
+
           if (!cancelled && j?.ok !== false && payload) {
             const merged = withDefaults(payload);
             setCfg(merged);
             persistLocal(merged);
-            lastSavedKeyRef.current = JSON.stringify(merged);
-            setLoading(false);
+            setLastSavedKey(JSON.stringify(merged));
+
+            if (!cancelled) setLoading(false);
             return;
           }
         }
       } catch {}
 
+      // fallback localStorage
       if (!cancelled) {
         try {
           const s = window.localStorage.getItem("tripleform_cod_offers_v33");
           if (s) {
             const parsed = withDefaults(JSON.parse(s));
             setCfg(parsed);
-            lastSavedKeyRef.current = JSON.stringify(parsed);
+            setLastSavedKey(JSON.stringify(parsed));
           } else {
-            lastSavedKeyRef.current = JSON.stringify(DEFAULT_CFG);
+            setLastSavedKey(JSON.stringify(DEFAULT_CFG));
           }
         } catch {
-          lastSavedKeyRef.current = JSON.stringify(DEFAULT_CFG);
+          setLastSavedKey(JSON.stringify(DEFAULT_CFG));
         }
       }
 
@@ -2181,6 +2185,7 @@ function Section2OffersInner({ products = [] }) {
       cancelled = true;
     };
   }, []);
+
 
   const saveOffers = async () => {
     const toSave = withDefaults(cfg);
@@ -2199,7 +2204,7 @@ function Section2OffersInner({ products = [] }) {
       if (!res.ok || j?.ok === false) throw new Error(j?.error || "Save failed");
 
       setCfg(toSave);
-      lastSavedKeyRef.current = JSON.stringify(toSave);
+setLastSavedKey(JSON.stringify(toSave));
 
       return true;
     } catch {
@@ -2533,29 +2538,7 @@ function Section2OffersInner({ products = [] }) {
         </div>
       </div>
 
-      {/* 
-        ✅ Keys to add to your dictionary (4 translations):
-        - section2.colors.offerBg
-          EN: Background
-          FR: Arrière-plan
-          ES: Fondo
-          AR: الخلفية
-        - section2.colors.offerBtnBg
-          EN: Button BG
-          FR: Fond du bouton
-          ES: Fondo del botón
-          AR: خلفية الزر
-        - section2.colors.offerBtnText
-          EN: Button Text
-          FR: Texte du bouton
-          ES: Texto del botón
-          AR: نص الزر
-        - section2.global.noteNoColors
-          EN: Global colors are managed automatically. Customize colors inside each Offer if needed.
-          FR: Les couleurs globales sont gérées automatiquement. Personnalisez les couleurs داخل كل Offer إذا لزم.
-          ES: Los colores globales se gestionan automáticamente. Personaliza los colores dentro de cada Oferta si es necesario.
-          AR: الألوان العامة تُدار تلقائيًا. يمكنك تخصيص الألوان داخل كل عرض عند الحاجة.
-      */}
+     
     </>
   );
 }
