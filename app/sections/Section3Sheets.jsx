@@ -24,6 +24,77 @@ import {
 import * as PolarisIcons from "@shopify/polaris-icons";
 import { useI18n } from "../i18n/react";
 
+/* ======================= SAFE ICON helper (same as Offers) ======================= */
+function SafeIcon({ name, fallback = "AppsIcon", tone }) {
+  const src = PolarisIcons?.[name] || PolarisIcons?.[fallback];
+  if (!src) return null;
+  // Polaris Icon supports tone (new) or color (older). tone is safe; ignored if unsupported.
+  return <Icon source={src} tone={tone} />;
+}
+
+/* ======================= Shopify settings tile (same as Offers) ======================= */
+function SettingTileCard({
+  iconName = "SettingsIcon",
+  title,
+  description,
+  statusText,
+  statusTone = "subdued",
+  actionLabel = "Open",
+  onOpen,
+  active = false,
+}) {
+  const ChevronRightSrc =
+    PolarisIcons.ChevronRightIcon ||
+    PolarisIcons.ChevronRightSmallIcon ||
+    PolarisIcons.ChevronRightMinor ||
+    PolarisIcons.ArrowRightIcon;
+
+  return (
+    <div
+      className={`tf-setting-tile ${active ? "active" : ""}`}
+      onClick={onOpen}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") onOpen?.();
+      }}
+    >
+      <div className="tf-setting-tile-top">
+        <div className="tf-setting-tile-left">
+          <div className="tf-setting-ico">
+            <SafeIcon name={iconName} fallback="AppsIcon" />
+          </div>
+          <div style={{ minWidth: 0 }}>
+            <div className="tf-setting-title">{title}</div>
+            <div className="tf-setting-desc">{description}</div>
+          </div>
+        </div>
+
+        <Badge tone={statusTone}>{statusText}</Badge>
+      </div>
+
+      <div className="tf-setting-bottom">
+        <Text as="p" variant="bodySm" tone="subdued">
+          {/* spacer */}
+        </Text>
+
+        <Button
+          variant="secondary"
+          icon={ChevronRightSrc}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onOpen?.();
+          }}
+        >
+          {actionLabel}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+/* ======================= CSS / layout (PRO) ======================= */
 const LAYOUT_CSS = `
   html, body { margin:0; background:#F6F7F9; }
   .Polaris-Page, .Polaris-Page__Content {
@@ -129,6 +200,7 @@ const LAYOUT_CSS = `
     border:1px solid #E5E7EB;
     border-radius:12px;
     padding:8px 10px;
+    box-shadow:0 8px 24px rgba(15,23,42,0.04);
   }
 
   /* 2 columns: main + right */
@@ -143,13 +215,17 @@ const LAYOUT_CSS = `
     gap:16px;
     min-width:0;
   }
+
+  /* ✅ same as OFFERS */
   .tf-panel {
-    background:#fff;
+    background:#FFFFFF;
     border:1px solid #E5E7EB;
     border-radius:12px;
     padding:12px;
+    box-shadow:0 8px 24px rgba(15,23,42,0.04);
     min-width:0;
   }
+
   .tf-side-col{
     position:sticky;
     top:84px;
@@ -163,20 +239,92 @@ const LAYOUT_CSS = `
     background:#fff;
     border:1px solid #E5E7EB;
     border-radius:12px;
-    padding:12px;
+    padding:14px;
     margin-bottom:12px;
+    box-shadow:0 12px 32px rgba(15,23,42,0.08);
+  }
+
+  /* ✅ Shopify settings tiles dashboard (same as OFFERS) */
+  .tf-dashboard-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));
+    gap:12px;
+    align-items:stretch;
+  }
+  .tf-setting-tile{
+    border:1px solid #E5E7EB;
+    border-radius:14px;
+    padding:12px;
+    background:#fff;
+    box-shadow:0 10px 26px rgba(15,23,42,0.06);
+    transition:transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+    cursor:pointer;
+    outline:none;
+  }
+  .tf-setting-tile:hover{
+    transform:translateY(-1px);
+    box-shadow:0 14px 34px rgba(15,23,42,0.10);
+    border-color:#D1D5DB;
+  }
+  .tf-setting-tile.active{
+    border-color: rgba(11,59,130,0.35);
+    box-shadow:0 14px 34px rgba(11,59,130,0.18);
+  }
+  .tf-setting-tile-top{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:10px;
+  }
+  .tf-setting-tile-left{
+    display:flex;
+    gap:10px;
+    min-width:0;
+  }
+  .tf-setting-ico{
+    width:38px;
+    height:38px;
+    border-radius:12px;
+    background:linear-gradient(135deg, rgba(11,59,130,0.12), rgba(125,0,49,0.10));
+    border:1px solid rgba(15,23,42,0.06);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex:none;
+  }
+  .tf-setting-title{
+    font-weight:800;
+    color:#111827;
+    font-size:13px;
+    line-height:1.2;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .tf-setting-desc{
+    font-size:12px;
+    color:#6B7280;
+    line-height:1.35;
+    margin-top:2px;
+  }
+  .tf-setting-bottom{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    margin-top:10px;
   }
 
   .tf-group-title {
-    padding:10px 12px;
+    padding:8px 12px;
     background:linear-gradient(90deg,#0B3B82,#7D0031);
-    border:1px solid rgba(0,167,163,0.85);
     color:#F9FAFB;
     border-radius:10px;
-    font-weight:800;
-    letter-spacing:.2px;
+    font-weight:900;
+    letter-spacing:.02em;
     margin-bottom:10px;
-    box-shadow:0 6px 18px rgba(11,59,130,0.35);
+    font-size:13px;
+    box-shadow:0 6px 16px rgba(11,59,130,0.18);
   }
 
   .col-board-wrap { position:relative; }
@@ -204,6 +352,7 @@ const LAYOUT_CSS = `
     flex:0 0 auto;
     overflow-anchor:none;
     contain:layout paint;
+    box-shadow:0 10px 26px rgba(15,23,42,0.06);
   }
 
   .pill {
@@ -458,7 +607,7 @@ const APP_FIELDS = [
 ];
 
 function inferType(v = "") {
-  const s = v.toLowerCase();
+  const s = String(v || "").toLowerCase();
   if (s.includes("date")) return "datetime";
   if (s.includes("phone")) return "phone";
   if (s.includes("total") || s.includes("price") || s.includes("amount")) return "currency";
@@ -603,7 +752,7 @@ function SheetConfigSection({
           helpText={t("section3.sheetsConfiguration.selectSpreadsheetHelp")}
           options={[
             { label: t("section3.sheetsConfiguration.chooseSpreadsheet"), value: "" },
-            ...googleSpreadsheets.map((sheet) => ({ label: sheet.name, value: sheet.id })),
+            ...(googleSpreadsheets || []).map((sheet) => ({ label: sheet.name, value: sheet.id })),
           ]}
           value={sheetConfig.spreadsheetId || ""}
           onChange={(value) => onConfigChange({ ...sheetConfig, spreadsheetId: value })}
@@ -616,7 +765,7 @@ function SheetConfigSection({
             helpText={t("section3.sheetsConfiguration.selectTabHelp")}
             options={[
               { label: t("section3.sheetsConfiguration.chooseTab"), value: "" },
-              ...availableTabs.map((tab) => ({ label: tab.name, value: tab.name })),
+              ...(availableTabs || []).map((tab) => ({ label: tab.name, value: tab.name })),
             ]}
             value={sheetConfig.tabName || ""}
             onChange={(value) => onConfigChange({ ...sheetConfig, tabName: value })}
@@ -1404,45 +1553,20 @@ export default function Section3Sheets() {
     }
   };
 
-  /* ===================== GUARD ===================== */
-  const guard = useUnsavedNavigationGuard({
+  /* ===================== GUARD (same style as OFFERS) ===================== */
+  const navGuard = useUnsavedNavigationGuard({
     dirty: isDirty,
     onSave: handleSaveRemote,
     navigate: (href) => navigate(href),
+    // keep internal-only rule (safe)
     isInternalHref: (href) => {
       if (!href) return false;
       if (href.startsWith("#")) return false;
       if (/^https?:\/\//i.test(href)) return false;
+      if (/^(mailto|tel):/i.test(href)) return false;
       return true;
     },
   });
-
-  /* ✅ header save => opens bar فقط */
-  const [manualOpen, setManualOpen] = useState(false);
-
-  const openSaveBar = () => {
-    if (!isDirty) return;
-    if (typeof guard?.manualSave === "function") guard.manualSave();
-    else setManualOpen(true);
-  };
-
-  const saveBarOpen = guard.open || manualOpen;
-
-  const onSaveConfirm = async () => {
-    const ok = await guard.onSave();
-    if (ok) setManualOpen(false);
-    return ok;
-  };
-
-  const onCancelConfirm = () => {
-    if (manualOpen && !guard.open) setManualOpen(false);
-    else guard.onCancel();
-  };
-
-  const onDiscardConfirm = () => {
-    if (manualOpen && !guard.open) setManualOpen(false);
-    else guard.onDiscard();
-  };
 
   useEffect(() => {
     const handleMessage = (event) => {
@@ -1605,13 +1729,12 @@ export default function Section3Sheets() {
       await fetchGoogleStatus();
       if (!googleStatus.connected) return;
 
-      const res = await fetch("/api/google-sheets/test", {
+      await fetch("/api/google-sheets/test", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({ sheet, kind }),
-      });
-      await res.json().catch(() => null);
+      }).then((r) => r.json().catch(() => null));
     } catch (e) {
       console.error("test sheet error", e);
     } finally {
@@ -1823,32 +1946,130 @@ export default function Section3Sheets() {
   const formatMoney = (cents) =>
     new Intl.NumberFormat("fr-FR", { style: "currency", currency: totalCurrency }).format((cents || 0) / 100);
 
+  // ✅ dashboard statuses (shopify-like)
+  const googleBadge = googleStatus.connected ? t("common.connected") : t("common.notConnected");
+  const googleTone = googleStatus.connected ? "success" : "warning";
+
+  const ordersConfigured = !!cfg.sheet?.spreadsheetId;
+  const abandonedConfigured = !!cfg.abandonedSheet?.spreadsheetId;
+
+  const sheetStatusText = ordersConfigured ? t("common.configured") : t("common.notConfigured");
+  const sheetStatusTone = ordersConfigured ? "success" : "warning";
+
+  const abandonedStatusText = abandonedConfigured ? t("common.configured") : t("common.notConfigured");
+  const abandonedStatusTone = abandonedConfigured ? "success" : "warning";
+
+  const realtimeStatusText = totalOrders ? `${totalOrders} ${t("section3.rail.stats.orders")}` : t("common.ready");
+  const realtimeStatusTone = totalOrders ? "info" : "subdued";
+
   return (
     <>
-      {/* ✅ Header commun: rightSlot = SAVE فقط (selector محذوف) */}
+      {/* ✅ Header commun: rightSlot = SAVE (same as OFFERS) */}
       <TFSectionHeader
         title={t("section3.header.title")}
         subtitle={t("section3.header.subtitle")}
         rightSlot={
-          <Button variant="primary" onClick={openSaveBar} disabled={!isDirty || guard.saving}>
+          <Button
+            variant="primary"
+            onClick={navGuard.manualSave}
+            disabled={!isDirty || navGuard.saving}
+            loading={navGuard.saving}
+          >
             {t("common.save")}
           </Button>
         }
       />
 
-      {/* ✅ UnsavedSaveBar: الحقيقي save داخلها */}
+      {/* ✅ UnsavedSaveBar */}
       <UnsavedSaveBar
-        open={saveBarOpen}
-        dirty={isDirty}
-        saving={guard.saving}
-        mode={guard.mode}
-        onSave={onSaveConfirm}
-        onDiscard={onDiscardConfirm}
-        onCancel={onCancelConfirm}
+        open={navGuard.open}
+        dirty={navGuard.dirty}
+        saving={navGuard.saving}
+        mode={navGuard.mode}
+        onSave={navGuard.onSave}
+        onDiscard={navGuard.onDiscard}
+        onCancel={navGuard.onCancel}
         t={t}
       />
 
       <div className="tf-shell">
+        {/* ✅ Shopify settings overview tiles (same style as OFFERS) */}
+        <div className="tf-panel" style={{ marginBottom: 16 }}>
+          <BlockStack gap="400">
+            <InlineStack align="space-between" blockAlign="center">
+              <BlockStack gap="100">
+                <Text as="h2" variant="headingMd">
+                  {t("section3.dashboard.title")}
+                </Text>
+                <Text as="p" variant="bodySm" tone="subdued">
+                  {t("section3.dashboard.subtitle")}
+                </Text>
+              </BlockStack>
+
+              <InlineStack gap="200" blockAlign="center">
+                {isDirty ? <Badge tone="attention">{t("common.unsavedChanges")}</Badge> : <Badge tone="success">{t("common.saved")}</Badge>}
+              </InlineStack>
+            </InlineStack>
+
+            <div className="tf-dashboard-grid">
+              <SettingTileCard
+                iconName="LogoGoogleIcon"
+                title={t("section3.dashboard.tiles.google.title")}
+                description={t("section3.dashboard.tiles.google.desc")}
+                statusText={googleBadge}
+                statusTone={googleTone}
+                actionLabel={t("common.open")}
+                onOpen={() => setView("sheets")}
+                active={view === "sheets"}
+              />
+
+              <SettingTileCard
+                iconName="DataPresentationIcon"
+                title={t("section3.dashboard.tiles.sheets.title")}
+                description={t("section3.dashboard.tiles.sheets.desc")}
+                statusText={sheetStatusText}
+                statusTone={sheetStatusTone}
+                actionLabel={t("common.open")}
+                onOpen={() => setView("sheets")}
+                active={view === "sheets"}
+              />
+
+              <SettingTileCard
+                iconName="ClockIcon"
+                title={t("section3.dashboard.tiles.abandoned.title")}
+                description={t("section3.dashboard.tiles.abandoned.desc")}
+                statusText={abandonedStatusText}
+                statusTone={abandonedStatusTone}
+                actionLabel={t("common.open")}
+                onOpen={() => setView("abandons")}
+                active={view === "abandons"}
+              />
+
+              <SettingTileCard
+                iconName="ChartHistogramIcon"
+                title={t("section3.dashboard.tiles.realtime.title")}
+                description={t("section3.dashboard.tiles.realtime.desc")}
+                statusText={realtimeStatusText}
+                statusTone={realtimeStatusTone}
+                actionLabel={t("common.open")}
+                onOpen={() => setView("realtime")}
+                active={view === "realtime"}
+              />
+
+              <SettingTileCard
+                iconName="ChatIcon"
+                title={t("section3.dashboard.tiles.whatsapp.title")}
+                description={t("section3.dashboard.tiles.whatsapp.desc")}
+                statusText={t("common.setup")}
+                statusTone="subdued"
+                actionLabel={t("common.open")}
+                onOpen={() => setView("whatsapp")}
+                active={view === "whatsapp"}
+              />
+            </div>
+          </BlockStack>
+        </div>
+
         <div className="tf-topnav">
           <Tabs
             tabs={topTabs}
@@ -1903,9 +2124,7 @@ export default function Section3Sheets() {
                               <InlineStack gap="100" blockAlign="center">
                                 <GoogleIcon />
                                 <span>
-                                  {googleStatus.connected
-                                    ? t("section3.connection.changeSheet")
-                                    : t("section3.connection.connect")}
+                                  {googleStatus.connected ? t("section3.connection.changeSheet") : t("section3.connection.connect")}
                                 </span>
                               </InlineStack>
                             </Button>
@@ -1958,10 +2177,7 @@ export default function Section3Sheets() {
                             sheetConfig={cfg.abandonedSheet}
                             onConfigChange={(newSheetConfig) => {
                               setCfg((c) => ({ ...c, abandonedSheet: newSheetConfig }));
-                              if (
-                                newSheetConfig.spreadsheetId &&
-                                newSheetConfig.spreadsheetId !== cfg.abandonedSheet.spreadsheetId
-                              ) {
+                              if (newSheetConfig.spreadsheetId && newSheetConfig.spreadsheetId !== cfg.abandonedSheet.spreadsheetId) {
                                 loadSpreadsheetTabs(newSheetConfig.spreadsheetId);
                               }
                             }}
@@ -2003,20 +2219,10 @@ export default function Section3Sheets() {
                       <div className="edge-left" />
                       <div className="edge-right" />
 
-                      <button
-                        className="board-nav-btn board-nav-left"
-                        onClick={scrollLeft}
-                        disabled={atStart}
-                        aria-label={t("section3.mapping.previous")}
-                      >
+                      <button className="board-nav-btn board-nav-left" onClick={scrollLeft} disabled={atStart} aria-label={t("section3.mapping.previous")}>
                         ‹
                       </button>
-                      <button
-                        className="board-nav-btn board-nav-right"
-                        onClick={scrollRight}
-                        disabled={atEnd}
-                        aria-label={t("section3.mapping.next")}
-                      >
+                      <button className="board-nav-btn board-nav-right" onClick={scrollRight} disabled={atEnd} aria-label={t("section3.mapping.next")}>
                         ›
                       </button>
 
@@ -2064,11 +2270,7 @@ export default function Section3Sheets() {
 
                             {(col.type === "link" || col.asLink) && (
                               <>
-                                <Checkbox
-                                  label={t("section3.mapping.asLink")}
-                                  checked={!!col.asLink}
-                                  onChange={(v) => patchCol(col.id, { asLink: v })}
-                                />
+                                <Checkbox label={t("section3.mapping.asLink")} checked={!!col.asLink} onChange={(v) => patchCol(col.id, { asLink: v })} />
                                 <TextField
                                   label={t("section3.mapping.linkTemplate")}
                                   helpText={t("section3.mapping.linkExample")}
@@ -2141,14 +2343,8 @@ export default function Section3Sheets() {
                               </Text>
                               <Text tone="subdued" as="p">
                                 {t("section3.abandoned.selectedSheet")}{" "}
-                                <b>
-                                  {googleStatus.abandonedSheetName ||
-                                    cfg.abandonedSheet.tabName ||
-                                    t("section3.connection.notDefined")}
-                                </b>
-                                {cfg.abandonedSheet.spreadsheetId
-                                  ? ` · ${t("section3.connection.id")}: ${cfg.abandonedSheet.spreadsheetId}`
-                                  : ""}
+                                <b>{googleStatus.abandonedSheetName || cfg.abandonedSheet.tabName || t("section3.connection.notDefined")}</b>
+                                {cfg.abandonedSheet.spreadsheetId ? ` · ${t("section3.connection.id")}: ${cfg.abandonedSheet.spreadsheetId}` : ""}
                               </Text>
                               <Text tone="subdued" as="p">
                                 {t("section3.abandoned.description")}
@@ -2156,7 +2352,6 @@ export default function Section3Sheets() {
                             </>
                           ) : (
                             <>
-                              {/* ✅ fixed typo */}
                               <Text as="p">{t("section3.abandoned.useSecondSheet")}</Text>
                               <Text tone="subdued" as="p">
                                 {t("section3.abandoned.whenAbandoned")}
@@ -2169,9 +2364,7 @@ export default function Section3Sheets() {
                               <InlineStack gap="100" blockAlign="center">
                                 <GoogleIcon />
                                 <span>
-                                  {googleStatus.connected
-                                    ? t("section3.abandoned.changeSheet")
-                                    : t("section3.connection.connect")}
+                                  {googleStatus.connected ? t("section3.abandoned.changeSheet") : t("section3.connection.connect")}
                                 </span>
                               </InlineStack>
                             </Button>
@@ -2201,9 +2394,7 @@ export default function Section3Sheets() {
                         value=""
                         onChange={(v) => quickAddAbandoned(v)}
                       />
-                      <Button onClick={() => quickAddAbandoned("customer.phone")}>
-                        {t("section3.abandoned.examplePhone")}
-                      </Button>
+                      <Button onClick={() => quickAddAbandoned("customer.phone")}>{t("section3.abandoned.examplePhone")}</Button>
                     </InlineStack>
 
                     <Text tone="subdued" as="p">
@@ -2262,11 +2453,7 @@ export default function Section3Sheets() {
 
                             {(col.type === "link" || col.asLink) && (
                               <>
-                                <Checkbox
-                                  label={t("section3.mapping.asLink")}
-                                  checked={!!col.asLink}
-                                  onChange={(v) => patchAbandonedCol(col.id, { asLink: v })}
-                                />
+                                <Checkbox label={t("section3.mapping.asLink")} checked={!!col.asLink} onChange={(v) => patchAbandonedCol(col.id, { asLink: v })} />
                                 <TextField
                                   label={t("section3.mapping.linkTemplate")}
                                   helpText={t("section3.mapping.linkExample")}
@@ -2308,9 +2495,7 @@ export default function Section3Sheets() {
                   {dashLoading && <Text>{t("section3.realtime.loading")}</Text>}
 
                   {dashError && (
-                    <Text tone="critical">
-                      {t("section3.realtime.error", { error: dashError || t("section3.realtime.unknownError") })}
-                    </Text>
+                    <Text tone="critical">{t("section3.realtime.error", { error: dashError || t("section3.realtime.unknownError") })}</Text>
                   )}
 
                   {!dashLoading && !dashError && (
@@ -2340,10 +2525,7 @@ export default function Section3Sheets() {
                                   <td>{o.city || t("section3.preview.empty")}</td>
                                   <td>{o.productTitle || t("section3.preview.empty")}</td>
                                   <td>
-                                    {new Intl.NumberFormat("fr-FR", {
-                                      style: "currency",
-                                      currency: o.currency || "MAD",
-                                    }).format((o.totalCents || 0) / 100)}
+                                    {new Intl.NumberFormat("fr-FR", { style: "currency", currency: o.currency || "MAD" }).format((o.totalCents || 0) / 100)}
                                   </td>
                                   <td>{o.country || t("section3.preview.empty")}</td>
                                 </tr>
@@ -2371,7 +2553,6 @@ export default function Section3Sheets() {
           {/* RIGHT */}
           <div className="tf-side-col">
             <div className="tf-side-card">
-              {/* ✅ Save f rail محذوف */}
               <InlineStack align="space-between" blockAlign="center">
                 <Text as="h3" variant="headingSm">
                   {t("section3.guide.title")}

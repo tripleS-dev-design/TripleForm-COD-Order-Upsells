@@ -7,18 +7,20 @@ import { createHash, randomUUID } from "crypto";
  */
 export async function loadPixelsConfig(admin) {
   if (!admin) return null;
+
   try {
     const resp = await admin.graphql(`
       query TripleformPixelsConfig {
-        currentAppInstallation {
+        shop {
           metafield(namespace: "tripleform_cod", key: "pixels") {
             value
           }
         }
       }
     `);
+
     const json = await resp.json();
-    const raw = json?.data?.currentAppInstallation?.metafield?.value;
+    const raw = json?.data?.shop?.metafield?.value;
     if (!raw) return null;
 
     try {
@@ -32,6 +34,7 @@ export async function loadPixelsConfig(admin) {
     return null;
   }
 }
+
 
 function sha256Normalize(value) {
   if (!value) return null;
