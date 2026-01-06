@@ -441,34 +441,44 @@ export const loader = async ({ request }) => {
     // default
     let payload = JSON.parse(JSON.stringify(DEFAULT_CFG));
 
-    if (mf?.value) {
-      const rawValue = safeParseJson(mf.value);
+ if (mf?.value) {
+  const rawValue = safeParseJson(mf.value);
 
-      if (rawValue) {
-        // ✅ 1) OLD object format: {discount, upsell}
-        if (isObject(rawValue) && (rawValue.discount || rawValue.upsell)) {
-          payload = convertOldDiscountUpsellObjectFormat(rawValue);
-        }
-        // ✅ 2) OLD array format
-        else if (Array.isArray(rawValue)) {
-          payload = convertOldArrayOffers(rawValue);
-        }
-        // ✅ 3) OLD v8-like schema (type/value/minQuantity/shopifyProductId...)
-        else if (
-          isObject(rawValue) &&
-          (Array.isArray(rawValue.offers) ||
-            Array.isArray(rawValue.upsells) ||
-            rawValue.display ||
-            (rawValue.global && (rawValue.global.currency || rawValue.global.rounding)))
-        ) {
-          payload = convertOldV8Schema(rawValue);
-        }
-        // ✅ 4) Already new schema (or close) => just normalize
-        else if (isObject(rawValue)) {
-          payload = withDefaults(rawValue);
-        }
-      }
+  if (rawValue) {
+    // ✅ 1) OLD object format: {discount, upsell}
+    if (isObject(rawValue) && (rawValue.discount || rawValue.upsell)) {
+      payload = convertOldDiscountUpsellObjectFormat(rawValue);
     }
+
+    // ✅ 2) OLD array format
+    else if (Array.isArray(rawValue)) {
+      payload = convertOldArrayOffers(rawValue);
+    }
+
+    // ✅ 3) NEW schema détecté (évite erreur: "offers[]" => pris comme v8)
+    // IMPORTANT: ton nouveau format a meta.version (ex: 33)
+    else if (isObject(rawValue) && rawValue?.meta?.version) {
+      payload = withDefaults(rawValue);
+    }
+
+    // ✅ 4) OLD v8-like schema (type/value/minQuantity/shopifyProductId...)
+    else if (
+      isObject(rawValue) &&
+      (Array.isArray(rawValue.offers) ||
+        Array.isArray(rawValue.upsells) ||
+        rawValue.display ||
+        (rawValue.global && (rawValue.global.currency || rawValue.global.rounding)))
+    ) {
+      payload = convertOldV8Schema(rawValue);
+    }
+
+    // ✅ 5) Already new schema (or close) => just normalize
+    else if (isObject(rawValue)) {
+      payload = withDefaults(rawValue);
+    }
+  }
+}
+
 
     // ✅ Always return the final schema
     return json({ ok: true, offers: payload });
