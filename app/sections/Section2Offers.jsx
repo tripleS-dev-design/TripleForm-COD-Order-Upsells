@@ -111,12 +111,7 @@ const LAYOUT_CSS = `
     padding:10px 12px;
     box-shadow:0 8px 24px rgba(15,23,42,0.04);
   }
-  .tf-topnav-center{
-    display:flex;
-    justify-content:flex-start; /* ✅ Shopify-like */
-    align-items:center;
-  }
-  .tf-topnav-center > div{ width:fit-content; }
+ 
 
   /* ✅ Tabs more spaced + medium */
   .tf-topnav .Polaris-Tabs__Tab{
@@ -2493,21 +2488,7 @@ function Section2OffersInner({ products = [] }) {
           </BlockStack>
         </div>
 
-        <div className="tf-topnav">
-          <div className="tf-topnav-center">
-            <div>
-              <Tabs
-                tabs={tabs.map((x) => ({
-                  id: x.id,
-                  content: x.content,
-                  panelID: x.panelID,
-                }))}
-                selected={selectedTabIndex}
-                onSelect={(i) => setTab(tabs[i]?.id || "global")}
-              />
-            </div>
-          </div>
-        </div>
+      
 
         <div className={`tf-editor ${isThankYouTab ? "tf-editor--full" : ""}`}>
           <div className="tf-main-col">
