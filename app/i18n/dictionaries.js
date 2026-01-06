@@ -1699,7 +1699,36 @@ const EN = {
   "section2.tabs.offers": "Offers",
   "section2.tabs.upsells": "Upsells",
   "section2.tabs.thankyou": "Thank you page",
-  "section2.global.notePerOfferColors": "Colors are configured inside each offer."
+  "section2.global.notePerOfferColors": "Colors are configured inside each offer.",
+  "common.close": "Close",
+"common.configured": "Configured",
+"common.connected": "Connected",
+"common.notConfigured": "Not configured",
+"common.notConnected": "Not connected",
+"common.open": "Open",
+"common.ready": "Ready",
+"common.saved": "Saved",
+"common.setup": "Setup",
+"common.unsavedChanges": "Unsaved changes",
+
+"section3.dashboard.title": "Dashboard",
+"section3.dashboard.subtitle": "Manage Google Sheets, live orders, abandons & WhatsApp",
+"section3.dashboard.tiles.abandoned.title": "Abandoned orders",
+"section3.dashboard.tiles.abandoned.desc": "Track leads who started the COD form but didn’t confirm.",
+"section3.dashboard.tiles.google.title": "Google authorization",
+"section3.dashboard.tiles.google.desc": "Connect your Google account securely (revocable anytime).",
+"section3.dashboard.tiles.realtime.title": "Real-time orders",
+"section3.dashboard.tiles.realtime.desc": "See the latest COD orders for the selected period.",
+"section3.dashboard.tiles.sheets.title": "Orders sheet & mapping",
+"section3.dashboard.tiles.sheets.desc": "Choose your sheet and map fields to columns.",
+"section3.dashboard.tiles.whatsapp.title": "WhatsApp & export",
+"section3.dashboard.tiles.whatsapp.desc": "Prepare templates and export numbers for recovery.",
+
+"whatsapp.advanced.subtitle": "Business hours, retries, media and more",
+"whatsapp.qr.generated": "QR code generated",
+"whatsapp.simple.title": "Simple settings",
+"whatsapp.simple.subtitle": "Phone number mode configuration"
+
 
 
 
@@ -3381,7 +3410,36 @@ const FR = {
   "section2.tabs.offers": "Offres",
   "section2.tabs.upsells": "Upsells",
   "section2.tabs.thankyou": "Page de remerciement",
-  "section2.global.notePerOfferColors": "Les couleurs se configurent dans chaque offre."
+  "section2.global.notePerOfferColors": "Les couleurs se configurent dans chaque offre.",
+  
+   "common.close": "Fermer",
+  "common.configured": "Configuré",
+  "common.connected": "Connecté",
+  "common.notConfigured": "Non configuré",
+  "common.notConnected": "Non connecté",
+  "common.open": "Ouvrir",
+  "common.ready": "Prêt",
+  "common.saved": "Enregistré",
+  "common.setup": "Configurer",
+  "common.unsavedChanges": "Modifications non enregistrées",
+
+  "section3.dashboard.title": "Tableau de bord",
+  "section3.dashboard.subtitle": "Gérez Google Sheets, les commandes en direct, les abandons et WhatsApp",
+  "section3.dashboard.tiles.abandoned.title": "Commandes abandonnées",
+  "section3.dashboard.tiles.abandoned.desc": "Suivez les prospects qui ont démarré le formulaire COD sans confirmer.",
+  "section3.dashboard.tiles.google.title": "Autorisation Google",
+  "section3.dashboard.tiles.google.desc": "Connectez votre compte Google en toute sécurité (révocable à tout moment).",
+  "section3.dashboard.tiles.realtime.title": "Commandes en temps réel",
+  "section3.dashboard.tiles.realtime.desc": "Consultez les dernières commandes COD sur la période sélectionnée.",
+  "section3.dashboard.tiles.sheets.title": "Feuille de commandes et mappage",
+  "section3.dashboard.tiles.sheets.desc": "Choisissez votre feuille et associez les champs aux colonnes.",
+  "section3.dashboard.tiles.whatsapp.title": "WhatsApp et export",
+  "section3.dashboard.tiles.whatsapp.desc": "Préparez des modèles et exportez les numéros pour la relance.",
+
+  "whatsapp.advanced.subtitle": "Horaires d’ouverture, relances, médias et plus",
+  "whatsapp.qr.generated": "Code QR généré",
+  "whatsapp.simple.title": "Paramètres simples",
+  "whatsapp.simple.subtitle": "Configuration du mode numéro de téléphone"
 
 
 
@@ -5067,7 +5125,35 @@ const ES = {
   "section2.tabs.offers": "Ofertas",
   "section2.tabs.upsells": "Upsells",
   "section2.tabs.thankyou": "Página de gracias",
-  "section2.global.notePerOfferColors": "Los colores se configuran dentro de cada oferta."
+  "section2.global.notePerOfferColors": "Los colores se configuran dentro de cada oferta.",
+   "common.close": "Cerrar",
+  "common.configured": "Configurado",
+  "common.connected": "Conectado",
+  "common.notConfigured": "No configurado",
+  "common.notConnected": "No conectado",
+  "common.open": "Abrir",
+  "common.ready": "Listo",
+  "common.saved": "Guardado",
+  "common.setup": "Configurar",
+  "common.unsavedChanges": "Cambios sin guardar",
+
+  "section3.dashboard.title": "Panel",
+  "section3.dashboard.subtitle": "Gestiona Google Sheets, pedidos en tiempo real, abandonos y WhatsApp",
+  "section3.dashboard.tiles.abandoned.title": "Pedidos abandonados",
+  "section3.dashboard.tiles.abandoned.desc": "Sigue los leads que iniciaron el formulario COD pero no confirmaron.",
+  "section3.dashboard.tiles.google.title": "Autorización de Google",
+  "section3.dashboard.tiles.google.desc": "Conecta tu cuenta de Google de forma segura (revocable en cualquier momento).",
+  "section3.dashboard.tiles.realtime.title": "Pedidos en tiempo real",
+  "section3.dashboard.tiles.realtime.desc": "Ver los últimos pedidos COD del período seleccionado.",
+  "section3.dashboard.tiles.sheets.title": "Hoja de pedidos y mapeo",
+  "section3.dashboard.tiles.sheets.desc": "Elige tu hoja y asigna los campos a las columnas.",
+  "section3.dashboard.tiles.whatsapp.title": "WhatsApp y exportación",
+  "section3.dashboard.tiles.whatsapp.desc": "Prepara plantillas y exporta números para la recuperación.",
+
+  "whatsapp.advanced.subtitle": "Horario comercial, reintentos, medios y más",
+  "whatsapp.qr.generated": "Código QR generado",
+  "whatsapp.simple.title": "Configuración simple",
+  "whatsapp.simple.subtitle": "Configuración del modo de número de teléfono"
 
 
 
@@ -6747,7 +6833,35 @@ const AR = {
   "section2.tabs.offers": "العروض",
   "section2.tabs.upsells": "عروض إضافية",
   "section2.tabs.thankyou": "صفحة الشكر",
-  "section2.global.notePerOfferColors": "الألوان كتتحدد داخل كل عرض."
+  "section2.global.notePerOfferColors": "الألوان كتتحدد داخل كل عرض.",
+   "common.close": "إغلاق",
+  "common.configured": "مُكوَّن",
+  "common.connected": "متصل",
+  "common.notConfigured": "غير مُكوَّن",
+  "common.notConnected": "غير متصل",
+  "common.open": "فتح",
+  "common.ready": "جاهز",
+  "common.saved": "تم الحفظ",
+  "common.setup": "إعداد",
+  "common.unsavedChanges": "تغييرات غير محفوظة",
+
+  "section3.dashboard.title": "لوحة التحكم",
+  "section3.dashboard.subtitle": "إدارة Google Sheets والطلبات المباشرة والطلبات المتروكة وواتساب",
+  "section3.dashboard.tiles.abandoned.title": "الطلبات المتروكة",
+  "section3.dashboard.tiles.abandoned.desc": "تتبّع العملاء المحتملين الذين بدؤوا نموذج الدفع عند الاستلام ولم يؤكدوا.",
+  "section3.dashboard.tiles.google.title": "تفويض Google",
+  "section3.dashboard.tiles.google.desc": "اربط حساب Google بأمان (قابل للإلغاء في أي وقت).",
+  "section3.dashboard.tiles.realtime.title": "الطلبات في الوقت الحقيقي",
+  "section3.dashboard.tiles.realtime.desc": "اطّلع على أحدث طلبات الدفع عند الاستلام للفترة المحددة.",
+  "section3.dashboard.tiles.sheets.title": "ورقة الطلبات ومطابقة الحقول",
+  "section3.dashboard.tiles.sheets.desc": "اختر ورقتك وطابق الحقول مع الأعمدة.",
+  "section3.dashboard.tiles.whatsapp.title": "واتساب والتصدير",
+  "section3.dashboard.tiles.whatsapp.desc": "حضّر القوالب وصدّر الأرقام للمتابعة.",
+
+  "whatsapp.advanced.subtitle": "ساعات العمل، إعادة المحاولة، الوسائط والمزيد",
+  "whatsapp.qr.generated": "تم إنشاء رمز QR",
+  "whatsapp.simple.title": "إعدادات بسيطة",
+  "whatsapp.simple.subtitle": "إعداد وضع رقم الهاتف"
 
 };
 

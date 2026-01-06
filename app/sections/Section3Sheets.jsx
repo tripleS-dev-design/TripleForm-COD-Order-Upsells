@@ -194,14 +194,7 @@ const LAYOUT_CSS = `
 
   .tf-shell { padding:16px; }
 
-  .tf-topnav{
-    margin-bottom:16px;
-    background:#fff;
-    border:1px solid #E5E7EB;
-    border-radius:12px;
-    padding:8px 10px;
-    box-shadow:0 8px 24px rgba(15,23,42,0.04);
-  }
+  
 
   /* 2 columns: main + right */
   .tf-editor{
@@ -2070,17 +2063,7 @@ export default function Section3Sheets() {
           </BlockStack>
         </div>
 
-        <div className="tf-topnav">
-          <Tabs
-            tabs={topTabs}
-            selected={topSelected < 0 ? 0 : topSelected}
-            onSelect={(idx) => {
-              const map = ["sheets", "abandons", "realtime", "whatsapp"];
-              const next = map[idx] || "sheets";
-              setView(next);
-            }}
-          />
-        </div>
+      
 
         <div className="tf-editor">
           <div className="tf-main-col">
