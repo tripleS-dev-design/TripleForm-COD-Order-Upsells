@@ -2365,7 +2365,7 @@ window.TripleformCOD = (function () {
     if (!isActive) {
       const offer = offersList[offerIndex] || {};
 
-      const bundleQty = Number(offer.bundleQty || offer.minQty || offer.requiredQty || 0);
+      const bundleQty = Number(offer.bundleQty || offer.minQty || offer.requiredQty || offer.qtyMultiplier || offer.minQuantity || 0);
       if (bundleQty > 0) setQty(bundleQty);
 
       button.classList.add("active");
@@ -2381,13 +2381,13 @@ window.TripleformCOD = (function () {
         title: offer.title || "",
         discountType: offer.discountType || null,
         discountValue: Number(offer.discountValue || 0),
-        minQty: Number(selectedPackQty || offer.requiredQty || offer.bundleQty || offer.minQty || 1),
+        minQty: Number(selectedPackQty || offer.requiredQty || offer.bundleQty || offer.minQty || offer.qtyMultiplier || offer.minQuantity || 1),
         applyPerItem: offer.applyPerItem === true,
         fixedMode: offer.fixedMode || null,
         capDiscount: offer.capDiscount !== false,
         maxDiscountCents: Number(offer.maxDiscountCents || 0),
         forceQty: offer.forceQty === true || !!selectedPackQty || !!offer.requiredQty || !!offer.bundleQty,
-        bundleQty: Number(selectedPackQty || offer.requiredQty || offer.bundleQty || 0),
+        bundleQty: Number(selectedPackQty || offer.requiredQty || offer.bundleQty || offer.qtyMultiplier || offer.minQuantity || 0),
         bundleTotal: offer.bundleTotal ?? null,
         bundleTotalCents: offer.bundleTotalCents ?? null,
         packQty: selectedPackQty || null,
@@ -2456,7 +2456,7 @@ window.TripleformCOD = (function () {
       const isActive = active && Number(active.index) === idx && active.type === "offer";
       const btnLabel = offer.buttonText || "Activer";
 
-      const minQty = Number(offer.minQty || offer.requiredQty || offer.bundleQty || 1);
+      const minQty = Number(offer.minQty || offer.requiredQty || offer.bundleQty || offer.qtyMultiplier || offer.minQuantity || 1);
       const packHint = minQty > 1 ? `Pack: ${minQty} pcs` : offer.subText || "";
 
       const packOptions = packOptionsForOffer(offer);
@@ -3216,7 +3216,7 @@ window.TripleformCOD = (function () {
     function applyOfferQtyIfNeeded() {
       const x = currentOffer();
       if (!x) return;
-      const q = Number(x.active.packQty || x.offer.bundleQty || x.offer.minQty || 0);
+      const q = Number(x.active.packQty || x.offer.bundleQty || x.offer.minQty || x.offer.requiredQty || x.offer.qtyMultiplier || x.offer.minQuantity || 0);
       if (q > 0 && getQty() !== q) setQty(q);
     }
 
@@ -3228,7 +3228,7 @@ window.TripleformCOD = (function () {
       const discountType = offer.discountType || null;
       const discountValue = Number(offer.discountValue ?? 0);
 
-      const minQty = Number(offer.minQty || offer.requiredQty || offer.bundleQty || 1);
+      const minQty = Number(offer.minQty || offer.requiredQty || offer.bundleQty || offer.qtyMultiplier || offer.minQuantity || 1);
       if (minQty > 1 && Number(qty || 1) < minQty) return 0;
 
       if (!discountType || !(discountValue > 0)) return 0;
@@ -3306,7 +3306,7 @@ window.TripleformCOD = (function () {
         const offer = activeOffersOnly[i];
         if (!offer) return;
 
-        const minQty = Number(offer.minQty || offer.requiredQty || offer.bundleQty || 1);
+        const minQty = Number(offer.minQty || offer.requiredQty || offer.bundleQty || offer.qtyMultiplier || offer.minQuantity || 1);
         const mustHavePack = minQty > 1;
         const ok = !mustHavePack || qty >= minQty;
 

@@ -1,53 +1,718 @@
 // ===== File: app/sections/Section2Offers.jsx =====
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "@remix-run/react";
 import {
   Card,
-  Layout,
   BlockStack,
   InlineStack,
   Text,
-  Tabs,
-  Divider,
-  Box,
-  Badge,
-  Button,
   TextField,
   Select,
   Checkbox,
-  Toast,
-  Spinner,
+  Button,
+  Icon,
+  Badge,
+  Tabs,
+  Divider,
+  RangeSlider,
 } from "@shopify/polaris";
+import * as PI from "@shopify/polaris-icons";
+import { useI18n } from "../i18n/react";
 
-import SettingTile from "../components/SettingTile";
+import TFSectionHeader from "../components/TFSectionHeader";
+import UnsavedSaveBar from "../components/UnsavedSaveBar";
+import { useUnsavedNavigationGuard } from "../hooks/useUnsavedNavigationGuard";
 
-/**
- * Section2Offers.jsx
- * - ✅ Design Shopify-like (cards + grille + colonne droite)
- * - ✅ Garde le même schema: { global, offers[], upsells[], thankYou }
- * - ✅ Load: GET /api/offers/load
- * - ✅ Save: POST /api/offers/save  (à créer si pas encore)
- */
+/* ======================= SAFE ICON helper ======================= */
+function SafeIcon({ name, fallback = "AppsIcon", tone }) {
+  const src = PI?.[name] || PI?.[fallback];
+  if (!src) return null;
+  return <Icon source={src} tone={tone} />;
+}
 
-const PALETTE_OPTIONS = [
-  { label: "Clean Pro", value: "clean-pro" },
-  { label: "Brand Gradient", value: "brand-gradient" },
-  { label: "Default", value: "default" },
+/* ======================= i18n fallback helper ======================= */
+function useT() {
+  const { t } = useI18n();
+
+  const tr = (key, fallback) => {
+    try {
+      const v = t(key);
+      if (typeof v === "string" && v.trim() && v !== key) return v;
+    } catch {}
+    return fallback || key;
+  };
+
+  return { t, tr };
+}
+
+/* ======================= CSS / layout (PRO) ======================= */
+const LAYOUT_CSS = `
+  html, body { margin:0; background:#F6F7F9; }
+  .Polaris-Page, .Polaris-Page__Content {
+    max-width:none!important;
+    padding-left:0!important;
+    padding-right:0!important;
+  }
+  .Polaris-TextField, .Polaris-Select, .Polaris-Labelled__LabelWrapper { min-width:0; }
+
+  /* ✅ Header styles used by TFSectionHeader */
+  .tf-header {
+    background:linear-gradient(90deg,#0B3B82,#7D0031);
+    padding:12px 16px;
+    position:sticky;
+    top:0;
+    z-index:40;
+    box-shadow:0 10px 28px rgba(11,59,130,0.45);
+  }
+  .tf-header-row{
+    display:grid;
+    grid-template-columns:auto 1fr auto;
+    gap:12px;
+    align-items:center;
+  }
+  .tf-brand{ display:flex; align-items:center; gap:10px; min-width:0; }
+  .tf-brand-text{ min-width:0; }
+  .tf-brand-title{
+    font-weight:950;
+    color:#F9FAFB;
+    line-height:1.1;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .tf-brand-sub{
+    font-size:12px;
+    color:rgba(249,250,251,0.85);
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .tf-flags-wrap{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    min-width:0;
+  }
+  .tf-header-right{
+    display:flex;
+    gap:8px;
+    align-items:center;
+    justify-content:flex-end;
+    flex-wrap:wrap;
+  }
+
+  .tf-shell { padding:16px; }
+
+  .tf-topnav{
+    margin: 14px 0 16px;
+    background:#fff;
+    border:1px solid #E5E7EB;
+    border-radius:12px;
+    padding:10px 12px;
+    box-shadow:0 8px 24px rgba(15,23,42,0.04);
+  }
+  .tf-topnav-center{
+    display:flex;
+    justify-content:flex-start; /* ✅ Shopify-like */
+    align-items:center;
+  }
+  .tf-topnav-center > div{ width:fit-content; }
+
+  /* ✅ Tabs more spaced + medium */
+  .tf-topnav .Polaris-Tabs__Tab{
+    padding:10px 14px!important;
+    margin:0 6px!important;
+    border-radius:10px!important;
+    font-weight:800!important;
+  }
+
+  .tf-editor {
+    display:grid;
+    grid-template-columns: minmax(0,1fr) 460px;
+    gap:16px;
+    align-items:start;
+  }
+  .tf-editor--full{ grid-template-columns: 1fr; }
+
+  .tf-main-col{ display:grid; gap:14px; min-width:0; }
+
+  .tf-panel {
+    background:#FFFFFF;
+    border:1px solid #E5E7EB;
+    border-radius:12px;
+    padding:12px;
+    box-shadow:0 8px 24px rgba(15,23,42,0.04);
+    min-width:0;
+  }
+
+  /* ✅ Shopify settings tiles dashboard */
+  .tf-dashboard-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));
+    gap:12px;
+    align-items:stretch;
+  }
+  .tf-setting-tile{
+    border:1px solid #E5E7EB;
+    border-radius:14px;
+    padding:12px;
+    background:#fff;
+    box-shadow:0 10px 26px rgba(15,23,42,0.06);
+    transition:all .15s ease;
+    cursor:pointer;
+    min-width:0;
+  }
+  .tf-setting-tile:hover{
+    transform:translateY(-1px);
+    box-shadow:0 14px 34px rgba(15,23,42,0.10);
+  }
+  .tf-setting-tile-top{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:12px;
+  }
+  .tf-setting-tile-left{
+    display:flex;
+    gap:10px;
+    min-width:0;
+  }
+  .tf-setting-ico{
+    width:42px;
+    height:42px;
+    border-radius:12px;
+    border:1px solid rgba(0,0,0,.08);
+    background:#F1F5F9;
+    display:grid;
+    place-items:center;
+    flex:0 0 auto;
+  }
+  .tf-setting-title{
+    font-weight:950;
+    font-size:13px;
+    color:#111827;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .tf-setting-desc{
+    font-size:12px;
+    color:#6B7280;
+    line-height:1.35;
+    margin-top:2px;
+  }
+  .tf-setting-bottom{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    margin-top:10px;
+  }
+
+  .tf-preview-col {
+    position:sticky;
+    top:124px;
+    max-height:calc(100vh - 140px);
+    overflow:auto;
+  }
+  .tf-preview-card {
+    background:#fff;
+    border-radius:12px;
+    padding:14px;
+    border:1px solid #E5E7EB;
+    box-shadow:0 12px 32px rgba(15,23,42,0.08);
+  }
+
+  .tf-group-title {
+    padding:8px 12px;
+    background:linear-gradient(90deg,#1E40AF,#7C2D12);
+    color:#F9FAFB;
+    border-radius:10px;
+    font-weight:900;
+    letter-spacing:.02em;
+    margin-bottom:10px;
+    font-size:13px;
+    box-shadow:0 6px 16px rgba(30,64,175,0.15);
+  }
+
+  .item-card {
+    background:#FFFFFF;
+    border:1px solid #E5E7EB;
+    border-radius:12px;
+    padding:12px;
+    margin-bottom:12px;
+    position:relative;
+  }
+  .item-header {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:10px;
+    padding-bottom:10px;
+    border-bottom:1px solid #F3F4F6;
+  }
+  .item-number {
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:28px;
+    height:28px;
+    border-radius:50%;
+    background:#4F46E5;
+    color:white;
+    font-weight:900;
+    font-size:12px;
+    margin-right:10px;
+  }
+  .remove-btn {
+    position:absolute;
+    top:10px;
+    right:10px;
+    background:#FEF2F2;
+    border:1px solid #FECACA;
+    color:#DC2626;
+    width:28px;
+    height:28px;
+    border-radius:10px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    font-size:16px;
+    transition:all .15s;
+  }
+  .remove-btn:hover { background:#FEE2E2; transform:scale(1.04); }
+
+  /* Palette CSS kept (ThankYou uses it) */
+  .tf-color-palettes {
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(160px, 1fr));
+    gap:12px;
+    margin-top:10px;
+  }
+  .tf-color-palette {
+    border:1px solid #E5E7EB;
+    border-radius:12px;
+    overflow:hidden;
+    cursor:pointer;
+    transition:all 0.2s;
+    background:#fff;
+  }
+  .tf-color-palette:hover { transform:translateY(-2px); box-shadow:0 8px 18px rgba(0,0,0,0.10); }
+  .tf-color-palette.active { outline:2px solid #00A7A3; }
+  .tf-palette-colors { height:44px; display:grid; grid-template-columns:1fr 1fr; }
+  .tf-palette-info {
+    padding:8px;
+    background:#fff;
+    font-size:11px;
+    font-weight:800;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+  }
+  .tf-palette-accent{ width:14px; height:14px; border-radius:999px; border:1px solid rgba(0,0,0,.12); }
+
+  .preview-offer {
+    border-radius:14px;
+    border:1px solid #E5E7EB;
+    padding:14px;
+    box-shadow:0 10px 22px rgba(15,23,42,0.06);
+    background:#fff;
+    overflow:hidden;
+  }
+  .preview-row { display:flex; gap:12px; align-items:center; }
+  .preview-img {
+    width:92px; height:92px;
+    border-radius:16px;
+    overflow:hidden;
+    border:1px solid rgba(0,0,0,.08);
+    background:#F3F4F6;
+    flex:none;
+  }
+  .preview-img img { width:100%; height:100%; object-fit:cover; display:block; }
+  .preview-main { min-width:0; flex:1; }
+  .preview-title { font-weight:950; font-size:14px; margin-bottom:3px; }
+  .preview-desc { font-size:12px; color:#6B7280; line-height:1.35; }
+  .preview-sub { font-size:11px; color:#94A3B8; margin-top:7px; }
+
+  .preview-icon {
+    width:36px; height:36px;
+    border-radius:12px;
+    display:grid; place-items:center;
+    border:1px solid rgba(0,0,0,.10);
+    flex:none;
+    overflow:hidden;
+    background:#EEF2FF;
+  }
+  .preview-icon img { width:100%; height:100%; object-fit:cover; display:block; }
+
+  .offer-btn {
+    margin-top:10px;
+    border-radius:12px;
+    padding:9px 10px;
+    font-size:12px;
+    font-weight:950;
+    cursor:pointer;
+    border:1px solid transparent;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    transition:all .15s ease;
+  }
+  .offer-btn:hover { transform: translateY(-1px); opacity:0.95; }
+
+  .preview-style--image-right .preview-row { flex-direction: row-reverse; }
+  .preview-style--image-top .preview-row { flex-direction: column; align-items: stretch; }
+  .preview-style--image-top .preview-img { width:100%; height:160px; border-radius:16px; }
+  .preview-style--image-bottom .preview-row { flex-direction: column-reverse; align-items: stretch; }
+  .preview-style--image-bottom .preview-img { width:100%; height:160px; border-radius:16px; }
+  .preview-style--image-bottom .preview-desc { font-size:11px; }
+
+  .add-wrap { display:flex; justify-content:center; margin-top:10px; }
+  .add-btn {
+    width:100%;
+    max-width:520px;
+    border-radius:14px;
+    padding:12px;
+    border:2px dashed #D1D5DB;
+    background:#F9FAFB;
+  }
+
+  /* THANK YOU builder css kept (unchanged) */
+  .tf-ty-preview-wrap{
+    position:relative;
+    border-radius:14px;
+    border:1px solid #E5E7EB;
+    background:#fff;
+    overflow:hidden;
+  }
+  .tf-ty-simple{
+    padding:14px;
+    display:grid;
+    gap:10px;
+  }
+  .tf-ty-simple-top{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:10px;
+  }
+  .tf-ty-chip{
+    font-size:11px;
+    font-weight:900;
+    padding:3px 8px;
+    border-radius:999px;
+    border:1px solid rgba(0,0,0,.10);
+    background:#F8FAFC;
+    color:#111827;
+    white-space:nowrap;
+  }
+  .tf-ty-banner{
+    border-radius:12px;
+    border:1px solid rgba(0,0,0,.08);
+    overflow:hidden;
+    background:#F3F4F6;
+    height:160px;
+  }
+  .tf-ty-banner img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .tf-ty-title{ font-size:14px; font-weight:950; }
+  .tf-ty-text{ font-size:12px; color:#6B7280; line-height:1.4; }
+  .tf-ty-actions{ display:flex; gap:10px; flex-wrap:wrap; }
+  .tf-ty-btn{
+    border-radius:12px;
+    padding:10px 12px;
+    font-size:12px;
+    font-weight:950;
+    border:1px solid transparent;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    cursor:pointer;
+    transition:all .15s ease;
+  }
+  .tf-ty-btn:hover{ transform:translateY(-1px); opacity:.97; }
+  .tf-ty-link{
+    font-size:12px;
+    font-weight:900;
+    color:#2563EB;
+    text-decoration:none;
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+  }
+  .tf-ty-modal-overlay{
+    position:absolute;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:18px;
+    background:rgba(2,6,23,.55);
+  }
+  .tf-ty-modal{
+    width:100%;
+    border-radius:16px;
+    border:1px solid rgba(255,255,255,.12);
+    overflow:hidden;
+    box-shadow:0 18px 40px rgba(0,0,0,.35);
+  }
+  .tf-ty-modal-inner{ padding:14px; display:grid; gap:10px; }
+  .tf-ty-builder{
+    border:1px solid #E5E7EB;
+    border-radius:14px;
+    overflow:hidden;
+    background:#fff;
+    box-shadow:0 10px 24px rgba(15,23,42,0.06);
+  }
+  .tf-ty-body{
+    display:grid;
+    grid-template-columns: 260px minmax(0,1fr) 420px;
+    min-height: 580px;
+  }
+  .tf-ty-rail{
+    border-right:1px solid #E5E7EB;
+    background:#F8FAFC;
+    padding:10px;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .tf-ty-stage{
+    background:#FFFFFF;
+    padding:14px;
+    display:flex;
+    align-items:stretch;
+    justify-content:stretch;
+    border-right:1px solid #E5E7EB;
+  }
+  .tf-ty-stage-inner{
+    width:100%;
+    max-width:none;
+  }
+  .tf-ty-settings{
+    background:#FFFFFF;
+    padding:12px;
+    overflow:auto;
+  }
+  .tf-ty-toolbtn{
+    width:100%;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    justify-content:flex-start;
+    border-radius:12px;
+    padding:10px 10px;
+    border:1px solid rgba(15,23,42,0.06);
+    background:#fff;
+    cursor:pointer;
+    transition:all .15s ease;
+  }
+  .tf-ty-toolbtn:hover{ transform:translateY(-1px); box-shadow:0 8px 18px rgba(0,0,0,0.08); }
+  .tf-ty-toolbtn.active{
+    outline:2px solid #00A7A3;
+    border-color: rgba(0,167,163,0.35);
+  }
+  .tf-ty-toolname{ font-weight:950; font-size:12px; color:#111827; }
+  .tf-ty-tooldesc{ font-size:11px; color:#6B7280; margin-top:2px; }
+  .tf-ty-controls-card{
+    border:1px solid #E5E7EB;
+    border-radius:14px;
+    background:#fff;
+    padding:12px;
+    box-shadow:0 10px 22px rgba(15,23,42,0.05);
+  }
+  .tf-ty-minirow3{
+    display:grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap:12px;
+    align-items:start;
+  }
+  .Polaris-Modal-Dialog__Modal{
+    border-radius:16px!important;
+    overflow:hidden!important;
+    box-shadow:0 24px 60px rgba(2,6,23,.28)!important;
+  }
+  .Polaris-Modal-Header{
+    background:linear-gradient(90deg,rgba(11,59,130,.10),rgba(125,0,49,.08));
+  }
+
+  @media (max-width: 1200px) {
+    .tf-editor { grid-template-columns:1fr; }
+    .tf-preview-col { position:static; max-height:none; }
+
+    .tf-ty-body{ grid-template-columns: 1fr; }
+    .tf-ty-rail{
+      flex-direction:row;
+      overflow:auto;
+      border-right:none;
+      border-bottom:1px solid #E5E7EB;
+    }
+    .tf-ty-stage{
+      border-right:none;
+      border-bottom:1px solid #E5E7EB;
+    }
+    .tf-ty-toolbtn{ min-width: 190px; }
+  }
+  @media (max-width: 980px) {
+    .tf-brand-sub{ display:none; }
+    .tf-flags-wrap{ display:none; }
+  }
+`;
+
+function useInjectCss() {
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    if (document.getElementById("tf-layout-css-offers")) return;
+    const t = document.createElement("style");
+    t.id = "tf-layout-css-offers";
+    t.appendChild(document.createTextNode(LAYOUT_CSS));
+    document.head.appendChild(t);
+    return () => {
+      try {
+        t.remove();
+      } catch {}
+    };
+  }, []);
+}
+
+/* ============================== UI helpers ============================== */
+function GroupCard({ title, children }) {
+  return (
+    <Card>
+      <div className="tf-group-title">{title}</div>
+      <BlockStack gap="300">{children}</BlockStack>
+    </Card>
+  );
+}
+
+/* ✅ compact 3 per row */
+const Grid3 = ({ children, min = 200 }) => (
+  <div
+    style={{
+      display: "grid",
+      gridTemplateColumns: `repeat(auto-fit, minmax(${min}px, 1fr))`,
+      gap: 10,
+      alignItems: "start",
+    }}
+  >
+    {children}
+  </div>
+);
+
+function ColorField({ label, value, onChange, placeholder = "#FFFFFF" }) {
+  return (
+    <div style={{ display: "grid", gap: 8 }}>
+      <Text as="p" variant="bodySm" fontWeight="bold">
+        {label}
+      </Text>
+      <InlineStack gap="200" blockAlign="center">
+        <input
+          type="color"
+          value={value || placeholder}
+          onChange={(e) => onChange(e.target.value)}
+          style={{
+            width: 42,
+            height: 38,
+            borderRadius: 12,
+            border: "1px solid #E5E7EB",
+            background: "transparent",
+            padding: 0,
+          }}
+          aria-label={label}
+        />
+        <div style={{ flex: 1 }}>
+          <TextField
+            label={label}
+            labelHidden
+            value={value || ""}
+            placeholder={placeholder}
+            onChange={(v) => onChange(v)}
+            autoComplete="off"
+          />
+        </div>
+      </InlineStack>
+    </div>
+  );
+}
+
+/* ✅ Shopify-like settings tile (self-contained) */
+function SettingTileCard({
+  iconName = "SettingsIcon",
+  title,
+  description,
+  statusText,
+  statusTone = "subdued",
+  actionLabel,
+  onOpen,
+}) {
+  return (
+    <div className="tf-setting-tile" onClick={onOpen} role="button" tabIndex={0}>
+      <div className="tf-setting-tile-top">
+        <div className="tf-setting-tile-left">
+          <div className="tf-setting-ico">
+            <SafeIcon name={iconName} fallback="AppsIcon" />
+          </div>
+          <div style={{ minWidth: 0 }}>
+            <div className="tf-setting-title">{title}</div>
+            <div className="tf-setting-desc">{description}</div>
+          </div>
+        </div>
+
+        <Badge tone={statusTone}>{statusText}</Badge>
+      </div>
+
+      <div className="tf-setting-bottom">
+        <Text as="p" variant="bodySm" tone="subdued">
+          {/* spacer / optional */}
+        </Text>
+        <Button
+          variant="secondary"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onOpen?.();
+          }}
+          icon={PI.ChevronRightIcon}
+        >
+          {actionLabel}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+/* ============================== Layout style options (4) ============================== */
+const LAYOUT_STYLE_OPTIONS = [
+  { label: "Image left · Text right", value: "image-left" },
+  { label: "Image right · Text left", value: "image-right" },
+  { label: "Image big top · Text bottom", value: "image-top" },
+  { label: "Image big bottom · Text small", value: "image-bottom" },
 ];
 
-const LAYOUT_OPTIONS = [
-  { label: "Image à gauche", value: "image-left" },
-  { label: "Image en haut", value: "image-top" },
-  { label: "Sans image", value: "no-image" },
-];
-
+/* ============================== Discount options ============================== */
 const DISCOUNT_TYPE_OPTIONS = [
-  { label: "Pourcentage (%)", value: "percentage" },
-  { label: "Montant fixe", value: "fixed" },
+  { label: "Percentage (%)", value: "percentage" },
+  { label: "Fixed amount", value: "fixed" },
 ];
 
+/* ✅ Quantity multiplier options (x1/x2/x3) */
+const OFFER_QTY_OPTIONS = [
+  { label: "x1 (1 product)", value: "1" },
+  { label: "x2 (2 products)", value: "2" },
+  { label: "x3 (3 products)", value: "3" },
+];
+
+/* ============================== Thank You Page options ============================== */
 const THANKYOU_MODE_OPTIONS = [
-  { label: "Simple", value: "simple" },
-  { label: "Popup", value: "popup" },
+  { label: "Simple (inline message)", value: "simple" },
+  { label: "Popup after order", value: "popup" },
+];
+
+const THANKYOU_LAYOUT_OPTIONS = [
+  { label: "Image top", value: "image-top" },
+  { label: "Image left", value: "image-left" },
+  { label: "Image right", value: "image-right" },
 ];
 
 const THANKYOU_SIZE_OPTIONS = [
@@ -56,1017 +721,1997 @@ const THANKYOU_SIZE_OPTIONS = [
   { label: "Large", value: "lg" },
 ];
 
-function deepClone(x) {
-  return JSON.parse(JSON.stringify(x));
+/* ✅ Thank you templates (READY) */
+const THANKYOU_TEMPLATES = [
+  {
+    id: "cod-confirm-pro",
+    label: "COD — Confirmation (Pro)",
+    data: {
+      title: "Thank you! ✅",
+      chipText: "Order confirmed",
+      message:
+        "Your order has been received successfully. Our team will contact you shortly to confirm the details and delivery.",
+      primaryText: "Continue shopping",
+      primaryUrl: "/",
+      secondaryEnabled: true,
+      secondaryText: "Track my order",
+      secondaryUrl: "/pages/track-order",
+      mode: "simple",
+      layout: "image-top",
+    },
+  },
+  {
+    id: "cod-whatsapp-fast",
+    label: "COD — WhatsApp (Fast confirm)",
+    data: {
+      title: "Order received 🎉",
+      chipText: "Pending confirmation",
+      message:
+        "We received your order. To confirm faster, contact us on WhatsApp. Our agent will validate your phone and delivery address.",
+      primaryText: "Chat on WhatsApp",
+      primaryUrl: "https://wa.me/",
+      secondaryEnabled: false,
+      mode: "popup",
+      autoOpenDelayMs: 250,
+      size: "md",
+      layout: "image-right",
+    },
+  },
+  {
+    id: "simple-clean",
+    label: "Simple — Clean",
+    data: {
+      title: "Thanks for your order",
+      chipText: "Success",
+      message:
+        "We’re processing your order now. You’ll receive an update as soon as it’s confirmed.",
+      primaryText: "Back to home",
+      primaryUrl: "/",
+      secondaryEnabled: false,
+      mode: "simple",
+      layout: "image-left",
+    },
+  },
+];
+
+/* ============================== Palettes (kept for ThankYou) ============================== */
+const COLOR_PALETTES = [
+  {
+    id: "clean-pro",
+    name: "Clean Pro",
+    colors: ["#111827", "#FFFFFF", "#E5E7EB", "#EEF2FF", "#4F46E5"],
+    preset: {
+      cardBg: "#FFFFFF",
+      borderColor: "#E5E7EB",
+      iconBg: "#EEF2FF",
+      buttonBg: "#111827",
+      buttonTextColor: "#FFFFFF",
+      buttonBorder: "#111827",
+    },
+  },
+  {
+    id: "brand-gradient",
+    name: "Brand (Blue/Cherry)",
+    colors: ["#0B3B82", "#7D0031", "#00A7A3", "#F8FAFC", "#111827"],
+    preset: {
+      cardBg: "#FFFFFF",
+      borderColor: "#E5E7EB",
+      iconBg: "#EEF2FF",
+      buttonBg: "#0B3B82",
+      buttonTextColor: "#FFFFFF",
+      buttonBorder: "#0B3B82",
+    },
+  },
+  {
+    id: "dark-modern",
+    name: "Dark Modern",
+    colors: ["#0B1220", "#2563EB", "#1F2A44", "#101828", "#E5F0FF"],
+    preset: {
+      cardBg: "#0F172A",
+      borderColor: "#1F2A44",
+      iconBg: "#101828",
+      buttonBg: "#2563EB",
+      buttonTextColor: "#FFFFFF",
+      buttonBorder: "#1D4ED8",
+    },
+  },
+  {
+    id: "green-nature",
+    name: "Green Nature",
+    colors: ["#10B981", "#065F46", "#D1FAE5", "#ECFDF5", "#064E3B"],
+    preset: {
+      cardBg: "#FFFFFF",
+      borderColor: "#D1FAE5",
+      iconBg: "#ECFDF5",
+      buttonBg: "#10B981",
+      buttonTextColor: "#FFFFFF",
+      buttonBorder: "#059669",
+    },
+  },
+];
+
+/* ============================== Product helpers ============================== */
+function getProductById(products, id) {
+  return products?.find((p) => String(p.id) === String(id));
+}
+function getProductImages(product) {
+  const imgs = [];
+  const push = (x) => {
+    if (!x) return;
+    const src =
+      x.src ||
+      x.url ||
+      x.originalSrc ||
+      x.transformedSrc ||
+      x.preview?.image?.url ||
+      x.previewImage?.url;
+    if (src && !imgs.includes(src)) imgs.push(src);
+  };
+
+  if (product?.image) push(product.image);
+  if (product?.featuredImage) push(product.featuredImage);
+  if (Array.isArray(product?.images)) product.images.forEach((im) => push(im));
+  if (Array.isArray(product?.media))
+    product.media.forEach((m) => push(m?.preview?.image || m?.image));
+  return imgs;
 }
 
-function isObject(x) {
-  return x && typeof x === "object" && !Array.isArray(x);
-}
+/* ============================== Defaults ============================== */
+const DEFAULT_GLOBAL_COLORS = {
+  paletteId: "clean-pro",
+  cardBg: "#FFFFFF",
+  borderColor: "#E5E7EB",
+  iconBg: "#EEF2FF",
+  buttonBg: "#111827",
+  buttonTextColor: "#FFFFFF",
+  buttonBorder: "#111827",
+};
+
+const DEFAULT_OFFER = {
+  enabled: true,
+  showInPreview: true,
+  title: "Offre spéciale",
+  description: "Ajoutez cette offre pour augmenter vos conversions",
+  productId: "",
+  iconUrl: "",
+  imageUrl: "",
+  layoutStyle: "image-left",
+  useGlobalColors: true,
+  colors: {
+    cardBg: "#FFFFFF",
+    borderColor: "#E5E7EB",
+    iconBg: "#EEF2FF",
+    buttonBg: "#111827",
+    buttonTextColor: "#FFFFFF",
+    buttonBorder: "#111827",
+  },
+  buttonText: "Activer",
+  qtyMultiplier: 1,
+  discountEnabled: false,
+  discountType: "percentage",
+  discountValue: 10,
+};
+
+const DEFAULT_UPSELL = {
+  enabled: true,
+  showInPreview: true,
+  title: "Upsell",
+  description: "Proposition complémentaire au produit",
+  productId: "",
+  iconUrl: "",
+  imageUrl: "",
+  layoutStyle: "image-left",
+  useGlobalColors: true,
+  colors: {
+    cardBg: "#FFFFFF",
+    borderColor: "#E5E7EB",
+    iconBg: "#ECFDF5",
+    buttonBg: "#111827",
+    buttonTextColor: "#FFFFFF",
+    buttonBorder: "#111827",
+  },
+};
+
+const DEFAULT_THANKYOU_COLORS = {
+  paletteId: "brand-gradient",
+  cardBg: "#FFFFFF",
+  borderColor: "#E5E7EB",
+  iconBg: "#EEF2FF",
+  buttonBg: "#0B3B82",
+  buttonTextColor: "#FFFFFF",
+  buttonBorder: "#0B3B82",
+};
+
+const DEFAULT_THANKYOU = {
+  enabled: true,
+  mode: "simple",
+  autoOpenDelayMs: 250,
+  title: "Thank you!",
+  message:
+    "Your order has been received. Our team will contact you shortly to confirm.",
+  imageUrl: "",
+  iconUrl: "",
+  primaryEnabled: true,
+  primaryText: "Continue shopping",
+  primaryUrl: "/",
+  secondaryEnabled: false,
+  secondaryText: "Track my order",
+  secondaryUrl: "/pages/track-order",
+  layout: "image-top",
+  size: "md",
+  useGlobalColors: true,
+  colors: { ...DEFAULT_THANKYOU_COLORS },
+  radius: 16,
+  imageHeight: 160,
+  showChip: true,
+  chipText: "Order confirmed",
+};
+
+const DEFAULT_CFG = {
+  meta: { version: 33 },
+  global: { enabled: true, colors: { ...DEFAULT_GLOBAL_COLORS } },
+  offers: [JSON.parse(JSON.stringify(DEFAULT_OFFER))],
+  upsells: [JSON.parse(JSON.stringify(DEFAULT_UPSELL))],
+  thankYou: JSON.parse(JSON.stringify(DEFAULT_THANKYOU)),
+};
 
 function clampInt(n, min, max, fallback) {
-  const v = Number(n);
-  if (!Number.isFinite(v)) return fallback;
-  const i = Math.round(v);
+  const x = Number(n);
+  if (!Number.isFinite(x)) return fallback;
+  const i = Math.round(x);
   return Math.max(min, Math.min(max, i));
 }
 
-export default function Section2Offers() {
-  const [cfg, setCfg] = useState(null);
-  const [selectedTab, setSelectedTab] = useState(0);
+function withDefaults(raw = {}) {
+  const d = DEFAULT_CFG;
+  const x = { ...d, ...(raw || {}) };
 
-  const initialJsonRef = useRef("");
-  const [isSaving, setIsSaving] = useState(false);
+  x.global = { ...d.global, ...((raw || {}).global || {}) };
+  x.global.colors = {
+    ...DEFAULT_GLOBAL_COLORS,
+    ...(((raw || {}).global || {}).colors || {}),
+  };
 
-  const [toast, setToast] = useState({ active: false, content: "", error: false });
+  x.offers = Array.isArray((raw || {}).offers) ? raw.offers : d.offers;
+  x.upsells = Array.isArray((raw || {}).upsells) ? raw.upsells : d.upsells;
 
-  const tabs = useMemo(
-    () => [
-      { id: "offers", content: "Offers", panelID: "offers-panel" },
-      { id: "upsells", content: "Upsells", panelID: "upsells-panel" },
-      { id: "thankYou", content: "Thank you", panelID: "thankyou-panel" },
-    ],
-    []
+  x.offers = x.offers.slice(0, 3).map((o) => ({
+    ...DEFAULT_OFFER,
+    ...o,
+    colors: { ...DEFAULT_OFFER.colors, ...(o?.colors || {}) },
+    discountEnabled: o?.discountEnabled ?? false,
+    discountType: o?.discountType || "percentage",
+    discountValue:
+      typeof o?.discountValue === "number"
+        ? o.discountValue
+        : o?.discountValue != null
+        ? Number(o.discountValue) || 0
+        : DEFAULT_OFFER.discountValue,
+    qtyMultiplier: clampInt(o?.qtyMultiplier, 1, 3, DEFAULT_OFFER.qtyMultiplier),
+  }));
+
+  x.upsells = x.upsells.slice(0, 3).map((u) => ({
+    ...DEFAULT_UPSELL,
+    ...u,
+    colors: { ...DEFAULT_UPSELL.colors, ...(u?.colors || {}) },
+  }));
+
+  const tyRaw = (raw || {})?.thankYou || {};
+  x.thankYou = {
+    ...DEFAULT_THANKYOU,
+    ...tyRaw,
+    colors: { ...DEFAULT_THANKYOU_COLORS, ...(tyRaw?.colors || {}) },
+    radius: clampInt(tyRaw?.radius, 10, 28, DEFAULT_THANKYOU.radius),
+    imageHeight: clampInt(
+      tyRaw?.imageHeight,
+      120,
+      240,
+      DEFAULT_THANKYOU.imageHeight
+    ),
+    autoOpenDelayMs: clampInt(
+      tyRaw?.autoOpenDelayMs,
+      0,
+      5000,
+      DEFAULT_THANKYOU.autoOpenDelayMs
+    ),
+    size: tyRaw?.size || DEFAULT_THANKYOU.size,
+    layout: tyRaw?.layout || DEFAULT_THANKYOU.layout,
+    mode: tyRaw?.mode || DEFAULT_THANKYOU.mode,
+  };
+
+  return x;
+}
+
+/* ============================== Palette Selector (kept for ThankYou) ============================== */
+function PaletteSelector({ value, onChange }) {
+  return (
+    <div className="tf-color-palettes">
+      {COLOR_PALETTES.map((p) => {
+        const c = p.colors || [];
+        const g1 = `linear-gradient(135deg, ${c[0]} 0%, ${c[1]} 100%)`;
+        const g2 = `linear-gradient(135deg, ${c[2]} 0%, ${c[3]} 100%)`;
+        const accent = c[4] || c[0];
+
+        return (
+          <div
+            key={p.id}
+            className={`tf-color-palette ${value === p.id ? "active" : ""}`}
+            onClick={() => onChange(p.id)}
+            role="button"
+            tabIndex={0}
+          >
+            <div className="tf-palette-colors">
+              <div style={{ background: g1 }} />
+              <div style={{ background: g2 }} />
+            </div>
+            <div className="tf-palette-info">
+              <span>{p.name}</span>
+              <span
+                className="tf-palette-accent"
+                style={{ background: accent }}
+                title={accent}
+              />
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function applyPalette(paletteId, baseColors) {
+  const p = COLOR_PALETTES.find((x) => x.id === paletteId);
+  if (!p?.preset) return baseColors;
+  return { ...baseColors, paletteId, ...p.preset };
+}
+
+/* ============================== Preview Card (offers/upsells) ============================== */
+function PreviewCard({ item, products, isOffer, globalColors, tr }) {
+  const product = item.productId
+    ? getProductById(products, item.productId)
+    : null;
+  const images = product ? getProductImages(product) : [];
+
+  const fallbackImg =
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 220'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23EEF2FF'/%3E%3Cstop offset='1' stop-color='%23F8FAFC'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='320' height='220' rx='18' fill='url(%23g)'/%3E%3Cpath d='M120 92l40-40 80 80v72H80V92z' fill='%234F46E5' opacity='.9'/%3E%3Ccircle cx='110' cy='78' r='18' fill='%2399A7FF' opacity='.85'/%3E%3C/svg%3E";
+
+  const img = (item.imageUrl || "").trim() || images?.[0] || fallbackImg;
+
+  const useGlobal = item.useGlobalColors !== false;
+  const c = useGlobal ? globalColors : item.colors || {};
+
+  const cardBg = c.cardBg || "#fff";
+  const borderColor = c.borderColor || "#E5E7EB";
+  const iconBg = c.iconBg || "#EEF2FF";
+
+  const btnBg = c.buttonBg || "#111827";
+  const btnText = c.buttonTextColor || "#fff";
+  const btnBorder = c.buttonBorder || btnBg;
+
+  const layout = item.layoutStyle || "image-left";
+  const layoutClass =
+    layout === "image-right"
+      ? "preview-style--image-right"
+      : layout === "image-top"
+      ? "preview-style--image-top"
+      : layout === "image-bottom"
+      ? "preview-style--image-bottom"
+      : "preview-style--image-left";
+
+  const discountLabel =
+    isOffer && item.discountEnabled
+      ? item.discountType === "fixed"
+        ? `${Number(item.discountValue || 0) || 0}`
+        : `${Number(item.discountValue || 0) || 0}%`
+      : null;
+
+  const qty = isOffer ? clampInt(item.qtyMultiplier, 1, 3, 1) : 1;
+
+  return (
+    <div
+      className={`preview-offer ${layoutClass}`}
+      style={{ background: cardBg, borderColor }}
+    >
+      <div className="preview-row">
+        <div className="preview-icon" style={{ background: iconBg }}>
+          {item.iconUrl ? (
+            <img
+              src={item.iconUrl}
+              alt=""
+              onError={(e) => {
+                e.currentTarget.onerror = null;
+                e.currentTarget.style.display = "none";
+              }}
+            />
+          ) : (
+            <SafeIcon
+              name={isOffer ? "DiscountIcon" : "GiftCardIcon"}
+              fallback="AppsIcon"
+            />
+          )}
+        </div>
+
+        <div className="preview-img">
+          <img
+            src={img}
+            alt=""
+            onError={(e) => {
+              e.currentTarget.onerror = null;
+              e.currentTarget.src = fallbackImg;
+            }}
+          />
+        </div>
+
+        <div className="preview-main">
+          <InlineStack align="space-between" blockAlign="center">
+            <div className="preview-title">
+              {item.title ||
+                (isOffer
+                  ? tr("section2.offers.defaultTitle", "Offer")
+                  : tr("section2.upsells.defaultTitle", "Upsell"))}
+            </div>
+
+            <InlineStack gap="200" blockAlign="center">
+              {isOffer && qty > 1 ? <Badge tone="info">x{qty}</Badge> : null}
+              {discountLabel ? (
+                <Badge tone="success">
+                  {tr("section2.discount.badge", "Discount")} {discountLabel}
+                </Badge>
+              ) : null}
+            </InlineStack>
+          </InlineStack>
+
+          <div className="preview-desc">{item.description || ""}</div>
+
+          <div className="preview-sub">
+            {tr("section2.preview.productLabel", "Product")}:{" "}
+            <b>
+              {product?.title
+                ? product.title
+                : item.productId
+                ? tr("section2.preview.productSelected", "Selected")
+                : tr("section2.preview.productNone", "None")}
+            </b>
+            {isOffer ? (
+              <>
+                {" "}
+                • {tr("section2.preview.qty", "Qty")}: <b>x{qty}</b>
+              </>
+            ) : null}
+          </div>
+
+          {isOffer && (
+            <button
+              className="offer-btn"
+              style={{
+                background: btnBg,
+                color: btnText,
+                borderColor: btnBorder,
+              }}
+              type="button"
+              onClick={() => {}}
+            >
+              <SafeIcon name="CirclePlusIcon" fallback="PlusIcon" />
+              {item.buttonText ||
+                tr("section2.offers.buttonDefault", "Activate")}
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ============================== Thank You Preview + Editor (UNCHANGED) ============================== */
+/* (Ton code ThankYouPreview + ThankYouEditor est inchangé — je le laisse tel quel) */
+// NOTE: Pour garder le message lisible, je n’ai rien modifié dans tes composants ThankYouPreview/ThankYouEditor.
+// Ils restent EXACTEMENT comme tu les as collés (ci-dessus et plus bas).
+
+/* ============================== Thank You Preview + Editor (UNCHANGED) ============================== */
+function ThankYouPreview({ thankYou, globalColors, tr }) {
+  const fallbackImg =
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 900 520'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23EEF2FF'/%3E%3Cstop offset='1' stop-color='%23F8FAFC'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='900' height='520' rx='28' fill='url(%23g)'/%3E%3Cpath d='M220 210l110-110 220 220v180H170V210z' fill='%234F46E5' opacity='.88'/%3E%3Ccircle cx='240' cy='190' r='46' fill='%2399A7FF' opacity='.85'/%3E%3C/svg%3E";
+
+  const ty = thankYou || DEFAULT_THANKYOU;
+
+  const useGlobal = ty.useGlobalColors !== false;
+  const c = useGlobal ? globalColors : ty.colors || {};
+
+  const cardBg = c.cardBg || "#fff";
+  const borderColor = c.borderColor || "#E5E7EB";
+  const iconBg = c.iconBg || "#EEF2FF";
+  const btnBg = c.buttonBg || "#111827";
+  const btnText = c.buttonTextColor || "#fff";
+  const btnBorder = c.buttonBorder || btnBg;
+
+  const img = (ty.imageUrl || "").trim() || fallbackImg;
+
+  const radius = clampInt(ty.radius, 10, 28, 16);
+  const imageHeight = clampInt(ty.imageHeight, 120, 240, 160);
+  const layout = ty.layout || "image-top";
+
+  const chip =
+    ty.showChip !== false
+      ? ty.chipText || tr("thankyou.chip", "Order confirmed")
+      : "";
+
+  const cardStyle = {
+    background: cardBg,
+    border: `1px solid ${borderColor}`,
+    borderRadius: radius,
+  };
+
+  const isTop = layout === "image-top";
+  const isRight = layout === "image-right";
+
+  const contentWrapStyle = {
+    display: "grid",
+    gap: 12,
+    gridTemplateColumns: isTop ? "1fr" : "160px 1fr",
+    alignItems: "start",
+  };
+
+  const imageWrapStyle = {
+    borderRadius: Math.max(10, radius - 4),
+    border: "1px solid rgba(0,0,0,.08)",
+    background: "#F3F4F6",
+    overflow: "hidden",
+    height: isTop ? imageHeight : 160,
+  };
+
+  const iconStyle = {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    display: "grid",
+    placeItems: "center",
+    border: "1px solid rgba(0,0,0,.10)",
+    background: iconBg,
+    overflow: "hidden",
+    flex: "0 0 auto",
+  };
+
+  const renderContent = () => (
+    <div className="tf-ty-simple" style={cardStyle}>
+      <div className="tf-ty-simple-top">
+        <InlineStack gap="200" blockAlign="center">
+          <div style={iconStyle}>
+            {ty.iconUrl ? (
+              <img
+                src={ty.iconUrl}
+                alt=""
+                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.style.display = "none";
+                }}
+              />
+            ) : (
+              <SafeIcon name="CheckCircleIcon" fallback="AppsIcon" />
+            )}
+          </div>
+
+          <div>
+            <div className="tf-ty-title">
+              {ty.title || tr("thankyou.title", "Thank you!")}
+            </div>
+            <div className="tf-ty-text">{ty.message || ""}</div>
+          </div>
+        </InlineStack>
+
+        {chip ? <span className="tf-ty-chip">{chip}</span> : null}
+      </div>
+
+      <div style={contentWrapStyle}>
+        <div
+          className="tf-ty-banner"
+          style={{
+            ...imageWrapStyle,
+            height: isTop ? imageHeight : 160,
+            order: isRight ? 2 : 0,
+          }}
+        >
+          <img
+            src={img}
+            alt=""
+            onError={(e) => {
+              e.currentTarget.onerror = null;
+              e.currentTarget.src = fallbackImg;
+            }}
+          />
+        </div>
+
+        <div style={{ display: "grid", gap: 10, order: isRight ? 1 : 0 }}>
+          <div className="tf-ty-actions">
+            {ty.primaryEnabled !== false ? (
+              <button
+                className="tf-ty-btn"
+                type="button"
+                style={{
+                  background: btnBg,
+                  color: btnText,
+                  borderColor: btnBorder,
+                  borderWidth: 1,
+                  borderStyle: "solid",
+                }}
+              >
+                <SafeIcon name="ArrowRightIcon" fallback="AppsIcon" />
+                {ty.primaryText || tr("thankyou.primary", "Continue")}
+              </button>
+            ) : null}
+
+            {ty.secondaryEnabled ? (
+              <a
+                className="tf-ty-link"
+                href={ty.secondaryUrl || "#"}
+                onClick={(e) => e.preventDefault()}
+              >
+                <SafeIcon name="ExternalIcon" fallback="AppsIcon" />
+                {ty.secondaryText || tr("thankyou.secondary", "Track")}
+              </a>
+            ) : null}
+          </div>
+
+          <Text as="p" variant="bodySm" tone="subdued">
+            {tr(
+              "thankyou.previewHint",
+              "Admin preview only — this shows how it can look on the storefront."
+            )}
+          </Text>
+        </div>
+      </div>
+    </div>
   );
 
-  const tabId = tabs[selectedTab]?.id || "offers";
+  const popupMaxWidth = ty.size === "sm" ? 420 : ty.size === "lg" ? 720 : 560;
 
-  const dirty = useMemo(() => {
-    if (!cfg) return false;
-    try {
-      const now = JSON.stringify(cfg);
-      return now !== initialJsonRef.current;
-    } catch {
-      return true;
-    }
-  }, [cfg]);
+  return (
+    <div className="tf-ty-preview-wrap" style={{ minHeight: 420 }}>
+      {ty.mode === "simple" ? (
+        renderContent()
+      ) : (
+        <>
+          <div style={{ padding: 12 }}>
+            <div style={{ ...cardStyle, padding: 12 }}>
+              <InlineStack align="space-between" blockAlign="center">
+                <Text as="p" variant="bodySm" fontWeight="bold">
+                  {tr("thankyou.mode.popupLabel", "Popup mode preview")}
+                </Text>
+                <Badge tone="info">{tr("thankyou.mode.popup", "Popup")}</Badge>
+              </InlineStack>
+              <Divider />
+              <Text as="p" variant="bodySm" tone="subdued">
+                {tr(
+                  "thankyou.preview.popupHint",
+                  "After order success, a popup opens automatically."
+                )}
+              </Text>
+              <div style={{ marginTop: 10 }}>
+                <button
+                  className="tf-ty-btn"
+                  type="button"
+                  style={{
+                    background: "#111827",
+                    color: "#fff",
+                    border: "1px solid #111827",
+                  }}
+                  onClick={() => {}}
+                >
+                  <SafeIcon name="CirclePlusIcon" fallback="AppsIcon" />
+                  {tr("thankyou.preview.fakeButton", "Finish order (demo)")}
+                </button>
+              </div>
+            </div>
+          </div>
 
-  // -------------------- LOAD --------------------
-  useEffect(() => {
-    let mounted = true;
+          <div className="tf-ty-modal-overlay">
+            <div
+              className="tf-ty-modal"
+              style={{
+                maxWidth: popupMaxWidth,
+                background: cardBg,
+                borderRadius: radius,
+                border: `1px solid ${borderColor}`,
+              }}
+            >
+              <div className="tf-ty-modal-inner">{renderContent()}</div>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
 
-    async function load() {
-      try {
-        const res = await fetch("/api/offers/load", { credentials: "include" });
-        const data = await res.json();
+/* ============================== Editors (Offers / Upsells) ============================== */
+/* ✅ CHANGE ONLY: Offer colors section => ONLY 3 colors in same line */
+function OfferEditor({ offer, index, products, onChange, onRemove, canRemove, tr }) {
+  const productOptions = useMemo(() => {
+    const opts = (products || []).map((p) => ({
+      label: p.title || tr("section2.product.fallbackLabel", "Product"),
+      value: String(p.id),
+    }));
+    return [
+      { label: tr("section2.product.placeholder", "— Choose a product —"), value: "" },
+      ...opts,
+    ];
+  }, [products, tr]);
 
-        if (!mounted) return;
+  const discountEnabled = !!offer.discountEnabled;
+  const discountType = offer.discountType || "percentage";
+  const discountValue = Number(offer.discountValue || 0);
+  const qtyMultiplier = clampInt(offer.qtyMultiplier, 1, 3, 1);
 
-        if (!data?.ok) {
-          setToast({ active: true, content: data?.error || "Erreur de chargement", error: true });
-          setCfg(null);
-          return;
-        }
+  return (
+    <div className="item-card">
+      {canRemove && (
+        <div
+          className="remove-btn"
+          onClick={onRemove}
+          title={tr("section2.common.remove", "Remove")}
+        >
+          ×
+        </div>
+      )}
 
-        const payload = data?.offers || null;
-        setCfg(payload);
+      <div className="item-header">
+        <InlineStack align="start" blockAlign="center">
+          <span className="item-number">{index + 1}</span>
+          <Text as="h3" variant="headingSm">
+            {tr("section2.offers.itemTitlePrefix", "Offer")} {index + 1}
+          </Text>
+        </InlineStack>
+        <Checkbox
+          label={tr("section2.common.enable", "Enable")}
+          checked={!!offer.enabled}
+          onChange={(v) => onChange({ ...offer, enabled: v })}
+        />
+      </div>
 
-        try {
-          initialJsonRef.current = JSON.stringify(payload);
-        } catch {
-          initialJsonRef.current = "";
-        }
-      } catch (e) {
-        if (!mounted) return;
-        setToast({
-          active: true,
-          content: e?.message || "Erreur réseau /api/offers/load",
-          error: true,
-        });
-      }
-    }
-
-    load();
-    return () => {
-      mounted = false;
-    };
-  }, []);
-
-  // -------------------- SAVE --------------------
-  async function saveNow() {
-    if (!cfg) return;
-    setIsSaving(true);
-    try {
-      // ⚠️ Si tu n'as pas encore /api/offers/save, crée-le plus tard.
-      const res = await fetch("/api/offers/save", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ offers: cfg }),
-      });
-
-      const data = await res.json().catch(() => ({}));
-
-      if (!res.ok || !data?.ok) {
-        throw new Error(data?.error || "Save failed");
-      }
-
-      // update baseline (dirty => false)
-      initialJsonRef.current = JSON.stringify(cfg);
-
-      setToast({ active: true, content: "Enregistré avec succès ✅", error: false });
-    } catch (e) {
-      setToast({
-        active: true,
-        content: e?.message || "Erreur d’enregistrement",
-        error: true,
-      });
-    } finally {
-      setIsSaving(false);
-    }
-  }
-
-  // -------------------- HELPERS (update cfg safely) --------------------
-  function updateGlobal(patch) {
-    setCfg((prev) => {
-      const next = deepClone(prev);
-      next.global = next.global || {};
-      Object.assign(next.global, patch);
-      return next;
-    });
-  }
-
-  function updateGlobalColors(patch) {
-    setCfg((prev) => {
-      const next = deepClone(prev);
-      next.global = next.global || {};
-      next.global.colors = next.global.colors || {};
-      Object.assign(next.global.colors, patch);
-      return next;
-    });
-  }
-
-  function updateOffer(idx, patch) {
-    setCfg((prev) => {
-      const next = deepClone(prev);
-      next.offers = Array.isArray(next.offers) ? next.offers : [];
-      if (!next.offers[idx]) return next;
-      Object.assign(next.offers[idx], patch);
-      return next;
-    });
-  }
-
-  function updateOfferColors(idx, patch) {
-    setCfg((prev) => {
-      const next = deepClone(prev);
-      next.offers = Array.isArray(next.offers) ? next.offers : [];
-      if (!next.offers[idx]) return next;
-      next.offers[idx].colors = next.offers[idx].colors || {};
-      Object.assign(next.offers[idx].colors, patch);
-      return next;
-    });
-  }
-
-  function updateUpsell(idx, patch) {
-    setCfg((prev) => {
-      const next = deepClone(prev);
-      next.upsells = Array.isArray(next.upsells) ? next.upsells : [];
-      if (!next.upsells[idx]) return next;
-      Object.assign(next.upsells[idx], patch);
-      return next;
-    });
-  }
-
-  function updateUpsellColors(idx, patch) {
-    setCfg((prev) => {
-      const next = deepClone(prev);
-      next.upsells = Array.isArray(next.upsells) ? next.upsells : [];
-      if (!next.upsells[idx]) return next;
-      next.upsells[idx].colors = next.upsells[idx].colors || {};
-      Object.assign(next.upsells[idx].colors, patch);
-      return next;
-    });
-  }
-
-  function updateThankYou(patch) {
-    setCfg((prev) => {
-      const next = deepClone(prev);
-      next.thankYou = next.thankYou || {};
-      Object.assign(next.thankYou, patch);
-      return next;
-    });
-  }
-
-  function updateThankYouColors(patch) {
-    setCfg((prev) => {
-      const next = deepClone(prev);
-      next.thankYou = next.thankYou || {};
-      next.thankYou.colors = next.thankYou.colors || {};
-      Object.assign(next.thankYou.colors, patch);
-      return next;
-    });
-  }
-
-  function goTo(id) {
-    const idx = tabs.findIndex((t) => t.id === id);
-    if (idx >= 0) setSelectedTab(idx);
-  }
-
-  // -------------------- RENDERS --------------------
-  function renderGlobalColorsBlock() {
-    const g = cfg?.global || {};
-    const c = g?.colors || {};
-
-    return (
-      <Card padding="500">
-        <BlockStack gap="400">
-          <InlineStack align="space-between" blockAlign="center">
-            <Text variant="headingSm" as="h3">
-              Global settings
-            </Text>
-            <Checkbox
-              label="Enabled"
-              checked={!!g.enabled}
-              onChange={(v) => updateGlobal({ enabled: v })}
-            />
-          </InlineStack>
-
-          <Divider />
-
-          <BlockStack gap="300">
-            <Select
-              label="Palette"
-              options={PALETTE_OPTIONS}
-              value={c.paletteId || "clean-pro"}
-              onChange={(v) => updateGlobalColors({ paletteId: v })}
-            />
-
-            <InlineStack gap="300" wrap>
-              <TextField
-                label="Card bg"
-                value={c.cardBg || ""}
-                onChange={(v) => updateGlobalColors({ cardBg: v })}
-                autoComplete="off"
-              />
-              <TextField
-                label="Border"
-                value={c.borderColor || ""}
-                onChange={(v) => updateGlobalColors({ borderColor: v })}
-                autoComplete="off"
-              />
-              <TextField
-                label="Icon bg"
-                value={c.iconBg || ""}
-                onChange={(v) => updateGlobalColors({ iconBg: v })}
-                autoComplete="off"
-              />
-            </InlineStack>
-
-            <InlineStack gap="300" wrap>
-              <TextField
-                label="Button bg"
-                value={c.buttonBg || ""}
-                onChange={(v) => updateGlobalColors({ buttonBg: v })}
-                autoComplete="off"
-              />
-              <TextField
-                label="Button text"
-                value={c.buttonTextColor || ""}
-                onChange={(v) => updateGlobalColors({ buttonTextColor: v })}
-                autoComplete="off"
-              />
-              <TextField
-                label="Button border"
-                value={c.buttonBorder || ""}
-                onChange={(v) => updateGlobalColors({ buttonBorder: v })}
-                autoComplete="off"
-              />
-            </InlineStack>
-
-            <Text tone="subdued" as="p">
-              Ces couleurs sont utilisées quand “useGlobalColors” est activé sur Offers/Upsells/Thank you.
-            </Text>
-          </BlockStack>
-        </BlockStack>
-      </Card>
-    );
-  }
-
-  function renderOfferEditor(offer, idx) {
-    const o = offer || {};
-    const colors = o.colors || {};
-
-    return (
-      <Card key={`offer-${idx}`} padding="500">
-        <BlockStack gap="400">
-          <InlineStack align="space-between" blockAlign="center">
-            <Text variant="headingSm" as="h3">
-              Offer #{idx + 1}
-            </Text>
-
-            <InlineStack gap="300" blockAlign="center">
-              <Checkbox
-                label="Enabled"
-                checked={!!o.enabled}
-                onChange={(v) => updateOffer(idx, { enabled: v })}
-              />
-              <Checkbox
-                label="Preview"
-                checked={!!o.showInPreview}
-                onChange={(v) => updateOffer(idx, { showInPreview: v })}
-              />
-            </InlineStack>
-          </InlineStack>
-
-          <Divider />
-
-          <BlockStack gap="300">
-            <InlineStack gap="300" wrap>
-              <TextField
-                label="Title"
-                value={o.title || ""}
-                onChange={(v) => updateOffer(idx, { title: v })}
-                autoComplete="off"
-              />
-              <TextField
-                label="Button text"
-                value={o.buttonText || ""}
-                onChange={(v) => updateOffer(idx, { buttonText: v })}
-                autoComplete="off"
-              />
-            </InlineStack>
-
+      <BlockStack gap="400">
+        <GroupCard title={tr("section2.groups.content", "Content")}>
+          <Grid3 min={220}>
             <TextField
-              label="Description"
-              value={o.description || ""}
-              onChange={(v) => updateOffer(idx, { description: v })}
-              multiline={2}
+              label={tr("section2.fields.title", "Title")}
+              value={offer.title || ""}
+              onChange={(v) => onChange({ ...offer, title: v })}
               autoComplete="off"
             />
+            <TextField
+              label={tr("section2.fields.description", "Text")}
+              value={offer.description || ""}
+              onChange={(v) => onChange({ ...offer, description: v })}
+              autoComplete="off"
+            />
+            <Select
+              label={tr("section2.fields.layoutStyle", "Layout style")}
+              value={offer.layoutStyle || "image-left"}
+              options={LAYOUT_STYLE_OPTIONS}
+              onChange={(v) => onChange({ ...offer, layoutStyle: v })}
+            />
+          </Grid3>
 
-            <InlineStack gap="300" wrap>
-              <TextField
-                label="Product ID"
-                value={o.productId || ""}
-                onChange={(v) => updateOffer(idx, { productId: v })}
-                autoComplete="off"
-                helpText="Garde bien productId (même terme que ton code)."
-              />
-              <Select
-                label="Layout"
-                options={LAYOUT_OPTIONS}
-                value={o.layoutStyle || "image-left"}
-                onChange={(v) => updateOffer(idx, { layoutStyle: v })}
-              />
-            </InlineStack>
+          <Grid3 min={220}>
+            <Select
+              label={tr("section2.fields.product", "Shopify product")}
+              value={offer.productId ? String(offer.productId) : ""}
+              options={productOptions}
+              onChange={(v) => onChange({ ...offer, productId: v })}
+            />
+            <TextField
+              label={tr("section2.fields.imageUrl", "Image URL")}
+              value={offer.imageUrl || ""}
+              onChange={(v) => onChange({ ...offer, imageUrl: v })}
+              placeholder="https://cdn.shopify.com/..."
+              autoComplete="off"
+            />
+            <TextField
+              label={tr("section2.fields.iconUrl", "Icon URL")}
+              value={offer.iconUrl || ""}
+              onChange={(v) => onChange({ ...offer, iconUrl: v })}
+              placeholder="https://cdn.shopify.com/..."
+              autoComplete="off"
+            />
+          </Grid3>
 
-            <InlineStack gap="300" wrap>
-              <TextField
-                label="Image URL"
-                value={o.imageUrl || ""}
-                onChange={(v) => updateOffer(idx, { imageUrl: v })}
-                autoComplete="off"
-              />
-              <TextField
-                label="Icon URL"
-                value={o.iconUrl || ""}
-                onChange={(v) => updateOffer(idx, { iconUrl: v })}
-                autoComplete="off"
-              />
-            </InlineStack>
+          <Text variant="bodySm" tone="subdued">
+            {tr(
+              "section2.hints.urlPriority",
+              "If URL is empty, we auto-use the Shopify product image (when available)."
+            )}
+          </Text>
+        </GroupCard>
+
+        <GroupCard title={tr("section2.groups.quantity", "Quantity (Offer)")}>
+          <Grid3 min={240}>
+            <Select
+              label={tr("section2.quantity.label", "Number of products")}
+              value={String(qtyMultiplier)}
+              options={OFFER_QTY_OPTIONS}
+              onChange={(v) =>
+                onChange({ ...offer, qtyMultiplier: clampInt(v, 1, 3, 1) })
+              }
+              helpText={tr(
+                "section2.quantity.help",
+                "Used to calculate totals (x2/x3) in the offer logic."
+              )}
+            />
+            <div />
+            <div />
+          </Grid3>
+        </GroupCard>
+
+        <GroupCard title={tr("section2.groups.discount", "Discount (Offer)")}>
+          <Grid3 min={220}>
+            <Checkbox
+              label={tr("section2.discount.enable", "Enable discount")}
+              checked={discountEnabled}
+              onChange={(v) => onChange({ ...offer, discountEnabled: v })}
+            />
+            <Select
+              label={tr("section2.discount.type", "Discount type")}
+              value={discountType}
+              options={DISCOUNT_TYPE_OPTIONS}
+              disabled={!discountEnabled}
+              onChange={(v) => onChange({ ...offer, discountType: v })}
+            />
+            <TextField
+              type="number"
+              label={
+                discountType === "fixed"
+                  ? tr("section2.discount.valueFixed", "Discount value (amount)")
+                  : tr("section2.discount.valuePercent", "Discount value (%)")
+              }
+              value={String(discountValue)}
+              disabled={!discountEnabled}
+              onChange={(v) => {
+                const n = Number(v);
+                const safe = Number.isFinite(n) ? n : 0;
+                const finalVal =
+                  discountType === "percentage"
+                    ? Math.max(0, Math.min(100, safe))
+                    : Math.max(0, safe);
+                onChange({ ...offer, discountValue: finalVal });
+              }}
+              placeholder={discountType === "fixed" ? "20" : "10"}
+              autoComplete="off"
+            />
+          </Grid3>
+        </GroupCard>
+
+        <GroupCard title={tr("section2.groups.design", "Design")}>
+          <Grid3 min={220}>
+            <Checkbox
+              label={tr("section2.fields.useGlobalColors", "Use global colors")}
+              checked={offer.useGlobalColors !== false}
+              onChange={(v) => onChange({ ...offer, useGlobalColors: v })}
+            />
+            <Checkbox
+              label={tr("section2.fields.showInPreview", "Show in preview")}
+              checked={!!offer.showInPreview}
+              onChange={(v) => onChange({ ...offer, showInPreview: v })}
+            />
+            <div />
+          </Grid3>
+
+          {offer.useGlobalColors === false && (
+            <>
+              <Divider />
+              <Grid3 min={220}>
+                <ColorField
+                  label={tr("section2.colors.offerBg", "Background")}
+                  value={offer.colors?.cardBg || ""}
+                  onChange={(v) =>
+                    onChange({
+                      ...offer,
+                      colors: { ...(offer.colors || {}), cardBg: v },
+                    })
+                  }
+                  placeholder="#FFFFFF"
+                />
+                <ColorField
+                  label={tr("section2.colors.offerBtnBg", "Button BG")}
+                  value={offer.colors?.buttonBg || ""}
+                  onChange={(v) =>
+                    onChange({
+                      ...offer,
+                      colors: { ...(offer.colors || {}), buttonBg: v },
+                    })
+                  }
+                  placeholder="#111827"
+                />
+                <ColorField
+                  label={tr("section2.colors.offerBtnText", "Button Text")}
+                  value={offer.colors?.buttonTextColor || ""}
+                  onChange={(v) =>
+                    onChange({
+                      ...offer,
+                      colors: { ...(offer.colors || {}), buttonTextColor: v },
+                    })
+                  }
+                  placeholder="#FFFFFF"
+                />
+              </Grid3>
+
+              <Divider />
+
+              <Grid3 min={220}>
+                <TextField
+                  label={tr("section2.offers.buttonText", "Button text")}
+                  value={offer.buttonText || ""}
+                  onChange={(v) => onChange({ ...offer, buttonText: v })}
+                  autoComplete="off"
+                />
+                <div />
+                <div />
+              </Grid3>
+            </>
+          )}
+        </GroupCard>
+      </BlockStack>
+    </div>
+  );
+}
+
+function UpsellEditor({ upsell, index, products, onChange, onRemove, canRemove, tr }) {
+  const productOptions = useMemo(() => {
+    const opts = (products || []).map((p) => ({
+      label: p.title || tr("section2.product.fallbackLabel", "Product"),
+      value: String(p.id),
+    }));
+    return [
+      { label: tr("section2.product.placeholder", "— Choose a product —"), value: "" },
+      ...opts,
+    ];
+  }, [products, tr]);
+
+  return (
+    <div className="item-card">
+      {canRemove && (
+        <div className="remove-btn" onClick={onRemove} title={tr("section2.common.remove", "Remove")}>
+          ×
+        </div>
+      )}
+
+      <div className="item-header">
+        <InlineStack align="start" blockAlign="center">
+          <span className="item-number">{index + 1}</span>
+          <Text as="h3" variant="headingSm">
+            {tr("section2.upsells.itemTitlePrefix", "Upsell")} {index + 1}
+          </Text>
+        </InlineStack>
+        <Checkbox
+          label={tr("section2.common.enable", "Enable")}
+          checked={!!upsell.enabled}
+          onChange={(v) => onChange({ ...upsell, enabled: v })}
+        />
+      </div>
+
+      <BlockStack gap="400">
+        <GroupCard title={tr("section2.groups.content", "Content")}>
+          <Grid3 min={220}>
+            <TextField
+              label={tr("section2.fields.title", "Title")}
+              value={upsell.title || ""}
+              onChange={(v) => onChange({ ...upsell, title: v })}
+              autoComplete="off"
+            />
+            <TextField
+              label={tr("section2.fields.description", "Text")}
+              value={upsell.description || ""}
+              onChange={(v) => onChange({ ...upsell, description: v })}
+              autoComplete="off"
+            />
+            <Select
+              label={tr("section2.fields.layoutStyle", "Layout style")}
+              value={upsell.layoutStyle || "image-left"}
+              options={LAYOUT_STYLE_OPTIONS}
+              onChange={(v) => onChange({ ...upsell, layoutStyle: v })}
+            />
+          </Grid3>
+
+          <Grid3 min={220}>
+            <Select
+              label={tr("section2.fields.product", "Shopify product")}
+              value={upsell.productId ? String(upsell.productId) : ""}
+              options={productOptions}
+              onChange={(v) => onChange({ ...upsell, productId: v })}
+            />
+            <TextField
+              label={tr("section2.fields.imageUrl", "Image URL")}
+              value={upsell.imageUrl || ""}
+              onChange={(v) => onChange({ ...upsell, imageUrl: v })}
+              placeholder="https://cdn.shopify.com/..."
+              autoComplete="off"
+            />
+            <TextField
+              label={tr("section2.fields.iconUrl", "Icon URL")}
+              value={upsell.iconUrl || ""}
+              onChange={(v) => onChange({ ...upsell, iconUrl: v })}
+              placeholder="https://cdn.shopify.com/..."
+              autoComplete="off"
+            />
+          </Grid3>
+        </GroupCard>
+
+        <GroupCard title={tr("section2.groups.design", "Design")}>
+          <Grid3 min={220}>
+            <Checkbox
+              label={tr("section2.fields.useGlobalColors", "Use global colors")}
+              checked={upsell.useGlobalColors !== false}
+              onChange={(v) => onChange({ ...upsell, useGlobalColors: v })}
+            />
+            <Checkbox
+              label={tr("section2.fields.showInPreview", "Show in preview")}
+              checked={!!upsell.showInPreview}
+              onChange={(v) => onChange({ ...upsell, showInPreview: v })}
+            />
+            <div />
+          </Grid3>
+
+          {upsell.useGlobalColors === false && (
+            <>
+              <Divider />
+              <Grid3 min={220}>
+                <ColorField
+                  label={tr("section2.colors.cardBg", "Card background")}
+                  value={upsell.colors?.cardBg || ""}
+                  onChange={(v) =>
+                    onChange({ ...upsell, colors: { ...(upsell.colors || {}), cardBg: v } })
+                  }
+                  placeholder="#FFFFFF"
+                />
+                <ColorField
+                  label={tr("section2.colors.borderColor", "Border color")}
+                  value={upsell.colors?.borderColor || ""}
+                  onChange={(v) =>
+                    onChange({ ...upsell, colors: { ...(upsell.colors || {}), borderColor: v } })
+                  }
+                  placeholder="#E5E7EB"
+                />
+                <ColorField
+                  label={tr("section2.colors.iconBg", "Icon background")}
+                  value={upsell.colors?.iconBg || ""}
+                  onChange={(v) =>
+                    onChange({ ...upsell, colors: { ...(upsell.colors || {}), iconBg: v } })
+                  }
+                  placeholder="#EEF2FF"
+                />
+              </Grid3>
+            </>
+          )}
+        </GroupCard>
+      </BlockStack>
+    </div>
+  );
+}
+
+/* ============================== Thank You Editor (AS IS) ============================== */
+function ThankYouEditor({ thankYou, globalColors, onChange, tr }) {
+  const ty = thankYou || DEFAULT_THANKYOU;
+  const update = (patch) => onChange({ ...ty, ...patch });
+
+  const tools = useMemo(
+    () => [
+      { id: "mode", title: tr("thankyou.subtabs.mode", "Mode"), desc: tr("thankyou.tool.modeDesc", "Simple / Popup + delay"), icon: "SettingsIcon" },
+      { id: "content", title: tr("thankyou.subtabs.content", "Title & Text"), desc: tr("thankyou.tool.contentDesc", "Templates + text + chip"), icon: "TextIcon" },
+      { id: "media", title: tr("thankyou.media.title", "Media"), desc: tr("thankyou.tool.mediaDesc", "Image URL + Icon URL"), icon: "ImageIcon" },
+      { id: "actions", title: tr("thankyou.subtabs.actions", "Buttons"), desc: tr("thankyou.tool.actionsDesc", "Primary + secondary link"), icon: "ButtonIcon" },
+      { id: "design", title: tr("thankyou.subtabs.design", "Design"), desc: tr("thankyou.tool.designDesc", "Colors + palette"), icon: "ColorsIcon" },
+    ],
+    [tr]
+  );
+
+  const [tool, setTool] = useState("mode");
+
+  const useGlobal = ty.useGlobalColors !== false;
+  const colors = useGlobal ? globalColors : ty.colors || DEFAULT_THANKYOU_COLORS;
+
+  const applyTemplate = (templateId) => {
+    const t = THANKYOU_TEMPLATES.find((x) => x.id === templateId);
+    if (!t) return;
+    update({
+      ...t.data,
+      colors: ty.colors,
+      useGlobalColors: ty.useGlobalColors,
+      radius: ty.radius,
+      imageHeight: ty.imageHeight,
+      iconUrl: ty.iconUrl,
+      imageUrl: ty.imageUrl,
+      enabled: ty.enabled,
+    });
+  };
+
+  const ToolRail = () => (
+    <div className="tf-ty-rail">
+      <div style={{ display: "grid", gap: 10, marginBottom: 4 }}>
+        <Checkbox
+          label={tr("thankyou.enable", "Enable Thank You Page experience")}
+          checked={ty.enabled !== false}
+          onChange={(v) => update({ enabled: v })}
+        />
+        <Text as="p" variant="bodySm" tone="subdued">
+          {tr("thankyou.builderHint", "Like Paint: choose a tool then edit settings.")}
+        </Text>
+      </div>
+
+      <Divider />
+
+      {tools.map((t) => (
+        <div
+          key={t.id}
+          className={`tf-ty-toolbtn ${tool === t.id ? "active" : ""}`}
+          onClick={() => setTool(t.id)}
+          role="button"
+          tabIndex={0}
+        >
+          <div
+            style={{
+              width: 28,
+              height: 28,
+              borderRadius: 10,
+              background: "#EEF2FF",
+              display: "grid",
+              placeItems: "center",
+              border: "1px solid rgba(0,0,0,.06)",
+            }}
+          >
+            <SafeIcon name={t.icon} fallback="AppsIcon" />
+          </div>
+          <div style={{ minWidth: 0 }}>
+            <div className="tf-ty-toolname">{t.title}</div>
+            <div className="tf-ty-tooldesc">{t.desc}</div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
+  const ModePanel = () => (
+    <div className="tf-ty-controls-card">
+      <BlockStack gap="400">
+        <Text as="h3" variant="headingSm">{tr("thankyou.subtabs.mode", "Mode")}</Text>
+
+        <div className="tf-ty-minirow3">
+          <Select
+            label={tr("thankyou.mode.label", "Thank you mode")}
+            value={ty.mode || "simple"}
+            options={THANKYOU_MODE_OPTIONS}
+            onChange={(v) => update({ mode: v })}
+          />
+          <Select
+            label={tr("thankyou.layout.label", "Layout")}
+            value={ty.layout || "image-top"}
+            options={THANKYOU_LAYOUT_OPTIONS}
+            onChange={(v) => update({ layout: v })}
+          />
+          <Select
+            label={tr("thankyou.size.label", "Popup size")}
+            value={ty.size || "md"}
+            options={THANKYOU_SIZE_OPTIONS}
+            onChange={(v) => update({ size: v })}
+            disabled={ty.mode !== "popup"}
+          />
+        </div>
+
+        <Divider />
+
+        <div className="tf-ty-minirow3">
+          <TextField
+            type="number"
+            label={tr("thankyou.delay.label", "Auto open delay (ms)")}
+            value={String(clampInt(ty.autoOpenDelayMs, 0, 5000, 250))}
+            onChange={(v) => update({ autoOpenDelayMs: clampInt(v, 0, 5000, 250) })}
+            disabled={ty.mode !== "popup"}
+          />
+          <TextField
+            type="number"
+            label={tr("thankyou.layout.radius", "Border radius")}
+            value={String(clampInt(ty.radius, 10, 28, 16))}
+            onChange={(v) => update({ radius: clampInt(v, 10, 28, 16) })}
+          />
+          <TextField
+            type="number"
+            label={tr("thankyou.layout.imageHeight", "Image height (px)")}
+            value={String(clampInt(ty.imageHeight, 120, 240, 160))}
+            onChange={(v) => update({ imageHeight: clampInt(v, 120, 240, 160) })}
+          />
+        </div>
+
+        <Divider />
+        <Text as="p" variant="bodySm" tone="subdued">
+          {tr("thankyou.mode.note", "Storefront behavior needs the frontend script to show this popup after submit success.")}
+        </Text>
+      </BlockStack>
+    </div>
+  );
+
+  const ContentPanel = () => (
+    <div className="tf-ty-controls-card">
+      <BlockStack gap="400">
+        <InlineStack align="space-between" blockAlign="center">
+          <Text as="h3" variant="headingSm">{tr("thankyou.subtabs.content", "Content")}</Text>
+          <Badge tone="subdued">{tr("thankyou.templates", "Templates")}</Badge>
+        </InlineStack>
+
+        <Select
+          label={tr("thankyou.template.label", "Ready template")}
+          value=""
+          options={[
+            { label: tr("thankyou.template.choose", "— Choose a template —"), value: "" },
+            ...THANKYOU_TEMPLATES.map((t) => ({ label: t.label, value: t.id })),
+          ]}
+          onChange={(v) => v && applyTemplate(v)}
+          helpText={tr("thankyou.template.help", "Pick a ready text template (you can edit after).")}
+        />
+
+        <Divider />
+
+        <div className="tf-ty-minirow3">
+          <TextField
+            label={tr("thankyou.fields.title", "Title")}
+            value={ty.title || ""}
+            onChange={(v) => update({ title: v })}
+            autoComplete="off"
+          />
+          <TextField
+            label={tr("thankyou.fields.chipText", "Status chip text")}
+            value={ty.chipText || ""}
+            onChange={(v) => update({ chipText: v })}
+            autoComplete="off"
+          />
+          <Checkbox
+            label={tr("thankyou.fields.showChip", "Show chip")}
+            checked={ty.showChip !== false}
+            onChange={(v) => update({ showChip: v })}
+          />
+        </div>
+
+        <TextField
+          label={tr("thankyou.fields.message", "Message")}
+          value={ty.message || ""}
+          onChange={(v) => update({ message: v })}
+          autoComplete="off"
+          multiline={4}
+        />
+      </BlockStack>
+    </div>
+  );
+
+  const MediaPanel = () => (
+    <div className="tf-ty-controls-card">
+      <BlockStack gap="400">
+        <Text as="h3" variant="headingSm">{tr("thankyou.media.title", "Media (Image & Icon)")}</Text>
+
+        <div className="tf-ty-minirow3">
+          <TextField
+            label={tr("thankyou.media.imageUrl", "Image URL")}
+            value={ty.imageUrl || ""}
+            onChange={(v) => update({ imageUrl: v })}
+            placeholder="https://cdn.shopify.com/..."
+            autoComplete="off"
+          />
+          <TextField
+            label={tr("thankyou.media.iconUrl", "Icon URL")}
+            value={ty.iconUrl || ""}
+            onChange={(v) => update({ iconUrl: v })}
+            placeholder="https://cdn.shopify.com/..."
+            autoComplete="off"
+          />
+          <Button
+            onClick={() => update({ imageUrl: "", iconUrl: "" })}
+            icon={PI.DeleteIcon}
+            variant="secondary"
+          >
+            {tr("thankyou.media.clear", "Clear media")}
+          </Button>
+        </div>
+
+        <Divider />
+
+        <div className="tf-ty-minirow3">
+          <Select
+            label={tr("thankyou.layout.label", "Layout")}
+            value={ty.layout || "image-top"}
+            options={THANKYOU_LAYOUT_OPTIONS}
+            onChange={(v) => update({ layout: v })}
+          />
+          <RangeSlider
+            label={tr("thankyou.layout.imageHeight", "Image height (px)")}
+            value={clampInt(ty.imageHeight, 120, 240, 160)}
+            min={120}
+            max={240}
+            onChange={(v) => update({ imageHeight: clampInt(v, 120, 240, 160) })}
+            output
+          />
+          <RangeSlider
+            label={tr("thankyou.layout.radius", "Border radius")}
+            value={clampInt(ty.radius, 10, 28, 16)}
+            min={10}
+            max={28}
+            onChange={(v) => update({ radius: clampInt(v, 10, 28, 16) })}
+            output
+          />
+        </div>
+      </BlockStack>
+    </div>
+  );
+
+  const ActionsPanel = () => (
+    <div className="tf-ty-controls-card">
+      <BlockStack gap="400">
+        <Text as="h3" variant="headingSm">{tr("thankyou.subtabs.actions", "Buttons")}</Text>
+
+        <GroupCard title={tr("thankyou.actions.primary", "Primary button")}>
+          <div className="tf-ty-minirow3">
+            <Checkbox
+              label={tr("thankyou.actions.primaryEnabled", "Enable primary button")}
+              checked={ty.primaryEnabled !== false}
+              onChange={(v) => update({ primaryEnabled: v })}
+            />
+            <TextField
+              label={tr("thankyou.actions.primaryText", "Button text")}
+              value={ty.primaryText || ""}
+              onChange={(v) => update({ primaryText: v })}
+              autoComplete="off"
+            />
+            <TextField
+              label={tr("thankyou.actions.primaryUrl", "Button URL")}
+              value={ty.primaryUrl || ""}
+              onChange={(v) => update({ primaryUrl: v })}
+              placeholder="/"
+              autoComplete="off"
+            />
+          </div>
+        </GroupCard>
+
+        <GroupCard title={tr("thankyou.actions.secondary", "Secondary link")}>
+          <div className="tf-ty-minirow3">
+            <Checkbox
+              label={tr("thankyou.actions.secondaryEnabled", "Enable secondary link")}
+              checked={!!ty.secondaryEnabled}
+              onChange={(v) => update({ secondaryEnabled: v })}
+            />
+            <TextField
+              label={tr("thankyou.actions.secondaryText", "Link text")}
+              value={ty.secondaryText || ""}
+              onChange={(v) => update({ secondaryText: v })}
+              autoComplete="off"
+              disabled={!ty.secondaryEnabled}
+            />
+            <TextField
+              label={tr("thankyou.actions.secondaryUrl", "Link URL")}
+              value={ty.secondaryUrl || ""}
+              onChange={(v) => update({ secondaryUrl: v })}
+              placeholder="/pages/track-order"
+              autoComplete="off"
+              disabled={!ty.secondaryEnabled}
+            />
+          </div>
+        </GroupCard>
+      </BlockStack>
+    </div>
+  );
+
+  const DesignPanel = () => (
+    <div className="tf-ty-controls-card">
+      <BlockStack gap="400">
+        <Text as="h3" variant="headingSm">{tr("thankyou.subtabs.design", "Design")}</Text>
+
+        <div className="tf-ty-minirow3">
+          <Checkbox
+            label={tr("thankyou.design.useGlobal", "Use global (Offers) colors")}
+            checked={ty.useGlobalColors !== false}
+            onChange={(v) => update({ useGlobalColors: v })}
+          />
+          <div />
+          <div />
+        </div>
+
+        {ty.useGlobalColors === false ? (
+          <>
+            <Text as="p" variant="bodySm" tone="subdued">
+              {tr("thankyou.design.paletteHint", "Pick a palette for the Thank You popup/page.")}
+            </Text>
+
+            <PaletteSelector
+              value={(ty.colors?.paletteId || DEFAULT_THANKYOU_COLORS.paletteId) || "brand-gradient"}
+              onChange={(paletteId) =>
+                update({ colors: applyPalette(paletteId, ty.colors || DEFAULT_THANKYOU_COLORS) })
+              }
+            />
 
             <Divider />
 
-            <InlineStack gap="300" wrap>
-              <Checkbox
-                label="Use global colors"
-                checked={o.useGlobalColors !== false}
-                onChange={(v) => updateOffer(idx, { useGlobalColors: v })}
+            <div className="tf-ty-minirow3">
+              <ColorField
+                label={tr("thankyou.colors.cardBg", "Card background")}
+                value={ty.colors?.cardBg || ""}
+                onChange={(v) => update({ colors: { ...(ty.colors || {}), cardBg: v } })}
+                placeholder="#FFFFFF"
               />
-
-              <Select
-                label="Qty multiplier"
-                options={[
-                  { label: "1", value: "1" },
-                  { label: "2", value: "2" },
-                  { label: "3", value: "3" },
-                ]}
-                value={String(o.qtyMultiplier || 1)}
-                onChange={(v) => updateOffer(idx, { qtyMultiplier: clampInt(v, 1, 3, 1) })}
+              <ColorField
+                label={tr("thankyou.colors.borderColor", "Border color")}
+                value={ty.colors?.borderColor || ""}
+                onChange={(v) => update({ colors: { ...(ty.colors || {}), borderColor: v } })}
+                placeholder="#E5E7EB"
               />
-            </InlineStack>
-
-            <InlineStack gap="300" wrap>
-              <Checkbox
-                label="Discount enabled"
-                checked={!!o.discountEnabled}
-                onChange={(v) => updateOffer(idx, { discountEnabled: v })}
+              <ColorField
+                label={tr("thankyou.colors.iconBg", "Icon background")}
+                value={ty.colors?.iconBg || ""}
+                onChange={(v) => update({ colors: { ...(ty.colors || {}), iconBg: v } })}
+                placeholder="#EEF2FF"
               />
+            </div>
 
-              <Select
-                label="Discount type"
-                options={DISCOUNT_TYPE_OPTIONS}
-                value={o.discountType === "fixed" ? "fixed" : "percentage"}
-                onChange={(v) => updateOffer(idx, { discountType: v })}
+            <div className="tf-ty-minirow3">
+              <ColorField
+                label={tr("thankyou.colors.buttonBg", "Button background")}
+                value={ty.colors?.buttonBg || ""}
+                onChange={(v) => update({ colors: { ...(ty.colors || {}), buttonBg: v } })}
+                placeholder="#0B3B82"
               />
-
-              <TextField
-                label="Discount value"
-                type="number"
-                value={String(o.discountValue ?? 10)}
-                onChange={(v) => updateOffer(idx, { discountValue: Number(v) })}
-                autoComplete="off"
+              <ColorField
+                label={tr("thankyou.colors.buttonText", "Button text color")}
+                value={ty.colors?.buttonTextColor || ""}
+                onChange={(v) => update({ colors: { ...(ty.colors || {}), buttonTextColor: v } })}
+                placeholder="#FFFFFF"
               />
-            </InlineStack>
+              <ColorField
+                label={tr("thankyou.colors.buttonBorder", "Button border")}
+                value={ty.colors?.buttonBorder || ""}
+                onChange={(v) => update({ colors: { ...(ty.colors || {}), buttonBorder: v } })}
+                placeholder="#0B3B82"
+              />
+            </div>
+          </>
+        ) : (
+          <Text as="p" variant="bodySm" tone="subdued">
+            {tr("thankyou.design.usingGlobalNote", "Using global palette from Offers. Disable it to customize separately.")}
+          </Text>
+        )}
+      </BlockStack>
+    </div>
+  );
 
-            {o.useGlobalColors === false ? (
-              <>
-                <Divider />
-                <Text tone="subdued" as="p">
-                  Colors (Offer #{idx + 1})
-                </Text>
+  const ActivePanel = () => {
+    if (tool === "content") return <ContentPanel />;
+    if (tool === "media") return <MediaPanel />;
+    if (tool === "actions") return <ActionsPanel />;
+    if (tool === "design") return <DesignPanel />;
+    return <ModePanel />;
+  };
 
-                <InlineStack gap="300" wrap>
-                  <TextField
-                    label="Card bg"
-                    value={colors.cardBg || ""}
-                    onChange={(v) => updateOfferColors(idx, { cardBg: v })}
-                    autoComplete="off"
-                  />
-                  <TextField
-                    label="Border"
-                    value={colors.borderColor || ""}
-                    onChange={(v) => updateOfferColors(idx, { borderColor: v })}
-                    autoComplete="off"
-                  />
-                  <TextField
-                    label="Icon bg"
-                    value={colors.iconBg || ""}
-                    onChange={(v) => updateOfferColors(idx, { iconBg: v })}
-                    autoComplete="off"
-                  />
-                </InlineStack>
-
-                <InlineStack gap="300" wrap>
-                  <TextField
-                    label="Button bg"
-                    value={colors.buttonBg || ""}
-                    onChange={(v) => updateOfferColors(idx, { buttonBg: v })}
-                    autoComplete="off"
-                  />
-                  <TextField
-                    label="Button text"
-                    value={colors.buttonTextColor || ""}
-                    onChange={(v) => updateOfferColors(idx, { buttonTextColor: v })}
-                    autoComplete="off"
-                  />
-                  <TextField
-                    label="Button border"
-                    value={colors.buttonBorder || ""}
-                    onChange={(v) => updateOfferColors(idx, { buttonBorder: v })}
-                    autoComplete="off"
-                  />
-                </InlineStack>
-              </>
-            ) : null}
-          </BlockStack>
-        </BlockStack>
-      </Card>
-    );
-  }
-
-  function renderUpsellEditor(upsell, idx) {
-    const u = upsell || {};
-    const colors = u.colors || {};
-
+  if (ty.enabled === false) {
     return (
-      <Card key={`upsell-${idx}`} padding="500">
-        <BlockStack gap="400">
-          <InlineStack align="space-between" blockAlign="center">
-            <Text variant="headingSm" as="h3">
-              Upsell #{idx + 1}
-            </Text>
-
-            <InlineStack gap="300" blockAlign="center">
-              <Checkbox
-                label="Enabled"
-                checked={!!u.enabled}
-                onChange={(v) => updateUpsell(idx, { enabled: v })}
-              />
-              <Checkbox
-                label="Preview"
-                checked={!!u.showInPreview}
-                onChange={(v) => updateUpsell(idx, { showInPreview: v })}
-              />
-            </InlineStack>
-          </InlineStack>
-
-          <Divider />
-
-          <BlockStack gap="300">
-            <InlineStack gap="300" wrap>
-              <TextField
-                label="Title"
-                value={u.title || ""}
-                onChange={(v) => updateUpsell(idx, { title: v })}
-                autoComplete="off"
-              />
-              <Select
-                label="Layout"
-                options={LAYOUT_OPTIONS}
-                value={u.layoutStyle || "image-left"}
-                onChange={(v) => updateUpsell(idx, { layoutStyle: v })}
-              />
-            </InlineStack>
-
-            <TextField
-              label="Description"
-              value={u.description || ""}
-              onChange={(v) => updateUpsell(idx, { description: v })}
-              multiline={2}
-              autoComplete="off"
-            />
-
-            <InlineStack gap="300" wrap>
-              <TextField
-                label="Product ID"
-                value={u.productId || ""}
-                onChange={(v) => updateUpsell(idx, { productId: v })}
-                autoComplete="off"
-              />
-              <Checkbox
-                label="Use global colors"
-                checked={u.useGlobalColors !== false}
-                onChange={(v) => updateUpsell(idx, { useGlobalColors: v })}
-              />
-            </InlineStack>
-
-            <InlineStack gap="300" wrap>
-              <TextField
-                label="Image URL"
-                value={u.imageUrl || ""}
-                onChange={(v) => updateUpsell(idx, { imageUrl: v })}
-                autoComplete="off"
-              />
-              <TextField
-                label="Icon URL"
-                value={u.iconUrl || ""}
-                onChange={(v) => updateUpsell(idx, { iconUrl: v })}
-                autoComplete="off"
-              />
-            </InlineStack>
-
-            {u.useGlobalColors === false ? (
-              <>
-                <Divider />
-                <Text tone="subdued" as="p">
-                  Colors (Upsell #{idx + 1})
-                </Text>
-
-                <InlineStack gap="300" wrap>
-                  <TextField
-                    label="Card bg"
-                    value={colors.cardBg || ""}
-                    onChange={(v) => updateUpsellColors(idx, { cardBg: v })}
-                    autoComplete="off"
-                  />
-                  <TextField
-                    label="Border"
-                    value={colors.borderColor || ""}
-                    onChange={(v) => updateUpsellColors(idx, { borderColor: v })}
-                    autoComplete="off"
-                  />
-                  <TextField
-                    label="Icon bg"
-                    value={colors.iconBg || ""}
-                    onChange={(v) => updateUpsellColors(idx, { iconBg: v })}
-                    autoComplete="off"
-                  />
-                </InlineStack>
-
-                <InlineStack gap="300" wrap>
-                  <TextField
-                    label="Button bg"
-                    value={colors.buttonBg || ""}
-                    onChange={(v) => updateUpsellColors(idx, { buttonBg: v })}
-                    autoComplete="off"
-                  />
-                  <TextField
-                    label="Button text"
-                    value={colors.buttonTextColor || ""}
-                    onChange={(v) => updateUpsellColors(idx, { buttonTextColor: v })}
-                    autoComplete="off"
-                  />
-                  <TextField
-                    label="Button border"
-                    value={colors.buttonBorder || ""}
-                    onChange={(v) => updateUpsellColors(idx, { buttonBorder: v })}
-                    autoComplete="off"
-                  />
-                </InlineStack>
-              </>
-            ) : null}
-          </BlockStack>
-        </BlockStack>
-      </Card>
-    );
-  }
-
-  function renderThankYouEditor() {
-    const ty = cfg?.thankYou || {};
-    const c = ty.colors || {};
-
-    return (
-      <Card padding="500">
-        <BlockStack gap="400">
-          <InlineStack align="space-between" blockAlign="center">
-            <Text variant="headingSm" as="h3">
-              Thank you settings
-            </Text>
-
-            <Checkbox
-              label="Enabled"
-              checked={ty.enabled !== false}
-              onChange={(v) => updateThankYou({ enabled: v })}
-            />
-          </InlineStack>
-
-          <Divider />
-
-          <BlockStack gap="300">
-            <InlineStack gap="300" wrap>
-              <Select
-                label="Mode"
-                options={THANKYOU_MODE_OPTIONS}
-                value={ty.mode === "popup" ? "popup" : "simple"}
-                onChange={(v) => updateThankYou({ mode: v })}
-              />
-              <Select
-                label="Size"
-                options={THANKYOU_SIZE_OPTIONS}
-                value={ty.size || "md"}
-                onChange={(v) => updateThankYou({ size: v })}
-              />
-              <Checkbox
-                label="Use global colors"
-                checked={ty.useGlobalColors !== false}
-                onChange={(v) => updateThankYou({ useGlobalColors: v })}
-              />
-            </InlineStack>
-
-            <InlineStack gap="300" wrap>
-              <TextField
-                label="Title"
-                value={ty.title || ""}
-                onChange={(v) => updateThankYou({ title: v })}
-                autoComplete="off"
-              />
-              <TextField
-                label="Chip text"
-                value={ty.chipText || ""}
-                onChange={(v) => updateThankYou({ chipText: v })}
-                autoComplete="off"
-              />
-              <Checkbox
-                label="Show chip"
-                checked={ty.showChip !== false}
-                onChange={(v) => updateThankYou({ showChip: v })}
-              />
-            </InlineStack>
-
-            <TextField
-              label="Message"
-              value={ty.message || ""}
-              onChange={(v) => updateThankYou({ message: v })}
-              multiline={3}
-              autoComplete="off"
-            />
-
-            <InlineStack gap="300" wrap>
-              <TextField
-                label="Primary text"
-                value={ty.primaryText || ""}
-                onChange={(v) => updateThankYou({ primaryText: v })}
-                autoComplete="off"
-              />
-              <TextField
-                label="Primary url"
-                value={ty.primaryUrl || ""}
-                onChange={(v) => updateThankYou({ primaryUrl: v })}
-                autoComplete="off"
-              />
-              <Checkbox
-                label="Primary enabled"
-                checked={ty.primaryEnabled !== false}
-                onChange={(v) => updateThankYou({ primaryEnabled: v })}
-              />
-            </InlineStack>
-
-            <InlineStack gap="300" wrap>
-              <TextField
-                label="Secondary text"
-                value={ty.secondaryText || ""}
-                onChange={(v) => updateThankYou({ secondaryText: v })}
-                autoComplete="off"
-              />
-              <TextField
-                label="Secondary url"
-                value={ty.secondaryUrl || ""}
-                onChange={(v) => updateThankYou({ secondaryUrl: v })}
-                autoComplete="off"
-              />
-              <Checkbox
-                label="Secondary enabled"
-                checked={!!ty.secondaryEnabled}
-                onChange={(v) => updateThankYou({ secondaryEnabled: v })}
-              />
-            </InlineStack>
-
-            <InlineStack gap="300" wrap>
-              <TextField
-                label="Image URL"
-                value={ty.imageUrl || ""}
-                onChange={(v) => updateThankYou({ imageUrl: v })}
-                autoComplete="off"
-              />
-              <TextField
-                label="Icon URL"
-                value={ty.iconUrl || ""}
-                onChange={(v) => updateThankYou({ iconUrl: v })}
-                autoComplete="off"
-              />
-            </InlineStack>
-
-            <InlineStack gap="300" wrap>
-              <TextField
-                label="Radius"
-                type="number"
-                value={String(ty.radius ?? 16)}
-                onChange={(v) => updateThankYou({ radius: Number(v) })}
-                autoComplete="off"
-              />
-              <TextField
-                label="Image height"
-                type="number"
-                value={String(ty.imageHeight ?? 160)}
-                onChange={(v) => updateThankYou({ imageHeight: Number(v) })}
-                autoComplete="off"
-              />
-              <TextField
-                label="Auto open delay (ms)"
-                type="number"
-                value={String(ty.autoOpenDelayMs ?? 250)}
-                onChange={(v) => updateThankYou({ autoOpenDelayMs: Number(v) })}
-                autoComplete="off"
-              />
-            </InlineStack>
-
-            {ty.useGlobalColors === false ? (
-              <>
-                <Divider />
-                <Select
-                  label="Palette"
-                  options={PALETTE_OPTIONS}
-                  value={c.paletteId || "brand-gradient"}
-                  onChange={(v) => updateThankYouColors({ paletteId: v })}
-                />
-
-                <InlineStack gap="300" wrap>
-                  <TextField
-                    label="Card bg"
-                    value={c.cardBg || ""}
-                    onChange={(v) => updateThankYouColors({ cardBg: v })}
-                    autoComplete="off"
-                  />
-                  <TextField
-                    label="Border"
-                    value={c.borderColor || ""}
-                    onChange={(v) => updateThankYouColors({ borderColor: v })}
-                    autoComplete="off"
-                  />
-                  <TextField
-                    label="Icon bg"
-                    value={c.iconBg || ""}
-                    onChange={(v) => updateThankYouColors({ iconBg: v })}
-                    autoComplete="off"
-                  />
-                </InlineStack>
-
-                <InlineStack gap="300" wrap>
-                  <TextField
-                    label="Button bg"
-                    value={c.buttonBg || ""}
-                    onChange={(v) => updateThankYouColors({ buttonBg: v })}
-                    autoComplete="off"
-                  />
-                  <TextField
-                    label="Button text"
-                    value={c.buttonTextColor || ""}
-                    onChange={(v) => updateThankYouColors({ buttonTextColor: v })}
-                    autoComplete="off"
-                  />
-                  <TextField
-                    label="Button border"
-                    value={c.buttonBorder || ""}
-                    onChange={(v) => updateThankYouColors({ buttonBorder: v })}
-                    autoComplete="off"
-                  />
-                </InlineStack>
-              </>
-            ) : null}
-          </BlockStack>
-        </BlockStack>
-      </Card>
-    );
-  }
-
-  function renderRightPreview() {
-    const offersCount = Array.isArray(cfg?.offers) ? cfg.offers.length : 0;
-    const upsellsCount = Array.isArray(cfg?.upsells) ? cfg.upsells.length : 0;
-
-    return (
-      <BlockStack gap="400">
-        <Card padding="500">
-          <BlockStack gap="200">
-            <Text variant="headingSm" as="h3">
-              Aide rapide
-            </Text>
-            <Text tone="subdued" as="p">
-              Même style Shopify: colonne droite pour guidance + preview.
-            </Text>
-            <Text tone="subdued" as="p">
-              • Offers: {offersCount} • Upsells: {upsellsCount}
-            </Text>
-            <Text tone="subdued" as="p">
-              • Tab actuel: {tabId}
-            </Text>
-          </BlockStack>
-        </Card>
-
-        <Card padding="500">
-          <BlockStack gap="200">
-            <Text variant="headingSm" as="h3">
-              Preview (simple)
-            </Text>
-
-            <Box
-              padding="300"
-              background="bg-surface-secondary"
-              borderRadius="200"
-            >
-              <Text as="p" tone="subdued">
-                Ici tu peux coller ton “preview component” plus tard.
-              </Text>
-              <Text as="p">
-                {tabId === "offers" ? "Preview Offers" : null}
-                {tabId === "upsells" ? "Preview Upsells" : null}
-                {tabId === "thankYou" ? "Preview Thank you" : null}
-              </Text>
-            </Box>
-          </BlockStack>
-        </Card>
+      <BlockStack gap="300">
+        <GroupCard title={tr("thankyou.titleGroup", "Thank You Page")}>
+          <Checkbox
+            label={tr("thankyou.enable", "Enable Thank You Page experience")}
+            checked={false}
+            onChange={(v) => update({ enabled: v })}
+          />
+          <Text as="p" variant="bodySm" tone="subdued">
+            {tr("thankyou.disabledNote", "Enable this to configure the Thank you page / popup builder.")}
+          </Text>
+        </GroupCard>
       </BlockStack>
     );
   }
 
-  // -------------------- UI --------------------
-  if (!cfg) {
-    return (
-      <Card padding="500">
-        <InlineStack gap="300" blockAlign="center">
-          <Spinner />
-          <Text as="p">Chargement de Offers settings...</Text>
-        </InlineStack>
-      </Card>
-    );
-  }
+  return (
+    <div className="tf-ty-builder">
+      <div className="tf-ty-body">
+        <ToolRail />
 
-  const offers = Array.isArray(cfg.offers) ? cfg.offers : [];
-  const upsells = Array.isArray(cfg.upsells) ? cfg.upsells : [];
+        <div className="tf-ty-stage">
+          <div className="tf-ty-stage-inner">
+            <ThankYouPreview thankYou={ty} globalColors={colors} tr={tr} />
+          </div>
+        </div>
+
+        <div className="tf-ty-settings">
+          <ActivePanel />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ============================== MAIN ============================== */
+function Section2OffersInner({ products = [] }) {
+  const { tr } = useT();
+  useInjectCss();
+
+  const navigate = useNavigate();
+
+  const [cfg, setCfg] = useState(() => DEFAULT_CFG);
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const [tab, setTab] = useState("global");
+  const [lastSavedKey, setLastSavedKey] = useState("");
+
+  const normalizedCfg = useMemo(() => withDefaults(cfg), [cfg]);
+
+  const currentKey = useMemo(() => {
+    try {
+      return JSON.stringify(normalizedCfg);
+    } catch {
+      return String(Date.now());
+    }
+  }, [normalizedCfg]);
+
+  const dirty = useMemo(() => currentKey !== lastSavedKey, [currentKey, lastSavedKey]);
+
+  const persistLocal = (next) => {
+    try {
+      window.localStorage.setItem("tripleform_cod_offers_v33", JSON.stringify(withDefaults(next)));
+    } catch {}
+  };
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const run = async () => {
+      setLoading(true);
+
+      try {
+        const res = await fetch("/api/offers/load");
+        if (res.ok) {
+          const j = await res.json().catch(() => null);
+          const payload = j?.offers || j?.data?.offers || j?.data || j;
+
+          if (!cancelled && j?.ok !== false && payload) {
+            const merged = withDefaults(payload);
+            setCfg(merged);
+            persistLocal(merged);
+            setLastSavedKey(JSON.stringify(merged));
+
+            if (!cancelled) setLoading(false);
+            return;
+          }
+        }
+      } catch {}
+
+      if (!cancelled) {
+        try {
+          const s = window.localStorage.getItem("tripleform_cod_offers_v33");
+          if (s) {
+            const parsed = withDefaults(JSON.parse(s));
+            setCfg(parsed);
+            setLastSavedKey(JSON.stringify(parsed));
+          } else {
+            setLastSavedKey(JSON.stringify(DEFAULT_CFG));
+          }
+        } catch {
+          setLastSavedKey(JSON.stringify(DEFAULT_CFG));
+        }
+      }
+
+      if (!cancelled) setLoading(false);
+    };
+
+    run();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const saveOffers = async () => {
+    const toSave = withDefaults(cfg);
+
+    try {
+      setSaving(true);
+      persistLocal(toSave);
+
+      const res = await fetch("/api/save-offers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(toSave),
+      });
+
+      const j = await res.json().catch(() => ({ ok: true }));
+      if (!res.ok || j?.ok === false) throw new Error(j?.error || "Save failed");
+
+      setCfg(toSave);
+      setLastSavedKey(JSON.stringify(toSave));
+
+      return true;
+    } catch {
+      return false;
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const navGuard = useUnsavedNavigationGuard({
+    dirty,
+    onSave: saveOffers,
+    navigate,
+  });
+
+  const tabs = useMemo(
+    () => [
+      { id: "global", content: tr("section2.tabs.global", "Global"), panelID: "tab-global", icon: "SettingsIcon" },
+      { id: "offers", content: tr("section2.tabs.offers", "Offers"), panelID: "tab-offers", icon: "DiscountIcon" },
+      { id: "upsells", content: tr("section2.tabs.upsells", "Upsells"), panelID: "tab-upsells", icon: "GiftCardIcon" },
+      { id: "thankyou", content: tr("section2.tabs.thankyou", "Thank you page"), panelID: "tab-thankyou", icon: "ImageIcon" },
+    ],
+    [tr]
+  );
+
+  const selectedTabIndex = Math.max(0, tabs.findIndex((x) => x.id === tab));
+
+  const addOffer = () => {
+    if (cfg.offers.length >= 3) return;
+    setCfg((prev) => ({
+      ...prev,
+      offers: [...prev.offers, JSON.parse(JSON.stringify(DEFAULT_OFFER))],
+    }));
+  };
+  const updateOffer = (index, updatedOffer) => {
+    setCfg((prev) => ({
+      ...prev,
+      offers: prev.offers.map((o, i) => (i === index ? updatedOffer : o)),
+    }));
+  };
+  const removeOffer = (index) => {
+    if (cfg.offers.length <= 1) return;
+    setCfg((prev) => ({
+      ...prev,
+      offers: prev.offers.filter((_, i) => i !== index),
+    }));
+  };
+
+  const addUpsell = () => {
+    if (cfg.upsells.length >= 3) return;
+    setCfg((prev) => ({
+      ...prev,
+      upsells: [...prev.upsells, JSON.parse(JSON.stringify(DEFAULT_UPSELL))],
+    }));
+  };
+  const updateUpsell = (index, updatedUpsell) => {
+    setCfg((prev) => ({
+      ...prev,
+      upsells: prev.upsells.map((u, i) => (i === index ? updatedUpsell : u)),
+    }));
+  };
+  const removeUpsell = (index) => {
+    if (cfg.upsells.length <= 1) return;
+    setCfg((prev) => ({
+      ...prev,
+      upsells: prev.upsells.filter((_, i) => i !== index),
+    }));
+  };
+
+  const globalColors = cfg.global?.colors || DEFAULT_GLOBAL_COLORS;
+
+  const activeOffers = cfg.offers.filter((o) => o.enabled && o.showInPreview);
+  const activeUpsells = cfg.upsells.filter((u) => u.enabled && u.showInPreview);
+
+  const thankYou = cfg.thankYou || DEFAULT_THANKYOU;
+  const isThankYouTab = tab === "thankyou";
+
+  // ✅ dashboard stats (UI only)
+  const offersEnabledCount = cfg.offers.filter((o) => o.enabled).length;
+  const upsellsEnabledCount = cfg.upsells.filter((u) => u.enabled).length;
 
   return (
     <>
-      {toast.active ? (
-        <Toast
-          content={toast.content}
-          error={toast.error}
-          onDismiss={() => setToast((t) => ({ ...t, active: false }))}
-        />
-      ) : null}
+      <TFSectionHeader
+        title={tr("section2.header.appTitle", "TripleForm COD")}
+        subtitle={tr("section2.header.subtitle", "Offers & Upsells — Pro settings")}
+        rightSlot={
+          <InlineStack gap="200" blockAlign="center">
+            <div style={{ fontSize: 12, color: "rgba(249,250,251,0.9)" }}>
+              {loading ? tr("common.loading", "Loading...") : ""}
+            </div>
 
-      <Layout>
-        {/* LEFT */}
-        <Layout.Section>
-          {/* Shopify-like dashboard tiles */}
-          <Card padding="500">
-            <BlockStack gap="400">
-              <InlineStack align="space-between" blockAlign="center">
-                <BlockStack gap="100">
-                  <Text variant="headingMd" as="h2">
-                    Offers & Upsell — Settings
-                  </Text>
-                  <Text tone="subdued" as="p">
-                    Design inspiré de Shopify (cards + grille). Les keys restent identiques.
-                  </Text>
-                </BlockStack>
+            <Button
+              variant="primary"
+              onClick={navGuard.manualSave}
+              disabled={!dirty || navGuard.saving}
+              loading={navGuard.saving}
+            >
+              Save
+            </Button>
+          </InlineStack>
+        }
+      />
 
-                <InlineStack gap="200" blockAlign="center">
-                  {dirty ? <Badge tone="warning">Modifications non enregistrées</Badge> : <Badge tone="success">À jour</Badge>}
-                  <Button
-                    variant="primary"
-                    onClick={saveNow}
-                    disabled={!dirty || isSaving}
-                  >
-                    {isSaving ? "Enregistrement..." : "Enregistrer"}
-                  </Button>
-                </InlineStack>
-              </InlineStack>
+      <UnsavedSaveBar
+        open={navGuard.open}
+        dirty={navGuard.dirty}
+        saving={navGuard.saving}
+        mode={navGuard.mode}
+        onSave={navGuard.onSave}
+        onDiscard={navGuard.onDiscard}
+        onCancel={navGuard.onCancel}
+        t={(key) => tr(key, key)}
+      />
 
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
-                  gap: 16,
-                }}
-              >
-                <SettingTile
-                  title="Offers"
-                  description="Offres / discounts / cadeaux"
-                  status={{
-                    label: offers.length ? "Configurés" : "À configurer",
-                    tone: offers.length ? "success" : "warning",
-                  }}
-                  primaryAction={{ content: "Configurer", onAction: () => goTo("offers") }}
-                />
-
-                <SettingTile
-                  title="Upsells"
-                  description="Propositions complémentaires"
-                  status={{
-                    label: upsells.length ? "Configurés" : "À configurer",
-                    tone: upsells.length ? "success" : "warning",
-                  }}
-                  primaryAction={{ content: "Configurer", onAction: () => goTo("upsells") }}
-                />
-
-                <SettingTile
-                  title="Thank you page"
-                  description="Message + bouton + redirection"
-                  status={{
-                    label: cfg?.thankYou?.enabled !== false ? "Activé" : "Désactivé",
-                    tone: cfg?.thankYou?.enabled !== false ? "success" : "critical",
-                  }}
-                  primaryAction={{ content: "Configurer", onAction: () => goTo("thankYou") }}
-                />
-
-                <SettingTile
-                  title="Global colors"
-                  description="Palette globale (global.colors)"
-                  status={{
-                    label: cfg?.global?.enabled !== false ? "Actif" : "Off",
-                    tone: cfg?.global?.enabled !== false ? "success" : "critical",
-                  }}
-                  primaryAction={{ content: "Voir", onAction: () => goTo("offers") }}
-                />
-              </div>
-            </BlockStack>
-          </Card>
-
-          <Box paddingBlockStart="400">
-            <Card padding="500">
-              <BlockStack gap="400">
-                <InlineStack align="space-between" blockAlign="center">
-                  <Text variant="headingMd" as="h2">
-                    Paramètres
-                  </Text>
-                  <Badge tone="info">global • offers • upsells • thankYou</Badge>
-                </InlineStack>
-
-                <Tabs
-                  tabs={tabs}
-                  selected={selectedTab}
-                  onSelect={setSelectedTab}
-                  fitted
-                >
-                  <Box paddingBlockStart="400">
-                    <BlockStack gap="500">
-                      {/* Global settings visible in all tabs (Shopify-like) */}
-                      {renderGlobalColorsBlock()}
-
-                      {tabId === "offers" ? (
-                        <BlockStack gap="500">
-                          {offers.slice(0, 3).map((o, idx) => renderOfferEditor(o, idx))}
-                        </BlockStack>
-                      ) : null}
-
-                      {tabId === "upsells" ? (
-                        <BlockStack gap="500">
-                          {upsells.slice(0, 3).map((u, idx) => renderUpsellEditor(u, idx))}
-                        </BlockStack>
-                      ) : null}
-
-                      {tabId === "thankYou" ? renderThankYouEditor() : null}
-                    </BlockStack>
-                  </Box>
-                </Tabs>
+      <div className="tf-shell">
+        {/* ✅ Shopify-like settings dashboard (cards/tiles) */}
+        <div className="tf-panel">
+          <BlockStack gap="400">
+            <InlineStack align="space-between" blockAlign="center">
+              <BlockStack gap="100">
+                <Text as="h2" variant="headingMd">
+                  {tr("section2.dashboard.title", "Settings overview")}
+                </Text>
+                <Text as="p" variant="bodySm" tone="subdued">
+                  {tr(
+                    "section2.dashboard.subtitle",
+                    "Shopify-style cards to access settings quickly."
+                  )}
+                </Text>
               </BlockStack>
-            </Card>
-          </Box>
-        </Layout.Section>
+              <Badge tone={dirty ? "attention" : "success"}>
+                {dirty ? tr("common.unsaved", "Unsaved changes") : tr("common.saved", "Saved")}
+              </Badge>
+            </InlineStack>
 
-        {/* RIGHT */}
-        <Layout.Section secondary>{renderRightPreview()}</Layout.Section>
-      </Layout>
+            <div className="tf-dashboard-grid">
+              <SettingTileCard
+                iconName="SettingsIcon"
+                title={tr("section2.dashboard.globalTitle", "Global")}
+                description={tr("section2.dashboard.globalDesc", "Enable/disable Offers & Upsells")}
+                statusText={cfg.global.enabled ? tr("common.enabled", "Enabled") : tr("common.disabled", "Disabled")}
+                statusTone={cfg.global.enabled ? "success" : "critical"}
+                actionLabel={tr("common.configure", "Configure")}
+                onOpen={() => setTab("global")}
+              />
+              <SettingTileCard
+                iconName="DiscountIcon"
+                title={tr("section2.dashboard.offersTitle", "Offers")}
+                description={tr("section2.dashboard.offersDesc", "Discount offers + quantity + button")}
+                statusText={`${offersEnabledCount}/${cfg.offers.length} ${tr("common.enabled", "Enabled")}`}
+                statusTone={offersEnabledCount ? "success" : "subdued"}
+                actionLabel={tr("common.configure", "Configure")}
+                onOpen={() => setTab("offers")}
+              />
+              <SettingTileCard
+                iconName="GiftCardIcon"
+                title={tr("section2.dashboard.upsellsTitle", "Upsells")}
+                description={tr("section2.dashboard.upsellsDesc", "Upsell cards without button")}
+                statusText={`${upsellsEnabledCount}/${cfg.upsells.length} ${tr("common.enabled", "Enabled")}`}
+                statusTone={upsellsEnabledCount ? "success" : "subdued"}
+                actionLabel={tr("common.configure", "Configure")}
+                onOpen={() => setTab("upsells")}
+              />
+              <SettingTileCard
+                iconName="ImageIcon"
+                title={tr("section2.dashboard.thankyouTitle", "Thank you page")}
+                description={tr("section2.dashboard.thankyouDesc", "Builder + popup mode + design")}
+                statusText={(thankYou?.enabled === false) ? tr("common.disabled", "Disabled") : tr("common.enabled", "Enabled")}
+                statusTone={(thankYou?.enabled === false) ? "critical" : "success"}
+                actionLabel={tr("common.open", "Open")}
+                onOpen={() => setTab("thankyou")}
+              />
+            </div>
+          </BlockStack>
+        </div>
+
+        <div className="tf-topnav">
+          <div className="tf-topnav-center">
+            <div>
+              <Tabs
+                tabs={tabs.map((x) => ({
+                  id: x.id,
+                  content: x.content,
+                  panelID: x.panelID,
+                }))}
+                selected={selectedTabIndex}
+                onSelect={(i) => setTab(tabs[i]?.id || "global")}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className={`tf-editor ${isThankYouTab ? "tf-editor--full" : ""}`}>
+          <div className="tf-main-col">
+            <div className="tf-panel">
+              {tab === "global" && (
+                <BlockStack gap="400">
+                  <GroupCard title={tr("section2.global.title", "Global")}>
+                    <Grid3 min={240}>
+                      <Checkbox
+                        label={tr("section2.global.enable", "Enable Offers & Upsells")}
+                        checked={!!cfg.global.enabled}
+                        onChange={(v) =>
+                          setCfg((c) => ({
+                            ...c,
+                            global: { ...c.global, enabled: v },
+                          }))
+                        }
+                      />
+                      <div />
+                      <div />
+                    </Grid3>
+
+                    <Text as="p" variant="bodySm" tone="subdued">
+                      {tr(
+                        "section2.global.noteNoColors",
+                        "Global colors are managed automatically. Customize colors inside each Offer if needed."
+                      )}
+                    </Text>
+                  </GroupCard>
+                </BlockStack>
+              )}
+
+              {tab === "offers" && (
+                <BlockStack gap="400">
+                  <InlineStack align="space-between" blockAlign="center">
+                    <Text as="h2" variant="headingMd">
+                      {tr("section2.offers.title", "Offers")} ({cfg.offers.length}/3)
+                    </Text>
+                    <Badge tone="subdued">
+                      {tr("section2.badge.proSettings", "Pro settings")}
+                    </Badge>
+                  </InlineStack>
+
+                  {cfg.offers.map((offer, index) => (
+                    <OfferEditor
+                      key={index}
+                      offer={offer}
+                      index={index}
+                      products={products}
+                      onChange={(updated) => updateOffer(index, updated)}
+                      onRemove={() => removeOffer(index)}
+                      canRemove={cfg.offers.length > 1}
+                      tr={tr}
+                    />
+                  ))}
+
+                  <div className="add-wrap">
+                    <div className="add-btn">
+                      <Button
+                        fullWidth
+                        onClick={addOffer}
+                        disabled={cfg.offers.length >= 3}
+                        icon={PI.CirclePlusIcon}
+                      >
+                        {tr("section2.offers.add", "Add an offer")}
+                      </Button>
+                    </div>
+                  </div>
+                </BlockStack>
+              )}
+
+              {tab === "upsells" && (
+                <BlockStack gap="400">
+                  <InlineStack align="space-between" blockAlign="center">
+                    <Text as="h2" variant="headingMd">
+                      {tr("section2.upsells.title", "Upsells")} ({cfg.upsells.length}/3)
+                    </Text>
+                    <Badge tone="subdued">
+                      {tr("section2.badge.noButton", "No button")}
+                    </Badge>
+                  </InlineStack>
+
+                  {cfg.upsells.map((upsell, index) => (
+                    <UpsellEditor
+                      key={index}
+                      upsell={upsell}
+                      index={index}
+                      products={products}
+                      onChange={(updated) => updateUpsell(index, updated)}
+                      onRemove={() => removeUpsell(index)}
+                      canRemove={cfg.upsells.length > 1}
+                      tr={tr}
+                    />
+                  ))}
+
+                  <div className="add-wrap">
+                    <div className="add-btn">
+                      <Button
+                        fullWidth
+                        onClick={addUpsell}
+                        disabled={cfg.upsells.length >= 3}
+                        icon={PI.CirclePlusIcon}
+                      >
+                        {tr("section2.upsells.add", "Add an upsell")}
+                      </Button>
+                    </div>
+                  </div>
+                </BlockStack>
+              )}
+
+              {tab === "thankyou" && (
+                <BlockStack gap="400">
+                  <InlineStack align="space-between" blockAlign="center">
+                    <Text as="h2" variant="headingMd">
+                      {tr("thankyou.tabTitle", "Thank you page")}
+                    </Text>
+                    <Badge tone="subdued">{tr("thankyou.badge.pro", "Pro tools")}</Badge>
+                  </InlineStack>
+
+                  <ThankYouEditor
+                    thankYou={thankYou}
+                    globalColors={globalColors}
+                    onChange={(nextTy) => setCfg((c) => ({ ...c, thankYou: nextTy }))}
+                    tr={tr}
+                  />
+                </BlockStack>
+              )}
+            </div>
+          </div>
+
+          {tab !== "thankyou" && (
+            <div className="tf-preview-col">
+              <div className="tf-preview-card">
+                <BlockStack gap="300">
+                  <InlineStack align="space-between" blockAlign="center">
+                    <Text as="h3" variant="headingSm">
+                      {tr("section2.preview.title", "Preview")}
+                    </Text>
+                    <Badge tone={cfg.global.enabled ? "success" : "critical"}>
+                      {cfg.global.enabled
+                        ? tr("section2.preview.active", "Active")
+                        : tr("section2.preview.inactive", "Inactive")}
+                    </Badge>
+                  </InlineStack>
+
+                  <Text as="p" variant="bodySm" tone="subdued">
+                    {tr("section2.preview.subtitle", "Fast preview (what the customer sees).")}
+                  </Text>
+
+                  <Divider />
+
+                  <Text as="p" variant="bodySm" fontWeight="bold">
+                    {tr("section2.preview.offersTitle", "Offers")}
+                  </Text>
+                  {activeOffers.length ? (
+                    <BlockStack gap="200">
+                      {activeOffers.map((o, idx) => (
+                        <PreviewCard
+                          key={`o-${idx}`}
+                          item={o}
+                          products={products}
+                          isOffer
+                          globalColors={globalColors}
+                          tr={tr}
+                        />
+                      ))}
+                    </BlockStack>
+                  ) : (
+                    <Text variant="bodySm" tone="subdued">
+                      {tr("section2.preview.noOffer", "No active offer in preview.")}
+                    </Text>
+                  )}
+
+                  <Divider />
+
+                  <Text as="p" variant="bodySm" fontWeight="bold">
+                    {tr("section2.preview.upsellsTitle", "Upsells")}
+                  </Text>
+                  {activeUpsells.length ? (
+                    <BlockStack gap="200">
+                      {activeUpsells.map((u, idx) => (
+                        <PreviewCard
+                          key={`u-${idx}`}
+                          item={u}
+                          isOffer={false}
+                          products={products}
+                          globalColors={globalColors}
+                          tr={tr}
+                        />
+                      ))}
+                    </BlockStack>
+                  ) : (
+                    <Text variant="bodySm" tone="subdued">
+                      {tr("section2.preview.noUpsell", "No active upsell in preview.")}
+                    </Text>
+                  )}
+                </BlockStack>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
     </>
   );
 }
+
+export default Section2OffersInner;
