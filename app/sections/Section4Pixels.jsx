@@ -1,5 +1,5 @@
 // ===== File: app/sections/Section4Pixels.jsx =====
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "@remix-run/react";
 import {
   Card,
@@ -17,7 +17,7 @@ import TFSectionHeader from "../components/TFSectionHeader";
 import UnsavedSaveBar from "../components/UnsavedSaveBar";
 import { useUnsavedNavigationGuard } from "../hooks/useUnsavedNavigationGuard";
 
-/* ======================= CSS / layout (match Section Form) ======================= */
+/* ======================= CSS / layout (match Section Offers) ======================= */
 const LAYOUT_CSS = `
   html, body { margin:0; background:#F6F7F9; }
   .Polaris-Page, .Polaris-Page__Content {
@@ -27,46 +27,34 @@ const LAYOUT_CSS = `
   }
   .Polaris-TextField, .Polaris-Select, .Polaris-Labelled__LabelWrapper { min-width:0; }
 
-  /* ✅ HEADER (same wrapper everywhere) */
-  .tf-header{
+  /* ✅ Header styles used by TFSectionHeader (same as Offers) */
+  .tf-header {
     background:linear-gradient(90deg,#0B3B82,#7D0031);
-    border-bottom:none;
-    padding:6px 10px;
+    padding:12px 16px;
     position:sticky;
     top:0;
-    z-index:60;
+    z-index:40;
     box-shadow:0 10px 28px rgba(11,59,130,0.45);
   }
   .tf-header-row{
     display:grid;
-    grid-template-columns: auto 1fr auto;
+    grid-template-columns:auto 1fr auto;
+    gap:12px;
     align-items:center;
-    gap:10px;
-    min-height:44px;
   }
-  .tf-brand{
-    display:flex;
-    align-items:center;
-    gap:10px;
-    min-width:0;
-  }
-  .tf-brand-text{
-    display:flex;
-    flex-direction:column;
-    min-width:0;
-    line-height:1.05;
-  }
+  .tf-brand{ display:flex; align-items:center; gap:10px; min-width:0; }
+  .tf-brand-text{ min-width:0; }
   .tf-brand-title{
-    font-weight:900;
+    font-weight:950;
     color:#F9FAFB;
-    font-size:13px;
+    line-height:1.1;
     white-space:nowrap;
     overflow:hidden;
     text-overflow:ellipsis;
   }
   .tf-brand-sub{
-    font-size:11px;
-    color:rgba(249,250,251,0.78);
+    font-size:12px;
+    color:rgba(249,250,251,0.85);
     white-space:nowrap;
     overflow:hidden;
     text-overflow:ellipsis;
@@ -75,15 +63,14 @@ const LAYOUT_CSS = `
     display:flex;
     justify-content:center;
     align-items:center;
-    width:100%;
     min-width:0;
   }
   .tf-header-right{
     display:flex;
+    gap:8px;
     align-items:center;
     justify-content:flex-end;
-    gap:10px;
-    min-width:0;
+    flex-wrap:wrap;
   }
 
   .tf-shell { padding:16px; }
@@ -185,6 +172,7 @@ const LAYOUT_CSS = `
     .tf-editor { grid-template-columns: 1fr; }
     .tf-rail, .tf-side-col { position:static; max-height:none; width:auto; }
     .tf-brand-sub{ display:none; }
+    .tf-flags-wrap{ display:none; }
   }
 `;
 
@@ -295,6 +283,7 @@ export default function Section4Pixels() {
 
   const navigate = useNavigate();
   const { t: rawT } = useI18n();
+
   const t = (key, vars) => {
     try {
       return rawT(key, vars);
@@ -311,22 +300,18 @@ export default function Section4Pixels() {
   const [testResult, setTestResult] = useState(null);
   const [testError, setTestError] = useState(null);
 
-  const [saving, setSaving] = useState(false);
-
-  // ✅ unified dirty snapshot
-  const lastSavedRef = useRef(stableStringify(defaultCfg()));
-  const cfgSig = useMemo(() => stableStringify(cfg), [cfg]);
-  const [dirty, setDirty] = useState(false);
-
-  // ✅ IMPORTANT: don't compute dirty until initial data is loaded
+  // ✅ same concept as Offers: baseline + signature => dirty
   const [hydrated, setHydrated] = useState(false);
+  const [lastSavedKey, setLastSavedKey] = useState("");
+  const cfgSig = useMemo(() => stableStringify(cfg), [cfg]);
 
-  useEffect(() => {
-    if (!hydrated) return;
-    setDirty(cfgSig !== lastSavedRef.current);
-  }, [cfgSig, hydrated]);
+  const dirty = useMemo(() => {
+    if (!hydrated) return false;
+    if (!lastSavedKey) return false;
+    return cfgSig !== lastSavedKey;
+  }, [cfgSig, lastSavedKey, hydrated]);
 
-  // ===== load from localStorage (FIX: set baseline lastSavedRef) =====
+  // ===== load from localStorage (baseline) =====
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -338,17 +323,16 @@ export default function Section4Pixels() {
 
       setCfg((prev) => {
         const next = { ...prev, ...parsed };
-        lastSavedRef.current = stableStringify(next); // baseline = loaded config
+        const key = stableStringify(next);
+        setLastSavedKey(key);
         return next;
       });
-
-      setDirty(false);
     } catch (e) {
       console.error("load pixels localStorage:", e);
     }
   }, []);
 
-  // ===== load from store (metafield) (remote wins) =====
+  // ===== load from store (remote wins) =====
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -362,7 +346,8 @@ export default function Section4Pixels() {
         if (j?.ok && j.pixels) {
           setCfg((prev) => {
             const next = { ...prev, ...j.pixels };
-            lastSavedRef.current = stableStringify(next); // baseline = remote config
+            const key = stableStringify(next);
+            setLastSavedKey(key);
             return next;
           });
 
@@ -372,11 +357,13 @@ export default function Section4Pixels() {
               JSON.stringify(j.pixels)
             );
           } catch {}
-
-          setDirty(false);
+        } else {
+          // if remote not available, ensure baseline exists
+          setLastSavedKey((k) => k || stableStringify(cfg));
         }
       } catch (e) {
         console.error("Error loading pixels (remote):", e);
+        setLastSavedKey((k) => k || stableStringify(cfg));
       } finally {
         if (!cancelled) setHydrated(true);
       }
@@ -385,9 +372,10 @@ export default function Section4Pixels() {
     return () => {
       cancelled = true;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ===== auto-save to localStorage =====
+  // ===== auto-save to localStorage (optional) =====
   useEffect(() => {
     if (typeof window === "undefined") return;
     try {
@@ -400,7 +388,6 @@ export default function Section4Pixels() {
   /* === SAVE to store (returns boolean) === */
   const saveToShop = async () => {
     try {
-      setSaving(true);
       setTestError(null);
 
       const res = await fetch("/api/pixels/save", {
@@ -413,93 +400,20 @@ export default function Section4Pixels() {
       const j = await res.json().catch(() => ({ ok: true }));
       if (!res.ok || j?.ok === false) throw new Error(j?.error || "Save failed");
 
-      lastSavedRef.current = stableStringify(cfg);
-      setDirty(false);
+      setLastSavedKey(stableStringify(cfg));
       return true;
     } catch (e) {
       console.error("save pixels remote error:", e);
       return false;
-    } finally {
-      setSaving(false);
     }
   };
 
-  // ✅ unified navigation guard (only when user tries to leave section)
+  // ✅ unified navigation guard (only when user tries to leave the section)
   const guard = useUnsavedNavigationGuard({
     dirty,
     onSave: saveToShop,
     navigate,
   });
-
-  /* ===================== NEW: Header Save opens confirmation bar ===================== */
-  const [manualOpen, setManualOpen] = useState(false);
-  const [manualMode, setManualMode] = useState("idle"); // idle | attention | success | error
-  const manualCloseTimerRef = useRef(null);
-
-  const openManualConfirm = () => {
-    // header save => just open the alert, no save مباشرة
-    if (manualCloseTimerRef.current) clearTimeout(manualCloseTimerRef.current);
-    setManualMode("attention");
-    setManualOpen(true);
-    try {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    } catch {}
-  };
-
-  const manualOnSave = async () => {
-    // real save happens هنا (button inside alert)
-    if (saving) return false;
-
-    setManualMode("attention");
-    setManualOpen(true);
-
-    const ok = await saveToShop();
-
-    if (ok) {
-      setManualMode("success");
-      if (manualCloseTimerRef.current) clearTimeout(manualCloseTimerRef.current);
-      manualCloseTimerRef.current = setTimeout(() => {
-        setManualOpen(false);
-        setManualMode("idle");
-      }, 600);
-      return true;
-    }
-
-    setManualMode("error");
-    setManualOpen(true);
-    return false;
-  };
-
-  const manualOnDiscard = () => {
-    // في حالة header prompt: "Annuler" = fermer l'alert (pas de navigation)
-    if (manualCloseTimerRef.current) clearTimeout(manualCloseTimerRef.current);
-    setManualOpen(false);
-    setManualMode("idle");
-  };
-
-  const manualOnCancel = () => {
-    // "Rester" / "OK" = fermer l'alert
-    if (manualCloseTimerRef.current) clearTimeout(manualCloseTimerRef.current);
-    setManualOpen(false);
-    setManualMode("idle");
-  };
-
-  useEffect(() => {
-    return () => {
-      if (manualCloseTimerRef.current) clearTimeout(manualCloseTimerRef.current);
-    };
-  }, []);
-
-  // ===== Bar props: if guard is open (leaving) => guard controls it; else manual (header)
-  const barIsGuard = !!guard.open;
-
-  const barOpen = barIsGuard ? guard.open : manualOpen;
-  const barMode = barIsGuard ? guard.mode : manualMode;
-  const barSaving = barIsGuard ? guard.saving : saving;
-
-  const barOnSave = barIsGuard ? guard.onSave : manualOnSave;
-  const barOnDiscard = barIsGuard ? guard.onDiscard : manualOnDiscard;
-  const barOnCancel = barIsGuard ? guard.onCancel : manualOnCancel;
 
   /* === TEST backend button === */
   const handleTestRemote = async () => {
@@ -564,27 +478,36 @@ export default function Section4Pixels() {
 
   return (
     <>
-      {/* ✅ Header unifié + flags identiques partout */}
+      {/* ✅ Header unifié + même concept que Offers */}
       <TFSectionHeader
         title={t("section4.header.appTitle") || "TripleForm COD"}
         subtitle={t("section4.header.appSubtitle") || "Pixels & Tracking"}
         rightSlot={
-          // ✅ NEW: header Save opens the alert (no direct save)
-          <Button variant="primary" size="slim" onClick={openManualConfirm}>
-            {t("section4.buttons.saveStore") || "Save"}
-          </Button>
+          <InlineStack gap="200" blockAlign="center">
+            <div style={{ fontSize: 12, color: "rgba(249,250,251,0.9)" }}>
+              {!hydrated ? (t("common.loading") || "Loading...") : ""}
+            </div>
+            <Button
+              variant="primary"
+              onClick={guard.manualSave}
+              disabled={!dirty || guard.saving}
+              loading={guard.saving}
+            >
+              {t("section4.buttons.saveStore") || "Save"}
+            </Button>
+          </InlineStack>
         }
       />
 
-      {/* ✅ Save Bar: shows for leaving guard OR header confirmation */}
+      {/* ✅ Save Bar: appears only when user tries to leave the section */}
       <UnsavedSaveBar
-        open={barOpen}
+        open={guard.open}
         dirty={dirty}
-        saving={barSaving}
-        mode={barMode}
-        onSave={barOnSave}
-        onDiscard={barOnDiscard}
-        onCancel={barOnCancel}
+        saving={guard.saving}
+        mode={guard.mode}
+        onSave={guard.onSave}
+        onDiscard={guard.onDiscard}
+        onCancel={guard.onCancel}
         t={t}
       />
 
@@ -1008,9 +931,7 @@ export default function Section4Pixels() {
                               {readyBadge(!!testResult.fbClientReady)}
                             </InlineStack>
                             <InlineStack align="space-between">
-                              <Text as="span">
-                                {t("section4.tests.result.tiktokPixel")}
-                              </Text>
+                              <Text as="span">{t("section4.tests.result.tiktokPixel")}</Text>
                               {readyBadge(!!testResult.tiktokClientReady)}
                             </InlineStack>
                             <InlineStack align="space-between">
