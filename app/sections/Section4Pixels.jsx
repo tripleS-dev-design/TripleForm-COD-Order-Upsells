@@ -110,12 +110,41 @@ const LAYOUT_CSS = `
     box-shadow:0 8px 24px rgba(15,23,42,0.04);
   }
 
-  /* ✅ Tabs more spaced + medium */
+  /* ✅ Tabs centered + each tab has a "cadre" (boxed/pill) */
+  .tf-topnav .Polaris-Tabs__Wrapper{
+    display:flex!important;
+    justify-content:center!important;
+    width:100%;
+  }
+  .tf-topnav .Polaris-Tabs__TabList{
+    display:flex!important;
+    justify-content:center!important;
+    align-items:center!important;
+    flex-wrap:wrap;
+    gap:10px;
+  }
   .tf-topnav .Polaris-Tabs__Tab{
     padding:10px 14px!important;
-    margin:0 6px!important;
-    border-radius:10px!important;
+    margin:0!important;
+    border-radius:12px!important;
     font-weight:800!important;
+
+    background:#F9FAFB!important;
+    border:1px solid #E5E7EB!important;
+    box-shadow:0 6px 14px rgba(15,23,42,0.05);
+  }
+  .tf-topnav .Polaris-Tabs__Tab:hover{
+    background:#FFFFFF!important;
+    box-shadow:0 10px 22px rgba(15,23,42,0.08);
+  }
+  .tf-topnav .Polaris-Tabs__Tab--selected{
+    background:#FFFFFF!important;
+    border-color:#2563EB!important;
+    box-shadow:0 12px 28px rgba(37,99,235,0.18);
+  }
+  /* Remove underline bar if it appears */
+  .tf-topnav .Polaris-Tabs__Tab::after{
+    display:none!important;
   }
 
   .tf-editor {
@@ -227,6 +256,34 @@ const LAYOUT_CSS = `
     box-shadow:0 6px 16px rgba(30,64,175,0.15);
   }
 
+  /* ✅ Fix: Guide text must be horizontal (disable multi-columns / vertical modes) */
+  .tf-guide-box{
+    column-count:1!important;
+    columns:auto!important;
+    writing-mode: horizontal-tb!important;
+    text-orientation: mixed!important;
+  }
+  .tf-guide-box *{
+    column-count:1!important;
+    columns:auto!important;
+    writing-mode: horizontal-tb!important;
+    text-orientation: mixed!important;
+  }
+  .tf-guide-ol{
+    margin:10px 0 0 0;
+    padding-left:18px;
+    column-count:1!important;
+    columns:auto!important;
+  }
+  .tf-guide-ol li{
+    margin:0 0 8px 0;
+    white-space:normal;
+    word-break:normal;
+    overflow-wrap:anywhere;
+    line-height:1.5;
+    font-size:13px;
+  }
+
   @media (max-width: 1200px) {
     .tf-editor { grid-template-columns:1fr; }
     .tf-preview-col { position:static; max-height:none; }
@@ -234,6 +291,7 @@ const LAYOUT_CSS = `
   @media (max-width: 980px) {
     .tf-brand-sub{ display:none; }
     .tf-flags-wrap{ display:none; }
+    .tf-topnav .Polaris-Tabs__TabList{ justify-content:flex-start!important; }
   }
 `;
 
@@ -310,7 +368,7 @@ function SettingTileCard({
         <Badge tone={statusTone}>{statusText}</Badge>
       </div>
 
-      <div className="tf-setting-bottom">
+      <div className="tf-setting-tile-bottom tf-setting-bottom">
         <Text as="p" variant="bodySm" tone="subdued">
           {/* spacer */}
         </Text>
@@ -456,7 +514,6 @@ export default function Section4Pixels() {
             );
           } catch {}
         } else {
-          // if remote not available, ensure baseline exists
           setLastSavedKey((k) => k || stableStringify(cfg));
         }
       } catch (e) {
@@ -580,10 +637,7 @@ export default function Section4Pixels() {
     [tr]
   );
 
-  const selectedTabIndex = Math.max(
-    0,
-    tabs.findIndex((x) => x.id === view)
-  );
+  const selectedTabIndex = Math.max(0, tabs.findIndex((x) => x.id === view));
 
   const statusBadge = (enabled) => (
     <Badge tone={enabled ? "success" : "critical"}>
@@ -629,11 +683,11 @@ export default function Section4Pixels() {
         onSave={guard.onSave}
         onDiscard={guard.onDiscard}
         onCancel={guard.onCancel}
-        t={(k, vars) => tr(k, typeof vars?.fallback === "string" ? vars.fallback : undefined)}
+        t={(k, vars) => tr(k, vars?.fallback)}
       />
 
       <div className="tf-shell">
-        {/* ✅ Top tabs bar (same container as Offers) */}
+        {/* ✅ Top tabs bar (centered + boxed tabs) */}
         <div className="tf-topnav">
           <Tabs
             tabs={tabs}
@@ -661,10 +715,7 @@ export default function Section4Pixels() {
                       <SettingTileCard
                         iconName="AnalyticsIcon"
                         title={tr("section4.platforms.google", "Google")}
-                        description={tr(
-                          "section4.overview.googleDesc",
-                          "GA4 + Google Ads conversions"
-                        )}
+                        description={tr("section4.overview.googleDesc", "GA4 + Google Ads conversions")}
                         statusText={
                           cfg.google.enabled
                             ? tr("section4.status.on", "Enabled")
@@ -678,10 +729,7 @@ export default function Section4Pixels() {
                       <SettingTileCard
                         iconName="LogoFacebookIcon"
                         title={tr("section4.platforms.fbPixel", "Facebook Pixel")}
-                        description={tr(
-                          "section4.overview.fbPixelDesc",
-                          "Browser pixel events"
-                        )}
+                        description={tr("section4.overview.fbPixelDesc", "Browser pixel events")}
                         statusText={
                           cfg.fb.enabled
                             ? tr("section4.status.on", "Enabled")
@@ -695,10 +743,7 @@ export default function Section4Pixels() {
                       <SettingTileCard
                         iconName="ShieldCheckMarkIcon"
                         title={tr("section4.platforms.fbCAPI", "Facebook CAPI")}
-                        description={tr(
-                          "section4.overview.fbCAPIDesc",
-                          "Server-side events (dedup supported)"
-                        )}
+                        description={tr("section4.overview.fbCAPIDesc", "Server-side events (dedup supported)")}
                         statusText={
                           cfg.capi_fb.enabled
                             ? tr("section4.status.on", "Enabled")
@@ -712,10 +757,7 @@ export default function Section4Pixels() {
                       <SettingTileCard
                         iconName="MarketingIcon"
                         title={tr("section4.platforms.tiktokPixel", "TikTok Pixel")}
-                        description={tr(
-                          "section4.overview.tiktokPixelDesc",
-                          "Client-side TikTok tracking"
-                        )}
+                        description={tr("section4.overview.tiktokPixelDesc", "Client-side TikTok tracking")}
                         statusText={
                           cfg.tiktok.enabled
                             ? tr("section4.status.on", "Enabled")
@@ -729,10 +771,7 @@ export default function Section4Pixels() {
                       <SettingTileCard
                         iconName="LockIcon"
                         title={tr("section4.platforms.tiktokAPI", "TikTok API")}
-                        description={tr(
-                          "section4.overview.tiktokAPIDesc",
-                          "Server-side purchase events"
-                        )}
+                        description={tr("section4.overview.tiktokAPIDesc", "Server-side purchase events")}
                         statusText={
                           cfg.tiktok_api.enabled
                             ? tr("section4.status.on", "Enabled")
@@ -746,10 +785,7 @@ export default function Section4Pixels() {
                       <SettingTileCard
                         iconName="SearchIcon"
                         title={tr("section4.tests.title", "Tests")}
-                        description={tr(
-                          "section4.tests.description",
-                          "Verify your setup and server readiness"
-                        )}
+                        description={tr("section4.tests.description", "Verify your setup and server readiness")}
                         statusText={tr("common.tools", "Tools")}
                         statusTone="subdued"
                         actionLabel={tr("common.open", "Open")}
@@ -761,15 +797,10 @@ export default function Section4Pixels() {
 
                     {/* ✅ Global-like block (same visual style as Offers “Global”) */}
                     <Card>
-                      <div className="tf-group-title">
-                        {tr("section4.global.title", "Global")}
-                      </div>
+                      <div className="tf-group-title">{tr("section4.global.title", "Global")}</div>
                       <BlockStack gap="200">
                         <Checkbox
-                          label={tr(
-                            "section4.global.enableAll",
-                            "Enable all tracking platforms"
-                          )}
+                          label={tr("section4.global.enableAll", "Enable all tracking platforms")}
                           checked={allEnabled}
                           onChange={(v) => toggleAll(v)}
                         />
@@ -1084,10 +1115,7 @@ export default function Section4Pixels() {
                   <GroupCard title={tr("section4.tests.title", "Tests")}>
                     <BlockStack gap="200">
                       <Text as="p">
-                        {tr(
-                          "section4.tests.description",
-                          "Run checks to confirm your tracking setup."
-                        )}
+                        {tr("section4.tests.description", "Run checks to confirm your tracking setup.")}
                       </Text>
 
                       <ul style={{ paddingLeft: "1.2rem", margin: 0, fontSize: 13 }}>
@@ -1121,9 +1149,7 @@ export default function Section4Pixels() {
                         >
                           <BlockStack gap="150">
                             <InlineStack align="space-between">
-                              <Text as="span">
-                                {tr("section4.tests.result.fbPixel", "FB Pixel")}
-                              </Text>
+                              <Text as="span">{tr("section4.tests.result.fbPixel", "FB Pixel")}</Text>
                               {readyBadge(!!testResult.fbClientReady)}
                             </InlineStack>
                             <InlineStack align="space-between">
@@ -1133,23 +1159,16 @@ export default function Section4Pixels() {
                               {readyBadge(!!testResult.tiktokClientReady)}
                             </InlineStack>
                             <InlineStack align="space-between">
-                              <Text as="span">
-                                {tr("section4.tests.result.fbCAPI", "FB CAPI")}
-                              </Text>
+                              <Text as="span">{tr("section4.tests.result.fbCAPI", "FB CAPI")}</Text>
                               {readyBadge(!!testResult.fbCapiReady)}
                             </InlineStack>
                             <InlineStack align="space-between">
-                              <Text as="span">
-                                {tr("section4.tests.result.tiktokAPI", "TikTok API")}
-                              </Text>
+                              <Text as="span">{tr("section4.tests.result.tiktokAPI", "TikTok API")}</Text>
                               {readyBadge(!!testResult.tiktokApiReady)}
                             </InlineStack>
 
                             <Text tone="subdued" as="p">
-                              {tr(
-                                "section4.tests.resultNote",
-                                "Tip: Save your settings, then re-run tests."
-                              )}
+                              {tr("section4.tests.resultNote", "Tip: Save your settings, then re-run tests.")}
                             </Text>
                           </BlockStack>
                         </div>
@@ -1201,43 +1220,19 @@ export default function Section4Pixels() {
               </BlockStack>
             </div>
 
-            <div className="tf-preview-card">
+            {/* ✅ Guide fixed: normal horizontal list (no multi-column / no vertical look) */}
+            <div className="tf-preview-card tf-guide-box">
               <Text as="h3" variant="headingSm">
                 {tr("section4.guide.title", "Guide")}
               </Text>
 
-              <BlockStack gap="150" style={{ marginTop: 8, fontSize: 13, lineHeight: 1.5 }}>
-                <Text as="p">
-                  {tr(
-                    "section4.guide.step1",
-                    "1) Enable a platform in its tab."
-                  )}
-                </Text>
-                <Text as="p">
-                  {tr(
-                    "section4.guide.step2",
-                    "2) Enter IDs / tokens required by the platform."
-                  )}
-                </Text>
-                <Text as="p">
-                  {tr(
-                    "section4.guide.step3",
-                    "3) Select events you want to send."
-                  )}
-                </Text>
-                <Text as="p">
-                  {tr(
-                    "section4.guide.step4",
-                    "4) Click Save (top right)."
-                  )}
-                </Text>
-                <Text as="p">
-                  {tr(
-                    "section4.guide.step5",
-                    "5) Use Tests to verify readiness."
-                  )}
-                </Text>
-              </BlockStack>
+              <ol className="tf-guide-ol">
+                <li>{tr("section4.guide.step1", "1) Enable a platform in its tab.")}</li>
+                <li>{tr("section4.guide.step2", "2) Enter IDs / tokens required by the platform.")}</li>
+                <li>{tr("section4.guide.step3", "3) Select events you want to send.")}</li>
+                <li>{tr("section4.guide.step4", "4) Click Save (top right).")}</li>
+                <li>{tr("section4.guide.step5", "5) Use Tests to verify readiness.")}</li>
+              </ol>
             </div>
           </div>
         </div>

@@ -1,5 +1,6 @@
 // ===== File: app/sections/Section6Geo.jsx =====
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "@remix-run/react";
 import {
   Card,
   BlockStack,
@@ -7,13 +8,14 @@ import {
   Text,
   TextField,
   Select,
+  Checkbox,
   Button,
   Badge,
   Divider,
   Icon,
+  Tabs,
 } from "@shopify/polaris";
 import * as PI from "@shopify/polaris-icons";
-import { useNavigate } from "@remix-run/react";
 
 import { useI18n } from "../i18n/react";
 import TFSectionHeader from "../components/TFSectionHeader";
@@ -42,58 +44,201 @@ function useT() {
     return fallback || key;
   };
 
-  // adapter for shared components expecting t(key, vars?)
-  const tAdapter = (key, vars) => tr(key, key, vars);
-
-  return { t, tr, tAdapter };
+  return { t, tr };
 }
 
-/* ======================= CSS / layout (NO header overrides) ======================= */
-const LAYOUT_CSS = [
-  "html, body { margin:0; background:#F6F7F9; }",
-  ".Polaris-Page, .Polaris-Page__Content { max-width:none!important; padding-left:0!important; padding-right:0!important; }",
-  ".Polaris-TextField, .Polaris-Select, .Polaris-Labelled__LabelWrapper { min-width:0; }",
+/* ======================= CSS / layout (MATCH Pixels) ======================= */
+const LAYOUT_CSS = `
+  html, body { margin:0; background:#F6F7F9; }
+  .Polaris-Page, .Polaris-Page__Content {
+    max-width:none!important;
+    padding-left:0!important;
+    padding-right:0!important;
+  }
+  .Polaris-TextField, .Polaris-Select, .Polaris-Labelled__LabelWrapper { min-width:0; }
 
-  ".tf-shell{ padding:16px; }",
+  /* ✅ Header styles used by TFSectionHeader (same as Pixels/Offers) */
+  .tf-header {
+    background:linear-gradient(90deg,#0B3B82,#7D0031);
+    padding:12px 16px;
+    position:sticky;
+    top:0;
+    z-index:40;
+    box-shadow:0 10px 28px rgba(11,59,130,0.45);
+  }
+  .tf-header-row{
+    display:grid;
+    grid-template-columns:auto 1fr auto;
+    gap:12px;
+    align-items:center;
+  }
+  .tf-brand{ display:flex; align-items:center; gap:10px; min-width:0; }
+  .tf-brand-text{ min-width:0; }
+  .tf-brand-title{
+    font-weight:950;
+    color:#F9FAFB;
+    line-height:1.1;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .tf-brand-sub{
+    font-size:12px;
+    color:rgba(249,250,251,0.85);
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .tf-flags-wrap{ display:flex; justify-content:center; align-items:center; min-width:0; }
+  .tf-header-right{ display:flex; gap:8px; align-items:center; justify-content:flex-end; flex-wrap:wrap; }
 
-  "/* ===== Grille: rail gauche | contenu centre | guide droite ===== */",
-  ".tf-editor{ display:grid; grid-template-columns: 260px minmax(0,1fr) 320px; gap:16px; align-items:start; }",
+  .tf-shell { padding:16px; }
 
-  "/* rail gauche */",
-  ".tf-rail{ position:sticky; top:116px; max-height:calc(100vh - 132px); overflow:auto; }",
-  ".tf-rail-card{ background:#fff; border:1px solid #E5E7EB; border-radius:12px; margin-bottom:12px; }",
-  ".tf-rail-head{ padding:10px 12px; border-bottom:1px solid #E5E7EB; font-weight:800; }",
-  ".tf-rail-list{ padding:8px; display:grid; gap:8px; }",
-  ".tf-rail-item{ background:#fff; border:1px solid #E5E7EB; border-radius:12px; padding:10px 12px; cursor:pointer; font-size:13px; display:flex; align-items:center; justify-content:space-between; gap:10px; }",
-  ".tf-rail-item[data-sel='1']{ outline:2px solid #00A7A3; background:rgba(0,167,163,0.06); }",
+  /* ✅ Top nav container (same) */
+  .tf-topnav{
+    margin: 14px 0 16px;
+    background:#fff;
+    border:1px solid #E5E7EB;
+    border-radius:12px;
+    padding:10px 12px;
+    box-shadow:0 8px 24px rgba(15,23,42,0.04);
+  }
 
-  "/* centre */",
-  ".tf-main-col{ display:grid; gap:16px; min-width:0; }",
-  ".tf-panel{ background:#fff; border:1px solid #E5E7EB; border-radius:12px; padding:12px; min-width:0; box-shadow:0 8px 24px rgba(15,23,42,0.04); }",
+  /* ✅ Tabs centered + boxed */
+  .tf-topnav .Polaris-Tabs__Wrapper{
+    display:flex!important;
+    justify-content:center!important;
+    width:100%;
+  }
+  .tf-topnav .Polaris-Tabs__TabList{
+    display:flex!important;
+    justify-content:center!important;
+    align-items:center!important;
+    flex-wrap:wrap;
+    gap:10px;
+  }
+  .tf-topnav .Polaris-Tabs__Tab{
+    padding:10px 14px!important;
+    margin:0!important;
+    border-radius:12px!important;
+    font-weight:800!important;
+    background:#F9FAFB!important;
+    border:1px solid #E5E7EB!important;
+    box-shadow:0 6px 14px rgba(15,23,42,0.05);
+  }
+  .tf-topnav .Polaris-Tabs__Tab:hover{
+    background:#FFFFFF!important;
+    box-shadow:0 10px 22px rgba(15,23,42,0.08);
+  }
+  .tf-topnav .Polaris-Tabs__Tab--selected{
+    background:#FFFFFF!important;
+    border-color:#2563EB!important;
+    box-shadow:0 12px 28px rgba(37,99,235,0.18);
+  }
+  .tf-topnav .Polaris-Tabs__Tab::after{ display:none!important; }
 
-  "/* droite */",
-  ".tf-side-col{ position:sticky; top:116px; max-height:calc(100vh - 132px); overflow-y:auto; overflow-x:hidden; width:320px; flex:none; }",
-  ".tf-side-card{ background:#fff; border:1px solid #E5E7EB; border-radius:12px; padding:12px; margin-bottom:12px; }",
+  /* ✅ Main layout: content + right guide/status */
+  .tf-editor {
+    display:grid;
+    grid-template-columns: minmax(0,1fr) 360px;
+    gap:16px;
+    align-items:start;
+  }
+  .tf-main-col{ display:grid; gap:14px; min-width:0; }
 
-  "/* TITRES */",
-  ".tf-group-title{ padding:10px 12px; background:linear-gradient(90deg,#0B3B82,#7D0031); border:1px solid rgba(0,167,163,0.85); color:#F9FAFB; border-radius:10px; font-weight:900; letter-spacing:.2px; margin-bottom:10px; box-shadow:0 6px 18px rgba(11,59,130,0.35); }",
-  ".row-card{ border:1px solid #E5E7EB; border-radius:10px; padding:10px; background:#FFF; }",
-  ".tf-guide-text p{ font-size:13px; line-height:1.5; margin:0 0 6px 0; white-space:normal; }",
+  .tf-panel {
+    background:#FFFFFF;
+    border:1px solid #E5E7EB;
+    border-radius:12px;
+    padding:12px;
+    box-shadow:0 8px 24px rgba(15,23,42,0.04);
+    min-width:0;
+  }
 
-  "@media (max-width: 980px) {",
-  "  .tf-editor { grid-template-columns: 1fr; }",
-  "  .tf-rail, .tf-side-col { position:static; max-height:none; width:auto; }",
-  "}",
-].join("\n");
+  .tf-preview-col {
+    position:sticky;
+    top:124px;
+    max-height:calc(100vh - 140px);
+    overflow:auto;
+  }
+  .tf-preview-card {
+    background:#fff;
+    border-radius:12px;
+    padding:14px;
+    border:1px solid #E5E7EB;
+    box-shadow:0 12px 32px rgba(15,23,42,0.08);
+  }
+
+  .tf-group-title {
+    padding:8px 12px;
+    background:linear-gradient(90deg,#1E40AF,#7C2D12);
+    color:#F9FAFB;
+    border-radius:10px;
+    font-weight:900;
+    letter-spacing:.02em;
+    margin-bottom:10px;
+    font-size:13px;
+    box-shadow:0 6px 16px rgba(30,64,175,0.15);
+  }
+
+  .row-card{
+    border:1px solid #E5E7EB;
+    border-radius:10px;
+    padding:10px;
+    background:#FFF;
+  }
+
+  /* ✅ Guide ALWAYS horizontal */
+  .tf-guide-box{
+    column-count:1!important;
+    columns:auto!important;
+    writing-mode: horizontal-tb!important;
+    text-orientation: mixed!important;
+  }
+  .tf-guide-box *{
+    column-count:1!important;
+    columns:auto!important;
+    writing-mode: horizontal-tb!important;
+    text-orientation: mixed!important;
+  }
+  .tf-guide-ol{
+    margin:10px 0 0 0;
+    padding-left:18px;
+    column-count:1!important;
+    columns:auto!important;
+  }
+  .tf-guide-ol li{
+    margin:0 0 8px 0;
+    white-space:normal;
+    overflow-wrap:anywhere;
+    line-height:1.5;
+    font-size:13px;
+  }
+
+  @media (max-width: 1200px) {
+    .tf-editor { grid-template-columns:1fr; }
+    .tf-preview-col { position:static; max-height:none; }
+  }
+  @media (max-width: 980px) {
+    .tf-brand-sub{ display:none; }
+    .tf-flags-wrap{ display:none; }
+    .tf-topnav .Polaris-Tabs__TabList{ justify-content:flex-start!important; }
+  }
+`;
 
 function useInjectCss() {
   useEffect(() => {
     if (typeof document === "undefined") return;
-    if (document.getElementById("tf-geo-css")) return;
+    if (document.getElementById("tf-layout-css-geo")) return;
     const s = document.createElement("style");
-    s.id = "tf-geo-css";
+    s.id = "tf-layout-css-geo";
     s.appendChild(document.createTextNode(LAYOUT_CSS));
     document.head.appendChild(s);
+    return () => {
+      try {
+        s.remove();
+      } catch {}
+    };
   }, []);
 }
 
@@ -224,15 +369,14 @@ function normalizeGeoCfg(cfg) {
 export default function Section6Geo() {
   useInjectCss();
   const navigate = useNavigate();
-  const { tr, tAdapter } = useT();
+  const { tr } = useT();
 
-  // ✅ init stable (même objet pour cfg + lastSaved)
+  const [hydrated, setHydrated] = useState(false);
+
+  // ✅ init stable
   const initialCfg = useMemo(() => normalizeGeoCfg(defaultCfg()), []);
   const [cfg, setCfg] = useState(() => initialCfg);
-  const [view, setView] = useState("province"); // price | province | city | advanced
-
-  // ✅ manual open (header Save opens the bar, doesn't save مباشرة)
-  const [manualOpen, setManualOpen] = useState(false);
+  const [view, setView] = useState("province"); // province | city | price | advanced
 
   const lastSavedRef = useRef(stableStringify(initialCfg));
   const normalizedCfg = useMemo(() => normalizeGeoCfg(cfg), [cfg]);
@@ -281,6 +425,8 @@ export default function Section6Geo() {
         } catch {}
       } catch (e) {
         console.warn("[Section6Geo] load server failed:", e);
+      } finally {
+        if (!cancelled) setHydrated(true);
       }
     })();
 
@@ -326,7 +472,7 @@ export default function Section6Geo() {
     }
   };
 
-  /* ✅ Guard unique: bloque seulement quand user quitte la section (route change) */
+  /* ✅ Guard unique: SaveBar يظهر غير ملي user كيحاول يخرج من section */
   const guard = useUnsavedNavigationGuard({
     dirty,
     onSave: saveGeo,
@@ -340,30 +486,9 @@ export default function Section6Geo() {
     },
   });
 
-  /* -------------------- header Save opens the bar (not save مباشرة) -------------------- */
-  const openSavePrompt = () => {
-    if (!dirty) return;
-    setManualOpen(true);
-  };
-
-  const barOpen = guard.open || manualOpen;
-  const barMode = guard.open ? guard.mode : manualOpen ? "attention" : guard.mode;
-
-  const barOnSave = async () => {
-    const ok = await guard.onSave?.();
-    setManualOpen(false);
-    return ok;
-  };
-
-  const barOnDiscard = () => {
-    if (guard.open) guard.onDiscard?.(); // discard navigation-block
-    setManualOpen(false); // manual prompt: just close
-  };
-
-  const barOnCancel = () => {
-    guard.onCancel?.();
-    setManualOpen(false);
-  };
+  // Adapter like Pixels: t(key, {fallback})
+  const tForBar = (k, vars) =>
+    tr(k, typeof vars?.fallback === "string" ? vars.fallback : undefined, vars);
 
   /* ====== helpers ====== */
   const setRoot = (p) => setCfg((c) => ({ ...c, ...p }));
@@ -398,33 +523,18 @@ export default function Section6Geo() {
   const setProv = (arr) =>
     setCfg((c) => ({ ...c, provinceRates: { ...c.provinceRates, [c.country]: arr } }));
   const addProv = () => setProv([...curProv, { id: newId(), code: "", name: "", rate: 0 }]);
-  const updProv = (id, patch) => setProv(curProv.map((p) => (p.id === id ? { ...p, ...patch } : p)));
+  const updProv = (id, patch) =>
+    setProv(curProv.map((p) => (p.id === id ? { ...p, ...patch } : p)));
   const delProv = (id) => setProv(curProv.filter((p) => p.id !== id));
 
   // cities for current country
   const curCity = cfg.cityRates[cfg.country] || [];
-  const setCity = (arr) => setCfg((c) => ({ ...c, cityRates: { ...c.cityRates, [c.country]: arr } }));
+  const setCity = (arr) =>
+    setCfg((c) => ({ ...c, cityRates: { ...c.cityRates, [c.country]: arr } }));
   const addCity = () => setCity([...curCity, { id: newId(), province: "", name: "", rate: 0 }]);
-  const updCity = (id, patch) => setCity(curCity.map((ci) => (ci.id === id ? { ...ci, ...patch } : ci)));
+  const updCity = (id, patch) =>
+    setCity(curCity.map((ci) => (ci.id === id ? { ...ci, ...patch } : ci)));
   const delCity = (id) => setCity(curCity.filter((ci) => ci.id !== id));
-
-  /* ===== rail (panneaux) ===== */
-  const panels = [
-    { key: "province", label: tr("section6.rail.panels.province", "Province rates") },
-    { key: "city", label: tr("section6.rail.panels.city", "City rates") },
-    { key: "price", label: tr("section6.rail.panels.price", "Price brackets") },
-    { key: "advanced", label: tr("section6.rail.panels.advanced", "Advanced") },
-  ];
-
-  const countBrackets = cfg.priceBrackets?.length || 0;
-  const countProv = curProv.length;
-  const countCity = curCity.length;
-
-  const modeLabel = () => {
-    if (cfg.mode === "price") return tr("section6.mode.price", "Price");
-    if (cfg.mode === "city") return tr("section6.mode.city", "City");
-    return tr("section6.mode.province", "Province");
-  };
 
   const countryDef = getCountryDef(cfg.country);
   const countryOptions = Object.entries(GEO_COUNTRIES).map(([code, data]) => ({
@@ -437,109 +547,74 @@ export default function Section6Geo() {
     [cfg.country, tr]
   );
 
+  /* ===== Tabs (same style as Pixels) ===== */
+  const tabs = useMemo(
+    () => [
+      { id: "province", content: tr("section6.rail.panels.province", "Province rates") },
+      { id: "city", content: tr("section6.rail.panels.city", "City rates") },
+      { id: "price", content: tr("section6.rail.panels.price", "Price brackets") },
+      { id: "advanced", content: tr("section6.rail.panels.advanced", "Advanced") },
+    ],
+    [tr]
+  );
+  const selectedTabIndex = Math.max(0, tabs.findIndex((x) => x.id === view));
+
+  const modeLabel = () => {
+    if (cfg.mode === "price") return tr("section6.mode.price", "Price");
+    if (cfg.mode === "city") return tr("section6.mode.city", "City");
+    return tr("section6.mode.province", "Province");
+  };
+
   return (
     <>
-      {/* ✅ HEADER: Save opens only the alert (no direct save) */}
+      {/* ✅ HEADER: same as Pixels (Save = direct save) */}
       <TFSectionHeader
-        title={tr("section6.header.appTitle", "TripleForm — GEO")}
+        title={tr("section6.header.appTitle", "TripleForm COD")}
         subtitle={tr(
           "section6.header.appSubtitle",
-          "Shipping rates by province, city, or cart amount"
+          "GEO — Shipping rates by province, city, or cart amount"
         )}
         rightSlot={
-          <Button variant="primary" size="slim" onClick={openSavePrompt} disabled={!dirty}>
-            {tr("section6.buttons.saveStore", "Save")}
-          </Button>
+          <InlineStack gap="200" blockAlign="center">
+            <div style={{ fontSize: 12, color: "rgba(249,250,251,0.9)" }}>
+              {!hydrated ? tr("common.loading", "Loading...") : ""}
+            </div>
+            <Button
+              variant="primary"
+              onClick={guard.manualSave}
+              disabled={!dirty || guard.saving}
+              loading={guard.saving}
+            >
+              {tr("section6.buttons.saveStore", "Save")}
+            </Button>
+          </InlineStack>
         }
       />
 
-      {/* ✅ VRAI SAVE داخل bar */}
+      {/* ✅ Save Bar: يظهر غير ملي user كيحاول يخرج من section */}
       <UnsavedSaveBar
-        open={barOpen}
+        open={guard.open}
         dirty={dirty}
         saving={guard.saving}
-        mode={barMode}
-        onSave={barOnSave}
-        onDiscard={barOnDiscard}
-        onCancel={barOnCancel}
-        t={tAdapter}
+        mode={guard.mode}
+        onSave={guard.onSave}
+        onDiscard={guard.onDiscard}
+        onCancel={guard.onCancel}
+        t={tForBar}
       />
 
       <div className="tf-shell">
+        {/* ✅ Top tabs bar (centered + boxed like Pixels) */}
+        <div className="tf-topnav">
+          <Tabs
+            tabs={tabs}
+            selected={selectedTabIndex}
+            onSelect={(idx) => setView(tabs[idx]?.id || "province")}
+          />
+        </div>
+
         <div className="tf-editor">
-          {/* ===== Rail gauche ===== */}
-          <div className="tf-rail">
-            <div className="tf-rail-card">
-              <div className="tf-rail-head">{tr("section6.rail.title", "Panels")}</div>
-              <div className="tf-rail-list">
-                {panels.map((it) => (
-                  <div
-                    key={it.key}
-                    className="tf-rail-item"
-                    data-sel={view === it.key ? 1 : 0}
-                    onClick={() => setView(it.key)} // ✅ no alert (same section)
-                  >
-                    <span style={{ fontWeight: 800 }}>{it.label}</span>
-                    <span style={{ opacity: 0.75 }}>
-                      <SafeIcon name="ChevronRightIcon" />
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="tf-rail-card">
-              <div className="tf-rail-head">{tr("section6.rail.summaryTitle", "Summary")}</div>
-              <div style={{ padding: 10 }}>
-                <BlockStack gap="100">
-                  <InlineStack align="space-between">
-                    <Text as="span">{tr("section6.rail.type", "Shipping")}</Text>
-                    <Badge>
-                      {cfg.isFree ? tr("section6.rail.free", "Free") : tr("section6.rail.paid", "Paid")}
-                    </Badge>
-                  </InlineStack>
-
-                  {!cfg.isFree ? (
-                    <>
-                      <InlineStack align="space-between">
-                        <Text as="span">{tr("section6.rail.mode", "Mode")}</Text>
-                        <Badge>{modeLabel()}</Badge>
-                      </InlineStack>
-
-                      <InlineStack align="space-between">
-                        <Text as="span">{tr("section6.rail.priceBrackets", "Brackets")}</Text>
-                        <Badge tone="info">{countBrackets}</Badge>
-                      </InlineStack>
-                      <InlineStack align="space-between">
-                        <Text as="span">{tr("section6.rail.provinces", "Provinces")}</Text>
-                        <Badge tone="info">{countProv}</Badge>
-                      </InlineStack>
-                      <InlineStack align="space-between">
-                        <Text as="span">{tr("section6.rail.cities", "Cities")}</Text>
-                        <Badge tone="info">{countCity}</Badge>
-                      </InlineStack>
-                    </>
-                  ) : null}
-
-                  <Text tone="subdued" as="p">
-                    {tr("section6.rail.countryCurrency", "Country: {{country}} • Currency: {{currency}}", {
-                      country: cfg.country || "—",
-                      currency: cfg.currency || "—",
-                    })}
-                  </Text>
-
-                  {dirty ? (
-                    <Text tone="subdued" as="p">
-                      {tr("common.savebar.unsaved", "You have unsaved changes.")} —{" "}
-                      {tr("section6.tip", "Use the Save button in the header.")}
-                    </Text>
-                  ) : null}
-                </BlockStack>
-              </div>
-            </div>
-          </div>
-
-          {/* ===== Colonne centrale ===== */}
+          {/* ====================== LEFT / MAIN ====================== */}
           <div className="tf-main-col">
             <div className="tf-panel">
               {/* General */}
@@ -648,7 +723,10 @@ export default function Section6Geo() {
 
               {/* City view */}
               {!cfg.isFree && view === "city" && (
-                <GroupCard title={tr("section6.city.title", "City rates — {{country}}", { country: countryDef.label })} tr={tr}>
+                <GroupCard
+                  title={tr("section6.city.title", "City rates — {{country}}", { country: countryDef.label })}
+                  tr={tr}
+                >
                   <Text tone="subdued" as="p">
                     {tr("section6.city.description", "Define shipping rate per city inside a province.")}
                   </Text>
@@ -798,42 +876,74 @@ export default function Section6Geo() {
                   <Divider />
 
                   <Text tone="subdued" as="p">
-                    {tr("section6.tip", "Use the Save button in the header.")}
+                    {tr("section6.tip", "Tip: Save your settings before leaving this section.")}
                   </Text>
                 </GroupCard>
               )}
             </div>
           </div>
 
-          {/* ===== Colonne droite — guide ===== */}
-          <div className="tf-side-col">
-            <div className="tf-side-card">
+          {/* ====================== RIGHT / STICKY ====================== */}
+          <div className="tf-preview-col">
+            <div className="tf-preview-card" style={{ marginBottom: 12 }}>
+              <InlineStack align="space-between" blockAlign="center">
+                <Text as="h3" variant="headingSm">
+                  {tr("section6.preview.statusTitle", "Geo status")}
+                </Text>
+                {dirty ? (
+                  <Badge tone="warning">{tr("common.unsavedShort", "Unsaved")}</Badge>
+                ) : (
+                  <Badge tone="success">{tr("common.saved", "Saved")}</Badge>
+                )}
+              </InlineStack>
+
+              <Divider />
+
+              <BlockStack gap="150" style={{ marginTop: 10 }}>
+                <InlineStack align="space-between">
+                  <Text as="span">{tr("section6.rail.type", "Shipping")}</Text>
+                  <Badge>{cfg.isFree ? tr("section6.rail.free", "Free") : tr("section6.rail.paid", "Paid")}</Badge>
+                </InlineStack>
+
+                {!cfg.isFree ? (
+                  <InlineStack align="space-between">
+                    <Text as="span">{tr("section6.rail.mode", "Mode")}</Text>
+                    <Badge tone="info">{modeLabel()}</Badge>
+                  </InlineStack>
+                ) : null}
+
+                <InlineStack align="space-between">
+                  <Text as="span">{tr("section6.rail.country", "Country")}</Text>
+                  <Badge tone="info">{cfg.country || "—"}</Badge>
+                </InlineStack>
+
+                <InlineStack align="space-between">
+                  <Text as="span">{tr("section6.rail.currency", "Currency")}</Text>
+                  <Badge tone="info">{cfg.currency || "—"}</Badge>
+                </InlineStack>
+              </BlockStack>
+            </div>
+
+            <div className="tf-preview-card tf-guide-box">
               <Text as="h3" variant="headingSm">
                 {tr("section6.guide.title", "Guide")}
               </Text>
 
-              <BlockStack gap="150" className="tf-guide-text" style={{ marginTop: 8 }}>
-                <p>{tr("section6.guide.step1", "Choose your shipping type (free/paid).")}</p>
-                <p>{tr("section6.guide.step2", "Pick a pricing mode: province, city, or cart amount.")}</p>
-                <p>{tr("section6.guide.step3", "Add rates and keep entries clean.")}</p>
-                <p>{tr("section6.guide.step4", "Use Advanced only if you need global rules.")}</p>
-                <p>{tr("section6.guide.step5", "When leaving the section, save if needed.")}</p>
-              </BlockStack>
-            </div>
+              <ol className="tf-guide-ol">
+                <li>{tr("section6.guide.step1", "Choose your shipping type (free/paid).")}</li>
+                <li>{tr("section6.guide.step2", "Pick a pricing mode: province, city, or cart amount.")}</li>
+                <li>{tr("section6.guide.step3", "Add rates and keep entries clean.")}</li>
+                <li>{tr("section6.guide.step4", "Use Advanced only if you need global rules.")}</li>
+                <li>{tr("section6.guide.step5", "When leaving the section, save if needed.")}</li>
+              </ol>
 
-            {dirty ? (
-              <div className="tf-side-card">
-                <InlineStack gap="200" blockAlign="center">
-                  <Badge tone="warning">{tr("common.savebar.badgeUnsaved", "Unsaved")}</Badge>
-                  <Text as="span" fontWeight="bold">
-                    {tr("common.savebar.unsaved", "You have unsaved changes.")}
-                  </Text>
-                </InlineStack>
+              {dirty ? (
                 <Text tone="subdued" as="p" style={{ marginTop: 8 }}>
-                  {tr("section6.tip", "Use the Save button in the header.")}
+                  {tr("common.savebar.unsaved", "You have unsaved changes.")} —{" "}
+                  {tr("section6.tip", "Click Save in the header.")}
                 </Text>
-              </div>
-            ) : null}
+              ) : null}
+            </div>
           </div>
         </div>
       </div>
