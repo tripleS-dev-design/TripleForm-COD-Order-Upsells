@@ -768,7 +768,15 @@ export const action = async ({ request }) => {
           address: fields.address || "",
           country: countryCode || "",
           notes: fields.notes || "",
+          email: fields.email || "",
+          pincode: fields.pincode || "",
+          pincode2: fields.pincode2 || "",
+          pincode3: fields.pincode3 || "",
+          company: fields.company || "",
+          birthday: fields.birthday || "",
         },
+        // ✅ raw form fields (for flexible Sheets mapping)
+        fields: { ...(fields || {}), fullPhone, countryCode },
         cart: {
           productTitle:
             productInfo.productTitle ||

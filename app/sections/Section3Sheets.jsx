@@ -604,6 +604,14 @@ const Grid3 = ({ children }) => (
 const APP_FIELDS = [
   { label: "section3.fields.customer.name", value: "customer.name" },
   { label: "section3.fields.customer.phone", value: "customer.phone" },
+  // ✅ Form fields (sync with Section 1)
+  { label: "Email", value: "customer.email" },
+  { label: "Pincode", value: "customer.pincode" },
+  { label: "Pincode 2", value: "customer.pincode2" },
+  { label: "Pincode 3", value: "customer.pincode3" },
+  { label: "Company", value: "customer.company" },
+  { label: "Birthday", value: "customer.birthday" },
+  { label: "Full phone", value: "customer.fullPhone" },
   { label: "section3.fields.customer.city", value: "customer.city" },
   { label: "section3.fields.customer.province", value: "customer.province" },
   { label: "section3.fields.customer.country", value: "customer.country" },
@@ -622,6 +630,11 @@ const APP_FIELDS = [
   { label: "section3.fields.order.date", value: "order.date" },
 ];
 
+// ✅ translate only when label is an i18n key
+const resolveFieldLabel = (t, label) =>
+  typeof label === "string" && label.includes(".") ? t(label) : label || "";
+
+
 function inferType(v = "") {
   const s = String(v || "").toLowerCase();
   if (s.includes("date")) return "datetime";
@@ -631,10 +644,10 @@ function inferType(v = "") {
   return "string";
 }
 
-const labelFromValue = (v, t) => {
-  const f = APP_FIELDS.find((x) => x.value === v);
+const labelFromValue = (v, t, list = APP_FIELDS) => {
+  const f = (list || APP_FIELDS).find((x) => x.value === v);
   return f
-    ? t(f.label)
+    ? resolveFieldLabel(t, f.label)
     : v
         .split(".")
         .slice(-1)[0]
@@ -848,6 +861,25 @@ function SimpleWhatsAppConfig() {
 
   const [isGeneratingQR, setIsGeneratingQR] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+
+  // ✅ Load Section 1 (Form) fields so Sheets mapping stays in sync
+  const [formSettings, setFormSettings] = useState(null);
+
+  const formFieldOptions = useMemo(() => {
+    const ff = formSettings?.fields;
+    if (!ff || typeof ff !== "object") return [];
+    return Object.entries(ff).map(([key, st]) => ({
+      value: `fields.${key}`,
+      label: `Form · ${st?.label || key}`,
+    }));
+  }, [formSettings]);
+
+  const allFieldOptions = useMemo(() => {
+    const map = new Map();
+    for (const f of APP_FIELDS) map.set(f.value, f);
+    for (const f of formFieldOptions) if (!map.has(f.value)) map.set(f.value, f);
+    return Array.from(map.values());
+  }, [formFieldOptions]);
   const [activeToast, setActiveToast] = useState(null);
 
   useEffect(() => {
@@ -1687,9 +1719,23 @@ export default function Section3Sheets() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   };
 
+  const loadFormSettings = async () => {
+    try {
+      const res = await fetch("/api/load-settings");
+      const j = await res.json().catch(() => ({}));
+      if (res.ok && j?.ok && j.settings) {
+        setFormSettings(j.settings);
+      }
+    } catch (e) {
+      console.error("Failed to load form settings", e);
+    }
+  };
+
+
   useEffect(() => {
     loadGoogleSpreadsheets();
     fetchGoogleStatus();
+    loadFormSettings();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -1850,7 +1896,7 @@ export default function Section3Sheets() {
     keepScroll(() => {
       const id = "c" + Math.random().toString(36).slice(2, 7);
       const tType = inferType(fieldValue);
-      const header = labelFromValue(fieldValue, t);
+      const header = labelFromValue(fieldValue, t, allFieldOptions);
       setCfg((c) => ({
         ...c,
         columns: [
@@ -1911,7 +1957,7 @@ export default function Section3Sheets() {
   const quickAddAbandoned = (fieldValue) => {
     if (!fieldValue) return;
     const tType = inferType(fieldValue);
-    const header = labelFromValue(fieldValue, t);
+    const header = labelFromValue(fieldValue, t, allFieldOptions);
     setCfg((c) => {
       const cols = c.columnsAbandoned || [];
       const id = "a" + Math.random().toString(36).slice(2, 7);
@@ -2227,7 +2273,7 @@ export default function Section3Sheets() {
                       <Select
                         label={t("section3.mapping.selectField")}
                         placeholder={t("section3.mapping.selectPlaceholder")}
-                        options={APP_FIELDS.map((f) => ({ label: t(f.label), value: f.value }))}
+                        options={allFieldOptions.map((f) => ({ label: resolveFieldLabel(t, f.label), value: f.value }))}
                         value=""
                         onChange={(v) => quickAdd(v)}
                       />
@@ -2291,14 +2337,14 @@ export default function Section3Sheets() {
 
                             <Select
                               label={t("section3.mapping.fieldForColumn", { number: i + 1 })}
-                              options={APP_FIELDS.map((f) => ({ label: t(f.label), value: f.value }))}
+                              options={allFieldOptions.map((f) => ({ label: resolveFieldLabel(t, f.label), value: f.value }))}
                               value={col.appField}
                               onChange={(v) => {
                                 const tType = inferType(v);
                                 patchCol(col.id, {
                                   appField: v,
                                   type: tType,
-                                  header: labelFromValue(v, t),
+                                  header: labelFromValue(v, t, allFieldOptions),
                                   width: tType === "datetime" ? 220 : tType === "currency" ? 160 : 180,
                                   asLink: tType === "link" ? true : col.asLink,
                                 });
@@ -2406,7 +2452,7 @@ export default function Section3Sheets() {
                       <Select
                         label={t("section3.mapping.selectField")}
                         placeholder={t("section3.mapping.selectPlaceholder")}
-                        options={APP_FIELDS.map((f) => ({ label: t(f.label), value: f.value }))}
+                        options={allFieldOptions.map((f) => ({ label: resolveFieldLabel(t, f.label), value: f.value }))}
                         value=""
                         onChange={(v) => quickAddAbandoned(v)}
                       />
@@ -2453,14 +2499,14 @@ export default function Section3Sheets() {
 
                             <Select
                               label={t("section3.mapping.fieldForColumn", { number: i + 1 })}
-                              options={APP_FIELDS.map((f) => ({ label: t(f.label), value: f.value }))}
+                              options={allFieldOptions.map((f) => ({ label: resolveFieldLabel(t, f.label), value: f.value }))}
                               value={col.appField}
                               onChange={(v) => {
                                 const tType = inferType(v);
                                 patchAbandonedCol(col.id, {
                                   appField: v,
                                   type: tType,
-                                  header: labelFromValue(v, t),
+                                  header: labelFromValue(v, t, allFieldOptions),
                                   width: tType === "datetime" ? 220 : tType === "currency" ? 160 : 180,
                                   asLink: tType === "link" ? true : col.asLink,
                                 });
