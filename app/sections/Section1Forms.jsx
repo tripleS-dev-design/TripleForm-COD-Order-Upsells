@@ -2362,6 +2362,53 @@ function PreviewPanel({ config }) {
   const isPresetB = uiPreset === "B";
   const isPresetC = uiPreset === "C";
 
+
+// --- Preview-local style bases (avoid relying on outer variables) ---
+const baseFontSize = Number(config.design?.fontSize || 14);
+
+const inputBase = useMemo(
+  () => ({
+    width: "100%",
+    padding: "10px 12px",
+    borderRadius: 12,
+    border: `1px solid ${config.design?.inputBorder || "#E5E7EB"}`,
+    background: config.design?.inputBg || "#FFFFFF",
+    color: config.design?.text || "#0F172A",
+    outline: "none",
+    fontSize: baseFontSize,
+    lineHeight: "20px",
+    boxSizing: "border-box",
+  }),
+  [config.design, baseFontSize]
+);
+
+const cartBoxCSS = useMemo(
+  () => ({
+    background: config.design?.cartBg || "#FFFFFF",
+    border: `1px solid ${config.design?.cartBorder || "#E5E7EB"}`,
+    borderRadius: 12,
+    padding: 14,
+    boxShadow: config.design?.shadow ? "0 16px 50px rgba(2,6,23,.10)" : "none",
+    marginTop: 12,
+  }),
+  [config.design]
+);
+
+const cartRowCSS = useMemo(
+  () => ({
+    display: "grid",
+    gridTemplateColumns: "1fr auto",
+    gap: 8,
+    alignItems: "center",
+    padding: "8px 10px",
+    border: `1px solid ${config.design?.cartRowBorder || "#E5E7EB"}`,
+    borderRadius: 10,
+    background: config.design?.cartRowBg || "#FFFFFF",
+    fontSize: baseFontSize,
+  }),
+  [config.design, baseFontSize]
+);
+
   const inputPreset = useMemo(() => {
     // Preset B: "minimal underline" look + no icons
     if (!isPresetB) return inputBase;
