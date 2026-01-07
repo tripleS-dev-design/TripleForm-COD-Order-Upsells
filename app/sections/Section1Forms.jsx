@@ -1039,6 +1039,7 @@ function Section1FormsLayoutInner() {
     meta: {
       version: 3,
       preset: "CleanWhite",
+      uiPreset: "A",
       fieldsOrder: [
         "name",
         "phone",
@@ -1216,6 +1217,8 @@ function Section1FormsLayoutInner() {
   const setUiT = (p) => setConfig((c) => ({ ...c, uiTitles: { ...c.uiTitles, ...p } }));
   const setFieldsOrder = (order) =>
     setConfig((c) => ({ ...c, meta: { ...(c.meta || {}), fieldsOrder: order } }));
+  const setMeta = (p) => setConfig((c) => ({ ...c, meta: { ...(c.meta || {}), ...p } }));
+
 
   function computeShadow(effect, glowPx, glowColor, hasShadow) {
     if (effect === "glow") return `0 0 ${glowPx}px ${glowColor}`;
@@ -1428,6 +1431,7 @@ function Section1FormsLayoutInner() {
         setCartT,
         setUiT,
         setFieldsOrder,
+        setMeta,
         inputBase,
         btnCSS,
         cardCSS,
@@ -1776,6 +1780,21 @@ function OutletEditor() {
 
           {sel === "titles" && (
             <GroupCard title={t("section1.group.formTexts.title")}>
+              <div style={{ marginBottom: 12 }}>
+                <Select
+                  label="Form UI Style (A/B/C)"
+                  options={[
+                    { label: "Preset A — Clean cards", value: "A" },
+                    { label: "Preset B — Underline + sticky total bar", value: "B" },
+                    { label: "Preset C — Glass + offers inside form", value: "C" },
+                  ]}
+                  value={String((config.meta && (config.meta.uiPreset || config.meta.presetUi)) || "A").toUpperCase()}
+                  onChange={(v) => setMeta({ uiPreset: String(v || "A").toUpperCase() })}
+                />
+                <div style={{ marginTop: 6, fontSize: 12, color: "#6B7280" }}>
+                  The fields stay the same — only the global layout/style changes.
+                </div>
+              </div>
               <Grid2>
                 <TextField label={t("section1.form.titleLabel")} value={config.form.title} onChange={(v) => setForm({ title: v })} />
                 <TextField label={t("section1.form.subtitleLabel")} value={config.form.subtitle} onChange={(v) => setForm({ subtitle: v })} />
@@ -2344,6 +2363,26 @@ function PreviewPanel() {
   const { config, cardCSS, cartBoxCSS, cartRowCSS, inputBase, btnCSS, setBehav, t } =
     useForms();
 
+
+  const uiPreset = String((config.meta && (config.meta.uiPreset || config.meta.presetUi)) || "A")
+    .trim()
+    .toUpperCase();
+  const isPresetB = uiPreset === "B";
+  const isPresetC = uiPreset === "C";
+
+  const inputPreset = useMemo(() => {
+    if (!isPresetB) return inputBase;
+    return {
+      ...inputPreset,
+      background: "transparent",
+      border: "none",
+      borderBottom: `1px solid ${config.design?.inputBorder || "#E5E7EB"}`,
+      borderRadius: 0,
+      paddingLeft: 0,
+      paddingRight: 0,
+    };
+  }, [isPresetB, inputBase, config.design]);
+
   const [shippingPrice, setShippingPrice] = useState(null);
   const [shippingNote, setShippingNote] = useState("");
 
@@ -2392,9 +2431,9 @@ function PreviewPanel() {
   const renderField = (f, key) => {
     if (!f?.on) return null;
     const isTextarea = f.type === "textarea";
-    const hasIcon = !!f.icon;
+    const hasIcon = !isPresetB && !!f.icon;
 
-    const inputWithIcon = hasIcon ? { ...inputBase, padding: "10px 12px 10px 40px" } : inputBase;
+    const inputWithIcon = hasIcon ? { ...inputPreset, padding: "10px 12px 10px 40px" } : inputBase;
 
     const labelEl = (
       <label className="tf-field-row">
@@ -2413,12 +2452,12 @@ function PreviewPanel() {
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: f.prefix ? "minmax(88px,130px) 1fr" : "1fr",
+              gridTemplateColumns: f.prefix ? "minmax(60px,86px) 1fr" : "1fr",
               gap: 8,
             }}
           >
             {f.prefix && (
-              <input style={{ ...inputBase, textAlign: "center" }} value={f.prefix} readOnly />
+              <input style={{ ...inputPreset, textAlign: "center", fontWeight: 800, fontSize: 12, paddingLeft: 8, paddingRight: 8 }} value={f.prefix} readOnly />
             )}
             <input type="tel" style={inputWithIcon} placeholder={sStr(f.ph)} />
           </div>
@@ -2506,7 +2545,7 @@ function PreviewPanel() {
 
   const renderProvinceField = (f) => {
     if (!f?.on) return null;
-    const hasIcon = !!f.icon;
+    const hasIcon = !isPresetB && !!f.icon;
 
     const labelEl = (
       <label className="tf-field-row">
@@ -2515,7 +2554,7 @@ function PreviewPanel() {
           {f.required ? " *" : ""}
         </span>
         <select
-          style={{ ...inputBase, background: config.design.inputBg }}
+          style={{ ...inputPreset, background: config.design.inputBg }}
           value={selectedProvinceKey}
           onChange={(e) => setBehav({ provinceKey: e.target.value, cityKey: "" })}
         >
@@ -2553,7 +2592,7 @@ function PreviewPanel() {
         </span>
         <select
           style={{
-            ...inputBase,
+            ...inputPreset,
             backgroundColor: selectedProvinceKey ? inputBase.background : "#F3F4F6",
           }}
           value={config.behavior.cityKey || ""}
@@ -2594,6 +2633,7 @@ function PreviewPanel() {
     const total = productPrice + (shippingPrice || 0);
     const orderLabel = sStr(config.uiTitles.orderNow || config.form?.buttonText || "Order now");
     const suffix = sStr(config.uiTitles.totalSuffix || "Total:");
+    const showInlineTotal = !isPresetB;
 
     const motion = config.behavior?.buttonMotion || "none";
     const motionClass =
@@ -2620,6 +2660,28 @@ function PreviewPanel() {
             return renderField(f, key);
           })}
 
+          {isPresetC && (
+            <div style={{
+              border: "1px dashed rgba(2,6,23,.18)",
+              borderRadius: 12,
+              padding: 10,
+              background: "rgba(255,255,255,.6)",
+            }}>
+              <div style={{ fontWeight: 800, marginBottom: 6 }}>Offers (inside form)</div>
+              <div style={{ display: "grid", gap: 8 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
+                  <span>🔥 Bundle -10%</span>
+                  <span style={{ fontWeight: 800 }}>Activate</span>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
+                  <span>🎁 Free gift</span>
+                  <span style={{ fontWeight: 800 }}>Activate</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+
           {config.behavior.requireGDPR && (
             <label style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 13, color: "#374151" }}>
               <input type="checkbox" /> {sStr(config.behavior.gdprLabel)}
@@ -2638,7 +2700,13 @@ function PreviewPanel() {
               </span>
             ) : null}
             <span style={{ flex: 1, textAlign: "center" }}>
-              {orderLabel} · {suffix} {total.toFixed(2)} {currency}
+              {showInlineTotal ? (
+                <>
+                  {orderLabel} · {suffix} {total.toFixed(2)} {currency}
+                </>
+              ) : (
+                <>{orderLabel}</>
+              )}
             </span>
           </button>
         </div>
@@ -2651,6 +2719,7 @@ function PreviewPanel() {
       <BlockStack gap="250">
         <div style={{ width: "100%" }}>
           <div
+            className={`tf-preview-wrap tf-ui-${uiPreset}`}
             style={{
               borderRadius: 16,
               background: "#F9FAFB",
@@ -2662,6 +2731,41 @@ function PreviewPanel() {
             <div style={{ display: "grid", gap: 12 }}>
               {renderCartBox()}
               {renderFormCard()}
+              {isPresetB && (
+                <div style={{
+                  position: "sticky",
+                  bottom: 0,
+                  zIndex: 5,
+                  marginTop: 12,
+                  background: "rgba(255,255,255,.92)",
+                  border: "1px solid rgba(2,6,23,.10)",
+                  borderRadius: 14,
+                  padding: 10,
+                  backdropFilter: "blur(10px)",
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+                    <div style={{ fontWeight: 900, fontSize: 13 }}>
+                      {sStr(config.uiTitles.totalSuffix || "Total:")} {(
+                        productPrice + (shippingPrice || 0)
+                      ).toFixed(2)} {currency}
+                    </div>
+                    <button type="button" style={{
+                      height: 40,
+                      padding: "0 14px",
+                      borderRadius: 12,
+                      border: "1px solid " + (config.design?.btnBorder || "#111827"),
+                      background: getButtonBackground(config.design),
+                      color: config.design?.btnText || "#fff",
+                      fontWeight: 900,
+                      cursor: "pointer",
+                      whiteSpace: "nowrap",
+                    }}>
+                      {sStr(config.form?.buttonText || "Order now")}
+                    </button>
+                  </div>
+                </div>
+              )}
+
             </div>
           </div>
         </div>

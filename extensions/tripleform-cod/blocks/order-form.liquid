@@ -160,6 +160,7 @@ Sans parse_json (theme-check)
     "meta": {
       "version": 1,
       "preset": "CleanWhite",
+      "uiPreset": "{{ section.settings.ui_preset | default: 'A' }}",
       "fieldsOrder": ["name","phone","quantity","address","city","province","notes"]
     },
     "form": {
@@ -393,6 +394,7 @@ Le JS (tripleform.js) charge le script tout seul quand enabled=true.
 <div
   id="tripleform-cod-{{ section.id }}"
   class="tripleform-cod"
+  data-ui-preset="{{ section.settings.ui_preset | default: 'A' }}"
   data-settings='{% if tf_prod_val and tf_prod_val != blank or tf_shop_val and tf_shop_val != blank %}{{ tf_json | json | escape }}{% else %}{{ tf_json | strip | escape }}{% endif %}'
   data-offers='{% if tf_offers_prod_val and tf_offers_prod_val != blank or tf_offers_shop_val and tf_offers_shop_val != blank %}{{ tf_offers_json | json | escape }}{% else %}{{ tf_offers_json | strip | escape }}{% endif %}'
   data-product-id='{{ product.id }}'
@@ -453,6 +455,17 @@ Le JS (tripleform.js) charge le script tout seul quand enabled=true.
   "stylesheet": "tripleform-cod.css",
   "javascript": "tripleform.js",
   "settings": [
+    {
+      "type": "select",
+      "id": "ui_preset",
+      "label": "UI preset",
+      "default": "A",
+      "options": [
+        { "value": "A", "label": "Preset A — Clean cards" },
+        { "value": "B", "label": "Preset B — Underline + sticky bar" },
+        { "value": "C", "label": "Preset C — Glass + offers inside" }
+      ]
+    },
     {
       "type": "text",
       "id": "note",
