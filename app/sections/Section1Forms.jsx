@@ -1487,7 +1487,7 @@ function Section1FormsLayoutInner() {
         large
       >
         <Modal.Section>
-          <PreviewPanel />
+          <PreviewPanel config={config} />
         </Modal.Section>
       </Modal>
     </FormsCtx.Provider>
@@ -2070,7 +2070,7 @@ function OutletEditor() {
       {/* RIGHT PREVIEW */}
       <div className="tf-preview-col">
         <div className="tf-preview-card">
-          <PreviewPanel />
+          <PreviewPanel config={config} />
         </div>
       </div>
     </>
@@ -2352,7 +2352,7 @@ function GradientField({ label, mode, c1, c2, onChange }) {
 }
 
 /* ============================== Preview ============================== */
-function PreviewPanel() {
+function PreviewPanel({ config }) {
   const [shippingPrice, setShippingPrice] = useState(null);
   const [shippingNote, setShippingNote] = useState("");
 
