@@ -199,6 +199,14 @@ window.TripleformCOD = (function () {
 
   function drawerSizeConfig(beh) {
     const size = String((beh && (beh.drawerSize || beh.size)) || "md").toLowerCase();
+
+    // ✅ Mobile: drawer should take full width (prevents "crushed to the right" on small screens)
+    const isMobile =
+      typeof window !== "undefined" &&
+      window.matchMedia &&
+      window.matchMedia("(max-width: 768px)").matches;
+
+    if (isMobile) return { sideWidth: "100vw" };
     if (size === "sm") return { sideWidth: "360px" };
     if (size === "lg") return { sideWidth: "520px" };
     return { sideWidth: "420px" };
@@ -606,7 +614,52 @@ window.TripleformCOD = (function () {
         justify-content:center;
         gap:8px;
       }
-    `;
+    
+/* -------------------- Layout fixes (2026-01) -------------------- */
+/* Prevent sticky header overlap when scrolling to the form */
+.tripleform-cod{scroll-margin-top:120px;}
+
+/* Drawer: keep inside viewport and avoid "crushed to the right" */
+.tripleform-cod .tf-drawer{max-width:100vw;}
+.tripleform-cod .tf-drawer-overlay{overscroll-behavior:contain;}
+
+/* Phone prefix: smaller than the number input */
+.tripleform-cod .tf-phone-prefix{
+  font-weight:900;
+  font-size:12px !important;
+  padding-left:10px !important;
+  padding-right:10px !important;
+  opacity:.9;
+}
+
+/* Mobile compact mode: try to fit the whole form without scrolling */
+@media (max-width: 768px){
+  .tripleform-cod .tf-drawer{width:100vw !important;}
+  .tripleform-cod .tf-drawer-content{
+    padding:14px !important;
+    padding-top:calc(14px + env(safe-area-inset-top)) !important;
+    padding-bottom:calc(14px + env(safe-area-inset-bottom)) !important;
+  }
+  .tripleform-cod .tf-shell > div{
+    gap:10px !important;
+  }
+  
+/* Optional: hide offers + summary on mobile drawer to reduce height */
+.tripleform-cod .tf-drawer-overlay .tf-offers,
+.tripleform-cod .tf-drawer-overlay .tf-cart-box{
+  display:none !important;
+}
+        .tripleform-cod .tf-phone-grid{
+    grid-template-columns:minmax(60px,86px) 1fr !important;
+    gap:6px !important;
+  }
+  .tripleform-cod .tf-phone-prefix{
+    font-size:11px !important;
+    padding-left:8px !important;
+    padding-right:8px !important;
+  }
+}
+`;
     document.head.appendChild(style);
   }
 
@@ -2861,9 +2914,9 @@ window.TripleformCOD = (function () {
 
       if (field.type === "tel") {
         const prefix = field.prefix
-          ? `<input style="${inputStyle}; text-align:center;" value="${css(field.prefix)}" readonly />`
+          ? `<input class="tf-phone-prefix" style="${inputStyle}; text-align:center;" value="${css(field.prefix)}" readonly />`
           : "";
-        const grid = field.prefix ? "minmax(88px,130px) 1fr" : "1fr";
+        const grid = field.prefix ? "minmax(72px,110px) 1fr" : "1fr";
 
         return `
           <div style="${fieldContainerStyle}">
@@ -2872,9 +2925,9 @@ window.TripleformCOD = (function () {
             </div>
             <div style="flex:1;">
               <label style="${labelStyle}">${css(label)}</label>
-              <div style="display:grid; grid-template-columns:${grid}; gap:8px;">
+              <div class="tf-phone-grid" style="display:grid; grid-template-columns:${grid}; gap:8px;">
                 ${prefix}
-                <input type="tel" data-tf-field="${key}" style="${inputStyle}" placeholder="${css(ph)}" ${requiredAttr} />
+                <input type="tel" class="tf-phone-input" data-tf-field="${key}" style="${inputStyle}" placeholder="${css(ph)}" ${requiredAttr} />
               </div>
             </div>
           </div>
@@ -2905,7 +2958,7 @@ window.TripleformCOD = (function () {
         ? getIconHtml(t.cartIcon, 18, css(d.cartTitleColor || "#111827"))
         : "";
       return `
-        <div style="${cartBoxStyle}">
+        <div class="tf-cart-box" style="${cartBoxStyle}">
           <div style="${cartTitleStyle}">${cartIconHtml}${css(t.top || "Order summary")}</div>
           <div style="display:grid; gap:8px;">
             <div style="${rowStyle}">
@@ -2948,7 +3001,7 @@ window.TripleformCOD = (function () {
         : cardStyle;
 
       return `
-        <div style="${formContainerStyle}" data-tf-role="form-card">
+        <div class="tf-form-card" style="${formContainerStyle}" data-tf-role="form-card">
           ${
             cfg.form?.title || cfg.form?.subtitle
               ? `
@@ -3087,15 +3140,15 @@ window.TripleformCOD = (function () {
         ` +
         mainEnd +
         `
-        <div data-tf-role="drawer-overlay" style="
+        <div data-tf-role="drawer-overlay" class="tf-drawer-overlay" style="
           position:fixed; inset:0; display:none; z-index:999999;
           background:${ovBg}; overflow:hidden; padding:0;">
-          <div data-tf-role="drawer" data-origin="${origin}" style="
+          <div data-tf-role="drawer" class="tf-drawer" data-origin="${origin}" style="
             position:absolute; top:0; bottom:0; width:${drawerCfg.sideWidth};
             max-height:100%; background:${css(d.bg)}; box-shadow:0 0 40px rgba(15,23,42,0.65);
             display:flex; flex-direction:column; padding:0; box-sizing:border-box;
             transform:translateX(100%); transition:transform 260ms ease; overflow:hidden;">
-            <div style="padding:24px; overflow:auto; flex:1; box-sizing:border-box;">
+            <div class="tf-drawer-content" style="padding:24px; overflow:auto; flex:1; box-sizing:border-box;">
               <div style="text-align:right; margin-bottom:16px;">
                 <button type="button" data-tf="close" style="
                   background:${css(d.bg)}; border:1px solid ${css(d.border)}; color:${css(d.text)};
