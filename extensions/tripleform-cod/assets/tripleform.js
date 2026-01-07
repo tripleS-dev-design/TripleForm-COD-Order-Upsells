@@ -199,14 +199,6 @@ window.TripleformCOD = (function () {
 
   function drawerSizeConfig(beh) {
     const size = String((beh && (beh.drawerSize || beh.size)) || "md").toLowerCase();
-
-    // ✅ Mobile: drawer should take full width (prevents "crushed to the right" on small screens)
-    const isMobile =
-      typeof window !== "undefined" &&
-      window.matchMedia &&
-      window.matchMedia("(max-width: 768px)").matches;
-
-    if (isMobile) return { sideWidth: "100vw" };
     if (size === "sm") return { sideWidth: "360px" };
     if (size === "lg") return { sideWidth: "520px" };
     return { sideWidth: "420px" };
@@ -614,141 +606,7 @@ window.TripleformCOD = (function () {
         justify-content:center;
         gap:8px;
       }
-    
-/* -------------------- Layout fixes (2026-01) -------------------- */
-/* Prevent sticky header overlap when scrolling to the form */
-.tripleform-cod{scroll-margin-top:120px;}
-
-/* Drawer: keep inside viewport and avoid "crushed to the right" */
-.tripleform-cod .tf-drawer{max-width:100vw;}
-.tripleform-cod .tf-drawer-overlay{overscroll-behavior:contain;}
-
-/* Phone prefix: smaller than the number input */
-.tripleform-cod .tf-phone-prefix{
-  font-weight:900;
-  font-size:12px !important;
-  padding-left:10px !important;
-  padding-right:10px !important;
-  opacity:.9;
-}
-
-/* Mobile compact mode: try to fit the whole form without scrolling */
-@media (max-width: 768px){
-  .tripleform-cod .tf-drawer{width:100vw !important;}
-  .tripleform-cod .tf-drawer-content{
-    padding:14px !important;
-    padding-top:calc(14px + env(safe-area-inset-top)) !important;
-    padding-bottom:calc(14px + env(safe-area-inset-bottom)) !important;
-  }
-  .tripleform-cod .tf-shell > div{
-    gap:10px !important;
-  }
-  
-/* Optional: hide offers + summary on mobile drawer to reduce height */
-.tripleform-cod .tf-drawer-overlay .tf-offers,
-.tripleform-cod .tf-drawer-overlay .tf-cart-box{
-  display:none !important;
-}
-        .tripleform-cod .tf-phone-grid{
-    grid-template-columns:minmax(60px,86px) 1fr !important;
-    gap:6px !important;
-  }
-  .tripleform-cod .tf-phone-prefix{
-    font-size:11px !important;
-    padding-left:8px !important;
-    padding-right:8px !important;
-  }
-}
-
-
-
-/* -------------------- UI Presets -------------------- */
-/* Preset A (Clean Cards) — default look, only tiny refinements */
-.tripleform-cod.tf-ui-A .tf-form-card{max-width:640px;margin:0 auto;}
-.tripleform-cod.tf-ui-A .tf-field-icon{opacity:.9}
-
-/* Preset B (Offers TOP inside form + Summary stays TOP) */
-.tripleform-cod.tf-ui-B .tf-form-card{
-  max-width:680px;
-  margin:0 auto;
-}
-.tripleform-cod.tf-ui-B .tf-field-icon{opacity:.85}
-.tripleform-cod.tf-ui-B input,
-.tripleform-cod.tf-ui-B select,
-.tripleform-cod.tf-ui-B textarea{
-  border-radius:14px !important;
-}
-.tripleform-cod.tf-ui-B .tf-offers-container{
-  margin:10px 0 14px !important;
-}
-
-/* Preset C (Glass LIGHT — no forced black) */
-.tripleform-cod.tf-ui-C .tf-form-card{
-  background:var(--tf-shell-bg,#fff) !important;
-  color:var(--tf-title,#0F172A) !important;
-  border:1px solid var(--tf-shell-border,#E5E7EB) !important;
-  box-shadow: 0 22px 70px rgba(2,6,23,.12) !important;
-  position:relative;
-  overflow:hidden;
-}
-.tripleform-cod.tf-ui-C .tf-form-card:before{
-  content:"";
-  position:absolute;
-  inset:-60px;
-  background:
-    radial-gradient(circle at 18% 20%, rgba(255,255,255,.75), transparent 60%),
-    radial-gradient(circle at 80% 0%, rgba(255,255,255,.45), transparent 55%),
-    radial-gradient(circle at 60% 90%, rgba(255,255,255,.35), transparent 60%);
-  opacity:.55;
-  pointer-events:none;
-}
-.tripleform-cod.tf-ui-C .tf-form-card > *{position:relative; z-index:1;}
-.tripleform-cod.tf-ui-C label{color:var(--tf-title,#0F172A) !important; opacity:.88;}
-.tripleform-cod.tf-ui-C .tf-field-icon{
-  width:36px !important;
-  height:36px !important;
-  border-radius:999px !important;
-  background:rgba(255,255,255,.65) !important;
-  border:1px solid rgba(2,6,23,.10) !important;
-}
-.tripleform-cod.tf-ui-C input,
-.tripleform-cod.tf-ui-C select,
-.tripleform-cod.tf-ui-C textarea{
-  background:rgba(255,255,255,.72) !important;
-  border:1px solid rgba(2,6,23,.14) !important;
-  color:var(--tf-title,#0F172A) !important;
-}
-.tripleform-cod.tf-ui-C input::placeholder,
-.tripleform-cod.tf-ui-C textarea::placeholder{color:rgba(2,6,23,.45) !important;}
-.tripleform-cod.tf-ui-C .tf-offers-container{margin-top:10px;margin-bottom:10px}
-.tripleform-cod.tf-ui-C .tf-offer-card{
-  background:rgba(255,255,255,.78);
-  border:1px solid rgba(2,6,23,.10);
-}
-.tripleform-cod.tf-ui-C .tf-cart-box{
-  background:rgba(255,255,255,.78) !important;
-  border:1px solid rgba(2,6,23,.10) !important;
-}
-
-/* Sticky CTA styles (if merchant uses stickyType) — change with presets */
-.tripleform-cod.tf-ui-B button[data-tf-sticky-cta]{
-  border-radius:16px !important;
-  padding:10px 16px !important;
-  font-weight:900 !important;
-  background:rgba(255,255,255,.96) !important;
-  color:var(--tf-btn-bg,#111827) !important;
-  border:1px solid rgba(2,6,23,.16) !important;
-  box-shadow:0 14px 40px rgba(2,6,23,.12) !important;
-}
-.tripleform-cod.tf-ui-C button[data-tf-sticky-cta]{
-  border-radius:18px !important;
-  padding:12px 18px !important;
-  font-weight:900 !important;
-  background:var(--tf-btn-bg,#111827) !important;
-  color:var(--tf-btn-text,#fff) !important;
-  border:1px solid var(--tf-btn-solid,var(--tf-btn-bg,#111827)) !important;
-  box-shadow:0 18px 55px rgba(2,6,23,.22) !important;
-}`;
+    `;
     document.head.appendChild(style);
   }
 
@@ -2054,68 +1912,6 @@ window.TripleformCOD = (function () {
       ]
     }
   };
-function applyUiPreset(root, cfg) {
-  if (!root) return;
-
-  const allowed = { A: true, B: true, C: true };
-
-  const attrPreset = (root.getAttribute("data-ui-preset") || "").trim();
-  const cfgPreset = (cfg && cfg.meta && (cfg.meta.uiPreset || cfg.meta.presetUi)) || "";
-  let preset = String(cfgPreset || attrPreset || "A").trim().toUpperCase();
-  if (!allowed[preset]) preset = "A";
-
-  // Normalize storage
-  cfg.meta = cfg.meta || {};
-  cfg.meta.uiPreset = preset;
-
-  // Apply class
-  root.classList.remove("tf-ui-A", "tf-ui-B", "tf-ui-C");
-  root.classList.add(`tf-ui-${preset}`);
-  root.setAttribute("data-tf-ui", preset);
-
-  // Cleanup previous preset DOM wrappers (important on re-render)
-  root.querySelectorAll(".tf-sticky-bar").forEach((el) => el.remove());
-  root.querySelectorAll(".tf-offers-accordion").forEach((acc) => {
-    const innerOffers = acc.querySelector('[data-tf-offers-block="1"]');
-    if (innerOffers && acc.parentElement) acc.parentElement.insertBefore(innerOffers, acc);
-    acc.remove();
-  });
-
-  const formCard = root.querySelector('[data-tf-role="form-card"]');
-  if (!formCard) return;
-
-  const offersEl = root.querySelector('[data-tf-offers-block="1"]');
-  const ctaBtn = root.querySelector('button[data-tf-cta="1"]');
-  if (!ctaBtn) return;
-
-  // Try to find the main form container (the one that contains fields)
-  const rel = formCard.querySelector('div[style*="position:relative"]') || formCard;
-
-  // -------- Preset C: Offers inside form (before CTA)
-  if (preset === "C") {
-    try {
-      if (offersEl && ctaBtn.parentElement) {
-        ctaBtn.parentElement.insertBefore(offersEl, ctaBtn);
-      }
-    } catch (e) {}
-    return;
-  }
-
-  // -------- Preset B: Offers inside form (TOP) + Summary stays TOP (no sticky bar)
-  if (preset === "B") {
-    try {
-      // Move offers to the top of the form content (after title/subtitle area)
-      if (offersEl && rel) {
-        rel.insertBefore(offersEl, rel.firstChild);
-      }
-    } catch (e) {}
-    return;
-  }
-
-  // -------- Preset A: Default layout (Clean cards) — nothing to move
-}
-
-
 
   function getCountryDef(beh) {
     const raw =
@@ -3020,7 +2816,7 @@ function applyUiPreset(root, cfg) {
       if (key === "province") {
         return `
           <div style="${fieldContainerStyle}">
-            <div class="tf-field-icon" style="width:22px;height:${inputHeight}; display:flex; align-items:center; justify-content:center;">
+            <div style="width:22px;height:${inputHeight}; display:flex; align-items:center; justify-content:center;">
               ${iconHtml}
             </div>
             <div style="flex:1;">
@@ -3036,7 +2832,7 @@ function applyUiPreset(root, cfg) {
       if (key === "city") {
         return `
           <div style="${fieldContainerStyle}">
-            <div class="tf-field-icon" style="width:22px;height:${inputHeight}; display:flex; align-items:center; justify-content:center;">
+            <div style="width:22px;height:${inputHeight}; display:flex; align-items:center; justify-content:center;">
               ${iconHtml}
             </div>
             <div style="flex:1;">
@@ -3065,20 +2861,20 @@ function applyUiPreset(root, cfg) {
 
       if (field.type === "tel") {
         const prefix = field.prefix
-          ? `<input class="tf-phone-prefix" style="${inputStyle}; text-align:center;" value="${css(field.prefix)}" readonly />`
+          ? `<input style="${inputStyle}; text-align:center;" value="${css(field.prefix)}" readonly />`
           : "";
-        const grid = field.prefix ? "minmax(60px,86px) 1fr" : "1fr";
+        const grid = field.prefix ? "minmax(88px,130px) 1fr" : "1fr";
 
         return `
           <div style="${fieldContainerStyle}">
-            <div class="tf-field-icon" style="width:22px;height:${inputHeight}; display:flex; align-items:center; justify-content:center;">
+            <div style="width:22px;height:${inputHeight}; display:flex; align-items:center; justify-content:center;">
               ${iconHtml}
             </div>
             <div style="flex:1;">
               <label style="${labelStyle}">${css(label)}</label>
-              <div class="tf-phone-grid" style="display:grid; grid-template-columns:${grid}; gap:8px;">
+              <div style="display:grid; grid-template-columns:${grid}; gap:8px;">
                 ${prefix}
-                <input type="tel" class="tf-phone-input" data-tf-field="${key}" style="${inputStyle}" placeholder="${css(ph)}" ${requiredAttr} />
+                <input type="tel" data-tf-field="${key}" style="${inputStyle}" placeholder="${css(ph)}" ${requiredAttr} />
               </div>
             </div>
           </div>
@@ -3089,7 +2885,7 @@ function applyUiPreset(root, cfg) {
 
       return `
         <div style="${fieldContainerStyle}">
-          <div class="tf-field-icon" style="width:22px;height:${inputHeight}; display:flex; align-items:center; justify-content:center;">
+          <div style="width:22px;height:${inputHeight}; display:flex; align-items:center; justify-content:center;">
             ${iconHtml}
           </div>
           <div style="flex:1;">
@@ -3109,7 +2905,7 @@ function applyUiPreset(root, cfg) {
         ? getIconHtml(t.cartIcon, 18, css(d.cartTitleColor || "#111827"))
         : "";
       return `
-        <div class="tf-cart-box" style="${cartBoxStyle}">
+        <div style="${cartBoxStyle}">
           <div style="${cartTitleStyle}">${cartIconHtml}${css(t.top || "Order summary")}</div>
           <div style="display:grid; gap:8px;">
             <div style="${rowStyle}">
@@ -3152,7 +2948,7 @@ function applyUiPreset(root, cfg) {
         : cardStyle;
 
       return `
-        <div class="tf-form-card" style="${formContainerStyle}" data-tf-role="form-card">
+        <div style="${formContainerStyle}" data-tf-role="form-card">
           ${
             cfg.form?.title || cfg.form?.subtitle
               ? `
@@ -3291,15 +3087,15 @@ function applyUiPreset(root, cfg) {
         ` +
         mainEnd +
         `
-        <div data-tf-role="drawer-overlay" class="tf-drawer-overlay" style="
+        <div data-tf-role="drawer-overlay" style="
           position:fixed; inset:0; display:none; z-index:999999;
           background:${ovBg}; overflow:hidden; padding:0;">
-          <div data-tf-role="drawer" class="tf-drawer" data-origin="${origin}" style="
+          <div data-tf-role="drawer" data-origin="${origin}" style="
             position:absolute; top:0; bottom:0; width:${drawerCfg.sideWidth};
             max-height:100%; background:${css(d.bg)}; box-shadow:0 0 40px rgba(15,23,42,0.65);
             display:flex; flex-direction:column; padding:0; box-sizing:border-box;
             transform:translateX(100%); transition:transform 260ms ease; overflow:hidden;">
-            <div class="tf-drawer-content" style="padding:24px; overflow:auto; flex:1; box-sizing:border-box;">
+            <div style="padding:24px; overflow:auto; flex:1; box-sizing:border-box;">
               <div style="text-align:right; margin-bottom:16px;">
                 <button type="button" data-tf="close" style="
                   background:${css(d.bg)}; border:1px solid ${css(d.border)}; color:${css(d.text)};
@@ -3321,9 +3117,6 @@ function applyUiPreset(root, cfg) {
     }
 
     root.innerHTML = html;
-
-    // ✅ UI Preset (A/B/C): rearrange DOM + apply classes
-    applyUiPreset(root, cfg);
 
     // ✅ reCAPTCHA v2: render checkbox widget if enabled
     if (recaptchaCfg && recaptchaCfg.enabled) {
@@ -3875,17 +3668,7 @@ function applyUiPreset(root, cfg) {
     injectGlobalCSSOnce();
 
     const cfg = parseSettingsAttr(holder);
-const offersCfg = parseOffersAttr(holder);
-
-// ✅ UI Preset (A/B/C) — can come from metafield JSON (cfg.meta.uiPreset)
-// or from Theme Editor setting via data-ui-preset on the holder.
-const uiPresetAttr = holder.getAttribute("data-ui-preset") || "";
-cfg.meta = cfg.meta || {};
-const uiPresetRaw = String(cfg.meta.uiPreset || uiPresetAttr || "A").trim().toUpperCase();
-cfg.meta.uiPreset = (uiPresetRaw === "B" || uiPresetRaw === "C") ? uiPresetRaw : "A";
-holder.setAttribute("data-ui-preset", cfg.meta.uiPreset);
-holder.classList.remove("tf-ui-A", "tf-ui-B", "tf-ui-C");
-holder.classList.add(`tf-ui-${cfg.meta.uiPreset}`);
+    const offersCfg = parseOffersAttr(holder);
 
     const currency = holder.getAttribute("data-currency") || "USD";
     const locale = holder.getAttribute("data-locale") || "en";

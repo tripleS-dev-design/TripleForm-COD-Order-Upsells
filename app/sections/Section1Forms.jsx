@@ -423,11 +423,11 @@ function useInjectCss() {
     const id = "tf-layout-css-section1";
     const existing = document.getElementById(id);
     if (existing) return;
-    const t = document.createElement("style");
-    t.id = id;
-    t.appendChild(document.createTextNode(LAYOUT_CSS));
-    document.head.appendChild(t);
-    return () => t.remove();
+    const styleTag = document.createElement("style");
+    styleTag.id = id;
+    styleTag.appendChild(document.createTextNode(LAYOUT_CSS));
+    document.head.appendChild(styleTag);
+    return () => styleTag.remove();
   }, []);
 }
 
@@ -1216,7 +1216,6 @@ function Section1FormsLayoutInner() {
   const setUiT = (p) => setConfig((c) => ({ ...c, uiTitles: { ...c.uiTitles, ...p } }));
   const setFieldsOrder = (order) =>
     setConfig((c) => ({ ...c, meta: { ...(c.meta || {}), fieldsOrder: order } }));
-  const setMeta = (p) => setConfig((c) => ({ ...c, meta: { ...(c.meta || {}), ...p } }));
 
   function computeShadow(effect, glowPx, glowColor, hasShadow) {
     if (effect === "glow") return `0 0 ${glowPx}px ${glowColor}`;
@@ -1487,7 +1486,7 @@ function Section1FormsLayoutInner() {
         large
       >
         <Modal.Section>
-          <PreviewPanel config={config} />
+          <PreviewPanel />
         </Modal.Section>
       </Modal>
     </FormsCtx.Provider>
@@ -1931,17 +1930,6 @@ function OutletEditor() {
               <BlueSection title={t("section1.options.behavior")} defaultOpen>
                 <Grid3>
                   <Select
-                    label="Form UI Style (A / B / C)"
-                    helpText="Same content — only the global layout/style changes."
-                    options={[
-                      { label: "Preset A — Clean cards", value: "A" },
-                      { label: "Preset B — Minimal + offers inside", value: "B" },
-                      { label: "Preset C — Modern + compact", value: "C" },
-                    ]}
-                    value={String(config.meta?.uiPreset || "A")}
-                    onChange={(v) => setMeta({ uiPreset: v })}
-                  />
-                  <Select
                     label={t("section1.buttons.displayStyleLabel")}
                     options={[
                       { label: t("section1.buttons.style.inline"), value: "inline" },
@@ -2070,7 +2058,7 @@ function OutletEditor() {
       {/* RIGHT PREVIEW */}
       <div className="tf-preview-col">
         <div className="tf-preview-card">
-          <PreviewPanel config={config} />
+          <PreviewPanel />
         </div>
       </div>
     </>
@@ -2352,76 +2340,12 @@ function GradientField({ label, mode, c1, c2, onChange }) {
 }
 
 /* ============================== Preview ============================== */
-function PreviewPanel({ config }) {
+function PreviewPanel() {
+  const { config, cardCSS, cartBoxCSS, cartRowCSS, inputBase, btnCSS, setBehav, t } =
+    useForms();
+
   const [shippingPrice, setShippingPrice] = useState(null);
   const [shippingNote, setShippingNote] = useState("");
-
-  const uiPreset = String((config.meta && (config.meta.uiPreset || config.meta.presetUi)) || "A")
-    .trim()
-    .toUpperCase();
-  const isPresetB = uiPreset === "B";
-  const isPresetC = uiPreset === "C";
-
-
-// --- Preview-local style bases (avoid relying on outer variables) ---
-const baseFontSize = Number(config.design?.fontSize || 14);
-
-const inputBase = useMemo(
-  () => ({
-    width: "100%",
-    padding: "10px 12px",
-    borderRadius: 12,
-    border: `1px solid ${config.design?.inputBorder || "#E5E7EB"}`,
-    background: config.design?.inputBg || "#FFFFFF",
-    color: config.design?.text || "#0F172A",
-    outline: "none",
-    fontSize: baseFontSize,
-    lineHeight: "20px",
-    boxSizing: "border-box",
-  }),
-  [config.design, baseFontSize]
-);
-
-const cartBoxCSS = useMemo(
-  () => ({
-    background: config.design?.cartBg || "#FFFFFF",
-    border: `1px solid ${config.design?.cartBorder || "#E5E7EB"}`,
-    borderRadius: 12,
-    padding: 14,
-    boxShadow: config.design?.shadow ? "0 16px 50px rgba(2,6,23,.10)" : "none",
-    marginTop: 12,
-  }),
-  [config.design]
-);
-
-const cartRowCSS = useMemo(
-  () => ({
-    display: "grid",
-    gridTemplateColumns: "1fr auto",
-    gap: 8,
-    alignItems: "center",
-    padding: "8px 10px",
-    border: `1px solid ${config.design?.cartRowBorder || "#E5E7EB"}`,
-    borderRadius: 10,
-    background: config.design?.cartRowBg || "#FFFFFF",
-    fontSize: baseFontSize,
-  }),
-  [config.design, baseFontSize]
-);
-
-  const inputPreset = useMemo(() => {
-    // Preset B: "minimal underline" look + no icons
-    if (!isPresetB) return inputBase;
-    return {
-      ...inputBase,
-      background: "transparent",
-      border: "none",
-      borderBottom: `1px solid ${config.design?.inputBorder || "#E5E7EB"}`,
-      borderRadius: 0,
-      paddingLeft: 0,
-      paddingRight: 0,
-    };
-  }, [isPresetB, inputBase, config.design]);
 
   const countryKey = config.behavior.country || "";
   const country = COUNTRY_DATA[countryKey];
@@ -2468,11 +2392,9 @@ const cartRowCSS = useMemo(
   const renderField = (f, key) => {
     if (!f?.on) return null;
     const isTextarea = f.type === "textarea";
-    const hasIcon = !isPresetB && !!f.icon;
+    const hasIcon = !!f.icon;
 
-    const inputWithIcon = hasIcon
-      ? { ...inputPreset, padding: "10px 12px 10px 40px" }
-      : inputPreset;
+    const inputWithIcon = hasIcon ? { ...inputBase, padding: "10px 12px 10px 40px" } : inputBase;
 
     const labelEl = (
       <label className="tf-field-row">
@@ -2489,28 +2411,14 @@ const cartRowCSS = useMemo(
           />
         ) : f.type === "tel" ? (
           <div
-            className="tf-phone-grid"
             style={{
               display: "grid",
-              gridTemplateColumns: f.prefix ? "minmax(60px,86px) 1fr" : "1fr",
+              gridTemplateColumns: f.prefix ? "minmax(88px,130px) 1fr" : "1fr",
               gap: 8,
             }}
           >
             {f.prefix && (
-              <input
-                className="tf-phone-prefix"
-                style={{
-                  ...inputPreset,
-                  textAlign: "center",
-                  fontWeight: 900,
-                  fontSize: 12,
-                  paddingLeft: 8,
-                  paddingRight: 8,
-                  opacity: 0.92,
-                }}
-                value={f.prefix}
-                readOnly
-              />
+              <input style={{ ...inputBase, textAlign: "center" }} value={f.prefix} readOnly />
             )}
             <input type="tel" style={inputWithIcon} placeholder={sStr(f.ph)} />
           </div>
@@ -2598,7 +2506,7 @@ const cartRowCSS = useMemo(
 
   const renderProvinceField = (f) => {
     if (!f?.on) return null;
-    const hasIcon = !isPresetB && !!f.icon;
+    const hasIcon = !!f.icon;
 
     const labelEl = (
       <label className="tf-field-row">
@@ -2607,7 +2515,7 @@ const cartRowCSS = useMemo(
           {f.required ? " *" : ""}
         </span>
         <select
-          style={{ ...inputPreset, background: config.design.inputBg }}
+          style={{ ...inputBase, background: config.design.inputBg }}
           value={selectedProvinceKey}
           onChange={(e) => setBehav({ provinceKey: e.target.value, cityKey: "" })}
         >
@@ -2635,7 +2543,7 @@ const cartRowCSS = useMemo(
 
   const renderCityField = (f) => {
     if (!f?.on) return null;
-    const hasIcon = !isPresetB && !!f.icon;
+    const hasIcon = !!f.icon;
 
     const labelEl = (
       <label className="tf-field-row">
@@ -2645,8 +2553,8 @@ const cartRowCSS = useMemo(
         </span>
         <select
           style={{
-            ...inputPreset,
-            backgroundColor: selectedProvinceKey ? config.design.inputBg : "#F3F4F6",
+            ...inputBase,
+            backgroundColor: selectedProvinceKey ? inputBase.background : "#F3F4F6",
           }}
           value={config.behavior.cityKey || ""}
           onChange={(e) => {
@@ -2686,7 +2594,6 @@ const cartRowCSS = useMemo(
     const total = productPrice + (shippingPrice || 0);
     const orderLabel = sStr(config.uiTitles.orderNow || config.form?.buttonText || "Order now");
     const suffix = sStr(config.uiTitles.totalSuffix || "Total:");
-    const showInlineTotal = !isPresetB;
 
     const motion = config.behavior?.buttonMotion || "none";
     const motionClass =
@@ -2705,28 +2612,6 @@ const cartRowCSS = useMemo(
         )}
 
         <div style={{ display: "grid", gap: 10 }}>
-          {/* Preset B: offers inside form TOP */}
-          {isPresetB && (
-            <div style={{
-              border: "1px dashed rgba(2,6,23,.18)",
-              borderRadius: 12,
-              padding: 10,
-              background: "#FFFFFF",
-            }}>
-              <div style={{ fontWeight: 800, marginBottom: 6 }}>Offers (inside form · top)</div>
-              <div style={{ display: "grid", gap: 8 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
-                  <span>🔥 Bundle -10%</span>
-                  <span style={{ fontWeight: 800 }}>Activate</span>
-                </div>
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
-                  <span>🎁 Free gift</span>
-                  <span style={{ fontWeight: 800 }}>Activate</span>
-                </div>
-              </div>
-            </div>
-          )}
-
           {orderedFields.map((key) => {
             const f = config.fields[key];
             if (!f?.on) return null;
@@ -2734,28 +2619,6 @@ const cartRowCSS = useMemo(
             if (key === "city") return renderCityField(f);
             return renderField(f, key);
           })}
-
-          {/* Preset C: offers inside form (bottom / after fields) */}
-          {isPresetC && (
-            <div style={{
-              border: "1px dashed rgba(2,6,23,.18)",
-              borderRadius: 12,
-              padding: 10,
-              background: "rgba(255,255,255,.6)",
-            }}>
-              <div style={{ fontWeight: 800, marginBottom: 6 }}>Offers (inside form)</div>
-              <div style={{ display: "grid", gap: 8 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
-                  <span>🔥 Bundle -10%</span>
-                  <span style={{ fontWeight: 800 }}>Activate</span>
-                </div>
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
-                  <span>🎁 Free gift</span>
-                  <span style={{ fontWeight: 800 }}>Activate</span>
-                </div>
-              </div>
-            </div>
-          )}
 
           {config.behavior.requireGDPR && (
             <label style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 13, color: "#374151" }}>
@@ -2775,13 +2638,7 @@ const cartRowCSS = useMemo(
               </span>
             ) : null}
             <span style={{ flex: 1, textAlign: "center" }}>
-              {showInlineTotal ? (
-                <>
-                  {orderLabel} · {suffix} {total.toFixed(2)} {currency}
-                </>
-              ) : (
-                <>{orderLabel}</>
-              )}
+              {orderLabel} · {suffix} {total.toFixed(2)} {currency}
             </span>
           </button>
         </div>
@@ -2794,7 +2651,6 @@ const cartRowCSS = useMemo(
       <BlockStack gap="250">
         <div style={{ width: "100%" }}>
           <div
-            className={`tf-preview-wrap tf-ui-${uiPreset}`}
             style={{
               borderRadius: 16,
               background: "#F9FAFB",
