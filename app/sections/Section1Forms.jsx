@@ -1039,7 +1039,6 @@ function Section1FormsLayoutInner() {
     meta: {
       version: 3,
       preset: "CleanWhite",
-      uiPreset: "A",
       fieldsOrder: [
         "name",
         "phone",
@@ -1218,7 +1217,6 @@ function Section1FormsLayoutInner() {
   const setFieldsOrder = (order) =>
     setConfig((c) => ({ ...c, meta: { ...(c.meta || {}), fieldsOrder: order } }));
   const setMeta = (p) => setConfig((c) => ({ ...c, meta: { ...(c.meta || {}), ...p } }));
-
 
   function computeShadow(effect, glowPx, glowColor, hasShadow) {
     if (effect === "glow") return `0 0 ${glowPx}px ${glowColor}`;
@@ -1431,7 +1429,6 @@ function Section1FormsLayoutInner() {
         setCartT,
         setUiT,
         setFieldsOrder,
-        setMeta,
         inputBase,
         btnCSS,
         cardCSS,
@@ -1578,7 +1575,7 @@ function IconSelector({ fieldKey, type = "field", onSelect, selectedIcon }) {
 
 /* ============================== Editor (rail | settings | preview) ============================== */
 function OutletEditor() {
-  const { config, setCartT, setForm, setUiT, setField, setDesign, setBehav, setFieldsOrder, setMeta, t } =
+  const { config, setCartT, setForm, setUiT, setField, setDesign, setBehav, setFieldsOrder, t } =
     useForms();
   const [sel, setSel] = useState("cart");
 
@@ -1931,24 +1928,19 @@ function OutletEditor() {
 
           {sel === "options" && (
             <GroupCard title={t("section1.group.options.title")}>
-              
-              <div style={{ marginBottom: 12 }}>
-                <Select
-                  label="Form UI Style (A/B/C)"
-                  options={[
-                    { label: "Preset A — Clean cards", value: "A" },
-                    { label: "Preset B — Underline + sticky total bar", value: "B" },
-                    { label: "Preset C — Glass + offers inside form", value: "C" },
-                  ]}
-                  value={String((config.meta && (config.meta.uiPreset || config.meta.presetUi)) || "A").toUpperCase()}
-                  onChange={(v) => setMeta({ uiPreset: String(v || "A").toUpperCase() })}
-                />
-                <div style={{ marginTop: 6, fontSize: 12, color: "#6B7280" }}>
-                  The fields stay the same — only the global layout/style changes.
-                </div>
-              </div>
-<BlueSection title={t("section1.options.behavior")} defaultOpen>
+              <BlueSection title={t("section1.options.behavior")} defaultOpen>
                 <Grid3>
+                  <Select
+                    label="Form UI Style (A / B / C)"
+                    helpText="Same content — only the global layout/style changes."
+                    options={[
+                      { label: "Preset A — Clean cards", value: "A" },
+                      { label: "Preset B — Minimal + offers inside", value: "B" },
+                      { label: "Preset C — Modern + compact", value: "C" },
+                    ]}
+                    value={String(config.meta?.uiPreset || "A")}
+                    onChange={(v) => setMeta({ uiPreset: v })}
+                  />
                   <Select
                     label={t("section1.buttons.displayStyleLabel")}
                     options={[
@@ -2361,9 +2353,8 @@ function GradientField({ label, mode, c1, c2, onChange }) {
 
 /* ============================== Preview ============================== */
 function PreviewPanel() {
-  const { config, cardCSS, cartBoxCSS, cartRowCSS, inputBase, btnCSS, setBehav, t } =
-    useForms();
-
+  const [shippingPrice, setShippingPrice] = useState(null);
+  const [shippingNote, setShippingNote] = useState("");
 
   const uiPreset = String((config.meta && (config.meta.uiPreset || config.meta.presetUi)) || "A")
     .trim()
@@ -2372,6 +2363,7 @@ function PreviewPanel() {
   const isPresetC = uiPreset === "C";
 
   const inputPreset = useMemo(() => {
+    // Preset B: "minimal underline" look + no icons
     if (!isPresetB) return inputBase;
     return {
       ...inputBase,
@@ -2383,9 +2375,6 @@ function PreviewPanel() {
       paddingRight: 0,
     };
   }, [isPresetB, inputBase, config.design]);
-
-  const [shippingPrice, setShippingPrice] = useState(null);
-  const [shippingNote, setShippingNote] = useState("");
 
   const countryKey = config.behavior.country || "";
   const country = COUNTRY_DATA[countryKey];
@@ -2434,7 +2423,9 @@ function PreviewPanel() {
     const isTextarea = f.type === "textarea";
     const hasIcon = !isPresetB && !!f.icon;
 
-    const inputWithIcon = hasIcon ? { ...inputPreset, padding: "10px 12px 10px 40px" } : inputBase;
+    const inputWithIcon = hasIcon
+      ? { ...inputPreset, padding: "10px 12px 10px 40px" }
+      : inputPreset;
 
     const labelEl = (
       <label className="tf-field-row">
@@ -2451,6 +2442,7 @@ function PreviewPanel() {
           />
         ) : f.type === "tel" ? (
           <div
+            className="tf-phone-grid"
             style={{
               display: "grid",
               gridTemplateColumns: f.prefix ? "minmax(60px,86px) 1fr" : "1fr",
@@ -2458,7 +2450,20 @@ function PreviewPanel() {
             }}
           >
             {f.prefix && (
-              <input style={{ ...inputPreset, textAlign: "center", fontWeight: 800, fontSize: 12, paddingLeft: 8, paddingRight: 8 }} value={f.prefix} readOnly />
+              <input
+                className="tf-phone-prefix"
+                style={{
+                  ...inputPreset,
+                  textAlign: "center",
+                  fontWeight: 900,
+                  fontSize: 12,
+                  paddingLeft: 8,
+                  paddingRight: 8,
+                  opacity: 0.92,
+                }}
+                value={f.prefix}
+                readOnly
+              />
             )}
             <input type="tel" style={inputWithIcon} placeholder={sStr(f.ph)} />
           </div>
@@ -2583,7 +2588,7 @@ function PreviewPanel() {
 
   const renderCityField = (f) => {
     if (!f?.on) return null;
-    const hasIcon = !!f.icon;
+    const hasIcon = !isPresetB && !!f.icon;
 
     const labelEl = (
       <label className="tf-field-row">
@@ -2594,7 +2599,7 @@ function PreviewPanel() {
         <select
           style={{
             ...inputPreset,
-            backgroundColor: selectedProvinceKey ? inputBase.background : "#F3F4F6",
+            backgroundColor: selectedProvinceKey ? config.design.inputBg : "#F3F4F6",
           }}
           value={config.behavior.cityKey || ""}
           onChange={(e) => {
@@ -2653,7 +2658,7 @@ function PreviewPanel() {
         )}
 
         <div style={{ display: "grid", gap: 10 }}>
-          
+          {/* Preset B: offers inside form TOP */}
           {isPresetB && (
             <div style={{
               border: "1px dashed rgba(2,6,23,.18)",
@@ -2675,7 +2680,7 @@ function PreviewPanel() {
             </div>
           )}
 
-{orderedFields.map((key) => {
+          {orderedFields.map((key) => {
             const f = config.fields[key];
             if (!f?.on) return null;
             if (key === "province") return renderProvinceField(f);
@@ -2683,6 +2688,7 @@ function PreviewPanel() {
             return renderField(f, key);
           })}
 
+          {/* Preset C: offers inside form (bottom / after fields) */}
           {isPresetC && (
             <div style={{
               border: "1px dashed rgba(2,6,23,.18)",
@@ -2703,7 +2709,6 @@ function PreviewPanel() {
               </div>
             </div>
           )}
-
 
           {config.behavior.requireGDPR && (
             <label style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 13, color: "#374151" }}>
@@ -2754,7 +2759,6 @@ function PreviewPanel() {
             <div style={{ display: "grid", gap: 12 }}>
               {renderCartBox()}
               {renderFormCard()}
-              
             </div>
           </div>
         </div>
