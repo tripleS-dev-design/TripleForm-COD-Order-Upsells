@@ -79,11 +79,19 @@ const LAYOUT_CSS = [
   ".token button{ border:none; background:transparent; cursor:pointer; font-size:14px; line-height:1; color:#6B7280; }",
   ".tf-guide-text p{ font-size:13px; line-height:1.5; margin:0 0 6px 0; white-space:normal; }",
 
-  "/* ✅ reCAPTCHA image styles */",
-  ".tf-rc-img{ display:block; width:100%; max-width:260px; height:auto; border-radius:10px; border:1px solid #E5E7EB; box-shadow:0 10px 24px rgba(15,23,42,0.08); }",
-  ".tf-rc-img-sm{ display:block; width:120px; height:auto; border-radius:10px; border:1px solid #E5E7EB; }",
-  ".tf-rc-row{ display:flex; align-items:center; justify-content:space-between; gap:12px; }",
 
+  "/* ✅ overview Status card (big reCAPTCHA image + status list) */",
+  ".tf-status-grid{ display:grid; grid-template-columns: minmax(0,1fr) 280px; gap:14px; align-items:stretch; }",
+  ".tf-status-imgbox{ display:flex; align-items:center; justify-content:center; border:1px solid #E5E7EB; border-radius:12px; background:#F9FAFB; padding:10px; min-height:230px; }",
+  ".tf-status-imgbox img{ width:100%; height:100%; max-height:320px; object-fit:contain; }",
+  ".tf-status-right{ display:grid; gap:10px; padding:4px 2px; }",
+  ".tf-status-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; }",
+  ".tf-side-imgbox{ display:flex; align-items:center; justify-content:center; border:1px solid #E5E7EB; border-radius:12px; background:#F9FAFB; padding:10px; min-height:170px; margin-top:10px; }",
+  ".tf-side-imgbox img{ width:100%; height:auto; max-height:200px; object-fit:contain; }",
+  "@media (max-width: 920px) {",
+  "  .tf-status-grid{ grid-template-columns: 1fr; }",
+  "  .tf-status-imgbox{ min-height:200px; }",
+  "}",
   "@media (max-width: 1200px) {",
   "  .tf-editor{ grid-template-columns: 1fr; }",
   "  .tf-side-col{ position:static; max-height:none; }",
@@ -586,7 +594,11 @@ export default function Section5Antibot() {
       <div className="tf-shell">
         {/* ✅ Top tabs bar (same UI as the other sections) */}
         <div className="tf-topnav">
-          <Tabs tabs={tabs} selected={selectedTabIndex} onSelect={(idx) => setSel(tabs[idx]?.id || "overview")} />
+          <Tabs
+            tabs={tabs}
+            selected={selectedTabIndex}
+            onSelect={(idx) => setSel(tabs[idx]?.id || "overview")}
+          />
         </div>
 
         <div className="tf-editor">
@@ -597,10 +609,7 @@ export default function Section5Antibot() {
                 <GroupCard title="section5.overview.title" tr={tr}>
                   <BlockStack gap="200">
                     <Text as="p">
-                      {tr(
-                        "section5.overview.description",
-                        "This section protects your COD form against bots and spam orders."
-                      )}
+                      {tr("section5.overview.description", "Configure antibot protections for your COD form.")}
                     </Text>
 
                     <Divider />
@@ -652,79 +661,79 @@ export default function Section5Antibot() {
                     <Text tone="subdued" as="p">
                       ✅ reCAPTCHA v2 only • ✅ Honeypot • ✅ Clean tokens UI
                     </Text>
-
-                    {/* ✅ NEW: STATUS under "Anti-bot summary & advice" */}
-                    <Divider />
-
-                    <Card>
-                      <BlockStack gap="200">
-                        <InlineStack align="space-between" blockAlign="center">
-                          <Text as="h3" variant="headingSm">
-                            {tr("section5.right.status", "Status")}
-                          </Text>
-
-                          {dirty ? (
-                            <Badge tone="warning">{tr("common.savebar.badgeUnsaved", "Unsaved")}</Badge>
-                          ) : (
-                            <Badge tone="success">{tr("common.saved", "Saved")}</Badge>
-                          )}
-                        </InlineStack>
-
-                        {/* ✅ reCAPTCHA image inside status preview */}
-                        <div className="tf-rc-row">
-                          <div style={{ display: "grid", gap: 6 }}>
-                            <Text as="span" tone="subdued" variant="bodySm">
-                              {tr("section5.recaptcha.preview", "reCAPTCHA preview")}
-                            </Text>
-                            <img className="tf-rc-img-sm" src="/recaptcha.png" alt="Google reCAPTCHA preview" />
-                          </div>
-
-                          <div style={{ flex: 1 }} />
-                        </div>
-
-                        <Divider />
-
-                        <BlockStack gap="150">
-                          <InlineStack align="space-between">
-                            <Text as="span">IP</Text>
-                            {statusBadge(cfg.ipBlock.enabled)}
-                          </InlineStack>
-                          <InlineStack align="space-between">
-                            <Text as="span">{tr("section5.rail.panels.phone", "Phone")}</Text>
-                            {statusBadge(cfg.phoneBlock.enabled)}
-                          </InlineStack>
-                          <InlineStack align="space-between">
-                            <Text as="span">{tr("section5.rail.panels.country", "Country")}</Text>
-                            {statusBadge(cfg.countryBlock.enabled)}
-                          </InlineStack>
-                          <InlineStack align="space-between">
-                            <Text as="span">{tr("section5.rail.panels.recap", "reCAPTCHA")}</Text>
-                            {statusBadge(cfg.recaptcha.enabled)}
-                          </InlineStack>
-                          <InlineStack align="space-between">
-                            <Text as="span">{tr("section5.rail.panels.honeypot", "Honeypot")}</Text>
-                            {statusBadge(cfg.honeypot.enabled)}
-                          </InlineStack>
-
-                          <Text tone="subdued" as="p">
-                            {tr("section5.rail.statusNote", "IPs: {{ips}} • Phones: {{phones}}", {
-                              ips: countIPs,
-                              phones: countPhones,
-                            })}
-                            {geoCount ? " • GEO: " + geoCount : ""}
-                          </Text>
-
-                          {dirty ? (
-                            <Text tone="subdued" as="p">
-                              {tr("common.savebar.unsaved", "You have unsaved changes.")} —{" "}
-                              {tr("section5.tip", "Click Save in the header.")}
-                            </Text>
-                          ) : null}
-                        </BlockStack>
-                      </BlockStack>
-                    </Card>
                   </BlockStack>
                 </GroupCard>
+
+{/* ✅ Status (big preview) */}
+<div style={{ marginTop: 12 }}>
+  <Card>
+    <BlockStack gap="200">
+      <InlineStack align="space-between" blockAlign="center">
+        <Text as="h3" variant="headingSm">
+          {tr("section5.right.status", "Status")}
+        </Text>
+        {dirty ? (
+          <Badge tone="warning">{tr("common.savebar.badgeUnsaved", "Unsaved")}</Badge>
+        ) : (
+          <Badge tone="success">{tr("common.saved", "Saved")}</Badge>
+        )}
+      </InlineStack>
+
+      <Divider />
+
+      <div className="tf-status-grid">
+        {/* Left: big reCAPTCHA image */}
+        <div className="tf-status-imgbox" aria-label="reCAPTCHA preview">
+          <img src="/recaptcha.png" alt="reCAPTCHA preview" />
+        </div>
+
+        {/* Right: status list */}
+        <div className="tf-status-right">
+          <div className="tf-status-row">
+            <Text as="span">IP</Text>
+            {statusBadge(cfg.ipBlock.enabled)}
+          </div>
+          <div className="tf-status-row">
+            <Text as="span">{tr("section5.rail.panels.phone", "Phone")}</Text>
+            {statusBadge(cfg.phoneBlock.enabled)}
+          </div>
+          <div className="tf-status-row">
+            <Text as="span">{tr("section5.rail.panels.country", "Country")}</Text>
+            {statusBadge(cfg.countryBlock.enabled)}
+          </div>
+          <div className="tf-status-row">
+            <Text as="span">{tr("section5.rail.panels.recap", "reCAPTCHA")}</Text>
+            {statusBadge(cfg.recaptcha.enabled)}
+          </div>
+          <div className="tf-status-row">
+            <Text as="span">{tr("section5.rail.panels.honeypot", "Honeypot")}</Text>
+            {statusBadge(cfg.honeypot.enabled)}
+          </div>
+
+          <Text tone="subdued" as="p">
+            {tr("section5.rail.statusNote", "IPs: {{ips}} • Phones: {{phones}}", {
+              ips: countIPs,
+              phones: countPhones,
+            })}
+            {geoCount ? " • GEO: " + geoCount : ""}
+          </Text>
+
+          <Text tone="subdued" as="p">
+            {tr("section5.preview.note", "This image is loaded from /public/recaptcha.png")}
+          </Text>
+        </div>
+      </div>
+
+      {dirty ? (
+        <Text tone="subdued" as="p">
+          {tr("common.savebar.unsaved", "You have unsaved changes.")} —{" "}
+          {tr("section5.tip", "Click Save in the header.")}
+        </Text>
+      ) : null}
+    </BlockStack>
+  </Card>
+</div>
+
               </div>
             )}
 
@@ -1037,30 +1046,38 @@ export default function Section5Antibot() {
                   </Grid2>
 
                   <Text tone="subdued" as="p">
-                    {tr("section5.honeypot.description", "Honeypot adds a hidden field and timing checks to block bots.")}
+                    {tr(
+                      "section5.honeypot.description",
+                      "Honeypot adds a hidden field and timing checks to block bots."
+                    )}
                   </Text>
                 </GroupCard>
               </div>
             )}
           </div>
 
-          {/* ====================== RIGHT: IMAGE (TOP) + GUIDE ====================== */}
+          {/* ====================== RIGHT: STATUS + GUIDE ====================== */}
           <div className="tf-side-col">
-            {/* ✅ Right top: replace "Status" card title with recaptcha image */}
-            <div className="tf-side-card">
-              <InlineStack align="space-between" blockAlign="center">
-                <img className="tf-rc-img" src="/recaptcha.png" alt="Google reCAPTCHA (public/recaptcha.png)" />
-                {dirty ? (
-                  <Badge tone="warning">{tr("common.savebar.badgeUnsaved", "Unsaved")}</Badge>
-                ) : (
-                  <Badge tone="success">{tr("common.saved", "Saved")}</Badge>
-                )}
-              </InlineStack>
+<div className="tf-side-card">
+  <InlineStack align="space-between" blockAlign="center">
+    <Text as="h3" variant="headingSm">
+      {tr("section5.recaptcha.roleTitle", "The role of Google reCAPTCHA in COD Stores")}
+    </Text>
+    {dirty ? (
+      <Badge tone="warning">{tr("common.savebar.badgeUnsaved", "Unsaved")}</Badge>
+    ) : (
+      <Badge tone="success">{tr("common.saved", "Saved")}</Badge>
+    )}
+  </InlineStack>
 
-              <Text tone="subdued" as="p" style={{ marginTop: 8 }}>
-                {tr("section5.recaptcha.previewHint", "This image is loaded from /public/recaptcha.png")}
-              </Text>
-            </div>
+  <div className="tf-side-imgbox">
+    <img src="/recaptcha.png" alt="Google reCAPTCHA example" />
+  </div>
+
+  <Text tone="subdued" as="p" style={{ marginTop: 8 }}>
+    {tr("section5.preview.note", "This image is loaded from /public/recaptcha.png")}
+  </Text>
+</div>
 
             <div className="tf-side-card">
               <Text as="h3" variant="headingSm">
