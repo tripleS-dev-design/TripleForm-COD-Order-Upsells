@@ -1578,7 +1578,7 @@ function IconSelector({ fieldKey, type = "field", onSelect, selectedIcon }) {
 
 /* ============================== Editor (rail | settings | preview) ============================== */
 function OutletEditor() {
-  const { config, setCartT, setForm, setUiT, setField, setDesign, setBehav, setFieldsOrder, t } =
+  const { config, setCartT, setForm, setUiT, setField, setDesign, setBehav, setFieldsOrder, setMeta, t } =
     useForms();
   const [sel, setSel] = useState("cart");
 
@@ -1780,21 +1780,6 @@ function OutletEditor() {
 
           {sel === "titles" && (
             <GroupCard title={t("section1.group.formTexts.title")}>
-              <div style={{ marginBottom: 12 }}>
-                <Select
-                  label="Form UI Style (A/B/C)"
-                  options={[
-                    { label: "Preset A — Clean cards", value: "A" },
-                    { label: "Preset B — Underline + sticky total bar", value: "B" },
-                    { label: "Preset C — Glass + offers inside form", value: "C" },
-                  ]}
-                  value={String((config.meta && (config.meta.uiPreset || config.meta.presetUi)) || "A").toUpperCase()}
-                  onChange={(v) => setMeta({ uiPreset: String(v || "A").toUpperCase() })}
-                />
-                <div style={{ marginTop: 6, fontSize: 12, color: "#6B7280" }}>
-                  The fields stay the same — only the global layout/style changes.
-                </div>
-              </div>
               <Grid2>
                 <TextField label={t("section1.form.titleLabel")} value={config.form.title} onChange={(v) => setForm({ title: v })} />
                 <TextField label={t("section1.form.subtitleLabel")} value={config.form.subtitle} onChange={(v) => setForm({ subtitle: v })} />
@@ -1946,7 +1931,23 @@ function OutletEditor() {
 
           {sel === "options" && (
             <GroupCard title={t("section1.group.options.title")}>
-              <BlueSection title={t("section1.options.behavior")} defaultOpen>
+              
+              <div style={{ marginBottom: 12 }}>
+                <Select
+                  label="Form UI Style (A/B/C)"
+                  options={[
+                    { label: "Preset A — Clean cards", value: "A" },
+                    { label: "Preset B — Underline + sticky total bar", value: "B" },
+                    { label: "Preset C — Glass + offers inside form", value: "C" },
+                  ]}
+                  value={String((config.meta && (config.meta.uiPreset || config.meta.presetUi)) || "A").toUpperCase()}
+                  onChange={(v) => setMeta({ uiPreset: String(v || "A").toUpperCase() })}
+                />
+                <div style={{ marginTop: 6, fontSize: 12, color: "#6B7280" }}>
+                  The fields stay the same — only the global layout/style changes.
+                </div>
+              </div>
+<BlueSection title={t("section1.options.behavior")} defaultOpen>
                 <Grid3>
                   <Select
                     label={t("section1.buttons.displayStyleLabel")}
@@ -2373,7 +2374,7 @@ function PreviewPanel() {
   const inputPreset = useMemo(() => {
     if (!isPresetB) return inputBase;
     return {
-      ...inputPreset,
+      ...inputBase,
       background: "transparent",
       border: "none",
       borderBottom: `1px solid ${config.design?.inputBorder || "#E5E7EB"}`,
