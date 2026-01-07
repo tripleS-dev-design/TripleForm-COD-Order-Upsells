@@ -776,6 +776,12 @@ const DESIGN_PRESETS = {
 /* ============================== Icons library (clean) ============================== */
 const NONE_ICON = { value: "", label: "Aucun" };
 
+const DEFAULT_LAYOUT = {
+  orderSummary: { position: "top", order: 2 },
+  offers: { position: "top", order: 1 },
+  upsells: { position: "top", order: 3 },
+};
+
 const ICON_LIBRARY = {
   cartTitle: [
     NONE_ICON,
@@ -1053,7 +1059,12 @@ function Section1FormsLayoutInner() {
         "city",
         "address",
         "notes",
-      ],
+      ],      
+      layout: {
+        orderSummary: { position: "top", order: 2 },
+        offers: { position: "top", order: 1 },
+        upsells: { position: "top", order: 3 },
+      }
     },
     form: {
       style: "inline",
@@ -1142,6 +1153,30 @@ function Section1FormsLayoutInner() {
               setConfig((prev) => ({
                 ...prev,
                 ...clean,
+                meta: {
+                  ...(prev.meta || {}),
+                  ...(clean.meta || {}),
+                  layout: {
+                    ...DEFAULT_LAYOUT,
+                    ...(((prev.meta || {}).layout) || {}),
+                    ...(((clean.meta || {}).layout) || {}),
+                    orderSummary: {
+                      ...DEFAULT_LAYOUT.orderSummary,
+                      ...((((prev.meta || {}).layout || {}).orderSummary || {})),
+                      ...((((clean.meta || {}).layout || {}).orderSummary || {})),
+                    },
+                    offers: {
+                      ...DEFAULT_LAYOUT.offers,
+                      ...((((prev.meta || {}).layout || {}).offers || {})),
+                      ...((((clean.meta || {}).layout || {}).offers || {})),
+                    },
+                    upsells: {
+                      ...DEFAULT_LAYOUT.upsells,
+                      ...((((prev.meta || {}).layout || {}).upsells || {})),
+                      ...((((clean.meta || {}).layout || {}).upsells || {})),
+                    },
+                  },
+                },
                 behavior: { ...prev.behavior, ...(clean.behavior || {}) },
                 form: { ...prev.form, ...(clean.form || {}) },
                 design: { ...prev.design, ...(clean.design || {}) },
@@ -1170,6 +1205,30 @@ function Section1FormsLayoutInner() {
           setConfig((prev) => ({
             ...prev,
             ...parsed,
+            meta: {
+              ...(prev.meta || {}),
+              ...(parsed.meta || {}),
+              layout: {
+                ...DEFAULT_LAYOUT,
+                ...(((prev.meta || {}).layout) || {}),
+                ...(((parsed.meta || {}).layout) || {}),
+                orderSummary: {
+                  ...DEFAULT_LAYOUT.orderSummary,
+                  ...((((prev.meta || {}).layout || {}).orderSummary || {})),
+                  ...((((parsed.meta || {}).layout || {}).orderSummary || {})),
+                },
+                offers: {
+                  ...DEFAULT_LAYOUT.offers,
+                  ...((((prev.meta || {}).layout || {}).offers || {})),
+                  ...((((parsed.meta || {}).layout || {}).offers || {})),
+                },
+                upsells: {
+                  ...DEFAULT_LAYOUT.upsells,
+                  ...((((prev.meta || {}).layout || {}).upsells || {})),
+                  ...((((parsed.meta || {}).layout || {}).upsells || {})),
+                },
+              },
+            },
             behavior: { ...prev.behavior, ...(parsed.behavior || {}) },
             form: { ...prev.form, ...(parsed.form || {}) },
             design: { ...prev.design, ...(parsed.design || {}) },
@@ -1207,6 +1266,17 @@ function Section1FormsLayoutInner() {
   const setDesign = (p) => setConfig((c) => ({ ...c, design: { ...c.design, ...p } }));
   const setForm = (p) => setConfig((c) => ({ ...c, form: { ...c.form, ...p } }));
   const setBehav = (p) => setConfig((c) => ({ ...c, behavior: { ...c.behavior, ...p } }));
+  const setLayoutBlock = (key, patch) =>
+    setConfig((c) => {
+      const cur = (c.meta && c.meta.layout) || {};
+      const next = {
+        ...DEFAULT_LAYOUT,
+        ...cur,
+        [key]: { ...(DEFAULT_LAYOUT[key] || {}), ...(cur[key] || {}), ...(patch || {}) },
+      };
+      return { ...c, meta: { ...(c.meta || {}), layout: next } };
+    });
+
   const setField = (k, p) =>
     setConfig((c) => ({
       ...c,
@@ -1985,6 +2055,97 @@ function OutletEditor() {
                   </div>
                 </Grid3>
               </BlueSection>
+              <BlueSection title="Layout positions (Storefront)">
+                <div style={{ fontSize: 12, color: "#64748b", marginBottom: 12 }}>
+                  Choose where blocks appear on the product page (above form / below form / hidden).
+                </div>
+
+                <div style={{ display: "grid", gap: 12 }}>
+                  <div style={{ padding: 12, border: "1px solid #E5E7EB", borderRadius: 14 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>
+                      Order summary (Summary / Samari)
+                    </div>
+                    <Grid3>
+                      <Select
+                        label="Position"
+                        options={[
+                          { label: "Above the form", value: "top" },
+                          { label: "Below the form", value: "bottom" },
+                          { label: "Hidden", value: "hide" },
+                        ]}
+                        value={(config.meta?.layout?.orderSummary?.position || DEFAULT_LAYOUT.orderSummary.position)}
+                        onChange={(v) => setLayoutBlock("orderSummary", { position: v })}
+                      />
+                      <Select
+                        label="Order"
+                        options={[
+                          { label: "1", value: "1" },
+                          { label: "2", value: "2" },
+                          { label: "3", value: "3" },
+                        ]}
+                        value={String(config.meta?.layout?.orderSummary?.order || DEFAULT_LAYOUT.orderSummary.order)}
+                        onChange={(v) => setLayoutBlock("orderSummary", { order: Number(v) })}
+                      />
+                      <div />
+                    </Grid3>
+                  </div>
+
+                  <div style={{ padding: 12, border: "1px solid #E5E7EB", borderRadius: 14 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>Offers</div>
+                    <Grid3>
+                      <Select
+                        label="Position"
+                        options={[
+                          { label: "Above the form", value: "top" },
+                          { label: "Below the form", value: "bottom" },
+                          { label: "Hidden", value: "hide" },
+                        ]}
+                        value={(config.meta?.layout?.offers?.position || DEFAULT_LAYOUT.offers.position)}
+                        onChange={(v) => setLayoutBlock("offers", { position: v })}
+                      />
+                      <Select
+                        label="Order"
+                        options={[
+                          { label: "1", value: "1" },
+                          { label: "2", value: "2" },
+                          { label: "3", value: "3" },
+                        ]}
+                        value={String(config.meta?.layout?.offers?.order || DEFAULT_LAYOUT.offers.order)}
+                        onChange={(v) => setLayoutBlock("offers", { order: Number(v) })}
+                      />
+                      <div />
+                    </Grid3>
+                  </div>
+
+                  <div style={{ padding: 12, border: "1px solid #E5E7EB", borderRadius: 14 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>Upsells / Gifts</div>
+                    <Grid3>
+                      <Select
+                        label="Position"
+                        options={[
+                          { label: "Above the form", value: "top" },
+                          { label: "Below the form", value: "bottom" },
+                          { label: "Hidden", value: "hide" },
+                        ]}
+                        value={(config.meta?.layout?.upsells?.position || DEFAULT_LAYOUT.upsells.position)}
+                        onChange={(v) => setLayoutBlock("upsells", { position: v })}
+                      />
+                      <Select
+                        label="Order"
+                        options={[
+                          { label: "1", value: "1" },
+                          { label: "2", value: "2" },
+                          { label: "3", value: "3" },
+                        ]}
+                        value={String(config.meta?.layout?.upsells?.order || DEFAULT_LAYOUT.upsells.order)}
+                        onChange={(v) => setLayoutBlock("upsells", { order: Number(v) })}
+                      />
+                      <div />
+                    </Grid3>
+                  </div>
+                </div>
+              </BlueSection>
+
 
               <BlueSection title={t("section1.options.countries")}>
                 <Select

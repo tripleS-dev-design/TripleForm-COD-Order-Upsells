@@ -2428,7 +2428,7 @@ window.TripleformCOD = (function () {
     return [];
   }
 
-  function buildOffersHtml(offersCfg, rootId) {
+  function buildOffersHtml(offersCfg, rootId, mode = "all") {
     if (!offersCfg || typeof offersCfg !== "object") return "";
 
     const global = offersCfg.global || {};
@@ -2438,8 +2438,15 @@ window.TripleformCOD = (function () {
     const offers = Array.isArray(offersCfg.offers) ? offersCfg.offers : [];
     const upsells = Array.isArray(offersCfg.upsells) ? offersCfg.upsells : [];
 
-    const activeOffers = offers.filter((o) => o && o.enabled !== false && o.showInPreview !== false);
-    const activeUpsells = upsells.filter((u) => u && u.enabled !== false && u.showInPreview !== false);
+    const showOffers = mode === "all" || mode === "offers";
+    const showUpsells = mode === "all" || mode === "upsells";
+
+    const activeOffers = showOffers
+      ? offers.filter((o) => o && o.enabled !== false && o.showInPreview !== false)
+      : [];
+    const activeUpsells = showUpsells
+      ? upsells.filter((u) => u && u.enabled !== false && u.showInPreview !== false)
+      : [];
 
     if (!activeOffers.length && !activeUpsells.length) return "";
 
@@ -2578,7 +2585,38 @@ window.TripleformCOD = (function () {
   }
 
   /* ------------------------------------------------------------------ */
-  /* Render                                                             */
+  
+  /* ------------------------------------------------------------------ */
+  /* Theme block layout (positions)                                      */
+  /* ------------------------------------------------------------------ */
+  function clampInt(n, min, max) {
+    const x = Number.isFinite(n) ? n : NaN;
+    if (!Number.isFinite(x)) return min;
+    return Math.max(min, Math.min(max, x));
+  }
+
+  function readThemeLayout(root) {
+    // data-* provided by the Liquid app block (Theme Editor settings)
+    const pos = (attr, def) => {
+      const v = String(root.getAttribute(attr) || "").toLowerCase();
+      if (v === "top" || v === "bottom" || v === "hide") return v;
+      return def;
+    };
+    const ord = (attr, def) => {
+      const n = parseInt(String(root.getAttribute(attr) || ""), 10);
+      if (!Number.isFinite(n)) return def;
+      return clampInt(n, 1, 3);
+    };
+
+    return {
+      summary: { position: pos("data-summary-position", "top"), order: ord("data-summary-order", 3) },
+      offers: { position: pos("data-offers-position", "top"), order: ord("data-offers-order", 1) },
+      upsells: { position: pos("data-upsells-position", "top"), order: ord("data-upsells-order", 2) },
+    };
+  }
+
+
+/* Render                                                             */
   /* ------------------------------------------------------------------ */
   function render(root, cfg, offersCfg, product, getVariant, moneyFmt, recaptchaCfg) {
     const d0 = cfg.design || {};
@@ -2773,7 +2811,32 @@ window.TripleformCOD = (function () {
       box-sizing:border-box;
     `;
 
-    const offersHtml = buildOffersHtml(offersCfg || {}, root.id);
+
+    const layout = readThemeLayout(root);
+
+    const offersBlockHtml =
+      layout.offers.position === "hide" ? "" : buildOffersHtml(offersCfg || {}, root.id, "offers");
+    const upsellsBlockHtml =
+      layout.upsells.position === "hide" ? "" : buildOffersHtml(offersCfg || {}, root.id, "upsells");
+    const summaryBlockHtml =
+      layout.summary.position === "hide" ? "" : cartSummaryHTML();
+
+    const blocks = [
+      { key: "offers", html: offersBlockHtml, position: layout.offers.position, order: layout.offers.order },
+      { key: "upsells", html: upsellsBlockHtml, position: layout.upsells.position, order: layout.upsells.order },
+      { key: "summary", html: summaryBlockHtml, position: layout.summary.position, order: layout.summary.order },
+    ].filter((b) => b && b.html && b.position !== "hide");
+
+    const blocksHtml = (where) =>
+      blocks
+        .filter((b) => b.position === where)
+        .sort((a, b) => (a.order || 99) - (b.order || 99))
+        .map((b) => b.html)
+        .join("");
+
+    const topBlocksHtml = blocksHtml("top");
+    const bottomBlocksHtml = blocksHtml("bottom");
+
 
     function orderedFieldKeys() {
       const metaOrder = (cfg.meta && cfg.meta.fieldsOrder) || [];
@@ -3014,19 +3077,23 @@ window.TripleformCOD = (function () {
     let html = "";
 
     if (styleType === "inline") {
+      const topGap = topBlocksHtml ? `<div style="height:6px"></div>` : "";
+      const bottomGap = bottomBlocksHtml ? `<div style="height:6px"></div>` : "";
+
       html =
         mainStart +
-        offersHtml +
-        cartSummaryHTML() +
-        `<div style="height:6px"></div>` +
+        topBlocksHtml +
+        topGap +
         formCardHTML("cta-inline", false) +
+        bottomGap +
+        bottomBlocksHtml +
         mainEnd;
     } else if (styleType === "popup") {
+      const topGap = topBlocksHtml ? `<div style="height:6px"></div>` : "";
       html =
         mainStart +
-        offersHtml +
-        cartSummaryHTML() +
-        `<div style="height:6px"></div>` +
+        topBlocksHtml +
+        topGap +
         `
         <div style="text-align:${titleAlign};">
           <button type="button" style="${btnStyle}" class="${motionClass}" data-tf-cta="1" data-tf="launcher">
@@ -3056,10 +3123,11 @@ window.TripleformCOD = (function () {
             <div style="padding:24px; box-sizing:border-box;">
               <div class="tf-shell">
                 <div style="max-width:560px;margin:0 auto;display:grid;gap:14px;direction:${textDir};">
-                  ${offersHtml}
-                  ${cartSummaryHTML()}
-                  <div style="height:6px"></div>
+                  ${topBlocksHtml}
+                  ${topBlocksHtml ? `<div style="height:6px"></div>` : ``}
                   ${formCardHTML("cta-popup", true)}
+                  ${bottomBlocksHtml ? `<div style="height:6px"></div>` : ``}
+                  ${bottomBlocksHtml}
                 </div>
               </div>
             </div>
@@ -3071,9 +3139,8 @@ window.TripleformCOD = (function () {
 
       html =
         mainStart +
-        offersHtml +
-        cartSummaryHTML() +
-        `<div style="height:6px"></div>` +
+        topBlocksHtml +
+        (topBlocksHtml ? `<div style="height:6px"></div>` : "") +
         `
         <div style="text-align:${titleAlign};">
           <button type="button" style="${btnStyle}" class="${motionClass}" data-tf-cta="1" data-tf="launcher">
@@ -3104,10 +3171,11 @@ window.TripleformCOD = (function () {
               </div>
               <div class="tf-shell">
                 <div style="max-width:560px;margin:0 auto;display:grid;gap:14px;direction:${textDir};">
-                  ${offersHtml}
-                  ${cartSummaryHTML()}
-                  <div style="height:6px"></div>
+                  ${topBlocksHtml}
+                  ${topBlocksHtml ? `<div style="height:6px"></div>` : ``}
                   ${formCardHTML("cta-drawer", true)}
+                  ${bottomBlocksHtml ? `<div style="height:6px"></div>` : ``}
+                  ${bottomBlocksHtml}
                 </div>
               </div>
             </div>
