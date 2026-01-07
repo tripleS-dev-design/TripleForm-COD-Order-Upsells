@@ -661,104 +661,94 @@ window.TripleformCOD = (function () {
 }
 
 
+
 /* -------------------- UI Presets -------------------- */
 /* Preset A (Clean Cards) — default look, only tiny refinements */
 .tripleform-cod.tf-ui-A .tf-form-card{max-width:640px;margin:0 auto;}
 .tripleform-cod.tf-ui-A .tf-field-icon{opacity:.9}
 
-/* Preset B (Underline + Sticky total bar) */
+/* Preset B (Offers TOP inside form + Summary stays TOP) */
 .tripleform-cod.tf-ui-B .tf-form-card{
-  background:transparent !important;
-  border:none !important;
-  box-shadow:none !important;
-  padding:0 !important;
+  max-width:680px;
+  margin:0 auto;
 }
-.tripleform-cod.tf-ui-B label{
-  font-weight:700 !important;
-  letter-spacing:.1px !important;
-}
-.tripleform-cod.tf-ui-B .tf-field-icon{display:none !important;}
+.tripleform-cod.tf-ui-B .tf-field-icon{opacity:.85}
 .tripleform-cod.tf-ui-B input,
 .tripleform-cod.tf-ui-B select,
 .tripleform-cod.tf-ui-B textarea{
-  background:transparent !important;
-  border:0 !important;
-  border-bottom:1px solid rgba(2,6,23,.18) !important;
-  border-radius:0 !important;
-  padding-left:0 !important;
-  padding-right:0 !important;
+  border-radius:14px !important;
 }
-.tripleform-cod.tf-ui-B .tf-offers-accordion{
-  border:1px solid rgba(2,6,23,.12);
-  border-radius:14px;
-  padding:10px 12px;
-  margin:12px 0 6px;
-  background:rgba(255,255,255,.6);
-  backdrop-filter: blur(8px);
-}
-.tripleform-cod.tf-ui-B .tf-offers-accordion > summary{
-  cursor:pointer;
-  font-weight:900;
-  list-style:none;
-}
-.tripleform-cod.tf-ui-B .tf-offers-accordion > summary::-webkit-details-marker{display:none;}
-.tripleform-cod.tf-ui-B .tf-sticky-bar{
-  position:sticky;
-  bottom:0;
-  z-index:20;
-  margin-top:14px;
-  padding:10px;
-  border:1px solid rgba(2,6,23,.12);
-  border-radius:16px;
-  background:rgba(255,255,255,.92);
-  backdrop-filter: blur(10px);
-  display:flex;
-  gap:10px;
-  align-items:center;
-}
-.tripleform-cod.tf-ui-B .tf-sticky-bar .tf-cart-box{
-  flex:1;
-  margin:0 !important;
-}
-.tripleform-cod.tf-ui-B .tf-sticky-bar button[data-tf-cta="1"]{
-  margin-top:0 !important;
-  white-space:nowrap;
+.tripleform-cod.tf-ui-B .tf-offers-container{
+  margin:10px 0 14px !important;
 }
 
-/* Preset C (Glass + Offers inside form) */
+/* Preset C (Glass LIGHT — no forced black) */
 .tripleform-cod.tf-ui-C .tf-form-card{
-  background:linear-gradient(135deg, rgba(15,23,42,.92), rgba(2,6,23,.92)) !important;
-  color:#fff !important;
-  border:1px solid rgba(255,255,255,.12) !important;
-  box-shadow: 0 20px 60px rgba(0,0,0,.22) !important;
+  background:var(--tf-shell-bg,#fff) !important;
+  color:var(--tf-title,#0F172A) !important;
+  border:1px solid var(--tf-shell-border,#E5E7EB) !important;
+  box-shadow: 0 22px 70px rgba(2,6,23,.12) !important;
+  position:relative;
+  overflow:hidden;
 }
-.tripleform-cod.tf-ui-C label{color:rgba(255,255,255,.82) !important;}
+.tripleform-cod.tf-ui-C .tf-form-card:before{
+  content:"";
+  position:absolute;
+  inset:-60px;
+  background:
+    radial-gradient(circle at 18% 20%, rgba(255,255,255,.75), transparent 60%),
+    radial-gradient(circle at 80% 0%, rgba(255,255,255,.45), transparent 55%),
+    radial-gradient(circle at 60% 90%, rgba(255,255,255,.35), transparent 60%);
+  opacity:.55;
+  pointer-events:none;
+}
+.tripleform-cod.tf-ui-C .tf-form-card > *{position:relative; z-index:1;}
+.tripleform-cod.tf-ui-C label{color:var(--tf-title,#0F172A) !important; opacity:.88;}
 .tripleform-cod.tf-ui-C .tf-field-icon{
   width:36px !important;
   height:36px !important;
   border-radius:999px !important;
-  background:rgba(255,255,255,.08) !important;
-  border:1px solid rgba(255,255,255,.14) !important;
+  background:rgba(255,255,255,.65) !important;
+  border:1px solid rgba(2,6,23,.10) !important;
 }
 .tripleform-cod.tf-ui-C input,
 .tripleform-cod.tf-ui-C select,
 .tripleform-cod.tf-ui-C textarea{
-  background:rgba(255,255,255,.06) !important;
-  border:1px solid rgba(255,255,255,.16) !important;
-  color:#fff !important;
+  background:rgba(255,255,255,.72) !important;
+  border:1px solid rgba(2,6,23,.14) !important;
+  color:var(--tf-title,#0F172A) !important;
 }
 .tripleform-cod.tf-ui-C input::placeholder,
-.tripleform-cod.tf-ui-C textarea::placeholder{color:rgba(255,255,255,.55) !important;}
+.tripleform-cod.tf-ui-C textarea::placeholder{color:rgba(2,6,23,.45) !important;}
 .tripleform-cod.tf-ui-C .tf-offers-container{margin-top:10px;margin-bottom:10px}
 .tripleform-cod.tf-ui-C .tf-offer-card{
-  background:rgba(255,255,255,.06);
-  border:1px solid rgba(255,255,255,.14);
+  background:rgba(255,255,255,.78);
+  border:1px solid rgba(2,6,23,.10);
 }
 .tripleform-cod.tf-ui-C .tf-cart-box{
-  background:rgba(255,255,255,.06) !important;
-  border:1px solid rgba(255,255,255,.14) !important;
+  background:rgba(255,255,255,.78) !important;
+  border:1px solid rgba(2,6,23,.10) !important;
 }
-`;
+
+/* Sticky CTA styles (if merchant uses stickyType) — change with presets */
+.tripleform-cod.tf-ui-B button[data-tf-sticky-cta]{
+  border-radius:16px !important;
+  padding:10px 16px !important;
+  font-weight:900 !important;
+  background:rgba(255,255,255,.96) !important;
+  color:var(--tf-btn-bg,#111827) !important;
+  border:1px solid rgba(2,6,23,.16) !important;
+  box-shadow:0 14px 40px rgba(2,6,23,.12) !important;
+}
+.tripleform-cod.tf-ui-C button[data-tf-sticky-cta]{
+  border-radius:18px !important;
+  padding:12px 18px !important;
+  font-weight:900 !important;
+  background:var(--tf-btn-bg,#111827) !important;
+  color:var(--tf-btn-text,#fff) !important;
+  border:1px solid var(--tf-btn-solid,var(--tf-btn-bg,#111827)) !important;
+  box-shadow:0 18px 55px rgba(2,6,23,.22) !important;
+}`;
     document.head.appendChild(style);
   }
 
@@ -2085,7 +2075,6 @@ function applyUiPreset(root, cfg) {
 
   // Cleanup previous preset DOM wrappers (important on re-render)
   root.querySelectorAll(".tf-sticky-bar").forEach((el) => el.remove());
-
   root.querySelectorAll(".tf-offers-accordion").forEach((acc) => {
     const innerOffers = acc.querySelector('[data-tf-offers-block="1"]');
     if (innerOffers && acc.parentElement) acc.parentElement.insertBefore(innerOffers, acc);
@@ -2096,13 +2085,13 @@ function applyUiPreset(root, cfg) {
   if (!formCard) return;
 
   const offersEl = root.querySelector('[data-tf-offers-block="1"]');
-  const cartBox = root.querySelector(".tf-cart-box");
   const ctaBtn = root.querySelector('button[data-tf-cta="1"]');
-
-  // If no CTA, nothing to arrange
   if (!ctaBtn) return;
 
-  // -------- Preset C: Offers inside form (before CTA) + "glass" feel via CSS
+  // Try to find the main form container (the one that contains fields)
+  const rel = formCard.querySelector('div[style*="position:relative"]') || formCard;
+
+  // -------- Preset C: Offers inside form (before CTA)
   if (preset === "C") {
     try {
       if (offersEl && ctaBtn.parentElement) {
@@ -2112,33 +2101,13 @@ function applyUiPreset(root, cfg) {
     return;
   }
 
-  // -------- Preset B: Underline fields + Accordion offers + Sticky bottom bar (Summary + CTA)
+  // -------- Preset B: Offers inside form (TOP) + Summary stays TOP (no sticky bar)
   if (preset === "B") {
-    // Offers in accordion inside form (before CTA)
     try {
-      if (offersEl && ctaBtn.parentElement && !offersEl.closest(".tf-offers-accordion")) {
-        const details = document.createElement("details");
-        details.className = "tf-offers-accordion";
-        details.open = false;
-
-        const sum = document.createElement("summary");
-        sum.textContent = (cfg && cfg.uiTitles && cfg.uiTitles.offersTitle) || "Special offers";
-        details.appendChild(sum);
-        details.appendChild(offersEl);
-
-        ctaBtn.parentElement.insertBefore(details, ctaBtn);
+      // Move offers to the top of the form content (after title/subtitle area)
+      if (offersEl && rel) {
+        rel.insertBefore(offersEl, rel.firstChild);
       }
-    } catch (e) {}
-
-    // Sticky bar at bottom: move cart + CTA into it
-    try {
-      const sticky = document.createElement("div");
-      sticky.className = "tf-sticky-bar";
-
-      if (cartBox) sticky.appendChild(cartBox);
-      sticky.appendChild(ctaBtn);
-
-      formCard.appendChild(sticky);
     } catch (e) {}
     return;
   }

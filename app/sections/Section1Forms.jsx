@@ -2653,7 +2653,29 @@ function PreviewPanel() {
         )}
 
         <div style={{ display: "grid", gap: 10 }}>
-          {orderedFields.map((key) => {
+          
+          {isPresetB && (
+            <div style={{
+              border: "1px dashed rgba(2,6,23,.18)",
+              borderRadius: 12,
+              padding: 10,
+              background: "#FFFFFF",
+            }}>
+              <div style={{ fontWeight: 800, marginBottom: 6 }}>Offers (inside form · top)</div>
+              <div style={{ display: "grid", gap: 8 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
+                  <span>🔥 Bundle -10%</span>
+                  <span style={{ fontWeight: 800 }}>Activate</span>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
+                  <span>🎁 Free gift</span>
+                  <span style={{ fontWeight: 800 }}>Activate</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+{orderedFields.map((key) => {
             const f = config.fields[key];
             if (!f?.on) return null;
             if (key === "province") return renderProvinceField(f);
@@ -2732,41 +2754,7 @@ function PreviewPanel() {
             <div style={{ display: "grid", gap: 12 }}>
               {renderCartBox()}
               {renderFormCard()}
-              {isPresetB && (
-                <div style={{
-                  position: "sticky",
-                  bottom: 0,
-                  zIndex: 5,
-                  marginTop: 12,
-                  background: "rgba(255,255,255,.92)",
-                  border: "1px solid rgba(2,6,23,.10)",
-                  borderRadius: 14,
-                  padding: 10,
-                  backdropFilter: "blur(10px)",
-                }}>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
-                    <div style={{ fontWeight: 900, fontSize: 13 }}>
-                      {sStr(config.uiTitles.totalSuffix || "Total:")} {(
-                        productPrice + (shippingPrice || 0)
-                      ).toFixed(2)} {currency}
-                    </div>
-                    <button type="button" style={{
-                      height: 40,
-                      padding: "0 14px",
-                      borderRadius: 12,
-                      border: "1px solid " + (config.design?.btnBorder || "#111827"),
-                      background: getButtonBackground(config.design),
-                      color: config.design?.btnText || "#fff",
-                      fontWeight: 900,
-                      cursor: "pointer",
-                      whiteSpace: "nowrap",
-                    }}>
-                      {sStr(config.form?.buttonText || "Order now")}
-                    </button>
-                  </div>
-                </div>
-              )}
-
+              
             </div>
           </div>
         </div>
