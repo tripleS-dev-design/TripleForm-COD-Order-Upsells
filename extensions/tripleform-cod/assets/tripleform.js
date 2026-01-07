@@ -521,8 +521,9 @@ window.TripleformCOD = (function () {
         overflow:hidden;
       }
       .tf-offer-row{display:flex;gap:12px;align-items:center}
+      .tf-circle-icon{width:30px;height:30px;border-radius:999px;display:inline-grid;place-items:center;flex:none;margin-right:8px;line-height:0;border:1px solid rgba(0,0,0,.10);background:rgba(15,23,42,0.05)}
       .tf-offer-icon{
-        width:34px;height:34px;border-radius:12px;
+        width:34px;height:34px;border-radius:999px;
         display:grid;place-items:center;flex:none;overflow:hidden;
         border:1px solid rgba(0,0,0,.10);
         background:var(--tf-offer-iconbg,#EEF2FF);
@@ -2599,7 +2600,7 @@ window.TripleformCOD = (function () {
     // data-* provided by the Liquid app block (Theme Editor settings)
     const pos = (attr, def) => {
       const v = String(root.getAttribute(attr) || "").toLowerCase();
-      if (v === "top" || v === "bottom" || v === "hide") return v;
+      if (v === "top" || v === "bottom" || v === "inside" || v === "hide") return v;
       return def;
     };
     const ord = (attr, def) => {
@@ -2615,6 +2616,42 @@ window.TripleformCOD = (function () {
     };
   }
 
+
+
+  function readBlocksLayoutFromConfig(cfg) {
+    const bl = cfg && cfg.behavior && cfg.behavior.blocksLayout ? cfg.behavior.blocksLayout : null;
+    if (!bl || typeof bl !== "object") return null;
+
+    const normPos = (v, def) => {
+      const x = String(v || "").toLowerCase();
+      if (x === "top" || x === "bottom" || x === "inside" || x === "hide") return x;
+      return def;
+    };
+    const normOrd = (v, def) => {
+      const n = parseInt(String(v || ""), 10);
+      if (!Number.isFinite(n)) return def;
+      return clampInt(n, 1, 3);
+    };
+
+    return {
+      summary: {
+        position: normPos(bl?.summary?.position, "top"),
+        order: normOrd(bl?.summary?.order, 3),
+      },
+      offers: {
+        position: normPos(bl?.offers?.position, "top"),
+        order: normOrd(bl?.offers?.order, 1),
+      },
+      upsells: {
+        position: normPos(bl?.upsells?.position, "top"),
+        order: normOrd(bl?.upsells?.order, 2),
+      },
+    };
+  }
+
+  function readLayout(cfg, root) {
+    return readBlocksLayoutFromConfig(cfg) || readThemeLayout(root);
+  }
 
 /* Render                                                             */
   /* ------------------------------------------------------------------ */
@@ -2812,7 +2849,7 @@ window.TripleformCOD = (function () {
     `;
 
 
-    const layout = readThemeLayout(root);
+    const layout = readLayout(cfg, root);
 
     const offersBlockHtml =
       layout.offers.position === "hide" ? "" : buildOffersHtml(offersCfg || {}, root.id, "offers");
@@ -2835,6 +2872,7 @@ window.TripleformCOD = (function () {
         .join("");
 
     const topBlocksHtml = blocksHtml("top");
+    const insideBlocksHtml = blocksHtml("inside");
     const bottomBlocksHtml = blocksHtml("bottom");
 
 
@@ -2965,7 +3003,7 @@ window.TripleformCOD = (function () {
 
     function cartSummaryHTML() {
       const cartIconHtml = t.cartIcon
-        ? getIconHtml(t.cartIcon, 18, css(d.cartTitleColor || "#111827"))
+        ? `<span class="tf-circle-icon">${getIconHtml(t.cartIcon, 18, css(d.cartTitleColor || "#111827"))}</span>`
         : "";
       return `
         <div style="${cartBoxStyle}">
@@ -3054,6 +3092,8 @@ window.TripleformCOD = (function () {
               <div data-tf-recaptcha-v2="1" style="margin-top:12px;"></div>`
                 : ""
             }
+
+            ${insideBlocksHtml ? `<div style="height:10px"></div>${insideBlocksHtml}` : ""}
 
             <button type="button" style="${btnStyle}; margin-top:16px;"
               class="${motionClass}"

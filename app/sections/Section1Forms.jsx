@@ -374,7 +374,17 @@ const LAYOUT_CSS = `
   .tf-field-icon { width:18px; height:18px; display:flex; align-items:center; justify-content:center; color:#6B7280; line-height:0; margin-top:2px; }
 
   .tf-btn-icon { display:flex; align-items:center; line-height:0; }
-  .tf-cart-icon { display:flex; align-items:center; justify-content:center; width:22px; height:22px; line-height:0; }
+  .tf-cart-icon { display:flex; align-items:center; justify-content:center; width:30px; height:30px; line-height:0; border-radius:999px; background:rgba(15,23,42,0.06); border:1px solid rgba(15,23,42,0.10); }
+
+  .tf-offer-icon-circle { width:30px; height:30px; border-radius:999px; display:flex; align-items:center; justify-content:center; background:rgba(99,102,241,0.10); border:1px solid rgba(99,102,241,0.25); flex:none; line-height:0; }
+  .tf-upsell-icon-circle { width:30px; height:30px; border-radius:999px; display:flex; align-items:center; justify-content:center; background:rgba(16,185,129,0.10); border:1px solid rgba(16,185,129,0.25); flex:none; line-height:0; }
+  .tf-block-card { border:1px solid rgba(15,23,42,0.10); border-radius:14px; padding:12px; background:#fff; }
+  .tf-block-title { font-weight:800; font-size:13px; color:#0F172A; display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+  .tf-block-item { display:flex; gap:12px; align-items:flex-start; padding:10px; border-radius:12px; border:1px solid rgba(15,23,42,0.10); background:rgba(248,250,252,0.8); }
+  .tf-block-item + .tf-block-item { margin-top:8px; }
+  .tf-block-item-title { font-weight:800; font-size:13px; color:#0F172A; line-height:1.2; }
+  .tf-block-item-desc { font-size:12px; opacity:.8; margin-top:2px; line-height:1.25; }
+  .tf-block-badge { display:inline-flex; align-items:center; gap:6px; margin-top:6px; font-size:11px; padding:4px 8px; border-radius:999px; border:1px solid rgba(15,23,42,0.10); background:rgba(15,23,42,0.04); }
   .tf-rail-icon { width:18px; height:18px; display:flex; align-items:center; justify-content:center; line-height:0; }
 
   .tf-icon-btn .Polaris-Icon,
@@ -1090,6 +1100,11 @@ function Section1FormsLayoutInner() {
       provinceKey: "",
       cityKey: "",
       buttonMotion: "none", // none | x | y | pulse | shake
+      blocksLayout: {
+        offers: { position: "top", order: 1 },
+        upsells: { position: "top", order: 2 },
+        summary: { position: "top", order: 3 },
+      },
     },
     fields: {
       name: { on: true, required: true, type: "text", label: "Full name", ph: "Your full name", icon: "PersonIcon" },
@@ -1124,6 +1139,7 @@ function Section1FormsLayoutInner() {
   
   const [saveError, setSaveError] = useState("");
 const [showPreview, setShowPreview] = useState(false);
+  const [offersCfg, setOffersCfg] = useState(null);
   const [loadingInitial, setLoadingInitial] = useState(true);
 
   // ✅ Dirty tracking (no spam)
@@ -1187,6 +1203,32 @@ const [showPreview, setShowPreview] = useState(false);
     }
 
     loadConfig();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+
+  // ✅ load offers/upsells config (for LIVE preview blocks)
+  useEffect(() => {
+    let cancelled = false;
+
+    const run = async () => {
+      try {
+        const res = await fetch("/api/offers/load");
+        if (!res.ok) return;
+        const j = await res.json().catch(() => null);
+
+        const payload = j?.offers || j?.data?.offers || j?.data || j;
+        if (!cancelled && j?.ok !== false && payload) {
+          setOffersCfg(payload);
+        }
+      } catch (e) {
+        // ignore
+      }
+    };
+
+    run();
     return () => {
       cancelled = true;
     };
@@ -1439,6 +1481,7 @@ const [showPreview, setShowPreview] = useState(false);
         cartRowCSS,
         showPreview,
         setShowPreview,
+        offersCfg,
         t,
       }}
     >
@@ -1999,6 +2042,78 @@ function OutletEditor() {
                 </Grid3>
               </BlueSection>
 
+              <BlueSection title="Blocks position (LIVE)" defaultOpen>
+                <Grid3>
+                  <Select
+                    label="Order summary position"
+                    options={[
+                      { label: "Top (above form)", value: "top" },
+                      { label: "Inside form (before button)", value: "inside" },
+                      { label: "Bottom (below form)", value: "bottom" },
+                      { label: "Hidden", value: "hide" },
+                    ]}
+                    value={config.behavior?.blocksLayout?.summary?.position || "top"}
+                    onChange={(v) =>
+                      setBehav({
+                        blocksLayout: {
+                          ...(config.behavior?.blocksLayout || {}),
+                          summary: {
+                            ...(config.behavior?.blocksLayout?.summary || {}),
+                            position: v,
+                            order: 3,
+                          },
+                        },
+                      })
+                    }
+                  />
+
+                  <Select
+                    label="Offers position"
+                    options={[
+                      { label: "Top (above form)", value: "top" },
+                      { label: "Inside form (before button)", value: "inside" },
+                      { label: "Bottom (below form)", value: "bottom" },
+                      { label: "Hidden", value: "hide" },
+                    ]}
+                    value={config.behavior?.blocksLayout?.offers?.position || "top"}
+                    onChange={(v) =>
+                      setBehav({
+                        blocksLayout: {
+                          ...(config.behavior?.blocksLayout || {}),
+                          offers: {
+                            ...(config.behavior?.blocksLayout?.offers || {}),
+                            position: v,
+                            order: 1,
+                          },
+                        },
+                      })
+                    }
+                  />
+
+                  <Select
+                    label="Upsells position"
+                    options={[
+                      { label: "Top (above form)", value: "top" },
+                      { label: "Inside form (before button)", value: "inside" },
+                      { label: "Bottom (below form)", value: "bottom" },
+                      { label: "Hidden", value: "hide" },
+                    ]}
+                    value={config.behavior?.blocksLayout?.upsells?.position || "top"}
+                    onChange={(v) =>
+                      setBehav({
+                        blocksLayout: {
+                          ...(config.behavior?.blocksLayout || {}),
+                          upsells: {
+                            ...(config.behavior?.blocksLayout?.upsells || {}),
+                            position: v,
+                            order: 2,
+                          },
+                        },
+                      })
+                    }
+                  />
+                </Grid3>
+              </BlueSection>
               <BlueSection title={t("section1.options.countries")}>
                 <Select
                   label={t("section1.options.countries.storeCountryLabel")}
@@ -2354,7 +2469,7 @@ function GradientField({ label, mode, c1, c2, onChange }) {
 
 /* ============================== Preview ============================== */
 function PreviewPanel() {
-  const { config, cardCSS, cartBoxCSS, cartRowCSS, inputBase, btnCSS, setBehav, t } =
+  const { config, cardCSS, cartBoxCSS, cartRowCSS, inputBase, btnCSS, setBehav, offersCfg, t } =
     useForms();
 
   const [shippingPrice, setShippingPrice] = useState(null);
@@ -2603,7 +2718,141 @@ function PreviewPanel() {
     );
   };
 
-  const renderFormCard = () => {
+  // ✅ Blocks layout (positions) — controlled from "Options" tab
+  const safePos = (v, def = "top") => {
+    const x = String(v || "").toLowerCase();
+    if (x === "top" || x === "bottom" || x === "inside" || x === "hide") return x;
+    return def;
+  };
+  const safeOrder = (v, def = 99) => {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : def;
+  };
+
+  const blocksLayout = config.behavior?.blocksLayout || {};
+  const layout = {
+    offers: {
+      position: safePos(blocksLayout?.offers?.position, "top"),
+      order: safeOrder(blocksLayout?.offers?.order, 1),
+    },
+    upsells: {
+      position: safePos(blocksLayout?.upsells?.position, "top"),
+      order: safeOrder(blocksLayout?.upsells?.order, 2),
+    },
+    summary: {
+      position: safePos(blocksLayout?.summary?.position, "top"),
+      order: safeOrder(blocksLayout?.summary?.order, 3),
+    },
+  };
+
+  const renderOffersBlock = () => {
+    const payload = offersCfg || {};
+    const globalEnabled = payload?.global?.enabled !== false;
+
+    const offers = Array.isArray(payload?.offers) ? payload.offers : [];
+    const activeOffers = globalEnabled
+      ? offers.filter((o) => o && o.enabled !== false && o.showInPreview !== false)
+      : [];
+
+    if (!activeOffers.length) return null;
+
+    const title = payload?.global?.title || "Offers";
+    return (
+      <div className="tf-block-card">
+        <div className="tf-block-title">
+          <span className="tf-offer-icon-circle">
+            <PolarisIcon iconName="DiscountIcon" size={16} />
+          </span>
+          <span>{title}</span>
+        </div>
+
+        {activeOffers.slice(0, 2).map((o, idx) => {
+          const pct =
+            o.discountType === "percentage" && Number.isFinite(Number(o.discountValue))
+              ? `-${Number(o.discountValue)}%`
+              : "";
+          return (
+            <div key={`offer-${idx}`} className="tf-block-item">
+              <span className="tf-offer-icon-circle" style={{ width: 34, height: 34 }}>
+                <PolarisIcon iconName="StarFilledIcon" size={16} />
+              </span>
+              <div style={{ flex: 1 }}>
+                <div className="tf-block-item-title">
+                  {o.title || "Special offer"} {pct ? <span style={{ opacity: 0.8 }}>{pct}</span> : null}
+                </div>
+                {o.description ? <div className="tf-block-item-desc">{o.description}</div> : null}
+                {o.enableTimer ? (
+                  <div className="tf-block-badge">
+                    <span>⏱️</span>
+                    <span>{o.timerMessage || "Limited time"}</span>
+                  </div>
+                ) : null}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
+  const renderUpsellsBlock = () => {
+    const payload = offersCfg || {};
+    const globalEnabled = payload?.global?.enabled !== false;
+
+    const upsells = Array.isArray(payload?.upsells) ? payload.upsells : [];
+    const activeUpsells = globalEnabled
+      ? upsells.filter((u) => u && u.enabled !== false && u.showInPreview !== false)
+      : [];
+
+    if (!activeUpsells.length) return null;
+
+    return (
+      <div className="tf-block-card">
+        <div className="tf-block-title">
+          <span className="tf-upsell-icon-circle">
+            <PolarisIcon iconName="GiftCardIcon" size={16} />
+          </span>
+          <span>Upsells</span>
+        </div>
+
+        {activeUpsells.slice(0, 2).map((u, idx) => (
+          <div key={`upsell-${idx}`} className="tf-block-item">
+            <span className="tf-upsell-icon-circle" style={{ width: 34, height: 34 }}>
+              <PolarisIcon iconName="GiftCardIcon" size={16} />
+            </span>
+            <div style={{ flex: 1 }}>
+              <div className="tf-block-item-title">{u.title || "Bonus / gift"}</div>
+              {u.description ? <div className="tf-block-item-desc">{u.description}</div> : null}
+              {u.enableTimer ? (
+                <div className="tf-block-badge">
+                  <span>🎁</span>
+                  <span>{u.timerMessage || "Limited bonus"}</span>
+                </div>
+              ) : null}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  const blocks = [
+    { key: "offers", node: renderOffersBlock(), ...layout.offers },
+    { key: "upsells", node: renderUpsellsBlock(), ...layout.upsells },
+    { key: "summary", node: renderCartBox(), ...layout.summary },
+  ].filter((b) => b && b.node && b.position !== "hide");
+
+  const blocksAt = (where) =>
+    blocks
+      .filter((b) => b.position === where)
+      .sort((a, b) => (a.order || 99) - (b.order || 99))
+      .map((b) => (
+        <React.Fragment key={b.key}>
+          {b.node}
+        </React.Fragment>
+      ));
+
+  const renderFormCard = (insideNodes) => {
     const total = productPrice + (shippingPrice || 0);
     const orderLabel = sStr(config.uiTitles.orderNow || config.form?.buttonText || "Order now");
     const suffix = sStr(config.uiTitles.totalSuffix || "Total:");
@@ -2644,6 +2893,12 @@ function PreviewPanel() {
             </label>
           )}
 
+          {insideNodes && insideNodes.length ? (
+            <div style={{ display: "grid", gap: 10, marginTop: 10 }}>
+              {insideNodes}
+            </div>
+          ) : null}
+
           <button type="button" style={btnCSS} className={`tf-btn-with-icon ${motionClass}`}>
             {config.form.buttonIcon ? (
               <span className="tf-btn-icon">
@@ -2673,8 +2928,9 @@ function PreviewPanel() {
             }}
           >
             <div style={{ display: "grid", gap: 12 }}>
-              {renderCartBox()}
-              {renderFormCard()}
+              {blocksAt("top")}
+              {renderFormCard(blocksAt("inside"))}
+              {blocksAt("bottom")}
             </div>
           </div>
         </div>
