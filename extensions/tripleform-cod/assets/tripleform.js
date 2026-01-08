@@ -2120,49 +2120,139 @@ window.TripleformCOD = (function () {
   }
 
   let __tfInternalQty = 1;
+  let __tfLastRoot = null;
 
-  function getQty() {
-    const q = document.querySelector('form[action^="/cart/add"] input[name="quantity"]');
-    const v = Number(q && q.value ? q.value : NaN);
-    if (v && v > 0) {
-      __tfInternalQty = v;
-      return v;
+  function setActiveRoot(root) {
+    if (root && root.nodeType === 1) __tfLastRoot = root;
+  }
+
+  function findQtyInput(root) {
+    if (!root || root.nodeType !== 1) return null;
+    return (
+      root.querySelector('[data-tf-field="quantity"]') ||
+      root.querySelector('input[data-tf-role="quantity"]') ||
+      root.querySelector('input[name="quantity"]')
+    );
+  }
+
+  function dispatchQtyEvents(el) {
+    if (!el) return;
+    try {
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+      el.dispatchEvent(new Event("change", { bubbles: true }));
+    } catch {
+      // noop
     }
+  }
+
+  // ✅ getQty / setQty are now COD-aware (root quantity field has priority)
+  function getQty(root) {
+    const r = root || __tfLastRoot;
+
+    const local = findQtyInput(r);
+    const vLocal = Number(local && local.value != null ? local.value : NaN);
+    if (Number.isFinite(vLocal) && vLocal > 0) {
+      __tfInternalQty = Math.max(1, Math.round(vLocal));
+      return __tfInternalQty;
+    }
+
+    const q = document.querySelector('form[action^="/cart/add"] input[name="quantity"]');
+    const v = Number(q && q.value != null ? q.value : NaN);
+    if (Number.isFinite(v) && v > 0) {
+      __tfInternalQty = Math.max(1, Math.round(v));
+      return __tfInternalQty;
+    }
+
     return Math.max(1, Number(__tfInternalQty || 1));
   }
 
-  function setQty(nextQty) {
-    const n = Math.max(1, Number(nextQty || 1));
+  function setQty(nextQty, root) {
+    const n = Math.max(1, Math.round(Number(nextQty || 1)));
     __tfInternalQty = n;
 
-    const q = document.querySelector('form[action^="/cart/add"] input[name="quantity"]');
-    if (q) {
-      q.value = String(n);
-      q.dispatchEvent(new Event("input", { bubbles: true }));
-      q.dispatchEvent(new Event("change", { bubbles: true }));
+    const r = root || __tfLastRoot;
+    const local = findQtyInput(r);
+    let did = false;
+
+    if (local) {
+      local.value = String(n);
+      dispatchQtyEvents(local);
+      did = true;
     }
-    return true;
+
+    const q = document.querySelector('form[action^="/cart/add"] input[name="quantity"]');
+    if (q && q !== local) {
+      q.value = String(n);
+      dispatchQtyEvents(q);
+      did = true;
+    }
+
+    return did;
   }
 
-  function watchVariantAndQty(onChange) {
-    document.addEventListener("change", (e) => {
-      if (e.target && (e.target.name === "id" || e.target.name === "quantity")) onChange();
-    });
-    document.addEventListener("input", (e) => {
-      if (e.target && e.target.name === "quantity") onChange();
-    });
-    document.addEventListener("variant:change", onChange);
+  // ✅ Watch variant + BOTH qty sources (theme qty + COD qty inside holder)
+  function watchVariantAndQty(onChange, scopeEl) {
+    const safeCall = () => {
+      try {
+        onChange();
+      } catch (e) {
+        console.warn("[Tripleform COD] watchVariantAndQty onChange error:", e);
+      }
+    };
+
+    // Bind global watchers once
+    if (!window.__tfWatchVariantAndQtyBound) {
+      window.__tfWatchVariantAndQtyBound = true;
+
+      document.addEventListener("change", (e) => {
+        if (e.target && (e.target.name === "id" || e.target.name === "quantity")) safeCall();
+      });
+      document.addEventListener("input", (e) => {
+        if (e.target && e.target.name === "quantity") safeCall();
+      });
+      document.addEventListener("variant:change", safeCall);
+    }
+
+    // Bind COD-qty watcher per holder (delegated, survives re-render)
+    const scope = scopeEl && scopeEl.nodeType === 1 ? scopeEl : null;
+    if (scope && !scope.__tfWatchCodQtyBound) {
+      scope.__tfWatchCodQtyBound = true;
+
+      const matchQty = (t) =>
+        !!t &&
+        t.matches &&
+        (t.matches('[data-tf-field="quantity"]') || t.matches('input[data-tf-role="quantity"]'));
+
+      scope.addEventListener(
+        "input",
+        (e) => {
+          if (matchQty(e.target)) safeCall();
+        },
+        true
+      );
+      scope.addEventListener(
+        "change",
+        (e) => {
+          if (matchQty(e.target)) safeCall();
+        },
+        true
+      );
+    }
   }
 
-  /* ------------------------------------------------------------------ */
+/* ------------------------------------------------------------------ */
   /* Sticky button                                                      */
   /* ------------------------------------------------------------------ */
   function setupSticky(root, cfg, openHandler, motionClass) {
-    const stickyType = cfg?.behavior?.stickyType || "none";
+    const rootId = (root && root.id) ? root.id : "root";
+    const stickyTypeRaw = String(cfg?.behavior?.stickyType || "none");
+    const stickyType = stickyTypeRaw.trim().toLowerCase();
+    const stickyPos = String(cfg?.behavior?.stickyPosition || cfg?.behavior?.stickyPos || "").trim().toLowerCase();
+
     const stickyLabel = css(cfg?.behavior?.stickyLabel || cfg?.uiTitles?.orderNow || "Order now");
     const stickyIcon = cfg?.behavior?.stickyIcon || "AppsIcon";
 
-    const prev = document.querySelector(`[data-tf-sticky-for="${root.id}"]`);
+    const prev = document.querySelector(`[data-tf-sticky-for="${rootId}"]`);
     if (prev && prev.parentNode) prev.parentNode.removeChild(prev);
     if (stickyType === "none") return;
 
@@ -2172,7 +2262,7 @@ window.TripleformCOD = (function () {
     const br = resolveButtonBorder(d, bg);
 
     const el = document.createElement("div");
-    el.setAttribute("data-tf-sticky-for", root.id);
+    el.setAttribute("data-tf-sticky-for", rootId);
     el.style.zIndex = "999999";
 
     const baseStyle = `
@@ -2185,24 +2275,62 @@ window.TripleformCOD = (function () {
       font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
     `;
 
+    const posMap = {
+      "bottom-right": "right:16px; bottom:12px;",
+      "bottom-left": "left:16px; bottom:12px;",
+      "top-right": "right:16px; top:12px; bottom:auto;",
+      "top-left": "left:16px; top:12px; bottom:auto;",
+      "middle-right": "right:16px; top:50%; bottom:auto; transform:translateY(-50%);",
+      "middle-left": "left:16px; top:50%; bottom:auto; transform:translateY(-50%);",
+      "center-bottom": "left:50%; bottom:12px; transform:translateX(-50%);",
+    };
+
+    const isBottomBar = stickyType === "bottom-bar";
+    const looksLeft = stickyType.includes("left");
+    const looksRight = stickyType.includes("right");
+
+    let posCss = "";
+    if (isBottomBar) {
+      posCss = "left:12px; right:12px; bottom:12px;";
+    } else if (stickyPos && posMap[stickyPos]) {
+      posCss = posMap[stickyPos];
+    } else if (looksLeft) {
+      posCss = posMap["bottom-left"];
+    } else if (looksRight) {
+      posCss = posMap["bottom-right"];
+    } else {
+      posCss = posMap["bottom-right"];
+    }
+
+    el.style.cssText = baseStyle + posCss;
+
     const iconHtml = getIconHtml(stickyIcon, 16, text);
-    const isLeft = stickyType === "bubble-left";
-    el.style.cssText = baseStyle + `${isLeft ? "left:16px;" : "right:16px;"}`;
+    const motion = motionClass ? ` ${motionClass}` : "";
+
     el.innerHTML = `
-      <button type="button" data-tf-sticky-cta class="${motionClass}" style="
-        border-radius:999px;
-        border:1px solid ${br};
-        background:${bg};
-        color:${text};
-        font-weight:800;
-        padding:10px 18px;
-        font-size:13px;
-        cursor:pointer;
-        box-shadow:0 18px 36px rgba(0,0,0,.55);
-        max-width:220px;
-        white-space:nowrap;
-        display:flex; align-items:center; gap:8px;
-      ">
+      <button
+        type="button"
+        data-tf-sticky-cta="1"
+        class="tf-btn${motion}"
+        style="
+          width:${isBottomBar ? "100%" : "auto"};
+          max-width:${isBottomBar ? "540px" : "none"};
+          display:inline-flex;
+          gap:10px;
+          align-items:center;
+          justify-content:center;
+          padding:12px 14px;
+          border-radius:${isBottomBar ? "14px" : "999px"};
+          min-height:${Math.max(44, Number(d.btnHeight || 46))}px;
+          background:${bg};
+          color:${text};
+          border:1px solid ${br};
+          box-shadow:0 10px 30px rgba(0,0,0,.16);
+          cursor:pointer;
+          font-weight:800;
+          letter-spacing:.2px;
+        "
+      >
         ${iconHtml}${stickyLabel}
       </button>
     `;
@@ -2367,14 +2495,14 @@ window.TripleformCOD = (function () {
       const offer = offersList[offerIndex] || {};
 
       const bundleQty = Number(offer.bundleQty || offer.minQty || offer.requiredQty || offer.qtyMultiplier || offer.minQuantity || 0);
-      if (bundleQty > 0) setQty(bundleQty);
+      if (bundleQty > 0) setQty(bundleQty, root);
 
       button.classList.add("active");
       button.setAttribute("aria-pressed", "true");
       button.innerHTML = `${getIconHtml("CheckCircleIcon", 16, "currentColor")} Activée`;
 
       const selectedPackQty = Number(button.getAttribute("data-tf-pack-qty") || 0) || bundleQty || 0;
-      if (selectedPackQty > 0) setQty(selectedPackQty);
+      if (selectedPackQty > 0) setQty(selectedPackQty, root);
 
       setActiveOfferData(rootId, {
         index: offerIndex,
@@ -2656,6 +2784,9 @@ window.TripleformCOD = (function () {
 /* Render                                                             */
   /* ------------------------------------------------------------------ */
   function render(root, cfg, offersCfg, product, getVariant, moneyFmt, recaptchaCfg) {
+    setActiveRoot(root);
+    const rootId = (root && root.id) ? root.id : "root";
+
     const d0 = cfg.design || {};
     const d = Object.assign(
       {
@@ -2852,9 +2983,9 @@ window.TripleformCOD = (function () {
     const layout = readLayout(cfg, root);
 
     const offersBlockHtml =
-      layout.offers.position === "hide" ? "" : buildOffersHtml(offersCfg || {}, root.id, "offers");
+      layout.offers.position === "hide" ? "" : buildOffersHtml(offersCfg || {}, rootId, "offers");
     const upsellsBlockHtml =
-      layout.upsells.position === "hide" ? "" : buildOffersHtml(offersCfg || {}, root.id, "upsells");
+      layout.upsells.position === "hide" ? "" : buildOffersHtml(offersCfg || {}, rootId, "upsells");
     const summaryBlockHtml =
       layout.summary.position === "hide" ? "" : cartSummaryHTML();
 
@@ -3298,7 +3429,7 @@ window.TripleformCOD = (function () {
 
     function computeProductTotals() {
       const vId = getVariant();
-      const qty = getQty();
+      const qty = getQty(root);
       const variant =
         product.variants.find((v) => String(v.id) === String(vId)) ||
         product.variants[0];
@@ -3314,7 +3445,7 @@ window.TripleformCOD = (function () {
     const activeOffersOnly = offersVisible.filter((o) => o && o.enabled !== false && o.showInPreview !== false);
 
     function currentOffer() {
-      const active = getActiveOfferData(root.id);
+      const active = getActiveOfferData(rootId);
       if (!active || active.type !== "offer") return null;
       const idx = Number(active.index);
       const offer = activeOffersOnly[idx];
@@ -3325,7 +3456,7 @@ window.TripleformCOD = (function () {
       const x = currentOffer();
       if (!x) return;
       const q = Number(x.active.packQty || x.offer.bundleQty || x.offer.minQty || x.offer.requiredQty || x.offer.qtyMultiplier || x.offer.minQuantity || 0);
-      if (q > 0 && getQty() !== q) setQty(q);
+      if (q > 0 && getQty(root) !== q) setQty(q, root);
     }
 
     function computeDiscountCents(baseTotalCents, qty) {
@@ -3442,8 +3573,8 @@ window.TripleformCOD = (function () {
           const q = Number(pill.getAttribute("data-tf-pack-qty") || 0);
           if (!(q > 1)) return;
 
-          setActiveOfferData(root.id, { index: idx, type: "offer", packQty: q });
-          setQty(q);
+          setActiveOfferData(rootId, { index: idx, type: "offer", packQty: q });
+          setQty(q, root);
           updateMoney();
 
           const row = root.querySelector(`[data-tf-pack-row="${idx}"]`);
@@ -3539,7 +3670,7 @@ window.TripleformCOD = (function () {
         return;
       }
 
-      const activeOfferData = getActiveOfferData(root.id);
+      const activeOfferData = getActiveOfferData(rootId);
 
       const payload = {
         fields: buildFieldsPayload(), // ✅ ALL fields
@@ -3816,7 +3947,7 @@ window.TripleformCOD = (function () {
 
     const doUpdate = render(holder, cfg, offersCfg, product, getVariant, moneyFmt, recaptchaCfg);
 
-    watchVariantAndQty(() => doUpdate());
+    watchVariantAndQty(() => doUpdate(), holder);
   }
 
   function autoBootAll() {
