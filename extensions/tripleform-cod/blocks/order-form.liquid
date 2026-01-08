@@ -1,34 +1,26 @@
 {% comment %}
 Tripleform COD – App block (product template)
 
-- settings: product.metafields.tripleform_cod.settings (prioritaire)
-           shop.metafields.tripleform_cod.settings (fallback)
+Lit la config form depuis:
+- product.metafields.tripleform_cod.settings (prioritaire)
+- shop.metafields.tripleform_cod.settings (fallback)
 
-- offers:   product.metafields.tripleform_cod.offers (prioritaire)
-           shop.metafields.tripleform_cod.offers (fallback)
+Lit la config OFFRES / UPSELL depuis:
+- product.metafields.tripleform_cod.offers (prioritaire)
+- shop.metafields.tripleform_cod.offers (fallback)
 
-✅ Blocks layout:
-- cfg.behavior.blocksLayout (prioritaire, depuis l’admin app)
-- sinon fallback via data-* du Liquid (Theme Editor)
+✅ Layout blocks (offers / upsells / summary)
+- Priorité: cfg.behavior.blocksLayout (venant du metafield via data-settings)
+- Fallback: data-* du Theme Editor (positions + order)
 
 ✅ reCAPTCHA v2 ONLY:
-- lit la config depuis shop.metafields.tripleform_cod.antibot
+- lit la config depuis shop.metafields.tripleform_cod.antibot (recaptcha.enabled + recaptcha.siteKey)
 - NE PAS injecter <script google> dans le Liquid (theme-check RemoteAsset)
 - on passe la config au JS via data-*
 {% endcomment %}
 
 {%- assign tf_prod_val = product.metafields.tripleform_cod.settings.value -%}
 {%- assign tf_shop_val = shop.metafields.tripleform_cod.settings.value -%}
-
-{%- comment -%} ✅ Theme Editor layout defaults (fallback) {%- endcomment -%}
-{%- assign tf_summary_position = section.settings.summary_position | default: 'top' -%}
-{%- assign tf_summary_order = section.settings.summary_order | default: 3 -%}
-
-{%- assign tf_offers_position = section.settings.offers_position | default: 'top' -%}
-{%- assign tf_offers_order = section.settings.offers_order | default: 1 -%}
-
-{%- assign tf_upsells_position = section.settings.upsells_position | default: 'top' -%}
-{%- assign tf_upsells_order = section.settings.upsells_order | default: 2 -%}
 
 {%- comment -%}
 ✅ reCAPTCHA config (PUBLIC) — source: metafield tripleform_cod.antibot (type json)
@@ -44,6 +36,16 @@ Sans parse_json (theme-check)
     {%- assign tf_recaptcha_enabled = true -%}
   {%- endif -%}
 {%- endif -%}
+
+{%- comment -%}
+✅ Theme Editor layout defaults (fallback si cfg.behavior.blocksLayout absent)
+{%- endcomment -%}
+{%- assign tf_summary_position = section.settings.summary_position | default: 'top' -%}
+{%- assign tf_summary_order = section.settings.summary_order | default: 3 -%}
+{%- assign tf_offers_position = section.settings.offers_position | default: 'top' -%}
+{%- assign tf_offers_order = section.settings.offers_order | default: 1 -%}
+{%- assign tf_upsells_position = section.settings.upsells_position | default: 'top' -%}
+{%- assign tf_upsells_order = section.settings.upsells_order | default: 2 -%}
 
 {%- if tf_prod_val and tf_prod_val != blank -%}
   {%- assign tf_json = tf_prod_val -%}
@@ -234,12 +236,7 @@ Sans parse_json (theme-check)
       "country": "{{ shop_country_code }}",
       "codCountry": "{{ shop_country_code }}",
       "provinceKey": "",
-      "cityKey": "",
-      "blocksLayout": {
-        "offers":  { "position": "{{ tf_offers_position }}",  "order": {{ tf_offers_order }} },
-        "upsells": { "position": "{{ tf_upsells_position }}", "order": {{ tf_upsells_order }} },
-        "summary": { "position": "{{ tf_summary_position }}", "order": {{ tf_summary_order }} }
-      }
+      "cityKey": ""
     },
     "fields": {
       "name": {
@@ -321,6 +318,9 @@ Sans parse_json (theme-check)
 
 {%- comment %}
 OFFRES / UPSELL
+Ces données sont écrites par /api/save-offers dans:
+- product.metafields.tripleform_cod.offers (prioritaire)
+- shop.metafields.tripleform_cod.offers (fallback)
 {%- endcomment -%}
 
 {%- assign tf_offers_prod_val = product.metafields.tripleform_cod.offers.value -%}
@@ -340,42 +340,8 @@ OFFRES / UPSELL
       "rounding": "none",
       "colorPalette": "blue-gradient"
     },
-    "offers": [
-      {
-        "enabled": true,
-        "title": "Remise spéciale -10%",
-        "description": "Profitez de -10% sur votre première commande",
-        "showInPreview": true,
-        "enableTimer": true,
-        "timerMinutes": 60,
-        "timerMessage": "⏱️ Offre limitée!",
-        "timerCssClass": "timer-flash",
-        "timerTimeFormat": "mm:ss",
-        "discountType": "percentage",
-        "discountValue": 10,
-        "conditions": { "minAmount": 0, "maxUses": 100, "applicableTo": "all" },
-        "buttonText": "Activer",
-        "imageUrl": "",
-        "currency": "{{ shop.currency | default: 'MAD' }}"
-      }
-    ],
-    "upsells": [
-      {
-        "enabled": true,
-        "title": "Cadeau gratuit inclus!",
-        "description": "Recevez un accessoire en cadeau avec votre commande",
-        "showInPreview": true,
-        "enableTimer": true,
-        "timerMinutes": 45,
-        "timerMessage": "🎁 Cadeau limité!",
-        "timerCssClass": "timer-hot",
-        "timerTimeFormat": "hh[h] mm[m]",
-        "giftProductId": "",
-        "giftVariantId": "",
-        "giftTitle": "Accessoire gratuit",
-        "imageUrl": ""
-      }
-    ],
+    "offers": [],
+    "upsells": [],
     "display": {
       "showOrderSummary": true,
       "showOffersSection": true,
@@ -400,7 +366,7 @@ OFFRES / UPSELL
   data-currency='{{ cart.currency.iso_code | default: shop.currency }}'
   data-locale='{{ request.locale.iso_code }}'
 
-  {%- comment -%} ✅ Theme layout fallback (used only if cfg.behavior.blocksLayout missing) {%- endcomment -%}
+  {%- comment -%} ✅ Layout fallback from Theme Editor {%- endcomment -%}
   data-summary-position="{{ tf_summary_position }}"
   data-summary-order="{{ tf_summary_order }}"
   data-offers-position="{{ tf_offers_position }}"
@@ -463,29 +429,7 @@ OFFRES / UPSELL
   "settings": [
     {
       "type": "header",
-      "content": "Blocks layout (positions)"
-    },
-
-    {
-      "type": "select",
-      "id": "summary_position",
-      "label": "Order summary position",
-      "default": "top",
-      "options": [
-        { "value": "top", "label": "Top (above form)" },
-        { "value": "inside", "label": "Inside form (before button)" },
-        { "value": "bottom", "label": "Bottom (below form)" },
-        { "value": "hide", "label": "Hidden" }
-      ]
-    },
-    {
-      "type": "range",
-      "id": "summary_order",
-      "label": "Order summary order",
-      "min": 1,
-      "max": 3,
-      "step": 1,
-      "default": 3
+      "content": "Blocks layout (Offers / Upsells / Summary)"
     },
 
     {
@@ -500,15 +444,7 @@ OFFRES / UPSELL
         { "value": "hide", "label": "Hidden" }
       ]
     },
-    {
-      "type": "range",
-      "id": "offers_order",
-      "label": "Offers order",
-      "min": 1,
-      "max": 3,
-      "step": 1,
-      "default": 1
-    },
+    { "type": "range", "id": "offers_order", "label": "Offers order", "min": 1, "max": 3, "step": 1, "default": 1 },
 
     {
       "type": "select",
@@ -522,15 +458,21 @@ OFFRES / UPSELL
         { "value": "hide", "label": "Hidden" }
       ]
     },
+    { "type": "range", "id": "upsells_order", "label": "Upsells order", "min": 1, "max": 3, "step": 1, "default": 2 },
+
     {
-      "type": "range",
-      "id": "upsells_order",
-      "label": "Upsells order",
-      "min": 1,
-      "max": 3,
-      "step": 1,
-      "default": 2
+      "type": "select",
+      "id": "summary_position",
+      "label": "Order summary position",
+      "default": "top",
+      "options": [
+        { "value": "top", "label": "Top (above form)" },
+        { "value": "inside", "label": "Inside form (before button)" },
+        { "value": "bottom", "label": "Bottom (below form)" },
+        { "value": "hide", "label": "Hidden" }
+      ]
     },
+    { "type": "range", "id": "summary_order", "label": "Order summary order", "min": 1, "max": 3, "step": 1, "default": 3 },
 
     {
       "type": "text",
