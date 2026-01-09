@@ -28,14 +28,20 @@ model Session {
 model Shop {
   id               Int       @id @default(autoincrement())
   shopDomain       String    @unique
+
+  // Billing
   billingPlan      String?
   billingTerm      String?
   billingStatus    String?
   subscriptionId   String?
   unitAmount       Float?
   currentPeriodEnd DateTime?
+
+  // ⚠️ Legacy (si tu veux, on les garde pour ne pas casser ton code actuel)
+  // mais on ne va plus les utiliser pour le quota mensuel Google Sheets.
   usageMonth       String?
   usageCount       Int       @default(0)
+
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 }
@@ -43,6 +49,8 @@ model Shop {
 model ShopGoogleSettings {
   id                   Int       @id @default(autoincrement())
   shopDomain           String    @unique
+
+  // (Si tu utilises encore ces champs dans ton code existant, garde-les)
   googleUserId         String?
   googleEmail          String?
   accessToken          String?
@@ -51,8 +59,8 @@ model ShopGoogleSettings {
   tokenType            String?
   tokenExpiryDate      DateTime?
   sheetsConfigJson     String?
-  
-  // NOUVEAUX CHAMPS CRITIQUES pour Google Sheets
+
+  // ✅ Champs recommandés (plus clairs pour Google Sheets)
   googleAccessToken    String?
   googleRefreshToken   String?
   googleTokenExpiry    DateTime?
@@ -64,7 +72,6 @@ model ShopGoogleSettings {
   updatedAt            DateTime  @updatedAt
 }
 
-// MODÈLES WHATSAPP - MIS À JOUR AVEC CHAMPS SIMPLE
 model WhatsappStatus {
   id           String    @id @default(cuid())
   shopDomain   String    @unique
@@ -76,17 +83,14 @@ model WhatsappStatus {
   lastError    String?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
-  
+
   @@map("whatsapp_status")
 }
 
 model WhatsAppConfig {
   id                     String    @id @default(cuid())
   shopDomain             String    @unique
-  
-  // ============================================
-  // NOUVEAUX CHAMPS POUR L'INTERFACE SIMPLE
-  // ============================================
+
   phoneNumber            String?   @default("")
   businessName           String?   @default("")
   orderMessage           String?   @default("✅ Commande #{orderId} confirmée! Livraison dans 2-3 jours. Merci!")
@@ -94,28 +98,23 @@ model WhatsAppConfig {
   useToken               Boolean   @default(false)
   permanentToken         String?   @default("")
   mode                   String    @default("simple")
-  // ============================================
-  
-  // Connexion (interface avancée)
+
   autoConnect            Boolean   @default(true)
   sessionTimeout         Int       @default(24)
-  
-  // Messages après commande COD (interface avancée)
+
   enabled                Boolean   @default(true)
   buttonText             String    @default("💬 WhatsApp")
   messageTemplate        String    @default("✅ Commande #{orderId} confirmée! Livraison dans 2-3 jours.")
   sendDelay              String    @default("immediate")
   buttonPosition         String    @default("below")
   buttonStyle            String    @default("secondary")
-  
-  // WhatsApp Recovery (interface avancée)
+
   recoveryEnabled        Boolean   @default(true)
   recoveryMessage        String    @default("👋 Vous avez oublié quelque chose! Votre panier vous attend.")
   recoveryDelay          String    @default("1h")
   recoveryDiscount       String    @default("10%")
   recoveryCode           String    @default("RECOVERY10")
-  
-  // Options avancées (interface avancée)
+
   enableAnalytics        Boolean   @default(true)
   enableReadReceipts     Boolean   @default(true)
   enableTypingIndicator  Boolean   @default(false)
@@ -124,8 +123,7 @@ model WhatsAppConfig {
   businessHoursOnly      Boolean   @default(false)
   businessHoursStart     String    @default("09:00")
   businessHoursEnd       String    @default("18:00")
-  
-  // Template personnalisation (interface avancée)
+
   enableMediaMessages    Boolean   @default(false)
   mediaUrl               String?
   enableButtons          Boolean   @default(false)
@@ -133,17 +131,17 @@ model WhatsAppConfig {
   button1Url             String    @default("{trackingUrl}")
   button2Text            String    @default("Contacter le support")
   button2Url             String    @default("https://wa.me/{supportNumber}")
-  
+
   createdAt              DateTime  @default(now())
   updatedAt              DateTime  @updatedAt
-  
+
   @@map("whatsapp_config")
 }
 
 model WhatsappStats {
   id                  String    @id @default(cuid())
   shopDomain          String    @unique
-  
+
   totalMessages       Int       @default(0)
   successful          Int       @default(0)
   failed              Int       @default(0)
@@ -152,39 +150,39 @@ model WhatsappStats {
   recoveryConverted   Int       @default(0)
   recoveryRate        Float     @default(0)
   avgResponseTime     Float     @default(0)
-  
+
   lastMessageAt       DateTime?
   lastRecoveryAt      DateTime?
   lastTestAt          DateTime?
   lastTestMessageAt   DateTime?
   lastError           String?
-  
+
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
-  
+
   @@map("whatsapp_stats")
 }
 
 model WhatsappMessage {
   id            String    @id @default(cuid())
   shopDomain    String
-    
+
   messageId     String?
   orderId       String?
   cartToken     String?
   customerPhone String
-  
+
   message       String    @db.Text
   type          String
   status        String
   error         String?
-  
+
   sentAt        DateTime  @default(now())
   deliveredAt   DateTime?
   readAt        DateTime?
-  
+
   createdAt     DateTime  @default(now())
-  
+
   @@map("whatsapp_messages")
   @@index([shopDomain])
   @@index([orderId])
@@ -197,22 +195,22 @@ model AbandonedCart {
   id                String    @id @default(cuid())
   token             String    @unique
   shopDomain        String
-    
+
   customerPhone     String
   customerEmail     String?
   items             String    @db.Text
   total             Float
   currency          String    @default("MAD")
-  
+
   abandonedAt       DateTime  @default(now())
   recoveredAt       DateTime?
   recoveryStatus    String    @default("pending")
   recoveryMessageId String?
   recoveryError     String?
-  
+
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
-  
+
   @@map("abandoned_carts")
   @@index([shopDomain])
   @@index([customerPhone])
@@ -220,7 +218,6 @@ model AbandonedCart {
   @@index([recoveryStatus])
 }
 
-// MODÈLES POUR LES COMMANDES ET USAGE
 model OrderSync {
   id               Int       @id @default(autoincrement())
   shopDomain       String
@@ -232,35 +229,53 @@ model OrderSync {
   error            String?
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
-  
+
+  // ✅ important: éviter double comptage d’une même commande
+  @@unique([shopDomain, orderId])
+
   @@index([shopDomain])
   @@index([orderId])
   @@index([syncedToSheets])
+  @@index([syncedAt])
 }
 
 model ShopAntibotSettings {
-  id              Int      @id @default(autoincrement())
-  shopDomain      String   @unique
+  id                   Int      @id @default(autoincrement())
+  shopDomain            String   @unique
 
-  recaptchaEnabled Boolean @default(false)
-
-  // v2 ou v3 (toi tu utilises v3 côté token, mais tu peux garder le champ)
-  recaptchaVersion String? // "v2" | "v3"
-
-  recaptchaSiteKey String? // PUBLIC (ok)
-  // SECRET: stocké chiffré en DB
-  recaptchaSecretEnc String? @db.Text
-
-  // optionnel: action attendue
+  recaptchaEnabled      Boolean  @default(false)
+  recaptchaVersion      String?
+  recaptchaSiteKey      String?
+  recaptchaSecretEnc    String?  @db.Text
   recaptchaExpectedAction String? @default("tf_submit")
 
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 
   @@map("shop_antibot_settings")
 }
 
+//
+// ✅ NOUVEAU: Usage mensuel basé sur les exports Google Sheets réussis
+// monthKey format: "YYYY-MM"
+//
+model ShopMonthlyOrderUsage {
+  id        String   @id @default(cuid())
+  shopDomain String
+  monthKey  String
+  used      Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
+  @@unique([shopDomain, monthKey], name: "shop_monthKey")
+  @@index([shopDomain])
+  @@map("shop_monthly_order_usage")
+}
+
+//
+// ⚠️ Ancien modèle: tu peux le garder provisoirement si ton code le lit encore,
+// mais la logique “quota mensuel Google Sheets” doit utiliser ShopMonthlyOrderUsage.
+//
 model PlanUsage {
   id            Int       @id @default(autoincrement())
   shopDomain    String    @unique
@@ -270,6 +285,6 @@ model PlanUsage {
   ordersLimit   Int       @default(100)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
-  
+
   @@map("plan_usage")
 }
