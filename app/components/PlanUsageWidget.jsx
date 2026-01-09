@@ -1,25 +1,20 @@
 // ===== File: app/components/PlanUsageWidget.jsx =====
-import React from "react";
-import { Text, Icon } from "@shopify/polaris";
+import React, { useEffect, useMemo, useState, useCallback } from "react";
+import { Text, Icon, Banner, Button, Modal } from "@shopify/polaris";
 import * as PI from "@shopify/polaris-icons";
 import { getPlan } from "../utils/plans";
 import { useI18n } from "../i18n/react";
 
-// Utilisez une icône qui existe certainement
-const subscriptionIconSource = PI.CashDollarIcon || PI.CreditCardIcon || PI.WalletIcon || "💰";
+const subscriptionIconSource =
+  PI.CashDollarIcon || PI.CreditCardIcon || PI.WalletIcon || "💰";
 
-/**
- * Cercle qui représente les commandes RESTANTES.
- *  - Au début : cercle complet
- *  - Plus l'utilisateur consomme, plus on enlève des morceaux.
- */
 function RemainingCircle({ used, limit, unlimited, label }) {
   const size = 110;
   const stroke = 10;
   const radius = (size - stroke) / 2;
   const circumference = 2 * Math.PI * radius;
 
-  // si illimité, on considère 100% restant
+  // cercle = "restant"
   let remainingPct = 100;
   if (!unlimited && limit > 0) {
     const remaining = Math.max(0, limit - used);
@@ -39,20 +34,12 @@ function RemainingCircle({ used, limit, unlimited, label }) {
     >
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
         <defs>
-          {/* dégradé vertical : plus foncé en haut */}
-          <linearGradient
-            id="tfRemainingGradient"
-            x1="0%"
-            y1="0%"
-            x2="0%"
-            y2="100%"
-          >
+          <linearGradient id="tfRemainingGradient" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="#0B3B82" />
             <stop offset="100%" stopColor="#7D0031" />
           </linearGradient>
         </defs>
 
-        {/* cercle fond très léger */}
         <circle
           cx={size / 2}
           cy={size / 2}
@@ -62,7 +49,6 @@ function RemainingCircle({ used, limit, unlimited, label }) {
           fill="none"
         />
 
-        {/* partie RESTANTE (ce qui reste du plan) */}
         <circle
           cx={size / 2}
           cy={size / 2}
@@ -73,13 +59,11 @@ function RemainingCircle({ used, limit, unlimited, label }) {
           strokeLinecap="round"
           strokeDasharray={circumference}
           strokeDashoffset={offset}
-          style={{
-            transition: "stroke-dashoffset 0.4s ease-out",
-          }}
+          style={{ transition: "stroke-dashoffset 0.4s ease-out" }}
         />
       </svg>
 
-      {/* centre du cercle */}
+      {/* centre */}
       <div
         style={{
           position: "absolute",
@@ -91,28 +75,14 @@ function RemainingCircle({ used, limit, unlimited, label }) {
           pointerEvents: "none",
         }}
       >
-        <span
-          style={{
-            fontSize: 18,
-            fontWeight: 800,
-            color: "#111827",
-            lineHeight: 1,
-          }}
-        >
-          {unlimited ? "∞" : used}
+        <span style={{ fontSize: 18, fontWeight: 800, color: "#111827", lineHeight: 1 }}>
+          {Math.max(0, Number(used || 0))}
         </span>
 
-        {!unlimited && typeof limit === "number" && (
-          <span
-            style={{
-              fontSize: 11,
-              color: "#6B7280",
-              marginTop: 2,
-            }}
-          >
-            / {limit}
-          </span>
-        )}
+        {/* ✅ Toujours "used/limit" */}
+        <span style={{ fontSize: 11, color: "#6B7280", marginTop: 2 }}>
+          / {unlimited ? "∞" : Number(limit || 0)}
+        </span>
 
         <span
           style={{
@@ -130,17 +100,122 @@ function RemainingCircle({ used, limit, unlimited, label }) {
   );
 }
 
-/**
- * Widget principal
- */
-export default function PlanUsageWidget({
-  isSubscribed,
-  planKey,
-  currentTerm,
-  usage,
-}) {
+function getNextPlanKey(planKey) {
+  const k = String(planKey || "starter").toLowerCase();
+  if (k === "starter") return "basic";
+  if (k === "basic") return "premium";
+  return null;
+}
+
+export default function PlanUsageWidget({ isSubscribed, planKey, currentTerm, usage }) {
   const { t } = useI18n();
-  const { ordersUsed = 0, sinceLabel = null, loading = false } = usage || {};
+
+  // usage depuis /api/plan-usage (idéal)
+  const ordersUsed = Math.max(0, Number(usage?.ordersUsed || 0));
+  const apiUnlimited = usage?.unlimited;
+  const apiLimit = usage?.ordersLimit;
+  const apiRemaining = usage?.remaining;
+  const monthKey = usage?.monthKey || null;
+  const apiNextPlanKey = usage?.nextPlanKey || null;
+  const loading = !!usage?.loading;
+  const sinceLabel = usage?.sinceLabel || null;
+
+  // fallback si ton endpoint n’envoie pas encore ordersLimit/unlimited
+  const cfg = getPlan(planKey || "starter") || getPlan("starter");
+  const fallbackLimit = cfg?.orderLimit ?? null;
+  const fallbackUnlimited = fallbackLimit == null || !Number.isFinite(fallbackLimit);
+
+  const unlimited = typeof apiUnlimited === "boolean" ? apiUnlimited : fallbackUnlimited;
+  const limit = unlimited
+    ? Infinity
+    : Number.isFinite(Number(apiLimit))
+    ? Number(apiLimit)
+    : Number(fallbackLimit || 0);
+
+  const remaining = unlimited
+    ? null
+    : Number.isFinite(Number(apiRemaining))
+    ? Math.max(0, Number(apiRemaining))
+    : Math.max(0, (Number(limit || 0) || 0) - ordersUsed);
+
+  const usedPct = useMemo(() => {
+    if (unlimited) return 0;
+    if (!limit || limit <= 0) return 0;
+    return Math.min(100, (ordersUsed / limit) * 100);
+  }, [unlimited, ordersUsed, limit]);
+
+  const planLabel = cfg?.name || t("section0.usage.planFallback") || "Plan";
+  const termLabel =
+    currentTerm === "annual"
+      ? t("section0.usage.term.annual")
+      : currentTerm === "monthly"
+      ? t("section0.usage.term.monthly")
+      : null;
+
+  const commandsLabel = t("section0.usage.commandsLabel") || "COMMANDS";
+
+  // ✅ Alerte orange à partir de 80% (si pas atteint)
+  const warnThresholdPct = 80;
+  const showNearLimitWarning = !unlimited && usedPct >= warnThresholdPct && ordersUsed < limit;
+
+  // ✅ Modal rouge فقط quand used >= limit
+  const isLimitReached = !unlimited && Number.isFinite(limit) && ordersUsed >= limit;
+
+  const nextPlanKey = apiNextPlanKey || getNextPlanKey(planKey);
+  const upgradeTerm = currentTerm === "annual" ? "annual" : "monthly";
+
+  const [openLimitModal, setOpenLimitModal] = useState(false);
+
+  // Ouvrir automatiquement la modal quand limite atteinte (1 fois par moisKey)
+  useEffect(() => {
+    if (!isSubscribed) return;
+    if (!isLimitReached) return;
+
+    const key = `tf_limit_modal_dismissed_${monthKey || "current"}`;
+    const dismissed =
+      typeof window !== "undefined" ? window.sessionStorage.getItem(key) === "1" : false;
+
+    if (!dismissed) setOpenLimitModal(true);
+  }, [isSubscribed, isLimitReached, monthKey]);
+
+  const dismissLimitModal = useCallback(() => {
+    setOpenLimitModal(false);
+    try {
+      const key = `tf_limit_modal_dismissed_${monthKey || "current"}`;
+      window.sessionStorage.setItem(key, "1");
+    } catch {}
+  }, [monthKey]);
+
+  const openBilling = useCallback(
+    async (plan, term) => {
+      try {
+        const u = new URL("/api/billing/request", window.location.origin);
+        u.searchParams.set("plan", plan);
+        u.searchParams.set("term", term);
+
+        const res = await fetch(u.toString(), { method: "GET", credentials: "include" });
+        const data = await res.json();
+
+        if (!res.ok || !data?.ok || !data?.confirmationUrl) {
+          console.error("Billing request failed:", data);
+          alert(t("section0.usage.upgrade.error") || "Billing error");
+          return;
+        }
+
+        // embedded → top redirect
+        window.top.location.href = data.confirmationUrl;
+      } catch (e) {
+        console.error(e);
+        alert(t("section0.usage.upgrade.networkError") || "Network error");
+      }
+    },
+    [t]
+  );
+
+  const onUpgrade = useCallback(() => {
+    if (!nextPlanKey) return;
+    openBilling(nextPlanKey, upgradeTerm);
+  }, [nextPlanKey, openBilling, upgradeTerm]);
 
   if (!isSubscribed) {
     return (
@@ -153,40 +228,15 @@ export default function PlanUsageWidget({
           background: "#F9FAFB",
         }}
       >
-        <div
-          style={{
-            fontSize: 13,
-            fontWeight: 600,
-            marginBottom: 4,
-          }}
-        >
-          {t("section0.usage.noPlan.title")}
+        <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4 }}>
+          {t("section0.usage.noPlan.title") || "No active plan"}
         </div>
         <div style={{ fontSize: 12, color: "#6B7280" }}>
-          {t("section0.usage.noPlan.body")}
+          {t("section0.usage.noPlan.body") || "Please subscribe to unlock usage."}
         </div>
       </div>
     );
   }
-
-  const cfg = getPlan(planKey || "starter") || getPlan("starter");
-  const limit = cfg?.orderLimit ?? null;
-  const unlimited = limit == null || !Number.isFinite(limit);
-
-  const safeUsed = Math.max(0, ordersUsed || 0);
-  const remaining = unlimited ? null : Math.max(0, limit - safeUsed);
-  const usedPct =
-    !unlimited && limit > 0 ? Math.min(100, (safeUsed / limit) * 100) : 0;
-
-  const planLabel = cfg?.name || t("section0.usage.planFallback");
-  const termLabel =
-    currentTerm === "annual"
-      ? t("section0.usage.term.annual")
-      : currentTerm === "monthly"
-      ? t("section0.usage.term.monthly")
-      : null;
-
-  const commandsLabel = t("section0.usage.commandsLabel");
 
   return (
     <div
@@ -203,14 +253,7 @@ export default function PlanUsageWidget({
       }}
     >
       {/* HEADER */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: 8,
-        }}
-      >
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <div
             style={{
@@ -224,35 +267,21 @@ export default function PlanUsageWidget({
               justifyContent: "center",
             }}
           >
-            {typeof subscriptionIconSource === 'string' ? (
-              <span style={{ fontSize: '14px' }}>{subscriptionIconSource}</span>
+            {typeof subscriptionIconSource === "string" ? (
+              <span style={{ fontSize: "14px" }}>{subscriptionIconSource}</span>
             ) : (
-              <Icon
-                source={subscriptionIconSource}
-                tone="success"
-                style={{ transform: "scale(0.8)" }}
-              />
+              <Icon source={subscriptionIconSource} tone="success" />
             )}
           </div>
+
           <div>
-            <div
-              style={{
-                fontSize: 13,
-                fontWeight: 600,
-                color: "#0B1120",
-              }}
-            >
-              {t("section0.usage.header.title")}
+            <div style={{ fontSize: 13, fontWeight: 600, color: "#0B1120" }}>
+              {t("section0.usage.header.title") || "Plan usage"}
             </div>
-            <div
-              style={{
-                fontSize: 11,
-                color: "#6B7280",
-              }}
-            >
+            <div style={{ fontSize: 11, color: "#6B7280" }}>
               {planLabel}
               {termLabel ? ` • ${termLabel}` : ""} —{" "}
-              {t("section0.usage.header.subtitleTail")}
+              {t("section0.usage.header.subtitleTail") || "monthly limit"}
             </div>
           </div>
         </div>
@@ -269,11 +298,11 @@ export default function PlanUsageWidget({
             whiteSpace: "nowrap",
           }}
         >
-          {t("section0.usage.badge.active")}
+          {t("section0.usage.badge.active") || "Active"}
         </span>
       </div>
 
-      {/* BARRE FINE EN HAUT (progression des commandes) */}
+      {/* BARRE PROGRESS */}
       {!unlimited && (
         <div
           style={{
@@ -294,7 +323,6 @@ export default function PlanUsageWidget({
               transition: "width 0.35s ease-out",
             }}
           >
-            {/* petite bulle au bout de la barre */}
             <div
               style={{
                 position: "absolute",
@@ -312,24 +340,43 @@ export default function PlanUsageWidget({
         </div>
       )}
 
-      {/* CONTENU PRINCIPAL */}
-      <div
-        style={{
-          display: "flex",
-          gap: 16,
-          alignItems: "center",
-          flexWrap: "wrap",
-        }}
-      >
-        {/* CERCLE RESTANT */}
-        <RemainingCircle
-          used={safeUsed}
-          limit={limit}
-          unlimited={unlimited}
-          label={commandsLabel}
-        />
+      {/* ✅ Alerte orange avant limite */}
+      {showNearLimitWarning && (
+        <Banner
+          tone="warning"
+          title={t("section0.usage.alert.nearLimit.title") || "Approaching limit"}
+        >
+          <p>
+            {t("section0.usage.alert.nearLimit.body") ||
+              "You are close to your monthly export limit."}
+          </p>
+        </Banner>
+      )}
 
-        {/* TEXTE + PETITES CARTES */}
+      {/* ✅ Alerte critique quand limite atteinte (en plus de la modal) */}
+      {isLimitReached && (
+        <Banner
+          tone="critical"
+          title={t("section0.usage.alert.limitReached.title") || "Limit reached"}
+        >
+          <p>
+            {t("section0.usage.alert.limitReached.body") ||
+              "Your monthly limit is reached. Upgrade to continue exporting."}
+          </p>
+          {nextPlanKey ? (
+            <div style={{ marginTop: 10 }}>
+              <Button variant="primary" onClick={onUpgrade}>
+                {t("section0.usage.alert.upgradeCta") || "Upgrade"}
+              </Button>
+            </div>
+          ) : null}
+        </Banner>
+      )}
+
+      {/* CONTENT */}
+      <div style={{ display: "flex", gap: 16, alignItems: "center", flexWrap: "wrap" }}>
+        <RemainingCircle used={ordersUsed} limit={limit} unlimited={unlimited} label={commandsLabel} />
+
         <div style={{ flex: 1, minWidth: 0 }}>
           <Text as="p" variant="bodySm">
             {loading
@@ -339,119 +386,43 @@ export default function PlanUsageWidget({
               : t("section0.usage.limitedText")}
           </Text>
 
-          <div
-            style={{
-              display: "flex",
-              flexWrap: "wrap",
-              gap: 8,
-              marginTop: 10,
-            }}
-          >
-            {/* Utilisées */}
-            <div
-              style={{
-                flex: "1 1 90px",
-                padding: "8px 10px",
-                borderRadius: 12,
-                backgroundColor: "#F9FAFB",
-              }}
-            >
-              <div
-                style={{
-                  fontSize: 11,
-                  color: "#6B7280",
-                  marginBottom: 2,
-                }}
-              >
-                {t("section0.usage.used")}
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 10 }}>
+            {/* Used */}
+            <div style={{ flex: "1 1 90px", padding: "8px 10px", borderRadius: 12, background: "#F9FAFB" }}>
+              <div style={{ fontSize: 11, color: "#6B7280", marginBottom: 2 }}>
+                {t("section0.usage.used") || "Used"}
               </div>
-              <div style={{ fontSize: 16, fontWeight: 700 }}>
-                {safeUsed}
+              <div style={{ fontSize: 16, fontWeight: 700 }}>{ordersUsed}</div>
+              <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 2 }}>
+                {t("section0.usage.usedOf") || "of"} {unlimited ? "∞" : limit}
               </div>
-              {!unlimited && (
-                <div
-                  style={{
-                    fontSize: 11,
-                    color: "#9CA3AF",
-                    marginTop: 2,
-                  }}
-                >
-                  {t("section0.usage.usedOf")} {limit}
-                </div>
-              )}
             </div>
 
-            {/* Restantes */}
-            <div
-              style={{
-                flex: "1 1 90px",
-                padding: "8px 10px",
-                borderRadius: 12,
-                backgroundColor: "#F9FAFB",
-              }}
-            >
-              <div
-                style={{
-                  fontSize: 11,
-                  color: "#6B7280",
-                  marginBottom: 2,
-                }}
-              >
-                {t("section0.usage.remaining")}
+            {/* Remaining */}
+            <div style={{ flex: "1 1 90px", padding: "8px 10px", borderRadius: 12, background: "#F9FAFB" }}>
+              <div style={{ fontSize: 11, color: "#6B7280", marginBottom: 2 }}>
+                {t("section0.usage.remaining") || "Remaining"}
               </div>
-              <div
-                style={{
-                  fontSize: 16,
-                  fontWeight: 700,
-                  color: unlimited ? "#0B3B82" : "#111827",
-                }}
-              >
+              <div style={{ fontSize: 16, fontWeight: 700, color: unlimited ? "#0B3B82" : "#111827" }}>
                 {unlimited ? "∞" : remaining ?? 0}
               </div>
               {!unlimited && (
-                <div
-                  style={{
-                    fontSize: 11,
-                    color: "#9CA3AF",
-                    marginTop: 2,
-                  }}
-                >
-                  {t("section0.usage.beforeLimit")}
+                <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 2 }}>
+                  {t("section0.usage.beforeLimit") || "before limit"}
                 </div>
               )}
             </div>
 
-            {/* Progression % */}
+            {/* Progress */}
             {!unlimited && (
-              <div
-                style={{
-                  flex: "1 1 90px",
-                  padding: "8px 10px",
-                  borderRadius: 12,
-                  backgroundColor: "#F9FAFB",
-                }}
-              >
-                <div
-                  style={{
-                    fontSize: 11,
-                    color: "#6B7280",
-                    marginBottom: 2,
-                  }}
-                >
-                  {t("section0.usage.progress")}
+              <div style={{ flex: "1 1 90px", padding: "8px 10px", borderRadius: 12, background: "#F9FAFB" }}>
+                <div style={{ fontSize: 11, color: "#6B7280", marginBottom: 2 }}>
+                  {t("section0.usage.progress") || "Progress"}
                 </div>
-                <div style={{ fontSize: 16, fontWeight: 700 }}>
-                  {Math.round(usedPct)}%
-                </div>
+                <div style={{ fontSize: 16, fontWeight: 700 }}>{Math.round(usedPct)}%</div>
                 {sinceLabel && (
-                  <div
-                    style={{
-                      fontSize: 10,
-                      color: "#9CA3AF",
-                      marginTop: 2,
-                    }}
-                  >
-                    {t("section0.usage.since")} {sinceLabel}
+                  <div style={{ fontSize: 10, color: "#9CA3AF", marginTop: 2 }}>
+                    {t("section0.usage.since") || "Since"} {sinceLabel}
                   </div>
                 )}
               </div>
@@ -459,6 +430,48 @@ export default function PlanUsageWidget({
           </div>
         </div>
       </div>
+
+      {/* ✅ MODAL ROUGE: فقط quand used >= limit */}
+      <Modal
+        open={openLimitModal}
+        onClose={dismissLimitModal}
+        title={t("section0.usage.modal.limitReached.title") || "Monthly limit reached"}
+        primaryAction={
+          nextPlanKey
+            ? {
+                content: t("section0.usage.modal.limitReached.upgradeCta") || "Upgrade",
+                onAction: onUpgrade,
+              }
+            : undefined
+        }
+        secondaryActions={[
+          {
+            content: t("section0.usage.modal.limitReached.dismiss") || "Close",
+            onAction: dismissLimitModal,
+          },
+        ]}
+      >
+        <Modal.Section>
+          <div
+            style={{
+              padding: 12,
+              borderRadius: 12,
+              background: "rgba(239,68,68,0.10)",
+              border: "1px solid rgba(239,68,68,0.25)",
+            }}
+          >
+            <Text as="p" variant="bodySm">
+              {t("section0.usage.modal.limitReached.body") ||
+                "You have reached your monthly export limit. Upgrade to continue exporting to Google Sheets."}
+            </Text>
+
+            <div style={{ marginTop: 10, fontSize: 12, color: "#111827", fontWeight: 600 }}>
+              {t("section0.usage.modal.limitReached.usedLabel") || "Used"}:{" "}
+              {ordersUsed} / {unlimited ? "∞" : limit}
+            </div>
+          </div>
+        </Modal.Section>
+      </Modal>
     </div>
   );
 }

@@ -1,64 +1,91 @@
 // app/routes/api.plan-usage.jsx
 import { json } from "@remix-run/node";
 import { authenticate } from "../shopify.server";
+import prisma from "../db.server";
+import { getPlan, isBillingActive } from "../utils/plans";
 
 /**
- * Widget "0 / 100" sur le dashboard.
- * On compte UNIQUEMENT les commandes créées par TripleForm COD,
- * identifiées par le tag d’ordre TRIPLEFORM_COD.
+ * Usage mensuel EXACT basé sur les exports Google Sheets réussis.
+ * Source de vérité: ShopMonthlyOrderUsage (used par mois).
  *
  * Réponse:
- * { ok: true, ordersUsed: number, sinceLabel: string }
+ * {
+ *   ok: true,
+ *   ordersUsed,
+ *   ordersLimit, // null si illimité
+ *   unlimited,
+ *   remaining,   // null si illimité
+ *   planKey,
+ *   term,
+ *   monthKey,
+ *   sinceLabel,
+ *   nextPlanKey,
+ *   isSubscribed
+ * }
  */
 export const loader = async ({ request }) => {
   try {
-    const { admin } = await authenticate.admin(request);
+    const { session } = await authenticate.admin(request);
+    const shop = session?.shop;
 
-    // --- Fenêtre de temps : depuis le début du mois courant ---
-    const now = new Date();
-    const start = new Date(now);
-    start.setDate(1);
-    start.setHours(0, 0, 0, 0);
-
-    const startStr = start.toISOString().slice(0, 10); // YYYY-MM-DD
-    const endStr = now.toISOString().slice(0, 10);
-
-    // 👉 IMPORTANT : ce tag doit être aussi mis sur les commandes
-    const APP_TAG = "TRIPLEFORM_COD";
-
-    // On filtre : période courante + seulement les commandes taguées par l’app
-    const search = `created_at:>='${startStr}' created_at:<='${endStr}' tag:'${APP_TAG}'`;
-
-    const gql = `
-      {
-        orders(
-          first: 250,
-          query: ${JSON.stringify(search)},
-          sortKey: CREATED_AT,
-          reverse: true
-        ) {
-          edges {
-            node { id }
-          }
-        }
-      }
-    `;
-
-    const res = await admin.graphql(gql);
-    const data = await res.json();
-
-    if (!data?.data?.orders) {
-      throw new Error("Réponse Shopify invalide");
+    if (!shop) {
+      return json(
+        { ok: false, error: "Shop manquant", ordersUsed: 0, sinceLabel: null },
+        { status: 400 }
+      );
     }
 
-    const ordersUsed = data.data.orders.edges.length;
+    // --- Mois courant ---
+    const now = new Date();
+    const monthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 
+    const start = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
     const sinceLabel = `Depuis le ${start.toLocaleDateString("fr-FR", {
       day: "2-digit",
       month: "short",
     })}`;
 
-    return json({ ok: true, ordersUsed, sinceLabel });
+    // --- Billing (plan réel) depuis DB ---
+    const shopRow = await prisma.shop.findUnique({
+      where: { shopDomain: shop },
+    });
+
+    const isSubscribed = isBillingActive(shopRow);
+    const planKey = (shopRow?.billingPlan || "starter").toLowerCase();
+    const term = (shopRow?.billingTerm || "monthly").toLowerCase();
+
+    const plan = getPlan(planKey) || getPlan("starter");
+    const limit = plan?.orderLimit ?? 100;
+    const unlimited = limit === Infinity || !Number.isFinite(limit);
+
+    // --- Usage mensuel DB (exports réussis) ---
+    const usageRow = await prisma.shopMonthlyOrderUsage.upsert({
+      where: { shop_monthKey: { shopDomain: shop, monthKey } },
+      create: { shopDomain: shop, monthKey, used: 0 },
+      update: {},
+    });
+
+    const ordersUsed = Number(usageRow?.used || 0);
+    const ordersLimit = unlimited ? null : Number(limit);
+    const remaining = unlimited ? null : Math.max(0, ordersLimit - ordersUsed);
+
+    // Next plan (pour le bouton Upgrade UI)
+    const nextPlanKey =
+      planKey === "starter" ? "basic" : planKey === "basic" ? "premium" : null;
+
+    return json({
+      ok: true,
+      ordersUsed,
+      ordersLimit,
+      unlimited,
+      remaining,
+      planKey,
+      term,
+      monthKey,
+      sinceLabel,
+      nextPlanKey,
+      isSubscribed,
+    });
   } catch (e) {
     console.error("api.plan-usage error", e);
     return json(
@@ -68,7 +95,7 @@ export const loader = async ({ request }) => {
         sinceLabel: null,
         error: e?.message || "Erreur inconnue",
       },
-      { status: 500 },
+      { status: 500 }
     );
   }
 };

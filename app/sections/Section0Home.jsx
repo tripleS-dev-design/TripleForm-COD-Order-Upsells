@@ -845,30 +845,53 @@ function Section0Inner() {
     })();
   }, []);
 
-  // load orders stats
-  const loadOrdersStats = async () => {
-    try {
-      const r = await fetch("/api/orders/dashboard?days=30&codOnly=1", { credentials: "include" });
-      if (!r.ok) throw new Error("bad status");
-      const j = await r.json();
+// ✅ usage quota (mois courant) = /api/plan-usage
+const loadPlanUsage = async () => {
+  setPlanUsage((p) => ({ ...p, loading: true }));
 
-      const used = j?.totals?.count ?? 0;
-      setPlanUsage({
-        loading: false,
-        ordersUsed: used,
-        sinceLabel: "30 derniers jours (approx. période d'abonnement)",
-      });
+  try {
+    const r = await fetch("/api/plan-usage", { credentials: "include", cache: "no-store" });
+    const j = await r.json().catch(() => null);
 
-      const abandoned = j?.abandoned?.count ?? 0;
-      const recovered = j?.recovered?.count ?? 0;
+    if (!r.ok || !j?.ok) throw new Error(j?.error || "plan-usage error");
 
-      setWaStats({ loading: false, orders: used, abandoned, recovered });
-    } catch (e) {
-      console.error("orders.dashboard error", e);
-      setPlanUsage((prev) => ({ ...prev, loading: false }));
-      setWaStats((prev) => ({ ...prev, loading: false }));
-    }
-  };
+    setPlanUsage({
+      loading: false,
+      ordersUsed: j.ordersUsed ?? 0,
+      ordersLimit: j.ordersLimit ?? null,
+      unlimited: !!j.unlimited,
+      remaining: j.remaining ?? null,
+      monthKey: j.monthKey ?? null,
+      nextPlanKey: j.nextPlanKey ?? null,
+      sinceLabel: j.sinceLabel ?? null,
+      planKey: j.planKey ?? null,
+      term: j.term ?? null,
+      isSubscribed: !!j.isSubscribed,
+    });
+  } catch (e) {
+    console.error("plan-usage error", e);
+    setPlanUsage((prev) => ({ ...prev, loading: false }));
+  }
+};
+
+// ✅ WhatsApp dashboard stats = /api/orders/dashboard (on garde)
+const loadOrdersStats = async () => {
+  try {
+    const r = await fetch("/api/orders/dashboard?days=30&codOnly=1", { credentials: "include" });
+    if (!r.ok) throw new Error("bad status");
+    const j = await r.json();
+
+    const used = j?.totals?.count ?? 0;
+    const abandoned = j?.abandoned?.count ?? 0;
+    const recovered = j?.recovered?.count ?? 0;
+
+    setWaStats({ loading: false, orders: used, abandoned, recovered });
+  } catch (e) {
+    console.error("orders.dashboard error", e);
+    setWaStats((prev) => ({ ...prev, loading: false }));
+  }
+};
+
 
   // ✅ load WhatsApp LIVE status (SYNC like Section3Sheets)
   const loadWhatsAppLive = async () => {
@@ -900,18 +923,23 @@ function Section0Inner() {
     }
   };
 
-  useEffect(() => {
-    loadOrdersStats();
-    loadWhatsAppLive();
+useEffect(() => {
+  loadPlanUsage();      // ✅ quota mensuel (Google Sheets)
+  loadOrdersStats();    // ✅ stats WhatsApp (dashboard 30j)
+  loadWhatsAppLive();
 
-    const t1 = setInterval(loadWhatsAppLive, 8000);
-    const t2 = setInterval(loadOrdersStats, 12000);
+  const t1 = setInterval(loadWhatsAppLive, 8000);
+  const t2 = setInterval(loadOrdersStats, 12000);
+  const t3 = setInterval(loadPlanUsage, 12000);
 
-    return () => {
-      clearInterval(t1);
-      clearInterval(t2);
-    };
-  }, []);
+  return () => {
+    clearInterval(t1);
+    clearInterval(t2);
+    clearInterval(t3);
+  };
+}, []);
+
+
 
   const isSubscribed = billing.active;
 
