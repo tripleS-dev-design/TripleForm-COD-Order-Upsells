@@ -698,6 +698,13 @@ const OFFER_QTY_OPTIONS = [
   { label: "x3 (3 products)", value: "3" },
 ];
 
+/* ✅ Border styles */
+const BORDER_STYLE_OPTIONS = [
+  { label: "Solid", value: "solid" },
+  { label: "Dashed", value: "dashed" },
+  { label: "Double", value: "double" },
+];
+
 /* ============================== Thank You Page options ============================== */
 const THANKYOU_MODE_OPTIONS = [
   { label: "Simple (inline message)", value: "simple" },
@@ -880,6 +887,11 @@ const DEFAULT_OFFER = {
     buttonTextColor: "#FFFFFF",
     buttonBorder: "#111827",
   },
+  design: {
+    borderStyle: "solid",
+    textColor: "#111827",
+    textSize: 14,
+  },
   buttonText: "Activer",
   qtyMultiplier: 1,
   discountEnabled: false,
@@ -905,6 +917,15 @@ const DEFAULT_UPSELL = {
     buttonTextColor: "#FFFFFF",
     buttonBorder: "#111827",
   },
+  design: {
+    borderStyle: "solid",
+    textColor: "#111827",
+    textSize: 14,
+  },
+  buttonEnabled: true,
+  buttonText: "Add",
+  addedText: "Added",
+  qty: 1,
 };
 
 const DEFAULT_THANKYOU_COLORS = {
@@ -1075,6 +1096,11 @@ function PreviewCard({ item, products, isOffer, globalColors, tr }) {
   const useGlobal = item.useGlobalColors !== false;
   const c = useGlobal ? globalColors : item.colors || {};
 
+  const d = item.design || {};
+  const cardBorderStyle = d.borderStyle || "solid";
+  const textColor = d.textColor || "#111827";
+  const textSize = clampInt(d.textSize, 10, 22, 14);
+
   const cardBg = c.cardBg || "#fff";
   const borderColor = c.borderColor || "#E5E7EB";
   const iconBg = c.iconBg || "#EEF2FF";
@@ -1105,7 +1131,7 @@ function PreviewCard({ item, products, isOffer, globalColors, tr }) {
   return (
     <div
       className={`preview-offer ${layoutClass}`}
-      style={{ background: cardBg, borderColor }}
+      style={{ background: cardBg, borderColor, borderStyle: cardBorderStyle }}
     >
       <div className="preview-row">
         <div className="preview-icon" style={{ background: iconBg }}>
@@ -1139,7 +1165,7 @@ function PreviewCard({ item, products, isOffer, globalColors, tr }) {
 
         <div className="preview-main">
           <InlineStack align="space-between" blockAlign="center">
-            <div className="preview-title">
+            <div className="preview-title" style={{ color: textColor, fontSize: `${textSize}px` }}>
               {item.title ||
                 (isOffer
                   ? tr("section2.offers.defaultTitle", "Offer")
@@ -1156,7 +1182,7 @@ function PreviewCard({ item, products, isOffer, globalColors, tr }) {
             </InlineStack>
           </InlineStack>
 
-          <div className="preview-desc">{item.description || ""}</div>
+          <div className="preview-desc" style={{ color: textColor, fontSize: `${Math.max(10, textSize - 2)}px` }}>{item.description || ""}</div>
 
           <div className="preview-sub">
             {tr("section2.preview.productLabel", "Product")}:{" "}
@@ -1175,7 +1201,7 @@ function PreviewCard({ item, products, isOffer, globalColors, tr }) {
             ) : null}
           </div>
 
-          {isOffer && (
+          {(isOffer || item.buttonEnabled !== false) && (
             <button
               className="offer-btn"
               style={{
@@ -1187,8 +1213,7 @@ function PreviewCard({ item, products, isOffer, globalColors, tr }) {
               onClick={() => {}}
             >
               <SafeIcon name="CirclePlusIcon" fallback="PlusIcon" />
-              {item.buttonText ||
-                tr("section2.offers.buttonDefault", "Activate")}
+              {item.buttonText || (isOffer ? tr("section2.offers.buttonDefault", "Activate") : tr("section2.upsells.buttonDefault", "Add"))}
             </button>
           )}
         </div>
@@ -1437,6 +1462,11 @@ function OfferEditor({ offer, index, products, onChange, onRemove, canRemove, tr
   const discountValue = Number(offer.discountValue || 0);
   const qtyMultiplier = clampInt(offer.qtyMultiplier, 1, 3, 1);
 
+  const d = offer.design || {};
+  const borderStyle = d.borderStyle || "solid";
+  const textColor = d.textColor || "#111827";
+  const textSize = clampInt(d.textSize, 10, 22, 14);
+
   return (
     <div className="item-card">
       {canRemove && (
@@ -1588,6 +1618,51 @@ function OfferEditor({ offer, index, products, onChange, onRemove, canRemove, tr
             />
             <div />
           </Grid3>
+          <Divider />
+
+          <Grid3 min={220}>
+            <Select
+              label={tr("section2.design.borderStyle", "Border style")}
+              value={borderStyle}
+              options={BORDER_STYLE_OPTIONS}
+              onChange={(v) =>
+                onChange({
+                  ...offer,
+                  design: { ...(offer.design || {}), borderStyle: v },
+                })
+              }
+            />
+            <ColorField
+              label={tr("section2.design.textColor", "Text color")}
+              value={textColor}
+              onChange={(v) =>
+                onChange({
+                  ...offer,
+                  design: { ...(offer.design || {}), textColor: v },
+                })
+              }
+              placeholder="#111827"
+            />
+            <div style={{ display: "grid", gap: 8 }}>
+              <RangeSlider
+                label={tr("section2.design.textSize", "Text size (px)")}
+                value={textSize}
+                min={10}
+                max={22}
+                onChange={(v) =>
+                  onChange({
+                    ...offer,
+                    design: {
+                      ...(offer.design || {}),
+                      textSize: clampInt(v, 10, 22, 14),
+                    },
+                  })
+                }
+                output
+              />
+            </div>
+          </Grid3>
+
 
           {offer.useGlobalColors === false && (
             <>
@@ -1643,6 +1718,83 @@ function OfferEditor({ offer, index, products, onChange, onRemove, canRemove, tr
             </>
           )}
         </GroupCard>
+
+        <GroupCard title={tr("section2.groups.upsellButton", "Upsell button")}>
+          <Grid3 min={220}>
+            <Checkbox
+              label={tr("section2.upsells.buttonEnabled", "Enable button")}
+              checked={btnEnabled}
+              onChange={(v) => onChange({ ...upsell, buttonEnabled: v })}
+            />
+            <Select
+              label={tr("section2.upsells.qty", "Upsell quantity")}
+              value={String(btnQty)}
+              options={OFFER_QTY_OPTIONS}
+              onChange={(v) => onChange({ ...upsell, qty: Number(v) })}
+            />
+            <div />
+          </Grid3>
+
+          <Grid3 min={220}>
+            <TextField
+              label={tr("section2.upsells.buttonText", "Button text")}
+              value={btnText}
+              onChange={(v) => onChange({ ...upsell, buttonText: v })}
+              autoComplete="off"
+              placeholder={tr("section2.upsells.buttonTextPh", "Add")}
+            />
+            <TextField
+              label={tr("section2.upsells.addedText", "Added text")}
+              value={addedText}
+              onChange={(v) => onChange({ ...upsell, addedText: v })}
+              autoComplete="off"
+              placeholder={tr("section2.upsells.addedTextPh", "Added")}
+            />
+            <div />
+          </Grid3>
+
+          {upsell.useGlobalColors === false && (
+            <>
+              <Divider />
+              <Grid3 min={220}>
+                <ColorField
+                  label={tr("section2.colors.upsellBtnBg", "Button BG")}
+                  value={upsell.colors?.buttonBg || ""}
+                  onChange={(v) =>
+                    onChange({
+                      ...upsell,
+                      colors: { ...(upsell.colors || {}), buttonBg: v },
+                    })
+                  }
+                  placeholder="#111827"
+                />
+                <ColorField
+                  label={tr("section2.colors.upsellBtnText", "Button text")}
+                  value={upsell.colors?.buttonTextColor || ""}
+                  onChange={(v) =>
+                    onChange({
+                      ...upsell,
+                      colors: { ...(upsell.colors || {}), buttonTextColor: v },
+                    })
+                  }
+                  placeholder="#FFFFFF"
+                />
+                <ColorField
+                  label={tr("section2.colors.upsellBtnBorder", "Button border")}
+                  value={upsell.colors?.buttonBorder || ""}
+                  onChange={(v) =>
+                    onChange({
+                      ...upsell,
+                      colors: { ...(upsell.colors || {}), buttonBorder: v },
+                    })
+                  }
+                  placeholder="#111827"
+                />
+              </Grid3>
+            </>
+          )}
+        </GroupCard>
+
       </BlockStack>
     </div>
   );
@@ -1743,6 +1895,51 @@ function UpsellEditor({ upsell, index, products, onChange, onRemove, canRemove, 
             />
             <div />
           </Grid3>
+          <Divider />
+
+          <Grid3 min={220}>
+            <Select
+              label={tr("section2.design.borderStyle", "Border style")}
+              value={borderStyle}
+              options={BORDER_STYLE_OPTIONS}
+              onChange={(v) =>
+                onChange({
+                  ...upsell,
+                  design: { ...(upsell.design || {}), borderStyle: v },
+                })
+              }
+            />
+            <ColorField
+              label={tr("section2.design.textColor", "Text color")}
+              value={textColor}
+              onChange={(v) =>
+                onChange({
+                  ...upsell,
+                  design: { ...(upsell.design || {}), textColor: v },
+                })
+              }
+              placeholder="#111827"
+            />
+            <div style={{ display: "grid", gap: 8 }}>
+              <RangeSlider
+                label={tr("section2.design.textSize", "Text size (px)")}
+                value={textSize}
+                min={10}
+                max={22}
+                onChange={(v) =>
+                  onChange({
+                    ...upsell,
+                    design: {
+                      ...(upsell.design || {}),
+                      textSize: clampInt(v, 10, 22, 14),
+                    },
+                  })
+                }
+                output
+              />
+            </div>
+          </Grid3>
+
 
           {upsell.useGlobalColors === false && (
             <>

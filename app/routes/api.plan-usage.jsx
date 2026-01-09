@@ -5,6 +5,67 @@ import prisma from "../db.server";
 import { getPlan, isBillingActive } from "../utils/plans";
 
 /**
+ * 🔎 Parse planKey/term depuis le nom d'abonnement Shopify.
+ * Exemples attendus:
+ * - "TripleForm COD – Starter (monthly)"
+ * - "TripleForm COD – Basic (annual)"
+ * - "TripleForm COD – Premium (monthly)"
+ */
+function parsePlanFromSubscriptionName(name) {
+  const n = String(name || "").toLowerCase();
+
+  let planKey = null;
+  if (n.includes("starter")) planKey = "starter";
+  else if (n.includes("basic")) planKey = "basic";
+  else if (n.includes("premium")) planKey = "premium";
+
+  let term = null;
+  if (n.includes("annual") || n.includes("year")) term = "annual";
+  else if (n.includes("monthly") || n.includes("month")) term = "monthly";
+
+  return { planKey, term };
+}
+
+/**
+ * ✅ Récupère le plan réel actif depuis Shopify (source de vérité).
+ * Retourne: { planKey, term } ou { planKey:null, term:null }
+ */
+async function fetchActivePlanFromShopify(admin) {
+  if (!admin) return { planKey: null, term: null };
+
+  const QUERY = `
+    query ActiveSubs {
+      currentAppInstallation {
+        activeSubscriptions {
+          id
+          name
+          status
+        }
+      }
+    }
+  `;
+
+  try {
+    const resp = await admin.graphql(QUERY);
+    const j = await resp.json();
+
+    const subs = j?.data?.currentAppInstallation?.activeSubscriptions || [];
+    const s = subs.find((x) => String(x?.status || "").toUpperCase() === "ACTIVE") || subs[0];
+    if (!s) return { planKey: null, term: null };
+
+    const parsed = parsePlanFromSubscriptionName(s?.name);
+
+    const term = parsed.term || null;
+
+    return { planKey: parsed.planKey, term };
+  } catch (e) {
+    console.error("fetchActivePlanFromShopify error:", e);
+    return { planKey: null, term: null };
+  }
+}
+
+
+/**
  * Usage mensuel EXACT basé sur les exports Google Sheets réussis.
  * Source de vérité: ShopMonthlyOrderUsage (used par mois).
  *
@@ -25,7 +86,7 @@ import { getPlan, isBillingActive } from "../utils/plans";
  */
 export const loader = async ({ request }) => {
   try {
-    const { session } = await authenticate.admin(request);
+    const { admin, session } = await authenticate.admin(request);
     const shop = session?.shop;
 
     if (!shop) {
@@ -45,14 +106,38 @@ export const loader = async ({ request }) => {
       month: "short",
     })}`;
 
-    // --- Billing (plan réel) depuis DB ---
+    // --- Billing (plan réel) ---
     const shopRow = await prisma.shop.findUnique({
       where: { shopDomain: shop },
     });
 
-    const isSubscribed = isBillingActive(shopRow);
-    const planKey = (shopRow?.billingPlan || "starter").toLowerCase();
-    const term = (shopRow?.billingTerm || "monthly").toLowerCase();
+    // 1) On tente Shopify (source de vérité)
+    const shopifyPlan = await fetchActivePlanFromShopify(admin);
+
+    // 2) Fallback DB
+    const dbPlanKey = (shopRow?.billingPlan || "starter").toLowerCase();
+    const dbTerm = (shopRow?.billingTerm || "monthly").toLowerCase();
+
+    const planKey = (shopifyPlan.planKey || dbPlanKey).toLowerCase();
+    const term = (shopifyPlan.term || dbTerm).toLowerCase();
+
+    // 3) isSubscribed: Shopify actif OU DB billing actif
+    const isSubscribed = !!shopifyPlan.planKey || isBillingActive(shopRow);
+
+    // 4) Sync DB si Shopify nous donne un plan clair (évite blocage sur 500)
+    if (shopifyPlan.planKey && (shopifyPlan.planKey !== dbPlanKey || (shopifyPlan.term && shopifyPlan.term !== dbTerm))) {
+      try {
+        await prisma.shop.update({
+          where: { shopDomain: shop },
+          data: {
+            billingPlan: shopifyPlan.planKey,
+            ...(shopifyPlan.term ? { billingTerm: shopifyPlan.term } : {}),
+          },
+        });
+      } catch (e) {
+        console.error("Failed to sync billingPlan in DB:", e);
+      }
+    }
 
     const plan = getPlan(planKey) || getPlan("starter");
     const limit = plan?.orderLimit ?? 100;

@@ -1169,8 +1169,8 @@ useEffect(() => {
             <div className="tf-preview-card">
               <PlanUsageWidget
                 isSubscribed={isSubscribed}
-                planKey={currentKey}
-                currentTerm={currentTerm}
+                planKey={planUsage?.planKey || currentKey}
+                currentTerm={planUsage?.term || currentTerm}
                 usage={planUsage}
               />
             </div>

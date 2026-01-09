@@ -16,7 +16,7 @@ export async function loader({ request }) {
   const { admin, session } = await authenticate.admin(request);
 
   const url = new URL(request.url);
-  const planKey = (url.searchParams.get("plan") || "").toLowerCase();   // starter | basic | premium
+  const planKey = (url.searchParams.get("plan") || "").toLowerCase(); // starter | basic | premium
   const term = (url.searchParams.get("term") || "monthly").toLowerCase(); // monthly | annual
   const host = url.searchParams.get("host") || "";
   const shop = session?.shop || "";
@@ -42,7 +42,7 @@ export async function loader({ request }) {
   const amount = Number(norm.amount); // ex: 0.99
   const name = `TripleForm COD – ${norm.plan.name} (${norm.term})`;
   const test = isDevStore || process.env.BILLING_TEST === "1";
-  const trialDays = 7; 
+  const trialDays = 7;
 
   const MUTATION = `
     mutation CreateSub(
@@ -84,24 +84,12 @@ export async function loader({ request }) {
   });
 
   const data = await resp.json();
-  const errs =
-    data?.data?.appSubscriptionCreate?.userErrors ||
-    data?.errors ||
-    [];
+  const errs = data?.data?.appSubscriptionCreate?.userErrors || data?.errors || [];
+  const confirmationUrl = data?.data?.appSubscriptionCreate?.confirmationUrl || null;
 
-  const confirmationUrl =
-    data?.data?.appSubscriptionCreate?.confirmationUrl || null;
-
-  if (errs.length) {
-    console.error("Billing request errors:", JSON.stringify(errs, null, 2));
-    return json({ ok: false, errors: errs }, { status: 400 });
+  if (errs?.length || !confirmationUrl) {
+    return json({ ok: false, error: errs?.[0]?.message || "Billing error" }, { status: 400 });
   }
 
-  if (!confirmationUrl) {
-    console.error("No confirmationUrl in billing response:", data);
-    return json({ ok: false, error: "No confirmationUrl" }, { status: 500 });
-  }
-
-  // 🔁 On renvoie l'URL pour que le client fasse top-level redirect
-  return json({ ok: true, confirmationUrl, test, shop, host });
+  return redirect(confirmationUrl);
 }
