@@ -1,48 +1,68 @@
-// ===== File: app/routes/api.billing.request.jsx =====
+// app/routes/api.billing.request.jsx
 import { json } from "@remix-run/node";
 import { authenticate } from "../shopify.server";
-import { normalizePlanSelection } from "../utils/plans.js";
 
-function buildConfirmUrl(request, shop, host) {
+/**
+ * Create Shopify subscription (recurring) and return confirmationUrl (JSON),
+ * so the client can redirect with window.top.location.href.
+ *
+ * Query:
+ * - plan: starter | basic | premium
+ * - term: monthly | annual
+ * - host: (optional)
+ */
+const PRICE_TABLE = {
+  monthly: { starter: 0.99, basic: 9.99, premium: 19.99 },
+  annual: { starter: 9.99, basic: 83.99, premium: 167.99 },
+};
+
+function buildReturnUrl(request, shop, host) {
   const appOrigin = process.env.SHOPIFY_APP_URL || new URL(request.url).origin;
-  const url = new URL("/api/billing/confirm", appOrigin);
-  if (shop) url.searchParams.set("shop", shop);
-  if (host) url.searchParams.set("host", host);
-  return url;
+  const u = new URL("/api/billing/confirm", appOrigin);
+  if (shop) u.searchParams.set("shop", shop);
+  if (host) u.searchParams.set("host", host);
+  return u.toString();
 }
 
-export async function loader({ request }) {
-  // ✅ plus de billing.request ici, juste admin.graphql
+async function isDevStore(admin) {
+  try {
+    const resp = await admin.graphql(`{ shop { plan { partnerDevelopment } } }`);
+    const j = await resp.json();
+    return j?.data?.shop?.plan?.partnerDevelopment === true;
+  } catch {
+    return false;
+  }
+}
+
+export const loader = async ({ request }) => {
   const { admin, session } = await authenticate.admin(request);
 
   const url = new URL(request.url);
-  const planKey = (url.searchParams.get("plan") || "").toLowerCase(); // starter | basic | premium
-  const term = (url.searchParams.get("term") || "monthly").toLowerCase(); // monthly | annual
-  const host = url.searchParams.get("host") || "";
+  const plan = (url.searchParams.get("plan") || "").toLowerCase();
+  const termRaw = (url.searchParams.get("term") || "monthly").toLowerCase();
+  const host = (url.searchParams.get("host") || "").trim();
+
+  const term = termRaw === "annual" ? "annual" : "monthly";
+
+  if (!["starter", "basic", "premium"].includes(plan)) {
+    return json({ ok: false, error: "Invalid plan" }, { status: 400 });
+  }
+
+  const amount = PRICE_TABLE[term]?.[plan];
+  if (typeof amount !== "number") {
+    return json({ ok: false, error: "Invalid pricing" }, { status: 400 });
+  }
+
   const shop = session?.shop || "";
+  const returnUrl = buildReturnUrl(request, shop, host);
 
-  const norm = normalizePlanSelection(planKey, term);
-  if (!norm) {
-    return json({ ok: false, error: "Invalid plan/term" }, { status: 400 });
-  }
+  const interval = term === "annual" ? "ANNUAL" : "EVERY_30_DAYS";
+  const test =
+    (await isDevStore(admin)) || process.env.BILLING_TEST === "1" || process.env.NODE_ENV !== "production";
 
-  const returnUrl = buildConfirmUrl(request, shop, host);
+  const trialDays = Number(process.env.BILLING_TRIAL_DAYS || 7);
 
-  // Dev store => mode test
-  let isDevStore = false;
-  try {
-    const q = await admin.graphql(`{ shop { plan { partnerDevelopment } } }`);
-    const j = await q.json();
-    isDevStore = j?.data?.shop?.plan?.partnerDevelopment === true;
-  } catch (err) {
-    console.error("Error checking dev store:", err);
-  }
-
-  const interval = norm.term === "annual" ? "ANNUAL" : "EVERY_30_DAYS";
-  const amount = Number(norm.amount); // ex: 0.99
-  const name = `TripleForm COD – ${norm.plan.name} (${norm.term})`;
-  const test = isDevStore || process.env.BILLING_TEST === "1";
-  const trialDays = 7;
+  const name = `TripleForm COD – ${plan.toUpperCase()} (${term})`;
 
   const MUTATION = `
     mutation CreateSub(
@@ -75,21 +95,32 @@ export async function loader({ request }) {
   const resp = await admin.graphql(MUTATION, {
     variables: {
       name,
-      returnUrl: returnUrl.toString(),
-      amount,
+      returnUrl,
+      amount: Number(amount.toFixed(2)),
       interval,
       trialDays,
       test,
     },
   });
 
-  const data = await resp.json();
-  const errs = data?.data?.appSubscriptionCreate?.userErrors || data?.errors || [];
+  const data = await resp.json().catch(() => null);
+
+  const errs =
+    data?.data?.appSubscriptionCreate?.userErrors ||
+    data?.errors ||
+    [];
+
   const confirmationUrl = data?.data?.appSubscriptionCreate?.confirmationUrl || null;
 
-  if (errs?.length || !confirmationUrl) {
-    return json({ ok: false, error: errs?.[0]?.message || "Billing error" }, { status: 400 });
+  if (errs?.length) {
+    console.error("Billing request errors:", JSON.stringify(errs, null, 2));
+    return json({ ok: false, errors: errs }, { status: 400 });
   }
 
-  return redirect(confirmationUrl);
-}
+  if (!confirmationUrl) {
+    console.error("No confirmationUrl in billing response:", data);
+    return json({ ok: false, error: "No confirmationUrl" }, { status: 500 });
+  }
+
+  return json({ ok: true, confirmationUrl, test, shop, host });
+};

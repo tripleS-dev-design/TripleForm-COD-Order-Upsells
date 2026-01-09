@@ -1719,82 +1719,6 @@ function OfferEditor({ offer, index, products, onChange, onRemove, canRemove, tr
           )}
         </GroupCard>
 
-        <GroupCard title={tr("section2.groups.upsellButton", "Upsell button")}>
-          <Grid3 min={220}>
-            <Checkbox
-              label={tr("section2.upsells.buttonEnabled", "Enable button")}
-              checked={btnEnabled}
-              onChange={(v) => onChange({ ...upsell, buttonEnabled: v })}
-            />
-            <Select
-              label={tr("section2.upsells.qty", "Upsell quantity")}
-              value={String(btnQty)}
-              options={OFFER_QTY_OPTIONS}
-              onChange={(v) => onChange({ ...upsell, qty: Number(v) })}
-            />
-            <div />
-          </Grid3>
-
-          <Grid3 min={220}>
-            <TextField
-              label={tr("section2.upsells.buttonText", "Button text")}
-              value={btnText}
-              onChange={(v) => onChange({ ...upsell, buttonText: v })}
-              autoComplete="off"
-              placeholder={tr("section2.upsells.buttonTextPh", "Add")}
-            />
-            <TextField
-              label={tr("section2.upsells.addedText", "Added text")}
-              value={addedText}
-              onChange={(v) => onChange({ ...upsell, addedText: v })}
-              autoComplete="off"
-              placeholder={tr("section2.upsells.addedTextPh", "Added")}
-            />
-            <div />
-          </Grid3>
-
-          {upsell.useGlobalColors === false && (
-            <>
-              <Divider />
-              <Grid3 min={220}>
-                <ColorField
-                  label={tr("section2.colors.upsellBtnBg", "Button BG")}
-                  value={upsell.colors?.buttonBg || ""}
-                  onChange={(v) =>
-                    onChange({
-                      ...upsell,
-                      colors: { ...(upsell.colors || {}), buttonBg: v },
-                    })
-                  }
-                  placeholder="#111827"
-                />
-                <ColorField
-                  label={tr("section2.colors.upsellBtnText", "Button text")}
-                  value={upsell.colors?.buttonTextColor || ""}
-                  onChange={(v) =>
-                    onChange({
-                      ...upsell,
-                      colors: { ...(upsell.colors || {}), buttonTextColor: v },
-                    })
-                  }
-                  placeholder="#FFFFFF"
-                />
-                <ColorField
-                  label={tr("section2.colors.upsellBtnBorder", "Button border")}
-                  value={upsell.colors?.buttonBorder || ""}
-                  onChange={(v) =>
-                    onChange({
-                      ...upsell,
-                      colors: { ...(upsell.colors || {}), buttonBorder: v },
-                    })
-                  }
-                  placeholder="#111827"
-                />
-              </Grid3>
-            </>
-          )}
-        </GroupCard>
-
       </BlockStack>
     </div>
   );
@@ -1980,6 +1904,84 @@ function UpsellEditor({ upsell, index, products, onChange, onRemove, canRemove, 
             </>
           )}
         </GroupCard>
+
+
+        <GroupCard title={tr("section2.groups.upsellButton", "Upsell button")}>
+          <Grid3 min={220}>
+            <Checkbox
+              label={tr("section2.upsells.buttonEnabled", "Enable button")}
+              checked={btnEnabled}
+              onChange={(v) => onChange({ ...upsell, buttonEnabled: v })}
+            />
+            <Select
+              label={tr("section2.upsells.qty", "Upsell quantity")}
+              value={String(btnQty)}
+              options={OFFER_QTY_OPTIONS}
+              onChange={(v) => onChange({ ...upsell, qty: Number(v) })}
+            />
+            <div />
+          </Grid3>
+
+          <Grid3 min={220}>
+            <TextField
+              label={tr("section2.upsells.buttonText", "Button text")}
+              value={btnText}
+              onChange={(v) => onChange({ ...upsell, buttonText: v })}
+              autoComplete="off"
+              placeholder={tr("section2.upsells.buttonTextPh", "Add")}
+            />
+            <TextField
+              label={tr("section2.upsells.addedText", "Added text")}
+              value={addedText}
+              onChange={(v) => onChange({ ...upsell, addedText: v })}
+              autoComplete="off"
+              placeholder={tr("section2.upsells.addedTextPh", "Added")}
+            />
+            <div />
+          </Grid3>
+
+          {upsell.useGlobalColors === false && (
+            <>
+              <Divider />
+              <Grid3 min={220}>
+                <ColorField
+                  label={tr("section2.colors.upsellBtnBg", "Button BG")}
+                  value={upsell.colors?.buttonBg || ""}
+                  onChange={(v) =>
+                    onChange({
+                      ...upsell,
+                      colors: { ...(upsell.colors || {}), buttonBg: v },
+                    })
+                  }
+                  placeholder="#111827"
+                />
+                <ColorField
+                  label={tr("section2.colors.upsellBtnText", "Button text")}
+                  value={upsell.colors?.buttonTextColor || ""}
+                  onChange={(v) =>
+                    onChange({
+                      ...upsell,
+                      colors: { ...(upsell.colors || {}), buttonTextColor: v },
+                    })
+                  }
+                  placeholder="#FFFFFF"
+                />
+                <ColorField
+                  label={tr("section2.colors.upsellBtnBorder", "Button border")}
+                  value={upsell.colors?.buttonBorder || ""}
+                  onChange={(v) =>
+                    onChange({
+                      ...upsell,
+                      colors: { ...(upsell.colors || {}), buttonBorder: v },
+                    })
+                  }
+                  placeholder="#111827"
+                />
+              </Grid3>
+            </>
+          )}
+        </GroupCard>
+
       </BlockStack>
     </div>
   );

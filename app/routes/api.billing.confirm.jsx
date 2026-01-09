@@ -1,29 +1,31 @@
-// ===== File: app/routes/api.billing.confirm.jsx =====
+// app/routes/api.billing.confirm.jsx
 import { redirect } from "@remix-run/node";
 import { authenticate } from "../shopify.server";
 import prisma from "../db.server";
 
-// mapping interval+amount -> planKey
+/**
+ * Billing confirm (returnUrl)
+ * - best effort: read ACTIVE subscription from Shopify, sync DB (billingPlan/billingTerm)
+ * - then exit iframe to the app page in Shopify Admin
+ */
+
 const PLAN_MAP = {
   EVERY_30_DAYS: { 0.99: "starter", 9.99: "basic", 19.99: "premium" },
   ANNUAL: { 9.99: "starter", 83.99: "basic", 167.99: "premium" },
 };
 
 function resolvePlanFromSubscription(sub) {
-  try {
-    const li = sub?.lineItems?.[0]?.plan?.pricingDetails;
-    const type = li?.__typename || "";
-    if (type !== "AppRecurringPricingDetails") return null;
+  const details = sub?.lineItems?.[0]?.plan?.pricingDetails;
+  if (!details || details?.__typename !== "AppRecurringPricingDetails") return null;
 
-    const interval = li?.interval || "EVERY_30_DAYS";
-    const amount = Number(li?.price?.amount || 0);
-    const rounded = Number(amount.toFixed(2));
-    const planKey = PLAN_MAP[interval]?.[rounded] || null;
-    const term = interval === "ANNUAL" ? "annual" : "monthly";
-    return { planKey, term };
-  } catch {
-    return null;
-  }
+  const interval = details.interval || "EVERY_30_DAYS";
+  const amount = Number(details.price?.amount || 0);
+  const rounded = Number(amount.toFixed(2));
+  const planKey = PLAN_MAP?.[interval]?.[rounded] || null;
+  const term = interval === "ANNUAL" ? "annual" : "monthly";
+
+  if (!planKey) return null;
+  return { planKey, term };
 }
 
 async function fetchShopifyActivePlan(admin) {
@@ -57,17 +59,15 @@ async function fetchShopifyActivePlan(admin) {
   return resolvePlanFromSubscription(active);
 }
 
-function buildBillingUpdateData(shopRow, planInfo) {
-  const data = {};
-  if (planInfo?.planKey && typeof shopRow?.billingPlan !== "undefined") data.billingPlan = planInfo.planKey;
-  if (planInfo?.term && typeof shopRow?.billingTerm !== "undefined") data.billingTerm = planInfo.term;
-
-  if (planInfo?.planKey) {
-    if (typeof shopRow?.billingActive !== "undefined") data.billingActive = true;
-    if (typeof shopRow?.billingStatus !== "undefined") data.billingStatus = "active";
-    if (typeof shopRow?.billingActivatedAt !== "undefined") data.billingActivatedAt = new Date();
-  }
-  return data;
+function buildAdminAppUrl(shop, host) {
+  const apiKey = process.env.SHOPIFY_API_KEY;
+  const store = (shop || "").replace(".myshopify.com", "");
+  const base = `https://admin.shopify.com/store/${store}/apps/${apiKey}`;
+  const params = new URLSearchParams();
+  if (shop) params.set("shop", shop);
+  if (host) params.set("host", host);
+  const qs = params.toString();
+  return qs ? `${base}?${qs}` : base;
 }
 
 export async function loader({ request }) {
@@ -75,17 +75,24 @@ export async function loader({ request }) {
   const shopParam = (url.searchParams.get("shop") || "").trim();
   const host = (url.searchParams.get("host") || "").trim();
 
-  // ✅ Best effort: sync plan Shopify -> DB (sans casser le flow si auth impossible)
+  // ✅ best effort sync (no loop if auth fails)
   try {
     const { admin, session } = await authenticate.admin(request);
-    const shop = session?.shop;
+    const shop = session?.shop || shopParam;
 
     if (admin && shop) {
       const planInfo = await fetchShopifyActivePlan(admin).catch(() => null);
+
       if (planInfo?.planKey) {
         const shopRow = await prisma.shop.findUnique({ where: { shopDomain: shop } });
         if (shopRow) {
-          const data = buildBillingUpdateData(shopRow, planInfo);
+          const data = {};
+          if (typeof shopRow.billingPlan !== "undefined") data.billingPlan = planInfo.planKey;
+          if (typeof shopRow.billingTerm !== "undefined") data.billingTerm = planInfo.term;
+          if (typeof shopRow.billingActive !== "undefined") data.billingActive = true;
+          if (typeof shopRow.billingStatus !== "undefined") data.billingStatus = "active";
+          if (typeof shopRow.billingActivatedAt !== "undefined") data.billingActivatedAt = new Date();
+
           if (Object.keys(data).length) {
             await prisma.shop.update({ where: { shopDomain: shop }, data }).catch(() => {});
           }
@@ -93,17 +100,11 @@ export async function loader({ request }) {
       }
     }
   } catch (e) {
-    // ⚠️ important: NE PAS renvoyer le redirect d'auth ici (sinon boucle "Enter your shop")
+    // ignore: we still redirect out of iframe
   }
 
-  // ✅ Sortie d’iframe → onglet app dans l’admin
   const appOrigin = process.env.SHOPIFY_APP_URL || url.origin;
-  const store = (shopParam || "").replace(".myshopify.com", "");
-  const adminAppUrl =
-    `https://admin.shopify.com/store/${store}/apps/${process.env.SHOPIFY_API_KEY}` +
-    ((shopParam || host)
-      ? `?${new URLSearchParams({ ...(shopParam && { shop: shopParam }), ...(host && { host }) }).toString()}`
-      : "");
+  const adminAppUrl = buildAdminAppUrl(shopParam, host);
 
   const exit = new URL("/auth/exit-iframe", appOrigin);
   if (shopParam) exit.searchParams.set("shop", shopParam);
