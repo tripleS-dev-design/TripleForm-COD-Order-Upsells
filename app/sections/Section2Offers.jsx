@@ -1812,6 +1812,13 @@ function UpsellEditor({ upsell, index, products, onChange, onRemove, canRemove, 
     ];
   }, [products, tr]);
 
+  // ✅ Upsell button settings (safe defaults)
+  // If undefined (old data), we enable the button by default to match the new UX.
+  const btnEnabled = upsell.buttonEnabled ?? true;
+  const btnQty = Math.min(3, Math.max(1, Number(upsell.qty || 1)));
+  const btnText = upsell.buttonText || tr("section2.upsells.buttonTextPh", "Add");
+  const addedText = upsell.addedText || tr("section2.upsells.addedTextPh", "Added");
+
   return (
     <div className="item-card">
       {canRemove && (
