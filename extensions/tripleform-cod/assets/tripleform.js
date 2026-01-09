@@ -3721,12 +3721,149 @@ function parseGeoAttr(holder) {
       return Math.round(n * 100);
     }
 
+
+function extractGeoShippingCents(resp) {
+  try {
+    if (!resp || typeof resp !== "object") return null;
+
+    // Explicit free-shipping flags
+    if (resp.freeShipping === true || resp.isFreeShipping === true || resp.free === true) return 0;
+
+    const pick = (v) => {
+      if (v == null) return null;
+      if (typeof v === "number" && Number.isFinite(v)) {
+        // Heuristic: if looks like major units (e.g. 39.9), convert to cents; if integer, assume cents
+        if (Number.isInteger(v)) return v;
+        return Math.round(v * 100);
+      }
+      if (typeof v === "string") {
+        const s = v.trim();
+        if (!s) return null;
+        const n = Number(s.replace(",", ".").replace(/[^\d.\-]/g, ""));
+        if (!Number.isFinite(n)) return null;
+        // If string contains decimal separator, assume major units
+        if (s.includes(".") || s.includes(",")) return Math.round(n * 100);
+        // Otherwise: could be cents or major; choose cents if big
+        if (n >= 1000) return Math.round(n);
+        return Math.round(n * 100);
+      }
+      return null;
+    };
+
+    const candidates = [
+      resp.shippingCents,
+      resp.shipping_cents,
+      resp.shippingPriceCents,
+      resp.shipping_price_cents,
+      resp.amountCents,
+      resp.amount_cents,
+      resp.cents,
+      resp.shipping,
+      resp.price,
+      resp.amount,
+    ];
+
+    for (const c of candidates) {
+      const cents = pick(c);
+      if (typeof cents === "number" && Number.isFinite(cents) && cents >= 0) return Math.round(cents);
+    }
+
+    // Nested shapes: { data: { ... } } or { result: { ... } }
+    if (resp.data) {
+      const cents = extractGeoShippingCents(resp.data);
+      if (cents != null) return cents;
+    }
+    if (resp.result) {
+      const cents = extractGeoShippingCents(resp.result);
+      if (cents != null) return cents;
+    }
+
+    return null;
+  } catch (e) {
+    return null;
+  }
+}
+
 function computeShippingCents(subtotalCents) {
   // Return null => keep "Shipping to calculate"
   // Return number (cents) => show shipping amount
   try {
     if (!geoCfg) return null;
     if (geoCfg.enabled === false) return null;
+
+    // Preferred: server-side GEO shipping calculation via endpoint
+    if (geoEndpoint) {
+      const sel = (typeof readGeoSelection === "function" ? readGeoSelection(cfg) : {}) || {};
+      const province = String(sel.province || "").trim();
+      const city = String(sel.city || "").trim();
+
+      const modeNow = String(geoCfg.mode || "city").toLowerCase();
+      const needCity = modeNow === "city";
+
+      // Not enough info yet => keep "Shipping to calculate"
+      if (!province || (needCity && !city)) {
+        __tfGeoRemote.key = null;
+        __tfGeoRemote.cents = null;
+        __tfGeoRemote.pending = false;
+        __tfGeoRemote.error = null;
+        return null;
+      }
+
+      const amt = Number(subtotalCents || 0);
+      const key = [String(geoCountryAttr || geoCfg.country || ""), province, city, String(Math.round(amt))].join("|");
+
+      // Use cached / in-flight result
+      if (__tfGeoRemote.key === key) {
+        if (typeof __tfGeoRemote.cents === "number" && Number.isFinite(__tfGeoRemote.cents)) return __tfGeoRemote.cents;
+        return null;
+      }
+
+      __tfGeoRemote.key = key;
+      __tfGeoRemote.cents = null;
+      __tfGeoRemote.pending = true;
+      __tfGeoRemote.error = null;
+
+      const payload = {
+        country: geoCountryAttr || geoCfg.country || "MA",
+        province,
+        city,
+        subtotalCents: Math.max(0, Math.round(amt)),
+        currency: holder.getAttribute("data-currency") || "",
+        productId: Number(holder.getAttribute("data-product-id") || 0) || undefined,
+        variantId: Number(holder.getAttribute("data-variant-id") || 0) || undefined,
+        locale: holder.getAttribute("data-locale") || ""
+      };
+
+      fetch(geoEndpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Accept": "application/json" },
+        body: JSON.stringify(payload)
+      })
+        .then(async (r) => {
+          let data = null;
+          try { data = await r.json(); } catch (e) { data = null; }
+          if (!r.ok) {
+            const msg = (data && (data.error || data.message)) ? (data.error || data.message) : ("HTTP " + r.status);
+            throw new Error(msg);
+          }
+          return data;
+        })
+        .then((data) => {
+          const cents = extractGeoShippingCents(data);
+          __tfGeoRemote.cents = (typeof cents === "number" && Number.isFinite(cents) && cents >= 0) ? cents : null;
+          __tfGeoRemote.pending = false;
+          // Re-render totals (will switch from "Shipping to calculate" => amount)
+          try { updateMoney(); } catch (e) {}
+        })
+        .catch((err) => {
+          __tfGeoRemote.pending = false;
+          __tfGeoRemote.error = err && err.message ? err.message : "shipping calc error";
+          __tfGeoRemote.cents = null;
+          try { updateMoney(); } catch (e) {}
+        });
+
+      return null;
+    }
 
     const country = geoCfg.country || "MA";
     const mode = geoCfg.mode || "city";
@@ -4236,7 +4373,32 @@ let recaptchaToken = null;
 
     const cfg = parseSettingsAttr(holder);
     const offersCfg = parseOffersAttr(holder);
-      const geoCfg = parseGeoAttr(holder);
+      const geoCfg = (function () {
+  const base = parseGeoAttr(holder) || {};
+  // New theme-block attributes (preferred)
+  const enabledAttr = holder.getAttribute("data-geo-enabled");
+  if (enabledAttr != null) base.enabled = String(enabledAttr) === "true";
+
+  const endpointAttr = holder.getAttribute("data-geo-endpoint");
+  if (endpointAttr) base.endpoint = endpointAttr;
+
+  const countryAttr = holder.getAttribute("data-geo-country") || holder.getAttribute("data-geo-country-code");
+  if (countryAttr) base.country = countryAttr;
+
+  // Backward-compat: allow config inside settings JSON (cfg.geo)
+  try {
+    if (cfg && cfg.geo && typeof cfg.geo === "object") {
+      Object.assign(base, cfg.geo);
+    }
+  } catch (e) {}
+
+  return Object.keys(base).length ? base : null;
+})();
+    // Shipping (GEO) remote calc state (used when data-geo-endpoint is provided)
+    const geoEndpoint = (geoCfg && (geoCfg.endpoint || geoCfg.geoEndpoint)) || holder.getAttribute("data-geo-endpoint") || "";
+    const geoCountryAttr = (geoCfg && geoCfg.country) || holder.getAttribute("data-geo-country") || holder.getAttribute("data-geo-country-code") || "";
+    const __tfGeoRemote = { key: null, cents: null, pending: false, error: null };
+
 
     const currency = holder.getAttribute("data-currency") || "USD";
     const locale = holder.getAttribute("data-locale") || "en";
