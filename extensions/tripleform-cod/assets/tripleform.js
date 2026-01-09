@@ -486,6 +486,12 @@ window.TripleformCOD = (function () {
   /* ------------------------------------------------------------------ */
   /* CSS Injection                                                      */
   /* ------------------------------------------------------------------ */
+
+function parseGeoAttr(holder) {
+  const raw = holder.getAttribute("data-geo");
+  return safeJsonParse(raw, {});
+}
+
   function injectGlobalCSSOnce() {
     if (document.getElementById("tf-global-css")) return;
 
@@ -2121,7 +2127,7 @@ window.TripleformCOD = (function () {
 
   let __tfInternalQty = 1;
   let __tfLastRoot = null;
-  let __tfGlobalWatchAttached = false;
+
   function setActiveRoot(root) {
     if (root && root.nodeType === 1) __tfLastRoot = root;
   }
@@ -2131,8 +2137,7 @@ window.TripleformCOD = (function () {
     return (
       root.querySelector('[data-tf-field="quantity"]') ||
       root.querySelector('input[data-tf-role="quantity"]') ||
-      root.querySelector('input[name="quantity"]') ||
-      root.querySelector('select[name="quantity"]')
+      root.querySelector('input[name="quantity"]')
     );
   }
 
@@ -2152,46 +2157,21 @@ window.TripleformCOD = (function () {
 
     const local = findQtyInput(r);
     const vLocal = Number(local && local.value != null ? local.value : NaN);
-
-    const qEl =
-      document.querySelector('form[action^="/cart/add"] input[name="quantity"]') ||
-      document.querySelector('form[action^="/cart/add"] select[name="quantity"]') ||
-      document.querySelector('input[name="quantity"]') ||
-      document.querySelector('select[name="quantity"]');
-
-    const vTheme = Number(qEl && qEl.value != null ? qEl.value : NaN);
-
-    // If both exist and theme qty is higher, keep them in sync (fixes x2/x3 blocking in some themes)
-    if (Number.isFinite(vLocal) && vLocal > 0 && Number.isFinite(vTheme) && vTheme > 0) {
-      const lv = Math.max(1, Math.round(vLocal));
-      const tv = Math.max(1, Math.round(vTheme));
-      if (local && (local.getAttribute("data-tf-field") === "quantity" || local.getAttribute("data-tf-role") === "quantity")) {
-        if (tv !== lv && (tv > 1 || lv > 1)) {
-          // sync local -> theme selection (without fighting user)
-          try {
-            local.value = String(tv);
-            dispatchQtyEvents(local);
-          } catch {}
-          __tfInternalQty = tv;
-          return tv;
-        }
-      }
-      __tfInternalQty = lv;
-      return lv;
-    }
-
     if (Number.isFinite(vLocal) && vLocal > 0) {
       __tfInternalQty = Math.max(1, Math.round(vLocal));
       return __tfInternalQty;
     }
 
-    if (Number.isFinite(vTheme) && vTheme > 0) {
-      __tfInternalQty = Math.max(1, Math.round(vTheme));
+    const q = document.querySelector('form[action^="/cart/add"] input[name="quantity"]');
+    const v = Number(q && q.value != null ? q.value : NaN);
+    if (Number.isFinite(v) && v > 0) {
+      __tfInternalQty = Math.max(1, Math.round(v));
       return __tfInternalQty;
     }
 
     return Math.max(1, Number(__tfInternalQty || 1));
   }
+
   function setQty(nextQty, root) {
     const n = Math.max(1, Math.round(Number(nextQty || 1)));
     __tfInternalQty = n;
@@ -2206,7 +2186,7 @@ window.TripleformCOD = (function () {
       did = true;
     }
 
-    const q = document.querySelector('form[action^="/cart/add"] input[name="quantity"]') || document.querySelector('form[action^="/cart/add"] select[name="quantity"]');
+    const q = document.querySelector('form[action^="/cart/add"] input[name="quantity"]');
     if (q && q !== local) {
       q.value = String(n);
       dispatchQtyEvents(q);
@@ -2226,71 +2206,17 @@ window.TripleformCOD = (function () {
       }
     };
 
-    // Bind global watchers once (theme variant + theme qty)
-    window.__tfVQHandlers = window.__tfVQHandlers || [];
-    window.__tfVQHandlers.push(safeCall);
+    // Bind global watchers once
+    if (!window.__tfWatchVariantAndQtyBound) {
+      window.__tfWatchVariantAndQtyBound = true;
 
-    if (!__tfGlobalWatchAttached) {
-      __tfGlobalWatchAttached = true;
-
-      const fireAll = () => {
-        const list = Array.isArray(window.__tfVQHandlers) ? window.__tfVQHandlers : [];
-        list.forEach((fn) => {
-          try {
-            if (typeof fn === "function") fn();
-          } catch {
-            // noop
-          }
-        });
-      };
-
-      const isQtyEl = (t) =>
-        !!t &&
-        t.matches &&
-        (t.matches('input[name="quantity"]') ||
-          t.matches('select[name="quantity"]') ||
-          t.matches('[data-quantity-input]') ||
-          t.matches('.quantity__input') ||
-          t.matches('.quantity__selector input'));
-
-      const isVariantEl = (t) =>
-        !!t &&
-        t.matches &&
-        (t.matches('select[name="id"]') ||
-          t.matches('input[name="id"]') ||
-          t.matches('[name="id"]'));
-
-      document.addEventListener(
-        "change",
-        (e) => {
-          if (isVariantEl(e.target) || isQtyEl(e.target)) fireAll();
-        },
-        true
-      );
-
-      document.addEventListener(
-        "input",
-        (e) => {
-          if (isQtyEl(e.target)) fireAll();
-        },
-        true
-      );
-
-      // Some themes change qty via +/- buttons without firing input immediately
-      document.addEventListener(
-        "click",
-        (e) => {
-          const t = e.target;
-          if (!t || !t.closest) return;
-          const btn = t.closest(
-            'button[name="plus"],button[name="minus"],.quantity__button,[data-quantity-plus],[data-quantity-minus]'
-          );
-          if (btn) fireAll();
-        },
-        true
-      );
-
-      document.addEventListener("variant:change", fireAll);
+      document.addEventListener("change", (e) => {
+        if (e.target && (e.target.name === "id" || e.target.name === "quantity")) safeCall();
+      });
+      document.addEventListener("input", (e) => {
+        if (e.target && e.target.name === "quantity") safeCall();
+      });
+      document.addEventListener("variant:change", safeCall);
     }
 
     // Bind COD-qty watcher per holder (delegated, survives re-render)
@@ -2301,10 +2227,7 @@ window.TripleformCOD = (function () {
       const matchQty = (t) =>
         !!t &&
         t.matches &&
-        (t.matches('[data-tf-field="quantity"]') ||
-          t.matches('input[data-tf-role="quantity"]') ||
-          t.matches('input[name="quantity"]') ||
-          t.matches('select[name="quantity"]'));
+        (t.matches('[data-tf-field="quantity"]') || t.matches('input[data-tf-role="quantity"]'));
 
       scope.addEventListener(
         "input",
@@ -2560,72 +2483,6 @@ window.TripleformCOD = (function () {
     localStorage.setItem(storeKey, JSON.stringify(dataOrNull));
   }
 
-  function getActiveUpsellsData(rootId) {
-    const storeKey = lsKey(rootId, "current_active_upsells");
-    const raw = localStorage.getItem(storeKey);
-    const arr = raw ? safeJsonParse(raw, []) : [];
-    return Array.isArray(arr) ? arr : [];
-  }
-
-  function setActiveUpsellsData(rootId, arr) {
-    const storeKey = lsKey(rootId, "current_active_upsells");
-    if (!arr || !Array.isArray(arr) || !arr.length) return localStorage.removeItem(storeKey);
-    localStorage.setItem(storeKey, JSON.stringify(arr));
-  }
-
-  function isUpsellActive(rootId, upsell, idx) {
-    const active = getActiveUpsellsData(rootId);
-    const pid = String(upsell?.productId || upsell?.product_id || upsell?.product || "");
-    return active.some((x) => {
-      if (!x) return false;
-      if (pid) return String(x.productId || x.product_id || x.product || "") === pid;
-      return Number(x.index) === Number(idx);
-    });
-  }
-
-  function toggleUpsellActivation(button, upsellIndex, upsellsList, root, updateMoney) {
-    const rootId = root.id || "root";
-    const upsell = upsellsList[upsellIndex] || {};
-    const productId = String(upsell.productId || upsell.product_id || upsell.product || "");
-    const qty = Math.max(1, Math.round(Number(upsell.qty || button.getAttribute("data-tf-upsell-qty") || 1)));
-
-    const active = getActiveUpsellsData(rootId);
-    const already = isUpsellActive(rootId, upsell, upsellIndex);
-
-    let next = active.filter(Boolean);
-
-    if (already) {
-      next = next.filter((x) => {
-        if (!x) return false;
-        if (productId) return String(x.productId || x.product_id || x.product || "") !== productId;
-        return Number(x.index) !== Number(upsellIndex);
-      });
-    } else {
-      next.push({
-        index: upsellIndex,
-        productId: productId || null,
-        title: upsell.title || "",
-        qty,
-      });
-    }
-
-    setActiveUpsellsData(rootId, next);
-
-    // UI
-    const btnLabel = button.getAttribute("data-tf-btn-label") || upsell.buttonText || "Add";
-    const addedText = button.getAttribute("data-tf-added-text") || upsell.addedText || "Added";
-    const nowActive = !already;
-
-    button.classList.toggle("active", nowActive);
-    button.setAttribute("aria-pressed", nowActive ? "true" : "false");
-    button.innerHTML = `${nowActive ? getIconHtml("CheckCircleIcon", 16, "currentColor") : getIconHtml("CirclePlusIcon", 16, "currentColor")} ${css(nowActive ? addedText : btnLabel)}`;
-
-    try {
-      if (typeof updateMoney === "function") updateMoney();
-    } catch {}
-  }
-
-
   function toggleOfferActivation(button, offerIndex, offersList, root, updateMoney) {
     const rootId = root.id || "root";
     const isActive = button.classList.contains("active");
@@ -2687,16 +2544,9 @@ window.TripleformCOD = (function () {
   function pickColors(item, globalColors) {
     const useGlobal = item?.useGlobalColors !== false;
     const c = useGlobal ? globalColors || {} : item?.colors || {};
-    const d = item?.design || {};
-    const borderStyle = String(d.borderStyle || "solid").toLowerCase();
-    const borderWidth = borderStyle === "double" ? 3 : 1;
     return {
       cardBg: c.cardBg || "var(--tf-offer-bg,#FFFFFF)",
       borderColor: c.borderColor || "var(--tf-offer-border,#E5E7EB)",
-      borderStyle,
-      borderWidth,
-      textColor: d.textColor || "var(--tf-offer-text,#111827)",
-      textSize: Number(d.textSize || 14) || 14,
       iconBg: c.iconBg || "var(--tf-offer-iconbg,#EEF2FF)",
       buttonBg: c.buttonBg || "var(--tf-btn-bg,#111827)",
       buttonTextColor: c.buttonTextColor || "var(--tf-btn-text,#FFFFFF)",
@@ -2755,7 +2605,7 @@ window.TripleformCOD = (function () {
       const activePack = active && active.packQty && Number(active.index) === idx ? Number(active.packQty) : 0;
 
       html += `
-        <div class="tf-offer-card" style="background:${css(c.cardBg)};border-color:${css(c.borderColor)};border-style:${css(c.borderStyle)};border-width:${css(c.borderWidth)}px;">
+        <div class="tf-offer-card" style="background:${css(c.cardBg)};border-color:${css(c.borderColor)}">
           <div class="tf-offer-row">
             <div class="tf-offer-icon" style="background:${css(c.iconBg)}">
               <span class="tf-offer-icon-fallback" style="color:${css(c.iconColor)}">
@@ -2765,9 +2615,9 @@ window.TripleformCOD = (function () {
             </div>
 
             <div class="tf-offer-main">
-              <div class="tf-offer-title" style="color:${css(c.textColor)};font-size:${css(c.textSize)}px">${css(title)}</div>
-              <div class="tf-offer-desc" style="color:${css(c.textColor)};font-size:${css(c.textSize)}px">${css(description)}</div>
-              ${packHint ? `<div class="tf-offer-sub" style="color:${css(c.textColor)};font-size:${css(c.textSize)}px">${css(packHint)}</div>` : ""}
+              <div class="tf-offer-title">${css(title)}</div>
+              <div class="tf-offer-desc">${css(description)}</div>
+              ${packHint ? `<div class="tf-offer-sub">${css(packHint)}</div>` : ""}
 
               ${
                 packOptions.length
@@ -2813,23 +2663,15 @@ window.TripleformCOD = (function () {
       `;
     });
 
-    activeUpsells.forEach((upsell, uidx) => {
+    activeUpsells.forEach((upsell) => {
       const title = upsell.title || "Upsell";
       const description = upsell.description || "";
       const img = (upsell.imageUrl || "").trim() || fallbackImgSvg();
       const iconUrl = (upsell.iconUrl || "").trim();
       const c = pickColors(upsell, globalColors);
-      const isActiveU = isUpsellActive(rootId, upsell, uidx);
-      const btnEnabledU = upsell.buttonEnabled !== false;
-      const btnLabelU = upsell.buttonText || "Add";
-      const addedTextU = upsell.addedText || "Added";
-      const upsellQtyU = Math.max(1, Math.round(Number(upsell.qty || 1)));
-      const upsellProductIdU = String(upsell.productId || upsell.product_id || upsell.product || "").trim();
-      const upsellBtnDisabledU = !upsellProductIdU;
-
 
       html += `
-        <div class="tf-offer-card" style="background:${css(c.cardBg)};border-color:${css(c.borderColor)};border-style:${css(c.borderStyle)};border-width:${css(c.borderWidth)}px;">
+        <div class="tf-offer-card" style="background:${css(c.cardBg)};border-color:${css(c.borderColor)}">
           <div class="tf-offer-row">
             <div class="tf-offer-icon" style="background:${css(c.iconBg)}">
               <span class="tf-offer-icon-fallback" style="color:${css(c.iconColor)}">
@@ -2839,38 +2681,11 @@ window.TripleformCOD = (function () {
             </div>
 
             <div class="tf-offer-main">
-              <div class="tf-offer-title" style="color:${css(c.textColor)};font-size:${css(c.textSize)}px">${css(title)}</div>
-              <div class="tf-offer-desc" style="color:${css(c.textColor)};font-size:${css(c.textSize)}px">${css(description)}</div>
+              <div class="tf-offer-title">${css(title)}</div>
+              <div class="tf-offer-desc">${css(description)}</div>
             </div>
-              ${
-                btnEnabledU
-                  ? `<button
-                      type="button"
-                      class="tf-offer-btn tf-upsell-btn ${isActiveU ? "active" : ""} ${upsellBtnDisabledU ? "disabled" : ""}"
-                      data-tf-upsell-toggle="1"
-                      data-tf-upsell-index="${uidx}"
-                      data-tf-root-id="${css(rootId)}"
-                      data-tf-btn-label="${css(btnLabelU)}"
-                      data-tf-added-text="${css(addedTextU)}"
-                      data-tf-upsell-qty="${upsellQtyU}"
-                      style="
-                        background:${css(c.buttonBg)};
-                        color:${css(c.buttonTextColor)};
-                        border:1px solid ${css(c.buttonBorder)};
-                        margin-top:10px;
-                        width:100%;
-                      "
-                      aria-pressed="${isActiveU ? "true" : "false"}"
-                      ${upsellBtnDisabledU ? "disabled" : ""}
-                      title="${upsellBtnDisabledU ? "Select a product for this upsell first" : ""}"
-                    >
-                      ${isActiveU ? getIconHtml("CheckCircleIcon", 16, "currentColor") : getIconHtml("CirclePlusIcon", 16, "currentColor")}
-                      ${isActiveU ? css(addedTextU) : css(btnLabelU)}
-                      ${upsellQtyU > 1 ? `<span style="opacity:.85;margin-left:6px">x${upsellQtyU}</span>` : ``}
-                    </button>`
-                  : ""
-              }
-<div class="tf-offer-img">
+
+            <div class="tf-offer-img">
               <img src="${css(img)}" alt="${css(title)}" onerror="this.onerror=null;this.src='${fallbackImgSvg()}'"/>
             </div>
           </div>
@@ -2974,7 +2789,7 @@ window.TripleformCOD = (function () {
 
 /* Render                                                             */
   /* ------------------------------------------------------------------ */
-  function render(root, cfg, offersCfg, product, getVariant, moneyFmt, recaptchaCfg) {
+  function render(root, cfg, offersCfg, geoCfg, product, getVariant, moneyFmt, recaptchaCfg) {
     setActiveRoot(root);
     const rootId = (root && root.id) ? root.id : "root";
 
@@ -3635,10 +3450,6 @@ window.TripleformCOD = (function () {
     const offersVisible = Array.isArray(offersCfg?.offers) ? offersCfg.offers : [];
     const activeOffersOnly = offersVisible.filter((o) => o && o.enabled !== false && o.showInPreview !== false);
 
-    const upsellsVisible = Array.isArray(offersCfg?.upsells) ? offersCfg.upsells : [];
-    const activeUpsellsOnly = upsellsVisible.filter((u) => u && u.enabled !== false && u.showInPreview !== false);
-
-
     function currentOffer() {
       const active = getActiveOfferData(rootId);
       if (!active || active.type !== "offer") return null;
@@ -3692,6 +3503,87 @@ window.TripleformCOD = (function () {
       return Math.round(n * 100);
     }
 
+function computeShippingCents(subtotalCents) {
+  try {
+    // Default: no shipping
+    if (!geoCfg || geoCfg.enabled === false) return 0;
+    if (geoCfg.isFree) return 0;
+
+    const adv = (geoCfg && geoCfg.advanced) ? geoCfg.advanced : {};
+    const useFallback = !!((adv.useFallbackIfNotFound !== undefined) ? adv.useFallbackIfNotFound : geoCfg.useFallbackIfNotFound);
+
+    const amount = (Number(subtotalCents || 0) / 100); // currency units
+
+    const freeThreshold = Number((adv.freeThreshold !== undefined) ? adv.freeThreshold : geoCfg.freeThreshold);
+    if (freeThreshold > 0 && amount >= freeThreshold) return 0;
+
+    const country = String((geoCfg.country) || (cfg && cfg.form && cfg.form.country) || (cfg && cfg.behavior && cfg.behavior.country) || "MA").toUpperCase();
+    const provEl = byId(`tf-province-${rootId}`);
+    const cityEl = byId(`tf-city-${rootId}`);
+    const province = provEl ? provEl.value : "";
+    const city = cityEl ? cityEl.value : "";
+
+    const norm = (v) => String(v || "").trim().toLowerCase();
+
+    const mode = String(geoCfg.mode || "province").toLowerCase();
+    const defaultRate = Number(geoCfg.defaultRate || 0);
+    let rate = null;
+
+    if (mode === "price") {
+      const brackets = Array.isArray(geoCfg.priceBrackets) ? geoCfg.priceBrackets.slice() : [];
+      // Pick the most specific bracket (largest min that still matches)
+      brackets.sort((a, b) => {
+        const amin = (a && a.min != null && a.min !== "") ? Number(a.min) : -1e18;
+        const bmin = (b && b.min != null && b.min !== "") ? Number(b.min) : -1e18;
+        if (amin !== bmin) return amin - bmin;
+        const amax = (a && a.max != null && a.max !== "") ? Number(a.max) : 1e18;
+        const bmax = (b && b.max != null && b.max !== "") ? Number(b.max) : 1e18;
+        return amax - bmax;
+      });
+      for (let i = 0; i < brackets.length; i++) {
+        const br = brackets[i] || {};
+        const min = (br.min != null && br.min !== "") ? Number(br.min) : null;
+        const max = (br.max != null && br.max !== "") ? Number(br.max) : null;
+        if ((min == null || amount >= min) && (max == null || amount <= max)) {
+          rate = Number(br.rate || 0);
+        }
+      }
+    } else if (mode === "city") {
+      const list = (geoCfg.cityRates && geoCfg.cityRates[country]) ? geoCfg.cityRates[country] : [];
+      if (Array.isArray(list) && province && city) {
+        const match = list.find((r) => norm(r && r.province) === norm(province) && norm(r && r.name) === norm(city));
+        if (match) rate = Number(match.rate || 0);
+      }
+      if ((rate == null || Number.isNaN(rate)) && useFallback) {
+        const provList = (geoCfg.provinceRates && geoCfg.provinceRates[country]) ? geoCfg.provinceRates[country] : [];
+        if (Array.isArray(provList) && province) {
+          const pm = provList.find((r) => norm(r && r.name) === norm(province) || norm(r && r.code) === norm(province));
+          if (pm) rate = Number(pm.rate || 0);
+        }
+      }
+    } else {
+      // province
+      const list = (geoCfg.provinceRates && geoCfg.provinceRates[country]) ? geoCfg.provinceRates[country] : [];
+      if (Array.isArray(list) && province) {
+        const match = list.find((r) => norm(r && r.name) === norm(province) || norm(r && r.code) === norm(province));
+        if (match) rate = Number(match.rate || 0);
+      }
+    }
+
+    if (rate == null || Number.isNaN(rate)) {
+      rate = useFallback ? defaultRate : defaultRate;
+    }
+
+    const codExtraFee = Number(adv.codExtraFee || 0);
+    const finalRate = Math.max(0, Number(rate || 0) + codExtraFee);
+
+    return Math.round(finalRate * 100);
+  } catch (e) {
+    return 0;
+  }
+}
+
+
     function updateMoney() {
       applyOfferQtyIfNeeded();
 
@@ -3703,7 +3595,7 @@ window.TripleformCOD = (function () {
       const discountCents = computeDiscountCents(subtotalBeforeDiscount, qty);
       const discountedSubtotalCents = Math.max(0, subtotalBeforeDiscount - discountCents);
 
-      const shippingCents = 0;
+      const shippingCents = computeShippingCents(subtotalCents);
       const grandTotalCents = discountedSubtotalCents + shippingCents;
 
       root.querySelectorAll('[data-tf="price"]').forEach((el) => (el.textContent = moneyFmt(priceCents)));
@@ -3757,16 +3649,6 @@ window.TripleformCOD = (function () {
           if (this.classList.contains("disabled")) return;
           const offerIndex = parseInt(this.getAttribute("data-tf-offer-index"), 10);
           toggleOfferActivation(this, offerIndex, activeOffersOnly, root, updateMoney);
-        };
-      });
-
-      const upsellButtons = root.querySelectorAll("[data-tf-upsell-toggle]");
-      upsellButtons.forEach((btn) => {
-        btn.onclick = function (e) {
-          e.preventDefault();
-          if (this.classList.contains("disabled") || this.disabled) return;
-          const idx = parseInt(this.getAttribute("data-tf-upsell-index") || "0", 10);
-          toggleUpsellActivation(this, idx, activeUpsellsOnly, root, updateMoney);
         };
       });
 
@@ -3864,7 +3746,9 @@ window.TripleformCOD = (function () {
       const discountCents = computeDiscountCents(subtotalBeforeDiscount, qty);
       const discountedSubtotalCents = Math.max(0, subtotalBeforeDiscount - discountCents);
 
-      let recaptchaToken = null;
+              const shippingCents = computeShippingCents(discountedSubtotalCents);
+        const totalCents = discountedSubtotalCents + shippingCents; // subtotal + shipping
+let recaptchaToken = null;
       let recaptchaVersion = "v2";
 
       recaptchaToken = await getRecaptchaToken(recaptchaCfg, root);
@@ -3885,13 +3769,12 @@ window.TripleformCOD = (function () {
         priceCents,
         baseTotalCents,
         discountCents,
-        shippingCents: 0,
-        totalCents: discountedSubtotalCents,
-        grandTotalCents: discountedSubtotalCents,
+        shippingCents,
+        totalCents,
+        grandTotalCents: totalCents,
         currency: root.getAttribute("data-currency") || null,
         locale: root.getAttribute("data-locale") || null,
         offer: activeOfferData || null,
-        upsells: getActiveUpsellsData(rootId) || null,
         recaptchaToken,
         recaptchaVersion,
         recaptchaAction: recaptchaCfg?.expectedAction || recaptchaCfg?.action || "tf_submit",
@@ -4114,6 +3997,7 @@ window.TripleformCOD = (function () {
 
     const cfg = parseSettingsAttr(holder);
     const offersCfg = parseOffersAttr(holder);
+      const geoCfg = parseGeoAttr(holder);
 
     const currency = holder.getAttribute("data-currency") || "USD";
     const locale = holder.getAttribute("data-locale") || "en";
@@ -4151,7 +4035,7 @@ window.TripleformCOD = (function () {
 
     const getVariant = () => getSelectedVariantId() || holder.getAttribute("data-variant-id");
 
-    const doUpdate = render(holder, cfg, offersCfg, product, getVariant, moneyFmt, recaptchaCfg);
+    const doUpdate = render(holder, cfg, offersCfg, geoCfg, product, getVariant, moneyFmt, recaptchaCfg);
 
     watchVariantAndQty(() => doUpdate(), holder);
   }
