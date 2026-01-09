@@ -3595,8 +3595,8 @@ function computeShippingCents(subtotalCents) {
       const discountCents = computeDiscountCents(subtotalBeforeDiscount, qty);
       const discountedSubtotalCents = Math.max(0, subtotalBeforeDiscount - discountCents);
 
-      const shippingCents = computeShippingCents(subtotalCents);
-      const grandTotalCents = discountedSubtotalCents + shippingCents;
+      const shippingCents = computeShippingCents(discountedSubtotalCents);
+      const grandTotalCents = discountedSubtotalCents + (shippingCents || 0);
 
       root.querySelectorAll('[data-tf="price"]').forEach((el) => (el.textContent = moneyFmt(priceCents)));
       root.querySelectorAll('[data-tf="total"]').forEach((el) => (el.textContent = moneyFmt(grandTotalCents)));
@@ -3612,8 +3612,18 @@ function computeShippingCents(subtotalCents) {
         }
       }
 
-      root.querySelectorAll('[data-tf="shipping"]').forEach((el) => (el.textContent = css(t.freeShipping || "Free")));
-      root.querySelectorAll('[data-tf="shipping-note"]').forEach((el) => (el.textContent = ""));
+      const shippingEls = root.querySelectorAll('[data-tf="shipping"]');
+      const shippingNoteEls = root.querySelectorAll('[data-tf="shipping-note"]');
+      if (shippingCents == null) {
+        shippingEls.forEach((el) => (el.textContent = css(t.shippingToCalculate || "Shipping to calculate")));
+        shippingNoteEls.forEach((el) => (el.textContent = css(t.selectShipping || "Select province/city to calculate shipping")));
+      } else if (shippingCents <= 0) {
+        shippingEls.forEach((el) => (el.textContent = css(t.freeShipping || "Free")));
+        shippingNoteEls.forEach((el) => (el.textContent = ""));
+      } else {
+        shippingEls.forEach((el) => (el.textContent = moneyFmt(shippingCents)));
+        shippingNoteEls.forEach((el) => (el.textContent = ""));
+      }
 
       const label = css(ui.orderNow || cfg.form?.buttonText || "Order now");
       const suffix = css(ui.totalSuffix || "Total:");
@@ -3747,7 +3757,7 @@ function computeShippingCents(subtotalCents) {
       const discountedSubtotalCents = Math.max(0, subtotalBeforeDiscount - discountCents);
 
               const shippingCents = computeShippingCents(discountedSubtotalCents);
-        const totalCents = discountedSubtotalCents + shippingCents; // subtotal + shipping
+        const totalCents = discountedSubtotalCents + (shippingCents || 0); // subtotal + shipping
 let recaptchaToken = null;
       let recaptchaVersion = "v2";
 
