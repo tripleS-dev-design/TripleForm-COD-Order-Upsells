@@ -2,7 +2,17 @@
 import React, { useEffect, useState } from "react";
 import CountryFlagsBar from "../components/CountryFlagsBar";
 
-import { Card, InlineStack, Button, Text, List, Icon, Banner, Badge, Spinner } from "@shopify/polaris";
+import {
+  Card,
+  InlineStack,
+  Button,
+  Text,
+  List,
+  Icon,
+  Banner,
+  Badge,
+  Spinner,
+} from "@shopify/polaris";
 import * as PI from "@shopify/polaris-icons";
 import { useNavigate } from "@remix-run/react";
 import SmartSupportPanel from "../components/SmartSupportPanel";
@@ -523,6 +533,26 @@ function useInjectCss() {
   }, []);
 }
 
+/* ======================= ✅ Crisp Chat (inject once) ======================= */
+function useCrispChat(websiteId) {
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    window.$crisp = window.$crisp || [];
+    window.CRISP_WEBSITE_ID = websiteId;
+
+    // avoid double load
+    if (document.getElementById("crisp-chat-script")) return;
+
+    const s = document.createElement("script");
+    s.id = "crisp-chat-script";
+    s.type = "text/javascript";
+    s.src = "https://client.crisp.chat/l.js";
+    s.async = true;
+    document.head.appendChild(s);
+  }, [websiteId]);
+}
+
 /* ======================= SAFE ICON helper ======================= */
 function SafeIcon({ name, fallback = "AppsIcon", tone }) {
   const src = PI?.[name] || PI?.[fallback];
@@ -803,6 +833,10 @@ function SingleVideoPreview() {
 /* ============================== Contenu Section0 ============================== */
 function Section0Inner() {
   useInjectCss();
+
+  // ✅ Crisp (Home only). If you want it on ALL pages, move this hook to app/root.jsx
+  useCrispChat("7ea27a85-6b6c-4a48-8381-6c0fdc94c1ea");
+
   const navigate = useNavigate();
   const { t } = useI18n();
 
@@ -845,53 +879,52 @@ function Section0Inner() {
     })();
   }, []);
 
-// ✅ usage quota (mois courant) = /api/plan-usage
-const loadPlanUsage = async () => {
-  setPlanUsage((p) => ({ ...p, loading: true }));
+  // ✅ usage quota (mois courant) = /api/plan-usage
+  const loadPlanUsage = async () => {
+    setPlanUsage((p) => ({ ...p, loading: true }));
 
-  try {
-    const r = await fetch("/api/plan-usage", { credentials: "include", cache: "no-store" });
-    const j = await r.json().catch(() => null);
+    try {
+      const r = await fetch("/api/plan-usage", { credentials: "include", cache: "no-store" });
+      const j = await r.json().catch(() => null);
 
-    if (!r.ok || !j?.ok) throw new Error(j?.error || "plan-usage error");
+      if (!r.ok || !j?.ok) throw new Error(j?.error || "plan-usage error");
 
-    setPlanUsage({
-      loading: false,
-      ordersUsed: j.ordersUsed ?? 0,
-      ordersLimit: j.ordersLimit ?? null,
-      unlimited: !!j.unlimited,
-      remaining: j.remaining ?? null,
-      monthKey: j.monthKey ?? null,
-      nextPlanKey: j.nextPlanKey ?? null,
-      sinceLabel: j.sinceLabel ?? null,
-      planKey: j.planKey ?? null,
-      term: j.term ?? null,
-      isSubscribed: !!j.isSubscribed,
-    });
-  } catch (e) {
-    console.error("plan-usage error", e);
-    setPlanUsage((prev) => ({ ...prev, loading: false }));
-  }
-};
+      setPlanUsage({
+        loading: false,
+        ordersUsed: j.ordersUsed ?? 0,
+        ordersLimit: j.ordersLimit ?? null,
+        unlimited: !!j.unlimited,
+        remaining: j.remaining ?? null,
+        monthKey: j.monthKey ?? null,
+        nextPlanKey: j.nextPlanKey ?? null,
+        sinceLabel: j.sinceLabel ?? null,
+        planKey: j.planKey ?? null,
+        term: j.term ?? null,
+        isSubscribed: !!j.isSubscribed,
+      });
+    } catch (e) {
+      console.error("plan-usage error", e);
+      setPlanUsage((prev) => ({ ...prev, loading: false }));
+    }
+  };
 
-// ✅ WhatsApp dashboard stats = /api/orders/dashboard (on garde)
-const loadOrdersStats = async () => {
-  try {
-    const r = await fetch("/api/orders/dashboard?days=30&codOnly=1", { credentials: "include" });
-    if (!r.ok) throw new Error("bad status");
-    const j = await r.json();
+  // ✅ WhatsApp dashboard stats = /api/orders/dashboard (on garde)
+  const loadOrdersStats = async () => {
+    try {
+      const r = await fetch("/api/orders/dashboard?days=30&codOnly=1", { credentials: "include" });
+      if (!r.ok) throw new Error("bad status");
+      const j = await r.json();
 
-    const used = j?.totals?.count ?? 0;
-    const abandoned = j?.abandoned?.count ?? 0;
-    const recovered = j?.recovered?.count ?? 0;
+      const used = j?.totals?.count ?? 0;
+      const abandoned = j?.abandoned?.count ?? 0;
+      const recovered = j?.recovered?.count ?? 0;
 
-    setWaStats({ loading: false, orders: used, abandoned, recovered });
-  } catch (e) {
-    console.error("orders.dashboard error", e);
-    setWaStats((prev) => ({ ...prev, loading: false }));
-  }
-};
-
+      setWaStats({ loading: false, orders: used, abandoned, recovered });
+    } catch (e) {
+      console.error("orders.dashboard error", e);
+      setWaStats((prev) => ({ ...prev, loading: false }));
+    }
+  };
 
   // ✅ load WhatsApp LIVE status (SYNC like Section3Sheets)
   const loadWhatsAppLive = async () => {
@@ -923,23 +956,21 @@ const loadOrdersStats = async () => {
     }
   };
 
-useEffect(() => {
-  loadPlanUsage();      // ✅ quota mensuel (Google Sheets)
-  loadOrdersStats();    // ✅ stats WhatsApp (dashboard 30j)
-  loadWhatsAppLive();
+  useEffect(() => {
+    loadPlanUsage(); // ✅ quota mensuel (Google Sheets)
+    loadOrdersStats(); // ✅ stats WhatsApp (dashboard 30j)
+    loadWhatsAppLive();
 
-  const t1 = setInterval(loadWhatsAppLive, 8000);
-  const t2 = setInterval(loadOrdersStats, 12000);
-  const t3 = setInterval(loadPlanUsage, 12000);
+    const t1 = setInterval(loadWhatsAppLive, 8000);
+    const t2 = setInterval(loadOrdersStats, 12000);
+    const t3 = setInterval(loadPlanUsage, 12000);
 
-  return () => {
-    clearInterval(t1);
-    clearInterval(t2);
-    clearInterval(t3);
-  };
-}, []);
-
-
+    return () => {
+      clearInterval(t1);
+      clearInterval(t2);
+      clearInterval(t3);
+    };
+  }, []);
 
   const isSubscribed = billing.active;
 

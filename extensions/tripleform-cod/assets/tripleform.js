@@ -3729,36 +3729,64 @@ function extractGeoShippingCents(resp) {
     // Explicit free-shipping flags
     if (resp.freeShipping === true || resp.isFreeShipping === true || resp.free === true) return 0;
 
-    const pick = (v) => {
+    const pick = (v, opts = {}) => {
       if (v == null) return null;
+
+      // Numbers
       if (typeof v === "number" && Number.isFinite(v)) {
+        // If caller says this value is already in cents, return as-is
+        if (opts.alreadyCents) return Math.max(0, Math.round(v));
         // Heuristic: if looks like major units (e.g. 39.9), convert to cents; if integer, assume cents
-        if (Number.isInteger(v)) return v;
-        return Math.round(v * 100);
+        if (Number.isInteger(v)) return Math.max(0, Math.round(v));
+        return Math.max(0, Math.round(v * 100));
       }
+
+      // Strings
       if (typeof v === "string") {
         const s = v.trim();
         if (!s) return null;
         const n = Number(s.replace(",", ".").replace(/[^\d.\-]/g, ""));
         if (!Number.isFinite(n)) return null;
+
+        if (opts.alreadyCents) return Math.max(0, Math.round(n));
+
         // If string contains decimal separator, assume major units
-        if (s.includes(".") || s.includes(",")) return Math.round(n * 100);
+        if (s.includes(".") || s.includes(",")) return Math.max(0, Math.round(n * 100));
         // Otherwise: could be cents or major; choose cents if big
-        if (n >= 1000) return Math.round(n);
-        return Math.round(n * 100);
+        if (n >= 1000) return Math.max(0, Math.round(n));
+        return Math.max(0, Math.round(n * 100));
       }
+
       return null;
     };
 
+    // ✅ New GEO calc format (server already returns cents)
+    const directCents = pick(resp.shippingAmount, { alreadyCents: true }) ??
+      pick(resp.shipping_amount, { alreadyCents: true }) ??
+      pick(resp.shippingCents, { alreadyCents: true }) ??
+      pick(resp.shipping_cents, { alreadyCents: true }) ??
+      pick(resp.amountCents, { alreadyCents: true }) ??
+      pick(resp.amount_cents, { alreadyCents: true });
+
+    if (directCents != null) return directCents;
+
+    // ✅ Legacy / nested shapes: { shipping: { amount: 30, currency: "MAD" } }
+    if (resp.shipping && typeof resp.shipping === "object") {
+      const nested =
+        pick(resp.shipping.amountCents, { alreadyCents: true }) ??
+        pick(resp.shipping.amount_cents, { alreadyCents: true }) ??
+        // amount usually in major units (MAD, DZD, ...)
+        pick(resp.shipping.amount) ??
+        pick(resp.shipping.price) ??
+        pick(resp.shipping.value);
+      if (nested != null) return nested;
+    }
+
+    // Other common keys
     const candidates = [
-      resp.shippingCents,
-      resp.shipping_cents,
       resp.shippingPriceCents,
       resp.shipping_price_cents,
-      resp.amountCents,
-      resp.amount_cents,
       resp.cents,
-      resp.shipping,
       resp.price,
       resp.amount,
     ];
@@ -3768,7 +3796,7 @@ function extractGeoShippingCents(resp) {
       if (typeof cents === "number" && Number.isFinite(cents) && cents >= 0) return Math.round(cents);
     }
 
-    // Nested shapes: { data: { ... } } or { result: { ... } }
+    // Nested wrappers: { data: { ... } } or { result: { ... } }
     if (resp.data) {
       const cents = extractGeoShippingCents(resp.data);
       if (cents != null) return cents;
@@ -3784,6 +3812,7 @@ function extractGeoShippingCents(resp) {
   }
 }
 
+
 function computeShippingCents(subtotalCents) {
   // Return null => keep "Shipping to calculate"
   // Return number (cents) => show shipping amount
@@ -3798,10 +3827,11 @@ function computeShippingCents(subtotalCents) {
       const city = String(sel.city || "").trim();
 
       const modeNow = String(geoCfg.mode || "city").toLowerCase();
+      const needProvince = modeNow === "province" || modeNow === "city";
       const needCity = modeNow === "city";
 
       // Not enough info yet => keep "Shipping to calculate"
-      if (!province || (needCity && !city)) {
+      if ((needProvince && !province) || (needCity && !city)) {
         __tfGeoRemote.key = null;
         __tfGeoRemote.cents = null;
         __tfGeoRemote.pending = false;
@@ -4004,6 +4034,34 @@ function updateMoney() {
         btn.classList.toggle("disabled", !ok);
         btn.title = !ok ? `Need quantity ${minQty} to apply discount` : "";
       });
+
+    // ✅ GEO: recalc shipping when province/city changes
+    (function bindGeoChangeHandlers() {
+      const provEl = root.querySelector('select[data-tf-role="province"]');
+      const cityEl = root.querySelector('select[data-tf-role="city"]');
+
+      const wrap = (el) => {
+        if (!el) return;
+        const prev = el.onchange;
+        el.onchange = function (e) {
+          if (typeof prev === "function") {
+            try { prev.call(this, e); } catch (err) {}
+          }
+          // Reset remote cache so the new selection forces a fresh calc
+          if (typeof __tfGeoRemote === "object" && __tfGeoRemote) {
+            __tfGeoRemote.key = null;
+            __tfGeoRemote.cents = null;
+            __tfGeoRemote.pending = false;
+            __tfGeoRemote.error = null;
+          }
+          try { updateMoney(); } catch (err) {}
+        };
+      };
+
+      wrap(provEl);
+      wrap(cityEl);
+    })();
+
     }
 
     setTimeout(() => {
