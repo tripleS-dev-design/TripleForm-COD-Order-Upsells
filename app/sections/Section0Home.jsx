@@ -1,10 +1,9 @@
 // ===== File: app/sections/Section0Home.jsx =====
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import CountryFlagsBar from "../components/CountryFlagsBar";
 
 import {
   Card,
-  InlineStack,
   Button,
   Text,
   List,
@@ -12,6 +11,9 @@ import {
   Banner,
   Badge,
   Spinner,
+  Modal,
+  TextField,
+  InlineStack,
 } from "@shopify/polaris";
 import * as PI from "@shopify/polaris-icons";
 import { useNavigate } from "@remix-run/react";
@@ -34,7 +36,7 @@ const LAYOUT_CSS = `
   .tf-header{
     background:linear-gradient(90deg,#0B3B82,#7D0031);
     border-bottom:none;
-    padding:6px 10px;             /* ✅ slimmer */
+    padding:6px 10px;
     position:sticky;
     top:0;
     z-index:40;
@@ -47,7 +49,7 @@ const LAYOUT_CSS = `
     grid-template-columns: auto 1fr auto;
     align-items:center;
     gap:10px;
-    min-height:44px;              /* ✅ slim band height */
+    min-height:44px;
   }
 
   .tf-brand{
@@ -158,7 +160,7 @@ const LAYOUT_CSS = `
   /* colonne gauche (sticky) */
   .tf-rail {
     position:sticky;
-    top:56px; /* ✅ header slim */
+    top:56px;
     max-height:calc(100vh - 72px);
     overflow:auto;
   }
@@ -170,7 +172,7 @@ const LAYOUT_CSS = `
   /* colonne droite (preview) */
   .tf-preview-col {
     position:sticky;
-    top:56px; /* ✅ header slim */
+    top:56px;
     max-height:calc(100vh - 72px);
     overflow:auto;
     display:grid;
@@ -202,7 +204,7 @@ const LAYOUT_CSS = `
 
     .tf-flags{ max-width:240px; gap:8px; padding:6px 10px; }
     .tf-pill{ display:none; }
-    .tf-brand-sub{ display:none; }  /* ✅ keep header slim on mobile */
+    .tf-brand-sub{ display:none; }
   }
 
   /* =================== PLANS (design) =================== */
@@ -500,6 +502,7 @@ const LAYOUT_CSS = `
     justify-content:center;
     margin-bottom:10px;
     box-shadow: inset 0 0 0 1px rgba(255,255,255,0.10);
+    cursor:pointer;
   }
   .tf-video-play{
     width:54px; height:54px;
@@ -515,8 +518,30 @@ const LAYOUT_CSS = `
   }
   .tf-video-hero-title{ font-weight:900; color:#F9FAFB; margin-bottom:4px; }
   .tf-video-hero-sub{ font-size:12px; color:rgba(229,231,235,0.85); }
+
+  /* ✅ video iframe (Modal) */
+  .tf-yt-wrap{
+    width:100%;
+    border-radius:12px;
+    overflow:hidden;
+    background:#000;
+    border:1px solid rgba(148,163,184,0.25);
+  }
+  .tf-yt-ratio{
+    position:relative;
+    width:100%;
+    padding-top:56.25%;
+  }
+  .tf-yt-iframe{
+    position:absolute;
+    top:0; left:0;
+    width:100%;
+    height:100%;
+    border:0;
+  }
 `;
 
+/* ======================= helpers ======================= */
 function useInjectCss() {
   useEffect(() => {
     if (typeof document === "undefined") return;
@@ -541,7 +566,6 @@ function useCrispChat(websiteId) {
     window.$crisp = window.$crisp || [];
     window.CRISP_WEBSITE_ID = websiteId;
 
-    // avoid double load
     if (document.getElementById("crisp-chat-script")) return;
 
     const s = document.createElement("script");
@@ -558,6 +582,59 @@ function SafeIcon({ name, fallback = "AppsIcon", tone }) {
   const src = PI?.[name] || PI?.[fallback];
   if (!src) return null;
   return <Icon source={src} tone={tone} />;
+}
+
+/* ======================= ✅ YouTube parsing ======================= */
+function extractYouTubeId(input) {
+  if (!input) return null;
+  const raw = String(input).trim();
+  if (!raw) return null;
+
+  // already embed url?
+  const embedMatch = raw.match(/\/embed\/([a-zA-Z0-9_-]{6,})/);
+  if (embedMatch?.[1]) return embedMatch[1];
+
+  try {
+    const u = new URL(raw);
+
+    // youtu.be/ID
+    if (u.hostname.includes("youtu.be")) {
+      const id = u.pathname.split("/").filter(Boolean)[0];
+      return id || null;
+    }
+
+    // youtube.com/watch?v=ID
+    if (u.searchParams?.get("v")) return u.searchParams.get("v");
+
+    // youtube.com/shorts/ID
+    if (u.pathname.includes("/shorts/")) {
+      const parts = u.pathname.split("/").filter(Boolean);
+      const idx = parts.indexOf("shorts");
+      return parts[idx + 1] || null;
+    }
+
+    // youtube.com/embed/ID
+    if (u.pathname.includes("/embed/")) {
+      const parts = u.pathname.split("/").filter(Boolean);
+      const idx = parts.indexOf("embed");
+      return parts[idx + 1] || null;
+    }
+  } catch {
+    // if not a valid URL, try a direct id
+    if (/^[a-zA-Z0-9_-]{6,}$/.test(raw)) return raw;
+  }
+
+  return null;
+}
+
+function toYouTubeEmbedUrl(input, { autoplay = true } = {}) {
+  const id = extractYouTubeId(input);
+  if (!id) return null;
+  const params = new URLSearchParams();
+  if (autoplay) params.set("autoplay", "1");
+  params.set("rel", "0");
+  params.set("modestbranding", "1");
+  return `https://www.youtube-nocookie.com/embed/${id}?${params.toString()}`;
 }
 
 /* -------- Plan courant: mapping interval+amount -> planKey -------- */
@@ -801,8 +878,8 @@ function WhatsAppMonitorPanel({ stats, wa, loading }) {
   );
 }
 
-/* ✅ Single global video window (one only) */
-function SingleVideoPreview() {
+/* ✅ Single global video preview (one only) */
+function SingleVideoPreview({ onOpen }) {
   const { t } = useI18n();
   return (
     <div className="tf-video-hero">
@@ -815,7 +892,7 @@ function SingleVideoPreview() {
       </div>
 
       <div className="tf-video-hero-body">
-        <div className="tf-video-screen">
+        <div className="tf-video-screen" role="button" tabIndex={0} onClick={onOpen} onKeyDown={(e) => e.key === "Enter" && onOpen?.()}>
           <div className="tf-video-play">▶</div>
         </div>
         <div className="tf-video-hero-title">
@@ -824,6 +901,12 @@ function SingleVideoPreview() {
         <div className="tf-video-hero-sub">
           {t?.("section0.videos.item.intro.sub") ||
             "Installation, settings, sheets, pixels, anti-bot, WhatsApp (one complete guide)."}
+        </div>
+
+        <div style={{ marginTop: 10 }}>
+          <Button onClick={onOpen} fullWidth variant="primary">
+            Watch now
+          </Button>
         </div>
       </div>
     </div>
@@ -857,6 +940,99 @@ function Section0Inner() {
     lastConnected: null,
     users: null,
   });
+
+  /* ✅ VIDEO SETTINGS (editable from interface) */
+  const DEFAULT_VIDEO_URL = "https://www.youtube.com/watch?v=rSNBF-Kh8kk";
+  const LS_KEY = "tf_home_video_url";
+
+  const [videoUrl, setVideoUrl] = useState(DEFAULT_VIDEO_URL);
+  const [videoDraft, setVideoDraft] = useState(DEFAULT_VIDEO_URL);
+  const [videoModalOpen, setVideoModalOpen] = useState(false);
+
+  const [videoSaving, setVideoSaving] = useState(false);
+  const [videoBanner, setVideoBanner] = useState(null); // {tone, title, body}
+
+  const embedUrl = useMemo(() => toYouTubeEmbedUrl(videoUrl, { autoplay: true }), [videoUrl]);
+
+  const openVideo = () => setVideoModalOpen(true);
+  const closeVideo = () => setVideoModalOpen(false);
+
+  // Load saved video (localStorage first, + optional API if exists)
+  useEffect(() => {
+    let mounted = true;
+
+    (async () => {
+      // 1) try API (optional)
+      try {
+        const r = await fetch("/api/settings/home-video", { credentials: "include", cache: "no-store" });
+        if (r.ok) {
+          const j = await r.json().catch(() => null);
+          if (mounted && j?.url) {
+            setVideoUrl(j.url);
+            setVideoDraft(j.url);
+            return;
+          }
+        }
+      } catch {
+        // ignore if route doesn't exist
+      }
+
+      // 2) localStorage fallback
+      try {
+        const saved = typeof window !== "undefined" ? window.localStorage.getItem(LS_KEY) : null;
+        if (mounted && saved) {
+          setVideoUrl(saved);
+          setVideoDraft(saved);
+        }
+      } catch {}
+    })();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  async function saveVideoUrl() {
+    const cleaned = String(videoDraft || "").trim();
+    const testEmbed = toYouTubeEmbedUrl(cleaned, { autoplay: false });
+
+    if (!testEmbed) {
+      setVideoBanner({
+        tone: "critical",
+        title: "Invalid YouTube link",
+        body: "Please paste a valid YouTube URL (watch?v=..., youtu.be/..., shorts/...).",
+      });
+      return;
+    }
+
+    setVideoSaving(true);
+    setVideoBanner(null);
+
+    // local save
+    try {
+      window.localStorage.setItem(LS_KEY, cleaned);
+    } catch {}
+
+    // update UI immediately
+    setVideoUrl(cleaned);
+
+    // optional API save (if you later create it)
+    try {
+      await fetch("/api/settings/home-video", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: cleaned }),
+      }).catch(() => null);
+    } catch {}
+
+    setVideoSaving(false);
+    setVideoBanner({
+      tone: "success",
+      title: "Saved",
+      body: "Video link updated successfully.",
+    });
+  }
 
   // billing
   useEffect(() => {
@@ -908,7 +1084,7 @@ function Section0Inner() {
     }
   };
 
-  // ✅ WhatsApp dashboard stats = /api/orders/dashboard (on garde)
+  // ✅ WhatsApp dashboard stats = /api/orders/dashboard
   const loadOrdersStats = async () => {
     try {
       const r = await fetch("/api/orders/dashboard?days=30&codOnly=1", { credentials: "include" });
@@ -926,7 +1102,7 @@ function Section0Inner() {
     }
   };
 
-  // ✅ load WhatsApp LIVE status (SYNC like Section3Sheets)
+  // ✅ load WhatsApp LIVE status
   const loadWhatsAppLive = async () => {
     setWaLive((p) => ({ ...p, loading: true }));
     try {
@@ -934,7 +1110,6 @@ function Section0Inner() {
       const data = await r.json().catch(() => null);
       if (!r.ok || !data) throw new Error(data?.error || "WhatsApp status error");
 
-      // ✅ IMPORTANT: same logic as Section3Sheets -> connected if config exists
       const connected = !!(data?.config && data?.config?.phoneNumber);
 
       const phoneNumber =
@@ -957,8 +1132,8 @@ function Section0Inner() {
   };
 
   useEffect(() => {
-    loadPlanUsage(); // ✅ quota mensuel (Google Sheets)
-    loadOrdersStats(); // ✅ stats WhatsApp (dashboard 30j)
+    loadPlanUsage();
+    loadOrdersStats();
     loadWhatsAppLive();
 
     const t1 = setInterval(loadWhatsAppLive, 8000);
@@ -1010,6 +1185,43 @@ function Section0Inner() {
 
   return (
     <>
+      {/* ✅ VIDEO POPUP MODAL */}
+      <Modal
+        open={videoModalOpen}
+        onClose={closeVideo}
+        title="Video guide"
+        primaryAction={{
+          content: "Close",
+          onAction: closeVideo,
+        }}
+      >
+        <Modal.Section>
+          {!embedUrl ? (
+            <Banner tone="critical" title="Invalid YouTube link">
+              <p>Please update the link from the interface (right panel).</p>
+            </Banner>
+          ) : (
+            <div className="tf-yt-wrap">
+              <div className="tf-yt-ratio">
+                <iframe
+                  className="tf-yt-iframe"
+                  src={embedUrl}
+                  title="TripleForm COD - Video guide"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                />
+              </div>
+            </div>
+          )}
+
+          <div style={{ marginTop: 10 }}>
+            <Text as="p" tone="subdued">
+              Current link: <b>{videoUrl}</b>
+            </Text>
+          </div>
+        </Modal.Section>
+      </Modal>
+
       {/* ===== Header (SLIM) ===== */}
       <div className="tf-header">
         <div className="tf-header-row">
@@ -1039,13 +1251,8 @@ function Section0Inner() {
               <div className="tf-brand-sub">{t("section0.header.subtitle")}</div>
             </div>
 
-            <button
-              type="button"
-              className="tf-video-btn"
-              onClick={() => {
-                // navigate("/app/help/video");
-              }}
-            >
+            {/* ✅ OPEN POPUP VIDEO */}
+            <button type="button" className="tf-video-btn" onClick={openVideo}>
               <span style={{ display: "inline-flex" }}>
                 <Icon source={PI.PlayIcon} />
               </span>
@@ -1206,8 +1413,68 @@ function Section0Inner() {
               />
             </div>
 
+            {/* ✅ VIDEO PREVIEW + SETTINGS */}
             <div className="tf-preview-card">
-              <SingleVideoPreview />
+              <SingleVideoPreview onOpen={openVideo} />
+
+              <div style={{ marginTop: 12 }}>
+                {videoBanner ? (
+                  <div style={{ marginBottom: 10 }}>
+                    <Banner tone={videoBanner.tone} title={videoBanner.title}>
+                      <p>{videoBanner.body}</p>
+                    </Banner>
+                  </div>
+                ) : null}
+
+                <Card>
+                  <div style={{ padding: 12 }}>
+                    <Text as="p" variant="headingSm">
+                      Video link (Home)
+                    </Text>
+                    <div style={{ marginTop: 10 }}>
+                      <TextField
+                        label="YouTube URL"
+                        value={videoDraft}
+                        onChange={(v) => setVideoDraft(v)}
+                        autoComplete="off"
+                        placeholder="https://www.youtube.com/watch?v=..."
+                      />
+                    </div>
+
+                    <div style={{ marginTop: 10 }}>
+                      <InlineStack gap="200" align="end">
+                        <Button
+                          variant="secondary"
+                          onClick={() => {
+                            setVideoDraft(DEFAULT_VIDEO_URL);
+                            setVideoUrl(DEFAULT_VIDEO_URL);
+                            try {
+                              window.localStorage.setItem(LS_KEY, DEFAULT_VIDEO_URL);
+                            } catch {}
+                            setVideoBanner({
+                              tone: "info",
+                              title: "Reset",
+                              body: "Video link reset to default.",
+                            });
+                          }}
+                        >
+                          Reset
+                        </Button>
+
+                        <Button variant="primary" onClick={saveVideoUrl} loading={videoSaving}>
+                          Save
+                        </Button>
+                      </InlineStack>
+                    </div>
+
+                    <div style={{ marginTop: 8 }}>
+                      <Text as="p" tone="subdued">
+                        Tip: click “Video guide” in the header to open the popup.
+                      </Text>
+                    </div>
+                  </div>
+                </Card>
+              </div>
             </div>
           </div>
         </div>

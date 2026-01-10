@@ -15,14 +15,14 @@ window.TripleformCOD = (function () {
   "use strict";
 
   // Build marker (GEO shipping)
-  window.__TF_GEO_BUILD__ = "geo-v6-2026-01-10";
+  window.__TF_GEO_BUILD__ = "geo-v6-fixed-2026-01-11";
 
   /* ------------------------------------------------------------------ */
-/* reCAPTCHA script loader (v2 checkbox)                               */
-/*  - Loads: https://www.google.com/recaptcha/api.js?render=explicit    */
-/*  - Renders widget via grecaptcha.render(container, { sitekey })      */
-/*  - Token via grecaptcha.getResponse(widgetId)                        */
-/* ------------------------------------------------------------------ */
+  /* reCAPTCHA script loader (v2 checkbox)                               */
+  /*  - Loads: https://www.google.com/recaptcha/api.js?render=explicit    */
+  /*  - Renders widget via grecaptcha.render(container, { sitekey })      */
+  /*  - Token via grecaptcha.getResponse(widgetId)                        */
+  /* ------------------------------------------------------------------ */
   let recaptchaScriptPromise = null;
   const recaptchaV2WidgetIds = new WeakMap(); // root -> widgetId
 
@@ -267,36 +267,40 @@ window.TripleformCOD = (function () {
     return obj && typeof obj === "object" ? obj : {};
   }
 
-  function fmtMoneyFactory(locale, currency, currencySymbol) {
-  const safeLocale = (locale && String(locale)) || "en";
-  const safeCurrency = (currency && String(currency).trim().toUpperCase()) || "";
-  const isIsoCurrency = /^[A-Z]{3}$/.test(safeCurrency);
-
-  let nf = null;
-  if (isIsoCurrency && typeof Intl !== "undefined" && Intl.NumberFormat) {
-    try {
-      nf = new Intl.NumberFormat(safeLocale, { style: "currency", currency: safeCurrency });
-    } catch (e) {
-      nf = null;
-    }
+  function parseGeoAttr(holder) {
+    const raw = holder.getAttribute("data-geo");
+    return safeJsonParse(raw, {});
   }
 
-  const sym = (currencySymbol && String(currencySymbol).trim()) || (isIsoCurrency ? safeCurrency : "");
+  function fmtMoneyFactory(locale, currency, currencySymbol) {
+    const safeLocale = (locale && String(locale)) || "en";
+    const safeCurrency = (currency && String(currency).trim().toUpperCase()) || "";
+    const isIsoCurrency = /^[A-Z]{3}$/.test(safeCurrency);
 
-  return (cents) => {
-    const n = Number(cents || 0) / 100;
-    if (nf) {
+    let nf = null;
+    if (isIsoCurrency && typeof Intl !== "undefined" && Intl.NumberFormat) {
       try {
-        return nf.format(n);
+        nf = new Intl.NumberFormat(safeLocale, { style: "currency", currency: safeCurrency });
       } catch (e) {
-        // fall through
+        nf = null;
       }
     }
-    const s = Number.isFinite(n) ? n.toFixed(2) : "0.00";
-    return sym ? `${s} ${sym}` : s;
-  };
-}
 
+    const sym = (currencySymbol && String(currencySymbol).trim()) || (isIsoCurrency ? safeCurrency : "");
+
+    return (cents) => {
+      const n = Number(cents || 0) / 100;
+      if (nf) {
+        try {
+          return nf.format(n);
+        } catch (e) {
+          // fall through
+        }
+      }
+      const s = Number.isFinite(n) ? n.toFixed(2) : "0.00";
+      return sym ? `${s} ${sym}` : s;
+    };
+  }
 
   /* ------------------------------------------------------------------ */
   /* ✅ Real / Simple SVG Icons (always visible)                         */
@@ -512,12 +516,6 @@ window.TripleformCOD = (function () {
   /* ------------------------------------------------------------------ */
   /* CSS Injection                                                      */
   /* ------------------------------------------------------------------ */
-
-function parseGeoAttr(holder) {
-  const raw = holder.getAttribute("data-geo");
-  return safeJsonParse(raw, {});
-}
-
   function injectGlobalCSSOnce() {
     if (document.getElementById("tf-global-css")) return;
 
@@ -644,10 +642,10 @@ function parseGeoAttr(holder) {
   }
 
   /* ------------------------------------------------------------------ */
-  /* ✅ NO COUNTRY_DATA HERE (left empty on purpose)                     */
+  /* ✅ COUNTRY_DATA (vous pouvez ajouter manuellement)                  */
   /* ------------------------------------------------------------------ */
- const COUNTRY_DATA = {
-    ma: {
+  const COUNTRY_DATA = {
+     ma: {
       label: "Maroc",
       phonePrefix: "+212",
       provinces: [
@@ -2355,7 +2353,7 @@ function parseGeoAttr(holder) {
     }
   }
 
-/* ------------------------------------------------------------------ */
+  /* ------------------------------------------------------------------ */
   /* Sticky button                                                      */
   /* ------------------------------------------------------------------ */
   function setupSticky(root, cfg, openHandler, motionClass) {
@@ -3732,249 +3730,275 @@ function parseGeoAttr(holder) {
       return Math.round(n * 100);
     }
 
+    /* ------------------------------------------------------------------ */
+    /* ✅ CORRECTION CRITIQUE: Fonction de calcul de shipping améliorée   */
+    /* ------------------------------------------------------------------ */
+    function extractGeoShippingCents(resp) {
+      try {
+        if (!resp || typeof resp !== "object") return null;
 
-function extractGeoShippingCents(resp) {
-  try {
-    if (!resp || typeof resp !== "object") return null;
+        // Explicit free-shipping flags
+        if (resp.freeShipping === true || resp.isFreeShipping === true || resp.free === true) return 0;
 
-    // Explicit free-shipping flags
-    if (resp.freeShipping === true || resp.isFreeShipping === true || resp.free === true) return 0;
-
-    const pick = (v) => {
-      if (v == null) return null;
-      if (typeof v === "number" && Number.isFinite(v)) {
-        // Heuristic: if looks like major units (e.g. 39.9), convert to cents; if integer, assume cents
-        if (Number.isInteger(v)) return v;
-        return Math.round(v * 100);
-      }
-      if (typeof v === "string") {
-        const s = v.trim();
-        if (!s) return null;
-        const n = Number(s.replace(",", ".").replace(/[^\d.\-]/g, ""));
-        if (!Number.isFinite(n)) return null;
-        // If string contains decimal separator, assume major units
-        if (s.includes(".") || s.includes(",")) return Math.round(n * 100);
-        // Otherwise: could be cents or major; choose cents if big
-        if (n >= 1000) return Math.round(n);
-        return Math.round(n * 100);
-      }
-      return null;
-    };
-
-    const candidates = [
-      resp.shippingCents,
-      resp.shipping_cents,
-      resp.shippingPriceCents,
-      resp.shipping_price_cents,
-      resp.amountCents,
-      resp.amount_cents,
-      resp.cents,
-      resp.shipping,
-      resp.price,
-      resp.amount,
-    ];
-
-    for (const c of candidates) {
-      const cents = pick(c);
-      if (typeof cents === "number" && Number.isFinite(cents) && cents >= 0) return Math.round(cents);
-    }
-
-    // Nested shapes: { data: { ... } } or { result: { ... } }
-    if (resp.data) {
-      const cents = extractGeoShippingCents(resp.data);
-      if (cents != null) return cents;
-    }
-    if (resp.result) {
-      const cents = extractGeoShippingCents(resp.result);
-      if (cents != null) return cents;
-    }
-
-    return null;
-  } catch (e) {
-    return null;
-  }
-}
-
-
-function readGeoSelection(_cfg) {
-  try {
-    // province + city selects are rendered with data-tf-role + value
-    const provinceEl =
-      root.querySelector('[data-tf-role="province"]') ||
-      root.querySelector('select[name="province"]') ||
-      root.querySelector('select[name="wilaya"]') ||
-      root.querySelector('select[name="state"]');
-
-    const cityEl =
-      root.querySelector('[data-tf-role="city"]') ||
-      root.querySelector('select[name="city"]') ||
-      root.querySelector('select[name="commune"]');
-
-    const province = provinceEl ? String(provinceEl.value || "").trim() : "";
-    const city = cityEl ? String(cityEl.value || "").trim() : "";
-    return { province, city };
-  } catch (e) {
-    return { province: "", city: "" };
-  }
-}
-
-
-function computeShippingCents(subtotalCents) {
-  // Return null => keep "Shipping to calculate"
-  // Return number (cents) => show shipping amount
-  try {
-    if (!geoCfg) return null;
-    if (geoCfg.enabled === false) return null;
-
-    // Preferred: server-side GEO shipping calculation via endpoint
-    if (geoEndpoint) {
-      const sel = (typeof readGeoSelection === "function" ? readGeoSelection(cfg) : {}) || {};
-      const province = String(sel.province || "").trim();
-      const city = String(sel.city || "").trim();
-
-      const modeNow = String(geoCfg.mode || "city").toLowerCase();
-      const needCity = modeNow === "city";
-
-      // Not enough info yet => keep "Shipping to calculate"
-      if (!province || (needCity && !city)) {
-        __tfGeoRemote.key = null;
-        __tfGeoRemote.cents = null;
-        __tfGeoRemote.pending = false;
-        __tfGeoRemote.error = null;
-        return null;
-      }
-
-      const amt = Number(subtotalCents || 0);
-      const key = [String(geoCountryAttr || geoCfg.country || ""), province, city, String(Math.round(amt))].join("|");
-
-      // Use cached / in-flight result
-      if (__tfGeoRemote.key === key) {
-        if (typeof __tfGeoRemote.cents === "number" && Number.isFinite(__tfGeoRemote.cents)) return __tfGeoRemote.cents;
-        return null;
-      }
-
-      __tfGeoRemote.key = key;
-      __tfGeoRemote.cents = null;
-      __tfGeoRemote.pending = true;
-      __tfGeoRemote.error = null;
-
-      const payload = {
-        country: geoCountryAttr || geoCfg.country || "MA",
-        province,
-        city,
-        subtotalCents: Math.max(0, Math.round(amt)),
-        currency: holder.getAttribute("data-currency") || "",
-        productId: Number(holder.getAttribute("data-product-id") || 0) || undefined,
-        variantId: Number(holder.getAttribute("data-variant-id") || 0) || undefined,
-        locale: holder.getAttribute("data-locale") || ""
-      };
-
-      fetch(geoEndpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Accept": "application/json" },
-        body: JSON.stringify(payload)
-      })
-        .then(async (r) => {
-          let data = null;
-          try { data = await r.json(); } catch (e) { data = null; }
-          if (!r.ok) {
-            const msg = (data && (data.error || data.message)) ? (data.error || data.message) : ("HTTP " + r.status);
-            throw new Error(msg);
+        const pick = (v) => {
+          if (v == null) return null;
+          if (typeof v === "number" && Number.isFinite(v)) {
+            // Heuristic: if looks like major units (e.g. 39.9), convert to cents; if integer, assume cents
+            if (Number.isInteger(v)) return v;
+            return Math.round(v * 100);
           }
-          return data;
-        })
-        .then((data) => {
-          const cents = extractGeoShippingCents(data);
-          __tfGeoRemote.cents = (typeof cents === "number" && Number.isFinite(cents) && cents >= 0) ? cents : null;
-          __tfGeoRemote.pending = false;
-          // Re-render totals (will switch from "Shipping to calculate" => amount)
-          try { updateMoney(); } catch (e) {}
-        })
-        .catch((err) => {
-          __tfGeoRemote.pending = false;
-          __tfGeoRemote.error = err && err.message ? err.message : "shipping calc error";
-          __tfGeoRemote.cents = null;
-          try { updateMoney(); } catch (e) {}
-        });
+          if (typeof v === "string") {
+            const s = v.trim();
+            if (!s) return null;
+            const n = Number(s.replace(",", ".").replace(/[^\d.\-]/g, ""));
+            if (!Number.isFinite(n)) return null;
+            // If string contains decimal separator, assume major units
+            if (s.includes(".") || s.includes(",")) return Math.round(n * 100);
+            // Otherwise: could be cents or major; choose cents if big
+            if (n >= 1000) return Math.round(n);
+            return Math.round(n * 100);
+          }
+          return null;
+        };
 
-      return null;
+        // Vérifier shippingAmount en premier (format retourné par api.geo.calc.jsx)
+        const candidates = [
+          resp.shippingAmount, // ajouté
+          resp.shippingCents,
+          resp.shipping_cents,
+          resp.shippingPriceCents,
+          resp.shipping_price_cents,
+          resp.amountCents,
+          resp.amount_cents,
+          resp.cents,
+          resp.shipping,
+          resp.price,
+          resp.amount,
+        ];
+
+        for (const c of candidates) {
+          const cents = pick(c);
+          if (typeof cents === "number" && Number.isFinite(cents) && cents >= 0) return Math.round(cents);
+        }
+
+        // Nested shapes: { data: { ... } } or { result: { ... } }
+        if (resp.data) {
+          const cents = extractGeoShippingCents(resp.data);
+          if (cents != null) return cents;
+        }
+        if (resp.result) {
+          const cents = extractGeoShippingCents(resp.result);
+          if (cents != null) return cents;
+        }
+
+        return null;
+      } catch (e) {
+        return null;
+      }
     }
 
-    const country = geoCfg.country || "MA";
-    const mode = geoCfg.mode || "city";
-    const adv = geoCfg.advanced || {};
+    function readGeoSelection() {
+      try {
+        // province + city selects are rendered with data-tf-role + value
+        const provinceEl =
+          root.querySelector('[data-tf-role="province"]') ||
+          root.querySelector('select[name="province"]') ||
+          root.querySelector('select[name="wilaya"]') ||
+          root.querySelector('select[name="state"]');
 
-    const amount = Number(subtotalCents || 0) / 100;
+        const cityEl =
+          root.querySelector('[data-tf-role="city"]') ||
+          root.querySelector('select[name="city"]') ||
+          root.querySelector('select[name="commune"]');
 
-    // Explicit free shipping toggles (only if merchant enabled them)
-    if (geoCfg.isFree === true) return 0;
+        const province = provinceEl ? String(provinceEl.value || "").trim() : "";
+        const city = cityEl ? String(cityEl.value || "").trim() : "";
+        return { province, city };
+      } catch (e) {
+        return { province: "", city: "" };
+      }
+    }
 
-    const freeThreshold = Number(adv.freeThreshold || 0);
-    if (freeThreshold > 0 && amount >= freeThreshold) return 0;
+    function computeShippingCents(subtotalCents) {
+      // Return null => keep "Shipping to calculate"
+      // Return number (cents) => show shipping amount
+      try {
+        // Si geoCfg est désactivé, retourner null (pas de calcul)
+        if (!geoCfg) return null;
+        if (geoCfg.enabled === false) return null;
 
-    const sel = readGeoSelection() || {};
-    const province = sel.province ? String(sel.province) : "";
-    const city = sel.city ? String(sel.city) : "";
+        // ✅ CORRECTION: Utiliser l'endpoint si disponible (méthode recommandée)
+        if (geoEndpoint) {
+          const sel = readGeoSelection();
+          const province = String(sel.province || "").trim();
+          const city = String(sel.city || "").trim();
 
-    // Need location selection to compute
-    if (!province) return null;
-    if (mode === "city" && !city) return null;
+          // Si pas de province sélectionnée, on ne peut pas calculer
+          if (!province) {
+            __tfGeoRemote.pending = false;
+            __tfGeoRemote.cents = null;
+            __tfGeoRemote.error = null;
+            return null;
+          }
 
-    const useFallback = Boolean(adv.useFallbackIfNotFound);
-    const hasDefaultRate = adv.defaultRate !== undefined && adv.defaultRate !== null && String(adv.defaultRate).trim() !== "";
-    const defaultRate = hasDefaultRate ? Number(adv.defaultRate) : null;
+          // Si mode "city" et pas de ville, on ne peut pas calculer
+          const modeNow = String(geoCfg.mode || "province").toLowerCase();
+          const needCity = modeNow === "city";
+          if (needCity && !city) {
+            __tfGeoRemote.pending = false;
+            __tfGeoRemote.cents = null;
+            __tfGeoRemote.error = null;
+            return null;
+          }
 
-    let rate = null;
+          const amt = Number(subtotalCents || 0);
+          const key = [String(geoCountryAttr || geoCfg.country || "MA"), province, city, String(Math.round(amt))].join("|");
 
-    if (mode === "price") {
-      const brackets = Array.isArray(geoCfg.priceBrackets) ? geoCfg.priceBrackets : [];
-      if (brackets.length) {
-        for (const b of brackets) {
-          const min = Number(b && b.min);
-          const max = Number(b && b.max);
-          if (!Number.isFinite(min) || !Number.isFinite(max)) continue;
-          if (amount >= min && amount < max) {
-            rate = Number(b && b.rate);
-            break;
+          // Use cached / in-flight result
+          if (__tfGeoRemote.key === key) {
+            if (typeof __tfGeoRemote.cents === "number" && Number.isFinite(__tfGeoRemote.cents)) return __tfGeoRemote.cents;
+            return null;
+          }
+
+          __tfGeoRemote.key = key;
+          __tfGeoRemote.cents = null;
+          __tfGeoRemote.pending = true;
+          __tfGeoRemote.error = null;
+
+          const payload = {
+            country: geoCountryAttr || geoCfg.country || "MA",
+            province,
+            city,
+            subtotalCents: Math.max(0, Math.round(amt)),
+            currency: holder.getAttribute("data-currency") || "",
+            productId: Number(holder.getAttribute("data-product-id") || 0) || undefined,
+            variantId: Number(holder.getAttribute("data-variant-id") || 0) || undefined,
+            locale: holder.getAttribute("data-locale") || ""
+          };
+
+          fetch(geoEndpoint, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Accept": "application/json" },
+            body: JSON.stringify(payload)
+          })
+            .then(async (r) => {
+              let data = null;
+              try { data = await r.json(); } catch (e) { data = null; }
+              if (!r.ok) {
+                const msg = (data && (data.error || data.message)) ? (data.error || data.message) : ("HTTP " + r.status);
+                throw new Error(msg);
+              }
+              return data;
+            })
+            .then((data) => {
+              const cents = extractGeoShippingCents(data);
+              __tfGeoRemote.cents = (typeof cents === "number" && Number.isFinite(cents) && cents >= 0) ? cents : null;
+              __tfGeoRemote.pending = false;
+              // Re-render totals (will switch from "Shipping to calculate" => amount)
+              try { updateMoney(); } catch (e) {}
+            })
+            .catch((err) => {
+              __tfGeoRemote.pending = false;
+              __tfGeoRemote.error = err && err.message ? err.message : "shipping calc error";
+              __tfGeoRemote.cents = null;
+              try { updateMoney(); } catch (e) {}
+            });
+
+          return null;
+        }
+
+        // ✅ CORRECTION: Si pas d'endpoint, calcul local avec la config GEO
+        const country = geoCfg.country || "MA";
+        const mode = geoCfg.mode || "province";
+        const adv = geoCfg.advanced || {};
+
+        const amount = Number(subtotalCents || 0) / 100;
+
+        // Explicit free shipping toggles
+        if (geoCfg.isFree === true) return 0;
+
+        const freeThreshold = Number(adv.freeThreshold || 0);
+        if (freeThreshold > 0 && amount >= freeThreshold) return 0;
+
+        const sel = readGeoSelection();
+        const province = sel.province ? String(sel.province) : "";
+        const city = sel.city ? String(sel.city) : "";
+
+        // Need location selection to compute
+        if (!province) return null;
+        if (mode === "city" && !city) return null;
+
+        const useFallback = Boolean(adv.useFallbackIfNotFound);
+        const hasDefaultRate = adv.defaultRate !== undefined && adv.defaultRate !== null && String(adv.defaultRate).trim() !== "";
+        const defaultRate = hasDefaultRate ? Number(adv.defaultRate) : null;
+
+        let rate = null;
+
+        // Fonction de normalisation
+        function norm(str) {
+          return (str || '').toString().trim().toLowerCase().replace(/\s+/g, ' ').replace(/[^\w\s]/g, '');
+        }
+
+        if (mode === "price") {
+          const brackets = Array.isArray(geoCfg.priceBrackets) ? geoCfg.priceBrackets : [];
+          if (brackets.length) {
+            for (const b of brackets) {
+              const min = b.min == null ? -Infinity : Number(b.min);
+              const max = b.max == null ? Infinity : Number(b.max);
+              
+              if (amount >= min && amount < max) {
+                rate = Number(b.rate || 0);
+                break;
+              }
+            }
+          }
+        } else if (mode === "city") {
+          const arr = (geoCfg.cityRates && geoCfg.cityRates[country]) || [];
+          const nCity = norm(city);
+          const nProvince = norm(province);
+          
+          const match = arr.find((c) => 
+            norm(c.name) === nCity && 
+            norm(c.province) === nProvince
+          );
+          rate = match ? Number(match.rate || 0) : 0;
+        } else {
+          // province mode
+          const arr = (geoCfg.provinceRates && geoCfg.provinceRates[country]) || [];
+          const nProvince = norm(province);
+          
+          const match = arr.find((p) => {
+            const nName = norm(p.name);
+            const nCode = norm(p.code);
+            return (nName && nName === nProvince) || (nCode && nCode === nProvince);
+          });
+          rate = match ? Number(match.rate || 0) : 0;
+        }
+
+        // Si aucun match trouvé et fallback activé
+        if (rate === 0 && adv.defaultRate != null) {
+          const defaultRate = Number(adv.defaultRate || 0);
+          if (defaultRate > 0) {
+            rate = defaultRate;
           }
         }
-      }
-    } else if (mode === "city") {
-      const allByProv = geoCfg.cityRates && geoCfg.cityRates[country] ? geoCfg.cityRates[country] : {};
-      const list = allByProv && allByProv[province] ? allByProv[province] : [];
-      if (Array.isArray(list)) {
-        const match = list.find((r) => norm(r && r.name) === norm(city) || norm(r && r.code) === norm(city));
-        if (match) rate = Number(match.rate);
-      }
-    } else {
-      // province
-      const list = geoCfg.provinceRates && geoCfg.provinceRates[country] ? geoCfg.provinceRates[country] : [];
-      if (Array.isArray(list)) {
-        const match = list.find((r) => norm(r && r.name) === norm(province) || norm(r && r.code) === norm(province));
-        if (match) rate = Number(match.rate);
-      }
-    }
 
-    // No match -> keep placeholder (unless fallback is explicitly enabled)
-    if (rate == null || Number.isNaN(rate)) {
-      if (useFallback && defaultRate != null && Number.isFinite(defaultRate)) {
-        rate = defaultRate;
-      } else {
+        // Si toujours 0 et pas de fallback, retourner null
+        if (rate === 0 && !useFallback) {
+          return null;
+        }
+
+        const codExtraFee = Number(adv.codExtraFee || 0);
+        const finalRate = Math.max(0, Number(rate || 0) + codExtraFee);
+
+        return Math.round(finalRate * 100);
+      } catch (e) {
+        console.warn("[Tripleform COD] computeShippingCents error:", e);
         return null;
       }
     }
 
-    const codExtraFee = Number(adv.codExtraFee || 0);
-    const finalRate = Math.max(0, Number(rate || 0) + codExtraFee);
-
-    return Math.round(finalRate * 100);
-  } catch (e) {
-    return null;
-  }
-}
-
-
-function updateMoney() {
+    function updateMoney() {
       applyOfferQtyIfNeeded();
 
       const { priceCents, baseTotalCents, qty } = computeProductTotals();
@@ -4348,7 +4372,7 @@ let recaptchaToken = null;
       setTimeout(() => openHandler(), delay);
     }
 
-    // GEO: recalc shipping when province/city changes (and clear remote cache)
+    // ✅ CORRECTION: GEO: recalc shipping when province/city changes
     try {
       const provinceEl = root.querySelector('[data-tf-role="province"]');
       const cityEl = root.querySelector('[data-tf-role="city"]');
@@ -4356,6 +4380,7 @@ let recaptchaToken = null;
         __tfGeoRemote.pending = false;
         __tfGeoRemote.error = null;
         __tfGeoRemote.cents = null;
+        __tfGeoRemote.key = null;
         try { updateMoney(); } catch (e) {}
       };
       if (provinceEl) {
@@ -4428,32 +4453,27 @@ let recaptchaToken = null;
 
     const cfg = parseSettingsAttr(holder);
     const offersCfg = parseOffersAttr(holder);
-      const geoCfg = (function () {
-  const base = parseGeoAttr(holder) || {};
-  // New theme-block attributes (preferred)
-  const enabledAttr = holder.getAttribute("data-geo-enabled");
-  if (enabledAttr != null) base.enabled = String(enabledAttr) === "true";
+    const geoCfg = (function () {
+      const base = parseGeoAttr(holder) || {};
+      // New theme-block attributes (preferred)
+      const enabledAttr = holder.getAttribute("data-geo-enabled");
+      if (enabledAttr != null) base.enabled = String(enabledAttr) === "true";
 
-  const endpointAttr = holder.getAttribute("data-geo-endpoint");
-  if (endpointAttr) base.endpoint = endpointAttr;
+      const endpointAttr = holder.getAttribute("data-geo-endpoint");
+      if (endpointAttr) base.endpoint = endpointAttr;
 
-  const countryAttr = holder.getAttribute("data-geo-country") || holder.getAttribute("data-geo-country-code");
-  if (countryAttr) base.country = countryAttr;
+      const countryAttr = holder.getAttribute("data-geo-country") || holder.getAttribute("data-geo-country-code");
+      if (countryAttr) base.country = countryAttr;
 
-  // Backward-compat: allow config inside settings JSON (cfg.geo)
-  try {
-    if (cfg && cfg.geo && typeof cfg.geo === "object") {
-      Object.assign(base, cfg.geo);
-    }
-  } catch (e) {}
+      // Backward-compat: allow config inside settings JSON (cfg.geo)
+      try {
+        if (cfg && cfg.geo && typeof cfg.geo === "object") {
+          Object.assign(base, cfg.geo);
+        }
+      } catch (e) {}
 
-  return Object.keys(base).length ? base : null;
-})();
-    // Shipping (GEO) remote calc state (used when data-geo-endpoint is provided)
-    const geoEndpoint = (geoCfg && (geoCfg.endpoint || geoCfg.geoEndpoint)) || holder.getAttribute("data-geo-endpoint") || "";
-    const geoCountryAttr = (geoCfg && geoCfg.country) || holder.getAttribute("data-geo-country") || holder.getAttribute("data-geo-country-code") || "";
-    const __tfGeoRemote = { key: null, cents: null, pending: false, error: null };
-
+      return Object.keys(base).length ? base : null;
+    })();
 
     const currency = holder.getAttribute("data-currency") || "USD";
     const locale = holder.getAttribute("data-locale") || "en";
