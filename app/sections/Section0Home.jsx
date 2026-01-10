@@ -1441,31 +1441,7 @@ function Section0Inner() {
                       />
                     </div>
 
-                    <div style={{ marginTop: 10 }}>
-                      <InlineStack gap="200" align="end">
-                        <Button
-                          variant="secondary"
-                          onClick={() => {
-                            setVideoDraft(DEFAULT_VIDEO_URL);
-                            setVideoUrl(DEFAULT_VIDEO_URL);
-                            try {
-                              window.localStorage.setItem(LS_KEY, DEFAULT_VIDEO_URL);
-                            } catch {}
-                            setVideoBanner({
-                              tone: "info",
-                              title: "Reset",
-                              body: "Video link reset to default.",
-                            });
-                          }}
-                        >
-                          Reset
-                        </Button>
-
-                        <Button variant="primary" onClick={saveVideoUrl} loading={videoSaving}>
-                          Save
-                        </Button>
-                      </InlineStack>
-                    </div>
+                   
 
                     <div style={{ marginTop: 8 }}>
                       <Text as="p" tone="subdued">
