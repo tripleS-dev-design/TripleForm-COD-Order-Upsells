@@ -49,7 +49,9 @@ export default function Root() {
           isEmbeddedApp={!isDevMode}
         >
           <I18nProvider locale={locale}>
-            <Outlet />
+            <div className="tf-ui-scale">
+              <Outlet />
+            </div>
           </I18nProvider>
         </ShopifyAppProvider>
 

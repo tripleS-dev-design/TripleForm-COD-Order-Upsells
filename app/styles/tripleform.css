@@ -1,4 +1,69 @@
-/* ✅ HEADER SLIM (FIX CLICK) */
+/* ==========================================================================
+   Tripleform - Global styles
+   - Works with Polaris
+   - Includes default UI scale (simulate 80-85%) via .tf-ui-scale wrapper
+   ========================================================================== */
+
+/* ==============================
+   ✅ Global tokens
+   ============================== */
+:root{
+  --tf-brand-blue: #0B3B82;
+  --tf-brand-wine: #7D0031;
+
+  --tf-ui-scale: 0.85; /* ✅ mets 0.80 si tu veux EXACT 80% */
+}
+
+/* ==============================
+   ✅ Basic safe defaults (do NOT fight Polaris)
+   ============================== */
+html, body{
+  height: 100%;
+}
+
+body{
+  margin: 0;
+}
+
+/* Optional: make images safe */
+img{
+  max-width: 100%;
+  height: auto;
+}
+
+/* ==============================
+   ✅ GLOBAL UI SCALE (default)
+   IMPORTANT:
+   - This does NOT change browser zoom.
+   - It scales your UI wrapper .tf-ui-scale (added in root.jsx).
+   ============================== */
+@media (min-width: 900px){
+  .tf-ui-scale{
+    zoom: var(--tf-ui-scale);
+  }
+
+  /* Fallback for browsers where zoom isn't supported */
+  @supports not (zoom: 1){
+    .tf-ui-scale{
+      transform: scale(var(--tf-ui-scale));
+      transform-origin: top left;
+      width: calc(100% / var(--tf-ui-scale));
+    }
+  }
+}
+
+/* Mobile: keep normal scale */
+@media (max-width: 899px){
+  .tf-ui-scale{
+    zoom: 1;
+    transform: none;
+    width: 100%;
+  }
+}
+
+/* ==========================================================================
+   ✅ HEADER SLIM (FIX CLICK)  (Your code)
+   ========================================================================== */
 .tf-header{
   background:linear-gradient(90deg,#0B3B82,#7D0031);
   border-bottom:none;
@@ -17,7 +82,6 @@
 .tf-header *{
   pointer-events: auto;
 }
-
 
 /* ✅ 1 seule ligne: left | center | right */
 .tf-header-row{
@@ -62,38 +126,5 @@
 /* ✅ FLAGS BAR (pill scrollable) */
 .tf-flags-wrap{
   display:flex;
-  justify-content:center;
-  align-items:center;
-  width:100%;
-  min-width:0;
-}
-
-.tf-flags{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  padding:6px 12px;
-  max-width:760px;
-  overflow-x:auto;
-  white-space:nowrap;
-  scrollbar-width:none;
-  -webkit-overflow-scrolling: touch;
-  border-radius:999px;
-  background:rgba(255,255,255,0.09);
-  border:1px solid rgba(255,255,255,0.18);
-}
-.tf-flags::-webkit-scrollbar{ display:none; }
-
-/* ✅ RIGHT */
-.tf-header-right{
-  display:flex;
-  align-items:center;
-  justify-content:flex-end;
-  gap:10px;
-  min-width:0;
-}
-
-@media (max-width: 980px) {
-  .tf-flags{ max-width:240px; gap:8px; padding:6px 10px; }
-  .tf-brand-sub{ display:none; }
+  justify-content:center
 }
