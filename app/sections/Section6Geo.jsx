@@ -25,6 +25,29 @@ import { useUnsavedNavigationGuard } from "../hooks/useUnsavedNavigationGuard";
 // ✅ ton fichier séparé
 import { COUNTRY_DATA } from "../data/countryData";
 
+/* ======================= ✅ CRISP (load once) ======================= */
+const CRISP_WEBSITE_ID = "7ea27a85-6b6c-4a48-8381-6c0fdc94c1ea";
+
+function useCrisp() {
+  useEffect(() => {
+    if (typeof window === "undefined" || typeof document === "undefined") return;
+
+    // Init globals
+    window.$crisp = window.$crisp || [];
+    window.CRISP_WEBSITE_ID = CRISP_WEBSITE_ID;
+
+    // Avoid duplicates
+    if (document.getElementById("crisp-chat-script")) return;
+
+    const s = document.createElement("script");
+    s.id = "crisp-chat-script";
+    s.type = "text/javascript";
+    s.async = true;
+    s.src = "https://client.crisp.chat/l.js";
+    document.head.appendChild(s);
+  }, []);
+}
+
 /* ======================= SAFE ICON helper ======================= */
 function SafeIcon({ name, fallback = "AppsIcon", tone }) {
   const src = PI?.[name] || PI?.[fallback];
@@ -368,6 +391,7 @@ function normalizeGeoCfg(cfg) {
 /* ============================== Page ============================== */
 export default function Section6Geo() {
   useInjectCss();
+  useCrisp(); // ✅ Crisp chargé quand tu entres dans GEO (et pas en double)
   const navigate = useNavigate();
   const { tr } = useT();
 
@@ -635,10 +659,16 @@ export default function Section6Geo() {
                     value={cfg.country}
                     onChange={setCountry}
                     options={[
-                      { label: tr("section6.general.countries.selectPlaceholder", "Select country"), value: "" },
+                      {
+                        label: tr("section6.general.countries.selectPlaceholder", "Select country"),
+                        value: "",
+                      },
                       ...countryOptions,
                     ]}
-                    helpText={tr("section6.general.countryHelp", "This will be the default geo for rates.")}
+                    helpText={tr(
+                      "section6.general.countryHelp",
+                      "This will be the default geo for rates."
+                    )}
                   />
 
                   <TextField
@@ -668,7 +698,10 @@ export default function Section6Geo() {
                   </Grid3>
                 ) : (
                   <Text tone="subdued" as="p">
-                    {tr("section6.general.freeShippingInfo", "Free shipping enabled: rates are ignored.")}
+                    {tr(
+                      "section6.general.freeShippingInfo",
+                      "Free shipping enabled: rates are ignored."
+                    )}
                   </Text>
                 )}
               </GroupCard>
@@ -676,7 +709,9 @@ export default function Section6Geo() {
               {/* Province view */}
               {!cfg.isFree && view === "province" && (
                 <GroupCard
-                  title={tr("section6.province.title", "Province rates — {{country}}", { country: countryDef.label })}
+                  title={tr("section6.province.title", "Province rates — {{country}}", {
+                    country: countryDef.label,
+                  })}
                   tr={tr}
                 >
                   <Text tone="subdued" as="p">
@@ -701,7 +736,9 @@ export default function Section6Geo() {
                           />
                           <TextField
                             type="number"
-                            label={tr("section6.province.rateLabel", "Rate ({{currency}})", { currency: cfg.currency })}
+                            label={tr("section6.province.rateLabel", "Rate ({{currency}})", {
+                              currency: cfg.currency,
+                            })}
                             value={String(p.rate)}
                             onChange={(v) => updProv(p.id, { rate: Number(v || 0) })}
                             autoComplete="off"
@@ -724,11 +761,16 @@ export default function Section6Geo() {
               {/* City view */}
               {!cfg.isFree && view === "city" && (
                 <GroupCard
-                  title={tr("section6.city.title", "City rates — {{country}}", { country: countryDef.label })}
+                  title={tr("section6.city.title", "City rates — {{country}}", {
+                    country: countryDef.label,
+                  })}
                   tr={tr}
                 >
                   <Text tone="subdued" as="p">
-                    {tr("section6.city.description", "Define shipping rate per city inside a province.")}
+                    {tr(
+                      "section6.city.description",
+                      "Define shipping rate per city inside a province."
+                    )}
                   </Text>
 
                   <BlockStack gap="200">
@@ -752,7 +794,9 @@ export default function Section6Geo() {
                             />
                             <TextField
                               type="number"
-                              label={tr("section6.city.rateLabel", "Rate ({{currency}})", { currency: cfg.currency })}
+                              label={tr("section6.city.rateLabel", "Rate ({{currency}})", {
+                                currency: cfg.currency,
+                              })}
                               value={String(ci.rate)}
                               onChange={(v) => updCity(ci.id, { rate: Number(v || 0) })}
                               autoComplete="off"
@@ -803,7 +847,9 @@ export default function Section6Geo() {
                           />
                           <TextField
                             type="number"
-                            label={tr("section6.price.rateLabel", "Rate ({{currency}})", { currency: cfg.currency })}
+                            label={tr("section6.price.rateLabel", "Rate ({{currency}})", {
+                              currency: cfg.currency,
+                            })}
                             value={String(b.rate)}
                             onChange={(v) => updBracket(b.id, { rate: Number(v || 0) })}
                             autoComplete="off"

@@ -995,6 +995,7 @@ function withDefaults(raw = {}) {
     ...DEFAULT_OFFER,
     ...o,
     colors: { ...DEFAULT_OFFER.colors, ...(o?.colors || {}) },
+    design: { ...DEFAULT_OFFER.design, ...(o?.design || {}) },
     discountEnabled: o?.discountEnabled ?? false,
     discountType: o?.discountType || "percentage",
     discountValue:
@@ -1010,6 +1011,7 @@ function withDefaults(raw = {}) {
     ...DEFAULT_UPSELL,
     ...u,
     colors: { ...DEFAULT_UPSELL.colors, ...(u?.colors || {}) },
+    design: { ...DEFAULT_UPSELL.design, ...(u?.design || {}) },
   }));
 
   const tyRaw = (raw || {})?.thankYou || {};
@@ -1742,6 +1744,13 @@ function UpsellEditor({ upsell, index, products, onChange, onRemove, canRemove, 
   const btnQty = Math.min(3, Math.max(1, Number(upsell.qty || 1)));
   const btnText = upsell.buttonText || tr("section2.upsells.buttonTextPh", "Add");
   const addedText = upsell.addedText || tr("section2.upsells.addedTextPh", "Added");
+
+  // ✅ Design (fix ReferenceError: borderStyle is not defined)
+  const d = upsell.design || {};
+  const borderStyle = d.borderStyle || "solid";
+  const textColor = d.textColor || "#111827";
+  const textSize = clampInt(d.textSize, 10, 22, 14);
+
 
   return (
     <div className="item-card">

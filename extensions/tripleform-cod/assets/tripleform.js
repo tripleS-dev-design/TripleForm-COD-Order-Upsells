@@ -3593,6 +3593,18 @@ function parseGeoAttr(holder) {
       const el = getField(key);
       return el ? String(el.value || "").trim() : "";
     }
+
+    // ✅ GEO selection helper (province/city) used by shipping calculator
+    function readGeoSelection() {
+      const pk = String((beh && beh.provinceKey) || "province");
+      const ck = String((beh && beh.cityKey) || "city");
+      return {
+        province: getVal(pk) || getVal("province"),
+        city: getVal(ck) || getVal("city"),
+        provinceKey: pk,
+        cityKey: ck
+      };
+    }
     function getPhone() {
       const phoneField = f.phone || {};
       const prefix = phoneField.prefix ? String(phoneField.prefix) : "";
@@ -4370,6 +4382,33 @@ let recaptchaToken = null;
     if (delay > 0 && styleType !== "inline" && typeof openHandler === "function") {
       setTimeout(() => openHandler(), delay);
     }
+
+    // ✅ Recalculate totals when GEO fields change (province/city)
+    try {
+      const isGeoField = (el) => {
+        if (!el || !el.getAttribute) return false;
+        const k = el.getAttribute("data-tf-field") || "";
+        const pk = String((beh && beh.provinceKey) || "province");
+        const ck = String((beh && beh.cityKey) || "city");
+        return k === pk || k === ck || k === "province" || k === "city";
+      };
+
+      const onGeoChange = (e) => {
+        const t = e && e.target ? e.target : null;
+        if (!isGeoField(t)) return;
+
+        // Invalidate remote GEO cache so next update triggers fetch
+        __tfGeoRemote.key = null;
+        __tfGeoRemote.cents = null;
+        __tfGeoRemote.pending = false;
+        __tfGeoRemote.error = null;
+
+        try { updateMoney(); } catch (err) {}
+      };
+
+      root.addEventListener("change", onGeoChange, true);
+      root.addEventListener("input", onGeoChange, true);
+    } catch (e) {}
 
     updateMoney();
     return function handleTotalsChange() {

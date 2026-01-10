@@ -441,6 +441,27 @@ function useInjectCss() {
   }, []);
 }
 
+/* ============================== ✅ Crisp loader ============================== */
+function useCrisp(websiteId) {
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!websiteId) return;
+
+    // Prevent double injection
+    if (document.getElementById("crisp-chat")) return;
+
+    window.$crisp = window.$crisp || [];
+    window.CRISP_WEBSITE_ID = websiteId;
+
+    const s = document.createElement("script");
+    s.id = "crisp-chat";
+    s.type = "text/javascript";
+    s.src = "https://client.crisp.chat/l.js";
+    s.async = true;
+    document.head.appendChild(s);
+  }, [websiteId]);
+}
+
 /* ============================== Design presets ============================== */
 const DESIGN_PRESETS = {
   SkyBlueUI: {
@@ -1025,6 +1046,9 @@ function PolarisIcon({
 function Section1FormsLayoutInner() {
   useInjectCss();
 
+  // ✅ Crisp (loads only in browser, once)
+  useCrisp("7ea27a85-6b6c-4a48-8381-6c0fdc94c1ea");
+
   const remixNavigate = useNavigate();
   const { t } = useI18n();
   const rootData = useRouteLoaderData("root");
@@ -1136,9 +1160,9 @@ function Section1FormsLayoutInner() {
   }));
 
   const [saving, setSaving] = useState(false);
-  
+
   const [saveError, setSaveError] = useState("");
-const [showPreview, setShowPreview] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
   const [offersCfg, setOffersCfg] = useState(null);
   const [loadingInitial, setLoadingInitial] = useState(true);
 
