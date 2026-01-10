@@ -13,6 +13,8 @@
 
 window.TripleformCOD = (function () {
   "use strict";
+  // TF GEO build marker (for debugging cache issues)
+  window.__TF_GEO_BUILD__ = "geo-v4-2026-01-10";
 
   /* ------------------------------------------------------------------ */
 /* reCAPTCHA script loader (v2 checkbox)                               */
@@ -3004,12 +3006,6 @@ function parseGeoAttr(holder) {
 /* Render                                                             */
   /* ------------------------------------------------------------------ */
   function render(root, cfg, offersCfg, geoCfg, product, getVariant, moneyFmt, recaptchaCfg) {
-    // GEO remote shipping calc (storefront)
-    const geoEndpoint = (geoCfg && (geoCfg.endpoint || geoCfg.geoEndpoint)) ? String(geoCfg.endpoint || geoCfg.geoEndpoint) : "";
-    const __tfGeoRemote = { key: null, cents: null, pending: false, error: null };
-    const TF_DEBUG = !!window.__TF_DEBUG;
-
-
     setActiveRoot(root);
     const rootId = (root && root.id) ? root.id : "root";
 
@@ -3591,6 +3587,17 @@ function parseGeoAttr(holder) {
     setTimeout(() => initializeTimers(root, offersCfg), 80);
     setupLocationDropdowns(root, cfg, countryDef);
 
+    // ✅ GEO shipping: recalc shipping when province/city changes
+    try {
+      const provSel = root.querySelector('select[data-tf-role="province"], select[data-tf-field="province"]');
+      const citySel = root.querySelector('select[data-tf-role="city"], select[data-tf-field="city"]');
+      const onGeoChange = () => {
+        try { updateMoney(); } catch (e) {}
+      };
+      if (provSel) provSel.addEventListener("change", onGeoChange);
+      if (citySel) citySel.addEventListener("change", onGeoChange);
+    } catch (e) {}
+
     /* --------------------- Field helpers --------------------------- */
     function getField(key) {
       return root.querySelector(`[data-tf-field="${key}"]`) || null;
@@ -3599,13 +3606,21 @@ function parseGeoAttr(holder) {
       const el = getField(key);
       return el ? String(el.value || "").trim() : "";
     }
-    
-
+    // ✅ GEO helper: always read current province/city selection from the form
     function readGeoSelection() {
-      return { province: getVal("province"), city: getVal("city") };
+      const provEl =
+        root.querySelector('select[data-tf-role="province"]') ||
+        root.querySelector('select[data-tf-field="province"]');
+      const cityEl =
+        root.querySelector('select[data-tf-role="city"]') ||
+        root.querySelector('select[data-tf-field="city"]');
+
+      const province = provEl ? String(provEl.value || "").trim() : getVal("province");
+      const city = cityEl ? String(cityEl.value || "").trim() : getVal("city");
+      return { province, city };
     }
 
-function getPhone() {
+    function getPhone() {
       const phoneField = f.phone || {};
       const prefix = phoneField.prefix ? String(phoneField.prefix) : "";
       const number = getVal("phone");
@@ -3805,14 +3820,13 @@ function computeShippingCents(subtotalCents) {
 
     // Preferred: server-side GEO shipping calculation via endpoint
     if (geoEndpoint) {
-      const province = getVal("province");
-      const city = getVal("city");
+      const sel = (typeof readGeoSelection === "function" ? readGeoSelection(cfg) : {}) || {};
+      const province = String(sel.province || "").trim();
+      const city = String(sel.city || "").trim();
 
-      const modeNow = String(geoCfg.mode || "city").toLowerCase();
-      const needCity = modeNow === "city";
-
+      // We let the server decide whether city is required (mode province/city/price/advanced)
       // Not enough info yet => keep "Shipping to calculate"
-      if (!province || (needCity && !city)) {
+      if (!province) {
         __tfGeoRemote.key = null;
         __tfGeoRemote.cents = null;
         __tfGeoRemote.pending = false;
@@ -3845,11 +3859,6 @@ function computeShippingCents(subtotalCents) {
         locale: holder.getAttribute("data-locale") || ""
       };
 
-      if (TF_DEBUG) {
-        console.debug("[TF GEO] fetch", geoEndpoint, payload);
-      }
-
-
       fetch(geoEndpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json", "Accept": "application/json" },
@@ -3866,7 +3875,6 @@ function computeShippingCents(subtotalCents) {
         })
         .then((data) => {
           const cents = extractGeoShippingCents(data);
-          if (TF_DEBUG) { console.debug('[TF GEO] response', data, '=> cents', cents); }
           __tfGeoRemote.cents = (typeof cents === "number" && Number.isFinite(cents) && cents >= 0) ? cents : null;
           __tfGeoRemote.pending = false;
           // Re-render totals (will switch from "Shipping to calculate" => amount)
@@ -4324,30 +4332,6 @@ let recaptchaToken = null;
     }
 
     setupSticky(root, cfg, openHandler, motionClass);
-
-    // GEO: refresh shipping when province/city changes
-    (function setupGeoWatchers() {
-      if (!geoEndpoint) return;
-      if (geoCfg && geoCfg.enabled === false) return;
-      const provEl = getField("province");
-      const cityEl = getField("city");
-      const onGeoChange = () => {
-        __tfGeoRemote.key = null;
-        __tfGeoRemote.cents = null;
-        __tfGeoRemote.pending = false;
-        __tfGeoRemote.error = null;
-        if (TF_DEBUG) {
-          console.debug("[TF GEO] change", { province: getVal("province"), city: getVal("city") });
-        }
-        try { updateMoney(); } catch (e) {}
-      };
-      ["change", "input"].forEach((ev) => {
-        if (provEl) provEl.addEventListener(ev, onGeoChange);
-        if (cityEl) cityEl.addEventListener(ev, onGeoChange);
-      });
-    })();
-
-
 
     const delay = Number(beh.openDelayMs || 0);
     if (delay > 0 && styleType !== "inline" && typeof openHandler === "function") {
