@@ -13,8 +13,9 @@
 
 window.TripleformCOD = (function () {
   "use strict";
-  // TF GEO build marker (for debugging cache issues)
-  window.__TF_GEO_BUILD__ = "geo-v4-2026-01-10";
+
+  // Build marker (GEO shipping)
+  window.__TF_GEO_BUILD__ = "geo-v6-2026-01-10";
 
   /* ------------------------------------------------------------------ */
 /* reCAPTCHA script loader (v2 checkbox)                               */
@@ -3006,6 +3007,14 @@ function parseGeoAttr(holder) {
 /* Render                                                             */
   /* ------------------------------------------------------------------ */
   function render(root, cfg, offersCfg, geoCfg, product, getVariant, moneyFmt, recaptchaCfg) {
+    // ------------------------------------------------------------
+    // GEO runtime (must be scoped to render, not boot)
+    // ------------------------------------------------------------
+    const holder = root;
+    const geoEndpoint = (geoCfg && (geoCfg.endpoint || geoCfg.geoEndpoint)) || holder.getAttribute("data-geo-endpoint") || "";
+    const geoCountryAttr = holder.getAttribute("data-geo-country") || holder.getAttribute("data-geo-country-code") || "";
+    const __tfGeoRemote = { pending: false, cents: null, error: null };
+
     setActiveRoot(root);
     const rootId = (root && root.id) ? root.id : "root";
 
@@ -3587,17 +3596,6 @@ function parseGeoAttr(holder) {
     setTimeout(() => initializeTimers(root, offersCfg), 80);
     setupLocationDropdowns(root, cfg, countryDef);
 
-    // ✅ GEO shipping: recalc shipping when province/city changes
-    try {
-      const provSel = root.querySelector('select[data-tf-role="province"], select[data-tf-field="province"]');
-      const citySel = root.querySelector('select[data-tf-role="city"], select[data-tf-field="city"]');
-      const onGeoChange = () => {
-        try { updateMoney(); } catch (e) {}
-      };
-      if (provSel) provSel.addEventListener("change", onGeoChange);
-      if (citySel) citySel.addEventListener("change", onGeoChange);
-    } catch (e) {}
-
     /* --------------------- Field helpers --------------------------- */
     function getField(key) {
       return root.querySelector(`[data-tf-field="${key}"]`) || null;
@@ -3606,20 +3604,6 @@ function parseGeoAttr(holder) {
       const el = getField(key);
       return el ? String(el.value || "").trim() : "";
     }
-    // ✅ GEO helper: always read current province/city selection from the form
-    function readGeoSelection() {
-      const provEl =
-        root.querySelector('select[data-tf-role="province"]') ||
-        root.querySelector('select[data-tf-field="province"]');
-      const cityEl =
-        root.querySelector('select[data-tf-role="city"]') ||
-        root.querySelector('select[data-tf-field="city"]');
-
-      const province = provEl ? String(provEl.value || "").trim() : getVal("province");
-      const city = cityEl ? String(cityEl.value || "").trim() : getVal("city");
-      return { province, city };
-    }
-
     function getPhone() {
       const phoneField = f.phone || {};
       const prefix = phoneField.prefix ? String(phoneField.prefix) : "";
@@ -3778,8 +3762,6 @@ function extractGeoShippingCents(resp) {
     };
 
     const candidates = [
-      resp.shippingAmount,
-      resp.shipping_amount,
       resp.shippingCents,
       resp.shipping_cents,
       resp.shippingPriceCents,
@@ -3797,20 +3779,6 @@ function extractGeoShippingCents(resp) {
       if (typeof cents === "number" && Number.isFinite(cents) && cents >= 0) return Math.round(cents);
     }
 
-
-// Nested shipping object: { shipping: { amount: 29, currency: "MAD" } }
-if (resp.shipping && typeof resp.shipping === "object") {
-  // Prefer cents fields if present, otherwise treat `amount` as major units
-  if (resp.shipping.amountCents != null || resp.shipping.amount_cents != null) {
-    const cents = pick(resp.shipping.amountCents ?? resp.shipping.amount_cents);
-    if (cents != null) return cents;
-  }
-  const amountMajor = resp.shipping.amount ?? resp.shipping.price ?? null;
-  if (amountMajor != null) {
-    const n = Number(amountMajor);
-    if (Number.isFinite(n)) return Math.round(n * 100);
-  }
-}
     // Nested shapes: { data: { ... } } or { result: { ... } }
     if (resp.data) {
       const cents = extractGeoShippingCents(resp.data);
@@ -3827,6 +3795,30 @@ if (resp.shipping && typeof resp.shipping === "object") {
   }
 }
 
+
+function readGeoSelection(_cfg) {
+  try {
+    // province + city selects are rendered with data-tf-role + value
+    const provinceEl =
+      root.querySelector('[data-tf-role="province"]') ||
+      root.querySelector('select[name="province"]') ||
+      root.querySelector('select[name="wilaya"]') ||
+      root.querySelector('select[name="state"]');
+
+    const cityEl =
+      root.querySelector('[data-tf-role="city"]') ||
+      root.querySelector('select[name="city"]') ||
+      root.querySelector('select[name="commune"]');
+
+    const province = provinceEl ? String(provinceEl.value || "").trim() : "";
+    const city = cityEl ? String(cityEl.value || "").trim() : "";
+    return { province, city };
+  } catch (e) {
+    return { province: "", city: "" };
+  }
+}
+
+
 function computeShippingCents(subtotalCents) {
   // Return null => keep "Shipping to calculate"
   // Return number (cents) => show shipping amount
@@ -3840,26 +3832,17 @@ function computeShippingCents(subtotalCents) {
       const province = String(sel.province || "").trim();
       const city = String(sel.city || "").trim();
 
-      // We let the server decide whether selection is required (mode province/city/price)
-// Not enough info yet => keep "Shipping to calculate"
-const mode = String(geoCfg.mode || "province");
-const needProvince = mode !== "price";
-const needCity = mode === "city";
+      const modeNow = String(geoCfg.mode || "city").toLowerCase();
+      const needCity = modeNow === "city";
 
-if (needProvince && !province) {
-  __tfGeoRemote.key = null;
-  __tfGeoRemote.cents = null;
-  __tfGeoRemote.pending = false;
-  __tfGeoRemote.error = null;
-  return null;
-}
-if (needCity && !city) {
-  __tfGeoRemote.key = null;
-  __tfGeoRemote.cents = null;
-  __tfGeoRemote.pending = false;
-  __tfGeoRemote.error = null;
-  return null;
-}
+      // Not enough info yet => keep "Shipping to calculate"
+      if (!province || (needCity && !city)) {
+        __tfGeoRemote.key = null;
+        __tfGeoRemote.cents = null;
+        __tfGeoRemote.pending = false;
+        __tfGeoRemote.error = null;
+        return null;
+      }
 
       const amt = Number(subtotalCents || 0);
       const key = [String(geoCountryAttr || geoCfg.country || ""), province, city, String(Math.round(amt))].join("|");
@@ -3933,8 +3916,8 @@ if (needCity && !city) {
     const province = sel.province ? String(sel.province) : "";
     const city = sel.city ? String(sel.city) : "";
 
-    // Need location selection to compute (only for province/city modes)
-    if (mode !== "price" && !province) return null;
+    // Need location selection to compute
+    if (!province) return null;
     if (mode === "city" && !city) return null;
 
     const useFallback = Boolean(adv.useFallbackIfNotFound);
@@ -3947,17 +3930,13 @@ if (needCity && !city) {
       const brackets = Array.isArray(geoCfg.priceBrackets) ? geoCfg.priceBrackets : [];
       if (brackets.length) {
         for (const b of brackets) {
-          const min = (b && b.min !== null && b.min !== undefined && String(b.min).trim() !== "") ? Number(b.min) : 0;
-const rawMax = b ? b.max : null;
-const max = (rawMax === null || rawMax === undefined || String(rawMax).trim() === "") ? Infinity : Number(rawMax);
-
-if (!Number.isFinite(min)) continue;
-if (max !== Infinity && !Number.isFinite(max)) continue;
-
-if (amount >= min && amount < max) {
-  rate = Number(b && b.rate);
-  break;
-}
+          const min = Number(b && b.min);
+          const max = Number(b && b.max);
+          if (!Number.isFinite(min) || !Number.isFinite(max)) continue;
+          if (amount >= min && amount < max) {
+            rate = Number(b && b.rate);
+            break;
+          }
         }
       }
     } else if (mode === "city") {
@@ -4369,6 +4348,26 @@ let recaptchaToken = null;
       setTimeout(() => openHandler(), delay);
     }
 
+    // GEO: recalc shipping when province/city changes (and clear remote cache)
+    try {
+      const provinceEl = root.querySelector('[data-tf-role="province"]');
+      const cityEl = root.querySelector('[data-tf-role="city"]');
+      const onGeoChange = () => {
+        __tfGeoRemote.pending = false;
+        __tfGeoRemote.error = null;
+        __tfGeoRemote.cents = null;
+        try { updateMoney(); } catch (e) {}
+      };
+      if (provinceEl) {
+        provinceEl.addEventListener("change", onGeoChange);
+        provinceEl.addEventListener("input", onGeoChange);
+      }
+      if (cityEl) {
+        cityEl.addEventListener("change", onGeoChange);
+        cityEl.addEventListener("input", onGeoChange);
+      }
+    } catch (e) {}
+
     updateMoney();
     return function handleTotalsChange() {
       updateMoney();
@@ -4437,9 +4436,6 @@ let recaptchaToken = null;
 
   const endpointAttr = holder.getAttribute("data-geo-endpoint");
   if (endpointAttr) base.endpoint = endpointAttr;
-
-  // Fallback to app-proxy endpoint if Liquid did not provide one
-  if (!base.endpoint) base.endpoint = "/apps/tripleform-cod/api/geo/calc";
 
   const countryAttr = holder.getAttribute("data-geo-country") || holder.getAttribute("data-geo-country-code");
   if (countryAttr) base.country = countryAttr;
