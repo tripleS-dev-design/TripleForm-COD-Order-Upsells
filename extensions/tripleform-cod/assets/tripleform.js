@@ -3004,6 +3004,12 @@ function parseGeoAttr(holder) {
 /* Render                                                             */
   /* ------------------------------------------------------------------ */
   function render(root, cfg, offersCfg, geoCfg, product, getVariant, moneyFmt, recaptchaCfg) {
+    // GEO remote shipping calc (storefront)
+    const geoEndpoint = (geoCfg && (geoCfg.endpoint || geoCfg.geoEndpoint)) ? String(geoCfg.endpoint || geoCfg.geoEndpoint) : "";
+    const __tfGeoRemote = { key: null, cents: null, pending: false, error: null };
+    const TF_DEBUG = !!window.__TF_DEBUG;
+
+
     setActiveRoot(root);
     const rootId = (root && root.id) ? root.id : "root";
 
@@ -3593,19 +3599,13 @@ function parseGeoAttr(holder) {
       const el = getField(key);
       return el ? String(el.value || "").trim() : "";
     }
+    
 
-    // ✅ GEO selection helper (province/city) used by shipping calculator
     function readGeoSelection() {
-      const pk = String((beh && beh.provinceKey) || "province");
-      const ck = String((beh && beh.cityKey) || "city");
-      return {
-        province: getVal(pk) || getVal("province"),
-        city: getVal(ck) || getVal("city"),
-        provinceKey: pk,
-        cityKey: ck
-      };
+      return { province: getVal("province"), city: getVal("city") };
     }
-    function getPhone() {
+
+function getPhone() {
       const phoneField = f.phone || {};
       const prefix = phoneField.prefix ? String(phoneField.prefix) : "";
       const number = getVal("phone");
@@ -3741,64 +3741,36 @@ function extractGeoShippingCents(resp) {
     // Explicit free-shipping flags
     if (resp.freeShipping === true || resp.isFreeShipping === true || resp.free === true) return 0;
 
-    const pick = (v, opts = {}) => {
+    const pick = (v) => {
       if (v == null) return null;
-
-      // Numbers
       if (typeof v === "number" && Number.isFinite(v)) {
-        // If caller says this value is already in cents, return as-is
-        if (opts.alreadyCents) return Math.max(0, Math.round(v));
         // Heuristic: if looks like major units (e.g. 39.9), convert to cents; if integer, assume cents
-        if (Number.isInteger(v)) return Math.max(0, Math.round(v));
-        return Math.max(0, Math.round(v * 100));
+        if (Number.isInteger(v)) return v;
+        return Math.round(v * 100);
       }
-
-      // Strings
       if (typeof v === "string") {
         const s = v.trim();
         if (!s) return null;
         const n = Number(s.replace(",", ".").replace(/[^\d.\-]/g, ""));
         if (!Number.isFinite(n)) return null;
-
-        if (opts.alreadyCents) return Math.max(0, Math.round(n));
-
         // If string contains decimal separator, assume major units
-        if (s.includes(".") || s.includes(",")) return Math.max(0, Math.round(n * 100));
+        if (s.includes(".") || s.includes(",")) return Math.round(n * 100);
         // Otherwise: could be cents or major; choose cents if big
-        if (n >= 1000) return Math.max(0, Math.round(n));
-        return Math.max(0, Math.round(n * 100));
+        if (n >= 1000) return Math.round(n);
+        return Math.round(n * 100);
       }
-
       return null;
     };
 
-    // ✅ New GEO calc format (server already returns cents)
-    const directCents = pick(resp.shippingAmount, { alreadyCents: true }) ??
-      pick(resp.shipping_amount, { alreadyCents: true }) ??
-      pick(resp.shippingCents, { alreadyCents: true }) ??
-      pick(resp.shipping_cents, { alreadyCents: true }) ??
-      pick(resp.amountCents, { alreadyCents: true }) ??
-      pick(resp.amount_cents, { alreadyCents: true });
-
-    if (directCents != null) return directCents;
-
-    // ✅ Legacy / nested shapes: { shipping: { amount: 30, currency: "MAD" } }
-    if (resp.shipping && typeof resp.shipping === "object") {
-      const nested =
-        pick(resp.shipping.amountCents, { alreadyCents: true }) ??
-        pick(resp.shipping.amount_cents, { alreadyCents: true }) ??
-        // amount usually in major units (MAD, DZD, ...)
-        pick(resp.shipping.amount) ??
-        pick(resp.shipping.price) ??
-        pick(resp.shipping.value);
-      if (nested != null) return nested;
-    }
-
-    // Other common keys
     const candidates = [
+      resp.shippingCents,
+      resp.shipping_cents,
       resp.shippingPriceCents,
       resp.shipping_price_cents,
+      resp.amountCents,
+      resp.amount_cents,
       resp.cents,
+      resp.shipping,
       resp.price,
       resp.amount,
     ];
@@ -3808,7 +3780,7 @@ function extractGeoShippingCents(resp) {
       if (typeof cents === "number" && Number.isFinite(cents) && cents >= 0) return Math.round(cents);
     }
 
-    // Nested wrappers: { data: { ... } } or { result: { ... } }
+    // Nested shapes: { data: { ... } } or { result: { ... } }
     if (resp.data) {
       const cents = extractGeoShippingCents(resp.data);
       if (cents != null) return cents;
@@ -3824,7 +3796,6 @@ function extractGeoShippingCents(resp) {
   }
 }
 
-
 function computeShippingCents(subtotalCents) {
   // Return null => keep "Shipping to calculate"
   // Return number (cents) => show shipping amount
@@ -3834,16 +3805,14 @@ function computeShippingCents(subtotalCents) {
 
     // Preferred: server-side GEO shipping calculation via endpoint
     if (geoEndpoint) {
-      const sel = (typeof readGeoSelection === "function" ? readGeoSelection(cfg) : {}) || {};
-      const province = String(sel.province || "").trim();
-      const city = String(sel.city || "").trim();
+      const province = getVal("province");
+      const city = getVal("city");
 
       const modeNow = String(geoCfg.mode || "city").toLowerCase();
-      const needProvince = modeNow === "province" || modeNow === "city";
       const needCity = modeNow === "city";
 
       // Not enough info yet => keep "Shipping to calculate"
-      if ((needProvince && !province) || (needCity && !city)) {
+      if (!province || (needCity && !city)) {
         __tfGeoRemote.key = null;
         __tfGeoRemote.cents = null;
         __tfGeoRemote.pending = false;
@@ -3876,6 +3845,11 @@ function computeShippingCents(subtotalCents) {
         locale: holder.getAttribute("data-locale") || ""
       };
 
+      if (TF_DEBUG) {
+        console.debug("[TF GEO] fetch", geoEndpoint, payload);
+      }
+
+
       fetch(geoEndpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json", "Accept": "application/json" },
@@ -3892,6 +3866,7 @@ function computeShippingCents(subtotalCents) {
         })
         .then((data) => {
           const cents = extractGeoShippingCents(data);
+          if (TF_DEBUG) { console.debug('[TF GEO] response', data, '=> cents', cents); }
           __tfGeoRemote.cents = (typeof cents === "number" && Number.isFinite(cents) && cents >= 0) ? cents : null;
           __tfGeoRemote.pending = false;
           // Re-render totals (will switch from "Shipping to calculate" => amount)
@@ -4046,34 +4021,6 @@ function updateMoney() {
         btn.classList.toggle("disabled", !ok);
         btn.title = !ok ? `Need quantity ${minQty} to apply discount` : "";
       });
-
-    // ✅ GEO: recalc shipping when province/city changes
-    (function bindGeoChangeHandlers() {
-      const provEl = root.querySelector('select[data-tf-role="province"]');
-      const cityEl = root.querySelector('select[data-tf-role="city"]');
-
-      const wrap = (el) => {
-        if (!el) return;
-        const prev = el.onchange;
-        el.onchange = function (e) {
-          if (typeof prev === "function") {
-            try { prev.call(this, e); } catch (err) {}
-          }
-          // Reset remote cache so the new selection forces a fresh calc
-          if (typeof __tfGeoRemote === "object" && __tfGeoRemote) {
-            __tfGeoRemote.key = null;
-            __tfGeoRemote.cents = null;
-            __tfGeoRemote.pending = false;
-            __tfGeoRemote.error = null;
-          }
-          try { updateMoney(); } catch (err) {}
-        };
-      };
-
-      wrap(provEl);
-      wrap(cityEl);
-    })();
-
     }
 
     setTimeout(() => {
@@ -4378,37 +4325,34 @@ let recaptchaToken = null;
 
     setupSticky(root, cfg, openHandler, motionClass);
 
-    const delay = Number(beh.openDelayMs || 0);
-    if (delay > 0 && styleType !== "inline" && typeof openHandler === "function") {
-      setTimeout(() => openHandler(), delay);
-    }
-
-    // ✅ Recalculate totals when GEO fields change (province/city)
-    try {
-      const isGeoField = (el) => {
-        if (!el || !el.getAttribute) return false;
-        const k = el.getAttribute("data-tf-field") || "";
-        const pk = String((beh && beh.provinceKey) || "province");
-        const ck = String((beh && beh.cityKey) || "city");
-        return k === pk || k === ck || k === "province" || k === "city";
-      };
-
-      const onGeoChange = (e) => {
-        const t = e && e.target ? e.target : null;
-        if (!isGeoField(t)) return;
-
-        // Invalidate remote GEO cache so next update triggers fetch
+    // GEO: refresh shipping when province/city changes
+    (function setupGeoWatchers() {
+      if (!geoEndpoint) return;
+      if (geoCfg && geoCfg.enabled === false) return;
+      const provEl = getField("province");
+      const cityEl = getField("city");
+      const onGeoChange = () => {
         __tfGeoRemote.key = null;
         __tfGeoRemote.cents = null;
         __tfGeoRemote.pending = false;
         __tfGeoRemote.error = null;
-
-        try { updateMoney(); } catch (err) {}
+        if (TF_DEBUG) {
+          console.debug("[TF GEO] change", { province: getVal("province"), city: getVal("city") });
+        }
+        try { updateMoney(); } catch (e) {}
       };
+      ["change", "input"].forEach((ev) => {
+        if (provEl) provEl.addEventListener(ev, onGeoChange);
+        if (cityEl) cityEl.addEventListener(ev, onGeoChange);
+      });
+    })();
 
-      root.addEventListener("change", onGeoChange, true);
-      root.addEventListener("input", onGeoChange, true);
-    } catch (e) {}
+
+
+    const delay = Number(beh.openDelayMs || 0);
+    if (delay > 0 && styleType !== "inline" && typeof openHandler === "function") {
+      setTimeout(() => openHandler(), delay);
+    }
 
     updateMoney();
     return function handleTotalsChange() {
