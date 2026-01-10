@@ -40,6 +40,7 @@ async function refreshGoogleToken(refreshToken) {
   oauth2Client.setCredentials({ refresh_token: refreshToken });
 
   try {
+    // googleapis legacy method (works in your codebase)
     const { credentials } = await oauth2Client.refreshAccessToken();
     return {
       access_token: credentials.access_token,
@@ -199,6 +200,94 @@ function getDeep(obj, path) {
   return path.split(".").reduce((acc, key) => (acc == null ? undefined : acc[key]), obj);
 }
 
+function firstNonEmpty(...vals) {
+  for (const v of vals) {
+    if (v == null) continue;
+    const s = String(v).trim();
+    if (s) return s;
+  }
+  return "";
+}
+
+function nameFromAny(x) {
+  if (x == null) return "";
+  if (typeof x === "string" || typeof x === "number") return String(x);
+  return (
+    x.title ||
+    x.name ||
+    x.label ||
+    x.offerName ||
+    x.upsellName ||
+    x.productTitle ||
+    x.variantTitle ||
+    ""
+  );
+}
+
+function joinNames(arr) {
+  if (!Array.isArray(arr)) return "";
+  const names = arr.map(nameFromAny).map((s) => String(s || "").trim()).filter(Boolean);
+  return names.join(" + ");
+}
+
+function pickOfferName(order) {
+  const o = order || {};
+  const cart = o.cart || {};
+  const ord = o.order || {};
+
+  // direct strings
+  const direct = firstNonEmpty(cart.offerName, o.offerName, ord.offerName);
+  if (direct) return direct;
+
+  // arrays
+  const fromArrays = firstNonEmpty(
+    joinNames(o.offers),
+    joinNames(cart.offers),
+    joinNames(ord.offers)
+  );
+  if (fromArrays) return fromArrays;
+
+  // objects
+  const fromObjects = firstNonEmpty(
+    nameFromAny(o.offer),
+    nameFromAny(cart.offer),
+    nameFromAny(ord.offer),
+    nameFromAny(o.appliedOffer),
+    nameFromAny(cart.appliedOffer),
+    nameFromAny(ord.appliedOffer)
+  );
+  return fromObjects || "";
+}
+
+function pickUpsellName(order) {
+  const o = order || {};
+  const cart = o.cart || {};
+  const ord = o.order || {};
+
+  // direct strings
+  const direct = firstNonEmpty(cart.upsellName, o.upsellName, ord.upsellName);
+  if (direct) return direct;
+
+  // arrays
+  const fromArrays = firstNonEmpty(
+    joinNames(o.upsells),
+    joinNames(cart.upsells),
+    joinNames(ord.upsells)
+  );
+  if (fromArrays) return fromArrays;
+
+  // objects
+  const fromObjects = firstNonEmpty(
+    nameFromAny(o.upsell),
+    nameFromAny(cart.upsell),
+    nameFromAny(ord.upsell),
+    nameFromAny(o.appliedUpsell),
+    nameFromAny(cart.appliedUpsell),
+    nameFromAny(ord.appliedUpsell)
+  );
+  return fromObjects || "";
+}
+
 /**
  * Transforme un appField en vraie valeur
  */
@@ -212,9 +301,9 @@ function resolveAppField(order, appField) {
     case "order.date":
       return o.createdAt || ord.createdAt || "";
     case "order.id":
-      return ord.id || "";
+      return ord.id || o.id || o.orderId || "";
     case "order.name":
-      return ord.name || "";
+      return ord.name || o.name || "";
 
     case "customer.name":
       return customer.name || "";
@@ -237,10 +326,12 @@ function resolveAppField(order, appField) {
       return cart.productTitle || "";
     case "cart.variantTitle":
       return cart.variantTitle || "";
+
+    // ✅ FIX: offers/upsells fallback
     case "cart.offerName":
-      return cart.offerName || "";
+      return pickOfferName(order);
     case "cart.upsellName":
-      return cart.upsellName || "";
+      return pickUpsellName(order);
 
     case "cart.subtotal":
       return cart.subtotal ?? "";
@@ -293,6 +384,7 @@ export async function appendOrderToSheet({ shop, order }) {
     order?.orderId ||
     order?.id ||
     order?.order?.name ||
+    order?.name ||
     null;
 
   if (!orderId) {
@@ -368,7 +460,9 @@ export async function appendOrderToSheet({ shop, order }) {
 
   const spreadsheetId = cfg.sheet.spreadsheetId;
   const tabName = cfg.sheet.tabName || "Orders";
-  const range = `${tabName}!A:Z`;
+
+  // ✅ FIX: force append from A1 (avoid “shift to the right”)
+  const range = `${tabName}!A1`;
 
   // 6) Token Google valide
   const accessToken = await getValidAccessTokenForShop(shop);
@@ -397,7 +491,10 @@ export async function appendOrderToSheet({ shop, order }) {
       range,
       valueInputOption: "USER_ENTERED",
       insertDataOption: "INSERT_ROWS",
-      requestBody: { values: [row] },
+      requestBody: {
+        majorDimension: "ROWS",
+        values: [row],
+      },
     });
 
     const updatedRange = response?.data?.updates?.updatedRange || null;
