@@ -253,17 +253,36 @@ data-offers="{{ tf_offers_fixed | escape }}"
 
 <script>
   (function () {
-    function boot() {
-      if (window.TripleformCOD && typeof window.TripleformCOD.boot === 'function') {
-        window.TripleformCOD.boot('{{ section.id }}');
+    function runBoot() {
+      const el = document.getElementById('tripleform-cod-{{ section.id }}');
+      if (!el || !window.TripleformCOD || typeof window.TripleformCOD.boot !== 'function') return;
+
+      // si déjà rendu, stop
+      if (el.getAttribute('data-tf-booted') === '1' && el.querySelector('.tf-shell')) return;
+
+      try {
+        window.TripleformCOD.boot(el);
+      } catch (e) {
+        console.warn('[Tripleform COD] boot error:', e);
+        el.removeAttribute('data-tf-booted');
       }
     }
-    document.addEventListener('DOMContentLoaded', boot);
-    document.addEventListener('shopify:section:load', boot);
-    document.addEventListener('shopify:section:select', boot);
-    document.addEventListener('shopify:block:select', boot);
+
+    function schedule() {
+      runBoot();
+      setTimeout(runBoot, 150);
+      setTimeout(runBoot, 800);
+    }
+
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', schedule);
+    else schedule();
+
+    document.addEventListener('shopify:section:load', schedule);
+    document.addEventListener('shopify:section:select', schedule);
+    document.addEventListener('shopify:block:select', schedule);
   })();
 </script>
+
 
 {% schema %}
 {
