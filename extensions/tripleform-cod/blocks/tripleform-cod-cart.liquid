@@ -3,7 +3,6 @@ Tripleform COD – Cart section
 {% endcomment %}
 
 {{ 'tripleform-cod.css' | asset_url | stylesheet_tag }}
-{{ 'tripleform.js' | asset_url | script_tag }}
 
 {%- assign tf_shop_val = shop.metafields.tripleform_cod.settings.value -%}
 
@@ -252,10 +251,48 @@ Tripleform COD – Cart section
         window.TripleformCOD.boot('{{ section.id }}');
       }
     }
-    document.addEventListener('DOMContentLoaded', boot);
-    document.addEventListener('shopify:section:load', boot);
-    document.addEventListener('shopify:section:select', boot);
-    document.addEventListener('shopify:block:select', boot);
+    
+    // Charger le script JavaScript de manière asynchrone
+    function loadScript() {
+      var script = document.createElement('script');
+      script.src = "{{ 'tripleform.js' | asset_url }}";
+      script.defer = true;
+      script.onload = function() {
+        // Attendre que le DOM soit prêt avant de démarrer
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', boot);
+        } else {
+          boot();
+        }
+      };
+      document.head.appendChild(script);
+    }
+    
+    // Démarrer le chargement du script
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', loadScript);
+    } else {
+      loadScript();
+    }
+    
+    // Écouter les événements Shopify pour les sections dynamiques
+    document.addEventListener('shopify:section:load', function(event) {
+      if (event.target.querySelector('#tripleform-cod-{{ section.id }}')) {
+        setTimeout(boot, 100);
+      }
+    });
+    
+    document.addEventListener('shopify:section:select', function(event) {
+      if (event.target.querySelector('#tripleform-cod-{{ section.id }}')) {
+        setTimeout(boot, 100);
+      }
+    });
+    
+    document.addEventListener('shopify:block:select', function(event) {
+      if (event.target.closest('#tripleform-cod-{{ section.id }}')) {
+        setTimeout(boot, 100);
+      }
+    });
   })();
 </script>
 
