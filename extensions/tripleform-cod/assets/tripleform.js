@@ -4522,7 +4522,7 @@ let recaptchaToken = null;
     return ds ? String(ds) : "";
   }
 
-  function findProductJsonEl(holder, sectionId) {
+    function findProductJsonEl(holder, sectionId) {
     if (holder) {
       const inside =
         holder.querySelector('script[id^="tf-product-json-"]') ||
@@ -4532,6 +4532,13 @@ let recaptchaToken = null;
       if (inside) return inside;
     }
 
+    if (sectionId) {
+      const byLegacy = byId(`tf-product-json-${sectionId}`);
+      if (byLegacy) return byLegacy;
+    }
+
+    return document.querySelector('script[id^="tf-product-json-"]') || null;
+  }
 
   function findCartJsonEl(holder, sectionId) {
     if (holder) {
@@ -4550,16 +4557,7 @@ let recaptchaToken = null;
     return document.querySelector('script[id^="tf-cart-json-"]') || null;
   }
 
-
-    if (sectionId) {
-      const byLegacy = byId(`tf-product-json-${sectionId}`);
-      if (byLegacy) return byLegacy;
-    }
-
-    return document.querySelector('script[id^="tf-product-json-"]') || null;
-  }
-
-  function boot(sectionIdOrEl) {
+function boot(sectionIdOrEl) {
     let holder = null;
     let sectionId = "";
 
