@@ -243,9 +243,10 @@ Tripleform COD – Cart section
   {%- endif -%}
 </div>
 
-<script type="application/json" id="tf-cart-json-{{ section.id }}">
-  {{ cart | json }}
-</script>
+<template id="tf-product-json-{{ section.id }}" data-tf-product-json="1">
+  {{ product | json }}
+</template>
+
 
 <script>
   (function () {
