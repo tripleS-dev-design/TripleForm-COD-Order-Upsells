@@ -14,7 +14,6 @@ import {
   Divider,
   Icon,
   Tabs,
-  Banner,
 } from "@shopify/polaris";
 import * as PI from "@shopify/polaris-icons";
 
@@ -362,12 +361,6 @@ function defaultCfg() {
       codExtraFee: 0,
       note: "",
     },
-
-    ui: {
-      enableCartBlock: false,
-      enableCouponField: false,
-      enableVariantSelector: false,
-    },
   };
 }
 
@@ -380,13 +373,10 @@ function stableStringify(obj) {
 }
 
 function normalizeGeoCfg(cfg) {
-  const defaults = defaultCfg();
-  const x = cfg || defaults;
+  const x = cfg || defaultCfg();
   const allCountries = Object.keys(GEO_COUNTRIES);
 
-  const next = { ...defaults, ...x };
-  next.advanced = { ...defaults.advanced, ...(x.advanced || {}) };
-  next.ui = { ...defaults.ui, ...(x.ui || {}) };
+  const next = { ...defaultCfg(), ...x };
   if (!next.provinceRates) next.provinceRates = {};
   if (!next.cityRates) next.cityRates = {};
 
@@ -527,7 +517,6 @@ export default function Section6Geo() {
   /* ====== helpers ====== */
   const setRoot = (p) => setCfg((c) => ({ ...c, ...p }));
   const setAdvanced = (p) => setCfg((c) => ({ ...c, advanced: { ...c.advanced, ...p } }));
-  const setUI = (p) => setCfg((c) => ({ ...c, ui: { ...(c.ui || {}), ...p } }));
 
   const setCountry = (iso2) => {
     const code = (iso2 || "").toUpperCase().slice(0, 2) || "MA";
@@ -589,7 +578,6 @@ export default function Section6Geo() {
       { id: "city", content: tr("section6.rail.panels.city", "City rates") },
       { id: "price", content: tr("section6.rail.panels.price", "Price brackets") },
       { id: "advanced", content: tr("section6.rail.panels.advanced", "Advanced") },
-      { id: "settings", content: tr("section6.rail.panels.settings", "Settings") },
     ],
     [tr]
   );
@@ -940,85 +928,6 @@ export default function Section6Geo() {
               )}
             </div>
           </div>
-
-
-              {/* Settings */}
-              {view === "settings" && (
-                <GroupCard title="section6.settings.title" tr={tr}>
-                  <Text tone="subdued" as="p">
-                    {tr(
-                      "section6.settings.subtitle",
-                      "Extra options: Cart support, coupon field, and variant selector."
-                    )}
-                  </Text>
-
-                  <Divider />
-
-                  <Checkbox
-                    label={tr(
-                      "section6.settings.cart",
-                      "Enable Cart page support (Cart app block)"
-                    )}
-                    checked={!!cfg.ui?.enableCartBlock}
-                    onChange={(v) => setUI({ enableCartBlock: !!v })}
-                  />
-                  <Text tone="subdued" as="p" style={{ marginTop: -6 }}>
-                    {tr(
-                      "section6.settings.cartHelp",
-                      "When enabled, you can add the Tripleform COD block on the Cart template."
-                    )}
-                  </Text>
-
-                  <Divider />
-
-                  <Checkbox
-                    label={tr(
-                      "section6.settings.coupon",
-                      "Show coupon / promo code field in the form"
-                    )}
-                    checked={!!cfg.ui?.enableCouponField}
-                    onChange={(v) => setUI({ enableCouponField: !!v })}
-                  />
-                  <Text tone="subdued" as="p" style={{ marginTop: -6 }}>
-                    {tr(
-                      "section6.settings.couponHelp",
-                      "Displays a coupon field and sends it with the order payload."
-                    )}
-                  </Text>
-
-                  <Divider />
-
-                  <Checkbox
-                    label={tr(
-                      "section6.settings.variants",
-                      "Show variant selector in the form (if product has variants)"
-                    )}
-                    checked={!!cfg.ui?.enableVariantSelector}
-                    onChange={(v) => setUI({ enableVariantSelector: !!v })}
-                  />
-                  <Text tone="subdued" as="p" style={{ marginTop: -6 }}>
-                    {tr(
-                      "section6.settings.variantsHelp",
-                      "Useful when the theme does not show variant options near the form."
-                    )}
-                  </Text>
-
-                  {cfg.ui?.enableCartBlock ? (
-                    <>
-                      <Divider />
-                      <Banner tone="info">
-                        <Text as="p" variant="bodySm">
-                          {tr(
-                            "section6.settings.nextStep",
-                            "Next: add the new Cart Liquid block in the theme editor (Cart template)."
-                          )}
-                        </Text>
-                      </Banner>
-                    </>
-                  ) : null}
-                </GroupCard>
-              )}
-
 
           {/* ====================== RIGHT / STICKY ====================== */}
           <div className="tf-preview-col">

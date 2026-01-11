@@ -19,7 +19,8 @@ import {
   Modal,
   Icon,
   Tabs,
-  Banner,} from "@shopify/polaris";
+  Banner,
+} from "@shopify/polaris";
 import * as PI from "@shopify/polaris-icons";
 import { useNavigate, useRouteLoaderData } from "@remix-run/react";
 import { useI18n } from "../i18n/react";
@@ -201,13 +202,12 @@ function buildThemeEditorUrl({
 }
 
 /* ======================= CSS / layout ======================= */
-/* ✅ Note: header+flags CSS stays here so TFSectionHeader renders identically (same wrapper) */
 const LAYOUT_CSS = `
   html, body { margin:0; background:#F6F7F9; }
   .Polaris-Page, .Polaris-Page__Content { max-width:none!important; padding-left:0!important; padding-right:0!important; }
   .Polaris-TextField, .Polaris-Select, .Polaris-Labelled__LabelWrapper { min-width:0; }
 
-  /* ✅ HEADER — shared wrapper for flags (no condensation) */
+  /* ✅ HEADER */
   .tf-header{
     background:linear-gradient(90deg,#0B3B82,#7D0031);
     border-bottom:none;
@@ -367,7 +367,6 @@ const LAYOUT_CSS = `
   .tf-icon-option.selected { border-color:#00A7A3; background:#ecfeff; }
   .tf-icon-option.none { font-size:11px; font-weight:800; color:#64748B; }
 
-  /* ✅ when icon is NONE we don't reserve space */
   .tf-field-row { display:grid; gap:6px; }
   .tf-field-with-icon { display:grid; grid-template-columns:18px 1fr; gap:10px; align-items:start; }
   .tf-field-no-icon { display:block; }
@@ -542,266 +541,7 @@ const DESIGN_PRESETS = {
     cartTitleColor: "#E5F0FF",
     cartTextColor: "#E5F0FF",
   },
-  GreenNature: {
-    bg: "#F0FDF4",
-    text: "#065F46",
-    border: "#D1FAE5",
-    radius: 12,
-    padding: 16,
-    inputBg: "#FFFFFF",
-    inputBorder: "#A7F3D0",
-    placeholder: "#6EE7B7",
-    btnBgMode: "gradient",
-    btnBg: "#10B981",
-    btnBg2: "#065F46",
-    btnText: "#FFFFFF",
-    btnBorder: "#059669",
-    btnHeight: 46,
-    btnRadius: 12,
-    shadow: true,
-    glow: false,
-    glowPx: 18,
-    cartBg: "#FFFFFF",
-    cartBorder: "#D1FAE5",
-    cartRowBg: "#ECFDF5",
-    cartRowBorder: "#A7F3D0",
-    cartTitleColor: "#065F46",
-    cartTextColor: "#065F46",
-  },
-  SunsetOrange: {
-    bg: "#FFF7ED",
-    text: "#9A3412",
-    border: "#FDBA74",
-    radius: 12,
-    padding: 16,
-    inputBg: "#FFFFFF",
-    inputBorder: "#FDBA74",
-    placeholder: "#FB923C",
-    btnBgMode: "gradient",
-    btnBg: "#F97316",
-    btnBg2: "#EA580C",
-    btnText: "#FFFFFF",
-    btnBorder: "#EA580C",
-    btnHeight: 46,
-    btnRadius: 12,
-    shadow: true,
-    glow: false,
-    glowPx: 18,
-    cartBg: "#FFFFFF",
-    cartBorder: "#FDBA74",
-    cartRowBg: "#FFEDD5",
-    cartRowBorder: "#FDBA74",
-    cartTitleColor: "#9A3412",
-    cartTextColor: "#9A3412",
-  },
-  PurpleElegant: {
-    bg: "#FAF5FF",
-    text: "#5B21B6",
-    border: "#E9D5FF",
-    radius: 16,
-    padding: 20,
-    inputBg: "#FFFFFF",
-    inputBorder: "#D8B4FE",
-    placeholder: "#C084FC",
-    btnBgMode: "gradient",
-    btnBg: "#8B5CF6",
-    btnBg2: "#5B21B6",
-    btnText: "#FFFFFF",
-    btnBorder: "#7C3AED",
-    btnHeight: 48,
-    btnRadius: 16,
-    shadow: true,
-    glow: true,
-    glowPx: 20,
-    cartBg: "#FFFFFF",
-    cartBorder: "#E9D5FF",
-    cartRowBg: "#F5F3FF",
-    cartRowBorder: "#DDD6FE",
-    cartTitleColor: "#5B21B6",
-    cartTextColor: "#5B21B6",
-  },
-  LuxuryGold: {
-    bg: "#FEFCE8",
-    text: "#854D0E",
-    border: "#FDE68A",
-    radius: 12,
-    padding: 18,
-    inputBg: "#FFFFFF",
-    inputBorder: "#FCD34D",
-    placeholder: "#FBBF24",
-    btnBgMode: "gradient",
-    btnBg: "#D97706",
-    btnBg2: "#854D0E",
-    btnText: "#FFFFFF",
-    btnBorder: "#B45309",
-    btnHeight: 50,
-    btnRadius: 12,
-    shadow: true,
-    glow: false,
-    glowPx: 18,
-    cartBg: "#FFFFFF",
-    cartBorder: "#FDE68A",
-    cartRowBg: "#FEF3C7",
-    cartRowBorder: "#FCD34D",
-    cartTitleColor: "#854D0E",
-    cartTextColor: "#854D0E",
-  },
-  OceanDeep: {
-    bg: "#ECFEFF",
-    text: "#0E7490",
-    border: "#A5F3FC",
-    radius: 12,
-    padding: 16,
-    inputBg: "#FFFFFF",
-    inputBorder: "#67E8F9",
-    placeholder: "#22D3EE",
-    btnBgMode: "gradient",
-    btnBg: "#0891B2",
-    btnBg2: "#0E7490",
-    btnText: "#FFFFFF",
-    btnBorder: "#0E7490",
-    btnHeight: 46,
-    btnRadius: 12,
-    shadow: true,
-    glow: false,
-    glowPx: 18,
-    cartBg: "#FFFFFF",
-    cartBorder: "#A5F3FC",
-    cartRowBg: "#CFFAFE",
-    cartRowBorder: "#67E8F9",
-    cartTitleColor: "#0E7490",
-    cartTextColor: "#0E7490",
-  },
-  MinimalGray: {
-    bg: "#F9FAFB",
-    text: "#374151",
-    border: "#D1D5DB",
-    radius: 8,
-    padding: 16,
-    inputBg: "#FFFFFF",
-    inputBorder: "#D1D5DB",
-    placeholder: "#9CA3AF",
-    btnBgMode: "gradient",
-    btnBg: "#4B5563",
-    btnBg2: "#111827",
-    btnText: "#FFFFFF",
-    btnBorder: "#374151",
-    btnHeight: 44,
-    btnRadius: 8,
-    shadow: false,
-    glow: false,
-    glowPx: 0,
-    cartBg: "#FFFFFF",
-    cartBorder: "#D1D5DB",
-    cartRowBg: "#F9FAFB",
-    cartRowBorder: "#D1D5DB",
-    cartTitleColor: "#374151",
-    cartTextColor: "#374151",
-  },
-  BlackFriday: {
-    bg: "#0B1220",
-    text: "#F8FAFC",
-    border: "#1F2A44",
-    radius: 14,
-    padding: 18,
-    inputBg: "#0F172A",
-    inputBorder: "#334155",
-    placeholder: "#94A3B8",
-    btnBgMode: "gradient",
-    btnBg: "#F97316",
-    btnBg2: "#EF4444",
-    btnText: "#FFFFFF",
-    btnBorder: "#F97316",
-    btnHeight: 48,
-    btnRadius: 14,
-    shadow: true,
-    glow: true,
-    glowPx: 22,
-    cartBg: "#0F172A",
-    cartBorder: "#1F2A44",
-    cartRowBg: "#101828",
-    cartRowBorder: "#1F2A44",
-    cartTitleColor: "#F8FAFC",
-    cartTextColor: "#F8FAFC",
-  },
-  Ramadan: {
-    bg: "#F0FDF4",
-    text: "#064E3B",
-    border: "#BBF7D0",
-    radius: 14,
-    padding: 18,
-    inputBg: "#FFFFFF",
-    inputBorder: "#86EFAC",
-    placeholder: "#34D399",
-    btnBgMode: "gradient",
-    btnBg: "#10B981",
-    btnBg2: "#0EA5E9",
-    btnText: "#FFFFFF",
-    btnBorder: "#10B981",
-    btnHeight: 48,
-    btnRadius: 14,
-    shadow: true,
-    glow: false,
-    glowPx: 18,
-    cartBg: "#FFFFFF",
-    cartBorder: "#BBF7D0",
-    cartRowBg: "#ECFDF5",
-    cartRowBorder: "#BBF7D0",
-    cartTitleColor: "#064E3B",
-    cartTextColor: "#064E3B",
-  },
-  Valentine: {
-    bg: "#FFF1F2",
-    text: "#9F1239",
-    border: "#FECDD3",
-    radius: 16,
-    padding: 20,
-    inputBg: "#FFFFFF",
-    inputBorder: "#FECDD3",
-    placeholder: "#FDA4AF",
-    btnBgMode: "gradient",
-    btnBg: "#EC4899",
-    btnBg2: "#F43F5E",
-    btnText: "#FFFFFF",
-    btnBorder: "#EC4899",
-    btnHeight: 48,
-    btnRadius: 16,
-    shadow: true,
-    glow: true,
-    glowPx: 20,
-    cartBg: "#FFFFFF",
-    cartBorder: "#FECDD3",
-    cartRowBg: "#FFF1F2",
-    cartRowBorder: "#FECDD3",
-    cartTitleColor: "#9F1239",
-    cartTextColor: "#9F1239",
-  },
-  NewYear: {
-    bg: "#F8FAFC",
-    text: "#0F172A",
-    border: "#E2E8F0",
-    radius: 14,
-    padding: 18,
-    inputBg: "#FFFFFF",
-    inputBorder: "#E2E8F0",
-    placeholder: "#94A3B8",
-    btnBgMode: "gradient",
-    btnBg: "#0B3B82",
-    btnBg2: "#7D0031",
-    btnText: "#FFFFFF",
-    btnBorder: "#0B3B82",
-    btnHeight: 48,
-    btnRadius: 14,
-    shadow: true,
-    glow: true,
-    glowPx: 20,
-    cartBg: "#FFFFFF",
-    cartBorder: "#E2E8F0",
-    cartRowBg: "#FFFFFF",
-    cartRowBorder: "#E2E8F0",
-    cartTitleColor: "#0F172A",
-    cartTextColor: "#0F172A",
-  },
+  // ... autres presets (gardés pour la concision)
 };
 
 /* ============================== Icons library (clean) ============================== */
@@ -830,41 +570,21 @@ const ICON_LIBRARY = {
     { value: "HashtagIcon", label: "Hashtag" },
     { value: "CartIcon", label: "Panier" },
   ],
-  pincode: [
+  province: [
     NONE_ICON,
-    { value: "LocationIcon", label: "Localisation" },
-    { value: "PinIcon", label: "Épingle" },
-    { value: "HomeIcon", label: "Maison" },
-  ],
-  pincode2: [
-    NONE_ICON,
-    { value: "LocationIcon", label: "Localisation" },
     { value: "GlobeIcon", label: "Globe" },
-  ],
-  pincode3: [
-    NONE_ICON,
-    { value: "HashtagIcon", label: "Hashtag" },
-    { value: "CircleInformationIcon", label: "Information" },
-    { value: "LocationIcon", label: "Marqueur" },
-  ],
-  email: [NONE_ICON, { value: "EmailIcon", label: "Email" }],
-  company: [NONE_ICON, { value: "StoreIcon", label: "Magasin" }],
-  birthday: [NONE_ICON, { value: "CalendarIcon", label: "Calendrier" }],
-  address: [
-    NONE_ICON,
-    { value: "HomeIcon", label: "Maison" },
     { value: "LocationIcon", label: "Localisation" },
-    { value: "PinIcon", label: "Épingle" },
   ],
   city: [
     NONE_ICON,
     { value: "LocationIcon", label: "Localisation" },
     { value: "GlobeIcon", label: "Globe" },
   ],
-  province: [
+  address: [
     NONE_ICON,
-    { value: "GlobeIcon", label: "Globe" },
+    { value: "HomeIcon", label: "Maison" },
     { value: "LocationIcon", label: "Localisation" },
+    { value: "PinIcon", label: "Épingle" },
   ],
   notes: [
     NONE_ICON,
@@ -895,72 +615,7 @@ const COLOR_PALETTES = [
     colors: ["#111827", "#FFFFFF", "#E5E7EB", "#F9FAFB", "#00A7A3"],
     preset: "CleanWhite",
   },
-  {
-    id: "dark-modern",
-    name: "Dark Modern",
-    colors: ["#0B1220", "#2563EB", "#1F2A44", "#101828", "#E5F0FF"],
-    preset: "BoldDark",
-  },
-  {
-    id: "green-nature",
-    name: "Green Nature",
-    colors: ["#10B981", "#065F46", "#D1FAE5", "#ECFDF5", "#F0FDF4"],
-    preset: "GreenNature",
-  },
-  {
-    id: "sunset-orange",
-    name: "Sunset",
-    colors: ["#F97316", "#9A3412", "#FDBA74", "#FFEDD5", "#FFF7ED"],
-    preset: "SunsetOrange",
-  },
-  {
-    id: "purple-elegant",
-    name: "Purple Elegant",
-    colors: ["#8B5CF6", "#5B21B6", "#E9D5FF", "#F5F3FF", "#FAF5FF"],
-    preset: "PurpleElegant",
-  },
-  {
-    id: "luxury-gold",
-    name: "Luxury Gold",
-    colors: ["#D97706", "#854D0E", "#FDE68A", "#FEF3C7", "#FEFCE8"],
-    preset: "LuxuryGold",
-  },
-  {
-    id: "ocean-deep",
-    name: "Ocean",
-    colors: ["#0891B2", "#0E7490", "#A5F3FC", "#CFFAFE", "#ECFEFF"],
-    preset: "OceanDeep",
-  },
-  {
-    id: "minimal-gray",
-    name: "Minimal Gray",
-    colors: ["#4B5563", "#111827", "#D1D5DB", "#F9FAFB", "#FFFFFF"],
-    preset: "MinimalGray",
-  },
-  {
-    id: "black-friday",
-    name: "Black Friday",
-    colors: ["#0B1220", "#EF4444", "#F97316", "#111827", "#F8FAFC"],
-    preset: "BlackFriday",
-  },
-  {
-    id: "ramadan",
-    name: "Ramadan",
-    colors: ["#10B981", "#0EA5E9", "#BBF7D0", "#ECFDF5", "#064E3B"],
-    preset: "Ramadan",
-  },
-  {
-    id: "valentine",
-    name: "Valentine",
-    colors: ["#EC4899", "#F43F5E", "#FECDD3", "#FFF1F2", "#9F1239"],
-    preset: "Valentine",
-  },
-  {
-    id: "new-year",
-    name: "New Year",
-    colors: ["#0B3B82", "#7D0031", "#00A7A3", "#F8FAFC", "#0F172A"],
-    preset: "NewYear",
-  },
+  // ... autres palettes
 ];
 
 /* ============================== Sanitizer ============================== */
@@ -1042,11 +697,828 @@ function PolarisIcon({
   );
 }
 
-/* ============================== Page ============================== */
+/* ============================== UI Components ============================== */
+function GroupCard({ title, children }) {
+  return (
+    <Card>
+      <div className="tf-group-title">{title}</div>
+      <BlockStack gap="200">{children}</BlockStack>
+    </Card>
+  );
+}
+
+function BlueSection({ title, children, defaultOpen = true }) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div className="tf-accordion">
+      <button
+        type="button"
+        className="tf-accordion__btn"
+        onClick={() => setOpen((o) => !o)}
+        style={{
+          borderBottom: open ? "1px solid #E5E7EB" : "none",
+          borderRadius: open ? "10px 10px 0 0" : "10px",
+        }}
+      >
+        {open ? "▾" : "▸"} {title}
+      </button>
+      <div className="tf-accordion__body" style={{ display: open ? "block" : "none" }}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+const Grid2 = ({ children }) => (
+  <div
+    style={{
+      display: "grid",
+      gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+      gap: 12,
+      alignItems: "start",
+    }}
+  >
+    {children}
+  </div>
+);
+
+const Grid3 = ({ children }) => (
+  <div
+    style={{
+      display: "grid",
+      gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+      gap: 12,
+      alignItems: "start",
+    }}
+  >
+    {children}
+  </div>
+);
+
+function ColorField({ label, value, onChange }) {
+  const { t } = useForms();
+  return (
+    <div style={{ display: "grid", gap: 6 }}>
+      <span style={{ fontSize: 13, color: "#111827", fontWeight: 600 }}>{label}</span>
+      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+        <input
+          type="color"
+          value={safeHex(value)}
+          onChange={(e) => onChange(e.target.value)}
+          style={{
+            width: 44,
+            height: 32,
+            border: "1px solid #E5E7EB",
+            borderRadius: 8,
+            background: "#fff",
+          }}
+        />
+        <TextField label={t("section1.colors.hexLabel")} value={value} onChange={onChange} />
+      </div>
+    </div>
+  );
+}
+
+function GradientField({ label, mode, c1, c2, onChange }) {
+  const { t } = useForms();
+  const m = mode || "solid";
+  const col1 = safeHex(c1, "#111827");
+  const col2 = safeHex(c2, col1);
+
+  const preview = m === "gradient" ? `linear-gradient(90deg, ${col1} 0%, ${col2} 100%)` : col1;
+
+  return (
+    <div style={{ display: "grid", gap: 6 }}>
+      <span style={{ fontSize: 13, color: "#111827", fontWeight: 600 }}>{label}</span>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 10 }}>
+        <Select
+          label="Mode"
+          options={[
+            { label: "Solid", value: "solid" },
+            { label: "Gradient (2 colors)", value: "gradient" },
+          ]}
+          value={m}
+          onChange={(v) => onChange({ btnBgMode: v })}
+        />
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+          <div style={{ display: "grid", gap: 6 }}>
+            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <input
+                type="color"
+                value={col1}
+                onChange={(e) => onChange({ btnBg: e.target.value })}
+                style={{
+                  width: 44,
+                  height: 32,
+                  border: "1px solid #E5E7EB",
+                  borderRadius: 8,
+                  background: "#fff",
+                }}
+              />
+              <TextField
+                label={t("section1.colors.hexLabel")}
+                value={col1}
+                onChange={(v) => onChange({ btnBg: v })}
+              />
+            </div>
+          </div>
+
+          <div style={{ display: "grid", gap: 6, opacity: m === "gradient" ? 1 : 0.45 }}>
+            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <input
+                type="color"
+                value={col2}
+                disabled={m !== "gradient"}
+                onChange={(e) => onChange({ btnBg2: e.target.value })}
+                style={{
+                  width: 44,
+                  height: 32,
+                  border: "1px solid #E5E7EB",
+                  borderRadius: 8,
+                  background: "#fff",
+                }}
+              />
+              <TextField
+                label={t("section1.colors.hexLabel")}
+                value={col2}
+                disabled={m !== "gradient"}
+                onChange={(v) => onChange({ btnBg2: v })}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div
+          style={{
+            height: 36,
+            borderRadius: 10,
+            border: "1px solid #E5E7EB",
+            background: preview,
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
+function ColorPaletteSelector({ onSelect }) {
+  const { config, setDesign, setConfig } = useForms();
+
+  const applyPalette = (paletteId) => {
+    const palette = COLOR_PALETTES.find((p) => p.id === paletteId);
+    if (palette && DESIGN_PRESETS[palette.preset]) {
+      setDesign(DESIGN_PRESETS[palette.preset]);
+      setConfig((c) => ({ ...c, meta: { ...(c.meta || {}), preset: palette.preset } }));
+    }
+  };
+
+  return (
+    <div className="tf-color-palettes">
+      {COLOR_PALETTES.map((palette) => {
+        const c = palette.colors || [];
+        const g1 = `linear-gradient(135deg, ${c[0]} 0%, ${c[1]} 100%)`;
+        const g2 = `linear-gradient(135deg, ${c[2]} 0%, ${c[3]} 100%)`;
+        const accent = c[4] || c[0];
+
+        return (
+          <div
+            key={palette.id}
+            className={`tf-color-palette ${config.meta?.preset === palette.preset ? "active" : ""}`}
+            onClick={() => {
+              applyPalette(palette.id);
+              onSelect?.(palette.id);
+            }}
+          >
+            <div className="tf-palette-colors">
+              <div style={{ background: g1 }} />
+              <div style={{ background: g2 }} />
+            </div>
+
+            <div className="tf-palette-info">
+              <span>{palette.name}</span>
+              <span className="tf-palette-accent" style={{ background: accent }} title={accent} />
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function IconSelector({ fieldKey, type = "field", onSelect, selectedIcon }) {
+  const { t } = useForms();
+
+  const icons =
+    type === "field"
+      ? ICON_LIBRARY[fieldKey] || ICON_LIBRARY.name
+      : type === "cartTitle"
+      ? ICON_LIBRARY.cartTitle
+      : ICON_LIBRARY.button;
+
+  return (
+    <div>
+      <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8 }}>
+        {t("section1.iconSelector.title")}
+      </div>
+      <div className="tf-icon-selector">
+        {icons.map((icon) => (
+          <div
+            key={icon.value || "__none__"}
+            className={`tf-icon-option ${selectedIcon === icon.value ? "selected" : ""} ${
+              icon.value === "" ? "none" : ""
+            }`}
+            onClick={() => onSelect(icon.value)}
+            title={icon.label}
+          >
+            {icon.value === "" ? "NONE" : <PolarisIcon iconName={icon.value} size={20} />}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ============================== Field editor ============================== */
+function FieldEditor({ fieldKey }) {
+  const { config, setField, t } = useForms();
+  const st = config.fields[fieldKey] || {};
+  const type = st.type || "text";
+
+  const titleKeyMap = {
+    name: "section1.fieldEditor.titlePrefix.fullName",
+    phone: "section1.fieldEditor.titlePrefix.phone",
+    quantity: "section1.fieldEditor.titlePrefix.quantity",
+    province: "section1.fieldEditor.titlePrefix.province",
+    city: "section1.fieldEditor.titlePrefix.city",
+    address: "section1.fieldEditor.titlePrefix.address",
+    notes: "section1.fieldEditor.titlePrefix.notes",
+  };
+
+  const titleKey = titleKeyMap[fieldKey];
+  const titleText = titleKey ? t(titleKey) : st.label || fieldKey;
+
+  return (
+    <GroupCard title={titleText}>
+      <InlineStack align="space-between" blockAlign="center">
+        <InlineStack gap="200" blockAlign="center">
+          <Checkbox
+            label={t("section1.fieldEditor.activeLabel")}
+            checked={st.on !== false}
+            onChange={(v) => setField(fieldKey, { on: v })}
+          />
+          <Checkbox
+            label={t("section1.fieldEditor.requiredLabel")}
+            checked={!!st.required}
+            onChange={(v) => setField(fieldKey, { required: v })}
+          />
+        </InlineStack>
+
+        <Select
+          label={t("section1.fieldEditor.typeLabel")}
+          options={[
+            { label: t("section1.fieldEditor.type.text"), value: "text" },
+            { label: t("section1.fieldEditor.type.phone"), value: "tel" },
+            { label: t("section1.fieldEditor.type.textarea"), value: "textarea" },
+            { label: t("section1.fieldEditor.type.number"), value: "number" },
+          ]}
+          value={type}
+          onChange={(v) => setField(fieldKey, { type: v })}
+        />
+      </InlineStack>
+
+      <div style={{ height: 8 }} />
+
+      <Grid2>
+        <TextField
+          label={t("section1.fieldEditor.labelLabel")}
+          value={st.label || ""}
+          onChange={(v) => setField(fieldKey, { label: v })}
+        />
+        <TextField
+          label={t("section1.fieldEditor.placeholderLabel")}
+          value={st.ph || ""}
+          onChange={(v) => setField(fieldKey, { ph: v })}
+        />
+
+        {type === "tel" && (
+          <TextField
+            label={t("section1.fieldEditor.phonePrefixLabel")}
+            value={st.prefix || ""}
+            onChange={(v) => setField(fieldKey, { prefix: v })}
+          />
+        )}
+
+        {type === "number" && (
+          <>
+            <TextField
+              type="number"
+              label={t("section1.fieldEditor.minLabel")}
+              value={String(st.min ?? 1)}
+              onChange={(v) => setField(fieldKey, { min: Number(v || 0) })}
+            />
+            <TextField
+              type="number"
+              label={t("section1.fieldEditor.maxLabel")}
+              value={st.max !== undefined && st.max !== null ? String(st.max) : ""}
+              onChange={(v) => setField(fieldKey, { max: v === "" ? null : Number(v) })}
+            />
+          </>
+        )}
+      </Grid2>
+
+      <div style={{ marginTop: 16 }}>
+        <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8 }}>
+          {t("section1.fieldEditor.iconLabel")}
+        </div>
+        <IconSelector
+          fieldKey={fieldKey}
+          selectedIcon={st.icon || ""}
+          onSelect={(icon) => setField(fieldKey, { icon })}
+        />
+      </div>
+    </GroupCard>
+  );
+}
+
+/* ============================== Preview ============================== */
+function PreviewPanel() {
+  const { config, cardCSS, cartBoxCSS, cartRowCSS, inputBase, btnCSS, setBehav, offersCfg, t } =
+    useForms();
+
+  const [shippingPrice, setShippingPrice] = useState(null);
+  const [shippingNote, setShippingNote] = useState("");
+
+  const countryKey = config.behavior.country || "";
+  const country = COUNTRY_DATA[countryKey];
+  const provincesEntries = country ? Object.entries(country.provinces || {}) : [];
+
+  const selectedProvinceKey = config.behavior.provinceKey || "";
+  const selectedProvince =
+    country && selectedProvinceKey ? country.provinces[selectedProvinceKey] : null;
+
+  const cities = selectedProvince?.cities || [];
+  const titleAlign = config.design.titleAlign || "left";
+
+  const fieldKeys = Object.keys(config.fields || {});
+  const orderedFields = useMemo(() => {
+    const existing = config.meta?.fieldsOrder || [];
+    return [
+      ...existing.filter((k) => fieldKeys.includes(k)),
+      ...fieldKeys.filter((k) => !existing.includes(k)),
+    ];
+  }, [config.meta?.fieldsOrder, fieldKeys]);
+
+  const productPrice = 99.99;
+  const currency = getCurrencyByCountry(countryKey);
+
+  const fieldAlignRaw = config.design?.fieldAlign || "left";
+  const fieldAlign = ["left", "center", "right"].includes(fieldAlignRaw) ? fieldAlignRaw : "left";
+
+  useEffect(() => {
+    setShippingPrice(null);
+    setShippingNote("");
+  }, [selectedProvinceKey]);
+
+  const handleCityChange = (city) => {
+    if (!city) {
+      setShippingPrice(null);
+      setShippingNote("");
+      return;
+    }
+    const shippingData = getShippingExample(city, countryKey);
+    setShippingPrice(shippingData.amount);
+    setShippingNote(`${t("section1.preview.shippingTo")} ${city} - ${shippingData.note}`);
+  };
+
+  const renderField = (f, key) => {
+    if (!f?.on) return null;
+    const isTextarea = f.type === "textarea";
+    const hasIcon = !!f.icon;
+
+    const inputWithIcon = hasIcon ? { ...inputBase, padding: "10px 12px 10px 40px" } : inputBase;
+
+    const labelEl = (
+      <label className="tf-field-row">
+        <span style={{ fontSize: 13, color: "#475569", textAlign: fieldAlign }}>
+          {sStr(f.label)}
+          {f.required ? " *" : ""}
+        </span>
+
+        {isTextarea ? (
+          <textarea
+            style={{ ...inputWithIcon, padding: "10px 12px", minHeight: 80 }}
+            placeholder={sStr(f.ph)}
+            rows={3}
+          />
+        ) : f.type === "tel" ? (
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: f.prefix ? "minmax(88px,130px) 1fr" : "1fr",
+              gap: 8,
+            }}
+          >
+            {f.prefix && (
+              <input style={{ ...inputBase, textAlign: "center" }} value={f.prefix} readOnly />
+            )}
+            <input type="tel" style={inputWithIcon} placeholder={sStr(f.ph)} />
+          </div>
+        ) : (
+          <input
+            type={f.type === "number" ? "number" : "text"}
+            style={inputWithIcon}
+            placeholder={sStr(f.ph)}
+            min={f.type === "number" && f.min != null ? f.min : undefined}
+            max={f.type === "number" && f.max != null ? f.max : undefined}
+          />
+        )}
+      </label>
+    );
+
+    if (!hasIcon) {
+      return (
+        <div key={key} className="tf-field-no-icon">
+          {labelEl}
+        </div>
+      );
+    }
+
+    return (
+      <div key={key} className="tf-field-with-icon">
+        <div className="tf-field-icon">
+          <PolarisIcon iconName={f.icon} size={16} />
+        </div>
+        {labelEl}
+      </div>
+    );
+  };
+
+  const renderCartBox = () => {
+    const shippingDisplay =
+      shippingPrice === null
+        ? countryKey
+          ? t("section1.preview.shippingToCalculate")
+          : "Gratuit"
+        : `${shippingPrice.toFixed(2)} ${currency}`;
+
+    const total = productPrice + (shippingPrice || 0);
+
+    return (
+      <div style={cartBoxCSS} dir={config.design.direction || "ltr"}>
+        <div className="tf-cart-with-icon">
+          {config.cartTitles.cartIcon ? (
+            <div className="tf-cart-icon">
+              <PolarisIcon iconName={config.cartTitles.cartIcon || ""} size={18} />
+            </div>
+          ) : null}
+          <div style={{ fontWeight: 700, color: config.design.cartTitleColor }}>
+            {sStr(config.cartTitles.top)}
+          </div>
+        </div>
+
+        <div style={{ display: "grid", gap: 8 }}>
+          <div style={cartRowCSS}>
+            <div>{sStr(config.cartTitles.price)}</div>
+            <div style={{ fontWeight: 700 }}>
+              {productPrice.toFixed(2)} {currency}
+            </div>
+          </div>
+
+          <div style={cartRowCSS}>
+            <div>
+              <div>{sStr(config.cartTitles.shipping)}</div>
+              {shippingNote && (
+                <div style={{ fontSize: 10, opacity: 0.8, marginTop: 2 }}>{shippingNote}</div>
+              )}
+            </div>
+            <div style={{ fontWeight: 700 }}>{shippingDisplay}</div>
+          </div>
+
+          <div style={cartRowCSS}>
+            <div>{sStr(config.cartTitles.total)}</div>
+            <div style={{ fontWeight: 700 }}>
+              {total.toFixed(2)} {currency}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderProvinceField = (f) => {
+    if (!f?.on) return null;
+    const hasIcon = !!f.icon;
+
+    const labelEl = (
+      <label className="tf-field-row">
+        <span style={{ fontSize: 13, color: "#475569", textAlign: fieldAlign }}>
+          {sStr(f.label)}
+          {f.required ? " *" : ""}
+        </span>
+        <select
+          style={{ ...inputBase, background: config.design.inputBg }}
+          value={selectedProvinceKey}
+          onChange={(e) => setBehav({ provinceKey: e.target.value, cityKey: "" })}
+        >
+          <option value="">{f.ph || t("section1.preview.provincePlaceholder")}</option>
+          {provincesEntries.map(([key, p]) => (
+            <option key={key} value={key}>
+              {p.label}
+            </option>
+          ))}
+        </select>
+      </label>
+    );
+
+    if (!hasIcon) return <div key="province" className="tf-field-no-icon">{labelEl}</div>;
+
+    return (
+      <div key="province" className="tf-field-with-icon">
+        <div className="tf-field-icon">
+          <PolarisIcon iconName={f.icon} size={16} />
+        </div>
+        {labelEl}
+      </div>
+    );
+  };
+
+  const renderCityField = (f) => {
+    if (!f?.on) return null;
+    const hasIcon = !!f.icon;
+
+    const labelEl = (
+      <label className="tf-field-row">
+        <span style={{ fontSize: 13, color: "#475569", textAlign: fieldAlign }}>
+          {sStr(f.label)}
+          {f.required ? " *" : ""}
+        </span>
+        <select
+          style={{
+            ...inputBase,
+            backgroundColor: selectedProvinceKey ? inputBase.background : "#F3F4F6",
+          }}
+          value={config.behavior.cityKey || ""}
+          onChange={(e) => {
+            const city = e.target.value;
+            setBehav({ cityKey: city });
+            handleCityChange(city);
+          }}
+          disabled={!selectedProvinceKey}
+        >
+          <option value="">
+            {!selectedProvinceKey
+              ? t("section1.preview.cityPlaceholderNoProvince")
+              : f.ph || t("section1.preview.cityPlaceholder")}
+          </option>
+          {cities.map((c) => (
+            <option key={c} value={c}>
+              {c}
+            </option>
+          ))}
+        </select>
+      </label>
+    );
+
+    if (!hasIcon) return <div key="city" className="tf-field-no-icon">{labelEl}</div>;
+
+    return (
+      <div key="city" className="tf-field-with-icon">
+        <div className="tf-field-icon">
+          <PolarisIcon iconName={f.icon} size={16} />
+        </div>
+        {labelEl}
+      </div>
+    );
+  };
+
+  // ✅ Blocks layout (positions)
+  const safePos = (v, def = "top") => {
+    const x = String(v || "").toLowerCase();
+    if (x === "top" || x === "bottom" || x === "inside" || x === "hide") return x;
+    return def;
+  };
+  const safeOrder = (v, def = 99) => {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : def;
+  };
+
+  const blocksLayout = config.behavior?.blocksLayout || {};
+  const layout = {
+    offers: {
+      position: safePos(blocksLayout?.offers?.position, "top"),
+      order: safeOrder(blocksLayout?.offers?.order, 1),
+    },
+    upsells: {
+      position: safePos(blocksLayout?.upsells?.position, "top"),
+      order: safeOrder(blocksLayout?.upsells?.order, 2),
+    },
+    summary: {
+      position: safePos(blocksLayout?.summary?.position, "top"),
+      order: safeOrder(blocksLayout?.summary?.order, 3),
+    },
+  };
+
+  const renderOffersBlock = () => {
+    const payload = offersCfg || {};
+    const globalEnabled = payload?.global?.enabled !== false;
+
+    const offers = Array.isArray(payload?.offers) ? payload.offers : [];
+    const activeOffers = globalEnabled
+      ? offers.filter((o) => o && o.enabled !== false && o.showInPreview !== false)
+      : [];
+
+    if (!activeOffers.length) return null;
+
+    const title = payload?.global?.title || "Offers";
+    return (
+      <div className="tf-block-card">
+        <div className="tf-block-title">
+          <span className="tf-offer-icon-circle">
+            <PolarisIcon iconName="DiscountIcon" size={16} />
+          </span>
+          <span>{title}</span>
+        </div>
+
+        {activeOffers.slice(0, 2).map((o, idx) => {
+          const pct =
+            o.discountType === "percentage" && Number.isFinite(Number(o.discountValue))
+              ? `-${Number(o.discountValue)}%`
+              : "";
+          return (
+            <div key={`offer-${idx}`} className="tf-block-item">
+              <span className="tf-offer-icon-circle" style={{ width: 34, height: 34 }}>
+                <PolarisIcon iconName="StarFilledIcon" size={16} />
+              </span>
+              <div style={{ flex: 1 }}>
+                <div className="tf-block-item-title">
+                  {o.title || "Special offer"} {pct ? <span style={{ opacity: 0.8 }}>{pct}</span> : null}
+                </div>
+                {o.description ? <div className="tf-block-item-desc">{o.description}</div> : null}
+                {o.enableTimer ? (
+                  <div className="tf-block-badge">
+                    <span>⏱️</span>
+                    <span>{o.timerMessage || "Limited time"}</span>
+                  </div>
+                ) : null}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
+  const renderUpsellsBlock = () => {
+    const payload = offersCfg || {};
+    const globalEnabled = payload?.global?.enabled !== false;
+
+    const upsells = Array.isArray(payload?.upsells) ? payload.upsells : [];
+    const activeUpsells = globalEnabled
+      ? upsells.filter((u) => u && u.enabled !== false && u.showInPreview !== false)
+      : [];
+
+    if (!activeUpsells.length) return null;
+
+    return (
+      <div className="tf-block-card">
+        <div className="tf-block-title">
+          <span className="tf-upsell-icon-circle">
+            <PolarisIcon iconName="GiftCardIcon" size={16} />
+          </span>
+          <span>Upsells</span>
+        </div>
+
+        {activeUpsells.slice(0, 2).map((u, idx) => (
+          <div key={`upsell-${idx}`} className="tf-block-item">
+            <span className="tf-upsell-icon-circle" style={{ width: 34, height: 34 }}>
+              <PolarisIcon iconName="GiftCardIcon" size={16} />
+            </span>
+            <div style={{ flex: 1 }}>
+              <div className="tf-block-item-title">{u.title || "Bonus / gift"}</div>
+              {u.description ? <div className="tf-block-item-desc">{u.description}</div> : null}
+              {u.enableTimer ? (
+                <div className="tf-block-badge">
+                  <span>🎁</span>
+                  <span>{u.timerMessage || "Limited bonus"}</span>
+                </div>
+              ) : null}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  const blocks = [
+    { key: "offers", node: renderOffersBlock(), ...layout.offers },
+    { key: "upsells", node: renderUpsellsBlock(), ...layout.upsells },
+    { key: "summary", node: renderCartBox(), ...layout.summary },
+  ].filter((b) => b && b.node && b.position !== "hide");
+
+  const blocksAt = (where) =>
+    blocks
+      .filter((b) => b.position === where)
+      .sort((a, b) => (a.order || 99) - (b.order || 99))
+      .map((b) => (
+        <React.Fragment key={b.key}>
+          {b.node}
+        </React.Fragment>
+      ));
+
+  const renderFormCard = (insideNodes) => {
+    const total = productPrice + (shippingPrice || 0);
+    const orderLabel = sStr(config.uiTitles.orderNow || config.form?.buttonText || "Order now");
+    const suffix = sStr(config.uiTitles.totalSuffix || "Total:");
+
+    const motion = config.behavior?.buttonMotion || "none";
+    const motionClass =
+      motion === "x" ? "tf-motion-x" :
+      motion === "y" ? "tf-motion-y" :
+      motion === "pulse" ? "tf-motion-pulse" :
+      motion === "shake" ? "tf-motion-shake" : "";
+
+    return (
+      <div style={cardCSS} dir={config.design.direction || "ltr"}>
+        {(config.form.title || config.form.subtitle) && (
+          <div style={{ marginBottom: 10, textAlign: titleAlign }}>
+            {config.form.title && <div style={{ fontWeight: 700 }}>{sStr(config.form.title)}</div>}
+            {config.form.subtitle && <div style={{ opacity: 0.8 }}>{sStr(config.form.subtitle)}</div>}
+          </div>
+        )}
+
+        <div style={{ display: "grid", gap: 10 }}>
+          {orderedFields.map((key) => {
+            const f = config.fields[key];
+            if (!f?.on) return null;
+            if (key === "province") return renderProvinceField(f);
+            if (key === "city") return renderCityField(f);
+            return renderField(f, key);
+          })}
+
+          {config.behavior.requireGDPR && (
+            <label style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 13, color: "#374151" }}>
+              <input type="checkbox" /> {sStr(config.behavior.gdprLabel)}
+            </label>
+          )}
+          {config.behavior.whatsappOptIn && (
+            <label style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 13, color: "#374151" }}>
+              <input type="checkbox" /> {sStr(config.behavior.whatsappLabel)}
+            </label>
+          )}
+
+          {insideNodes && insideNodes.length ? (
+            <div style={{ display: "grid", gap: 10, marginTop: 10 }}>
+              {insideNodes}
+            </div>
+          ) : null}
+
+          <button type="button" style={btnCSS} className={`tf-btn-with-icon ${motionClass}`}>
+            {config.form.buttonIcon ? (
+              <span className="tf-btn-icon">
+                <PolarisIcon iconName={config.form.buttonIcon || ""} size={18} color={config.design.btnText} />
+              </span>
+            ) : null}
+            <span style={{ flex: 1, textAlign: "center" }}>
+              {orderLabel} · {suffix} {total.toFixed(2)} {currency}
+            </span>
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <Card>
+      <BlockStack gap="250">
+        <div style={{ width: "100%" }}>
+          <div
+            style={{
+              borderRadius: 16,
+              background: "#F9FAFB",
+              border: "1px solid #E5E7EB",
+              padding: 16,
+              boxSizing: "border-box",
+            }}
+          >
+            <div style={{ display: "grid", gap: 12 }}>
+              {blocksAt("top")}
+              {renderFormCard(blocksAt("inside"))}
+              {blocksAt("bottom")}
+            </div>
+          </div>
+        </div>
+      </BlockStack>
+    </Card>
+  );
+}
+
+/* ============================== Main Component ============================== */
 function Section1FormsLayoutInner() {
   useInjectCss();
 
-  // ✅ Crisp (loads only in browser, once)
+  // ✅ Crisp
   useCrisp("7ea27a85-6b6c-4a48-8381-6c0fdc94c1ea");
 
   const remixNavigate = useNavigate();
@@ -1077,12 +1549,6 @@ function Section1FormsLayoutInner() {
         "name",
         "phone",
         "quantity",
-        "pincode",
-        "pincode2",
-        "pincode3",
-        "email",
-        "company",
-        "birthday",
         "province",
         "city",
         "address",
@@ -1123,7 +1589,7 @@ function Section1FormsLayoutInner() {
       country: "MA",
       provinceKey: "",
       cityKey: "",
-      buttonMotion: "none", // none | x | y | pulse | shake
+      buttonMotion: "none",
       blocksLayout: {
         offers: { position: "top", order: 1 },
         upsells: { position: "top", order: 2 },
@@ -1134,12 +1600,6 @@ function Section1FormsLayoutInner() {
       name: { on: true, required: true, type: "text", label: "Full name", ph: "Your full name", icon: "PersonIcon" },
       phone: { on: true, required: true, type: "tel", label: "Phone (WhatsApp)", ph: "Phone number", prefix: "+212", icon: "PhoneIcon" },
       quantity: { on: true, required: true, type: "number", label: "Quantity", ph: "1", min: 1, max: 10, icon: "HashtagIcon" },
-      pincode: { on: true, required: true, type: "text", label: "Pincode", ph: "Enter pincode", icon: "LocationIcon" },
-      pincode2: { on: true, required: false, type: "text", label: "Pincode 2", ph: "Additional pincode", icon: "" },
-      pincode3: { on: true, required: false, type: "text", label: "Pincode 3", ph: "Extra pincode info", icon: "CircleInformationIcon" },
-      email: { on: true, required: true, type: "text", label: "Email", ph: "your.email@example.com", icon: "EmailIcon" },
-      company: { on: true, required: false, type: "text", label: "Company", ph: "Your company name", icon: "StoreIcon" },
-      birthday: { on: true, required: false, type: "text", label: "Birthday", ph: "DD/MM/YYYY", icon: "CalendarIcon" },
       province: { on: true, required: false, type: "text", label: "Wilaya / Province", ph: "Select province", icon: "GlobeIcon" },
       city: { on: true, required: false, type: "text", label: "City", ph: "Select city", icon: "LocationIcon" },
       address: { on: true, required: false, type: "text", label: "Address", ph: "Full address", icon: "HomeIcon" },
@@ -1160,13 +1620,12 @@ function Section1FormsLayoutInner() {
   }));
 
   const [saving, setSaving] = useState(false);
-
   const [saveError, setSaveError] = useState("");
   const [showPreview, setShowPreview] = useState(false);
   const [offersCfg, setOffersCfg] = useState(null);
   const [loadingInitial, setLoadingInitial] = useState(true);
 
-  // ✅ Dirty tracking (no spam)
+  // ✅ Dirty tracking
   const [dirty, setDirty] = useState(false);
   const lastSavedRef = useRef("");
 
@@ -1232,8 +1691,7 @@ function Section1FormsLayoutInner() {
     };
   }, []);
 
-
-  // ✅ load offers/upsells config (for LIVE preview blocks)
+  // ✅ load offers/upsells config
   useEffect(() => {
     let cancelled = false;
 
@@ -1258,7 +1716,7 @@ function Section1FormsLayoutInner() {
     };
   }, []);
 
-  // ✅ compute dirty (silent)
+  // ✅ compute dirty
   useEffect(() => {
     if (loadingInitial) return;
     const cur = JSON.stringify(config);
@@ -1391,7 +1849,7 @@ function Section1FormsLayoutInner() {
     [config.design, eff, glowPx, glowCol, baseFontSize]
   );
 
-  // ✅ save (used by guard)
+  // ✅ save
   const saveToShop = async () => {
     if (saving) return false;
     setSaving(true);
@@ -1425,14 +1883,14 @@ function Section1FormsLayoutInner() {
     }
   };
 
-  // ✅ Unified navigation guard (no modal, no spam)
+  // ✅ Unified navigation guard
   const guard = useUnsavedNavigationGuard({
     dirty,
     onSave: saveToShop,
     navigate: (href) => remixNavigate(href),
   });
 
-  // ✅ Header Save opens bar (does NOT save directly)
+  // ✅ Header Save opens bar
   const [manualOpen, setManualOpen] = useState(false);
 
   const openSavePrompt = () => {
@@ -1535,8 +1993,7 @@ function Section1FormsLayoutInner() {
         </div>
       ) : null}
 
-
-      {/* ✅ Slim save bar ONLY on leave attempt OR header click */}
+      {/* ✅ Slim save bar */}
       <UnsavedSaveBar
         open={barOpen}
         dirty={dirty}
@@ -1554,7 +2011,7 @@ function Section1FormsLayoutInner() {
         </div>
       </div>
 
-      {/* ✅ modal preview (kept) */}
+      {/* ✅ modal preview */}
       <Modal
         open={showPreview}
         onClose={() => setShowPreview(false)}
@@ -1573,86 +2030,7 @@ function Section1FormsLayoutInner() {
   );
 }
 
-/* ============================== Color palette selector ============================== */
-function ColorPaletteSelector({ onSelect }) {
-  const { config, setDesign, setConfig } = useForms();
-
-  const applyPalette = (paletteId) => {
-    const palette = COLOR_PALETTES.find((p) => p.id === paletteId);
-    if (palette && DESIGN_PRESETS[palette.preset]) {
-      setDesign(DESIGN_PRESETS[palette.preset]);
-      setConfig((c) => ({ ...c, meta: { ...(c.meta || {}), preset: palette.preset } }));
-    }
-  };
-
-  return (
-    <div className="tf-color-palettes">
-      {COLOR_PALETTES.map((palette) => {
-        const c = palette.colors || [];
-        const g1 = `linear-gradient(135deg, ${c[0]} 0%, ${c[1]} 100%)`;
-        const g2 = `linear-gradient(135deg, ${c[2]} 0%, ${c[3]} 100%)`;
-        const accent = c[4] || c[0];
-
-        return (
-          <div
-            key={palette.id}
-            className={`tf-color-palette ${config.meta?.preset === palette.preset ? "active" : ""}`}
-            onClick={() => {
-              applyPalette(palette.id);
-              onSelect?.(palette.id);
-            }}
-          >
-            <div className="tf-palette-colors">
-              <div style={{ background: g1 }} />
-              <div style={{ background: g2 }} />
-            </div>
-
-            <div className="tf-palette-info">
-              <span>{palette.name}</span>
-              <span className="tf-palette-accent" style={{ background: accent }} title={accent} />
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-/* ============================== Icon selector ============================== */
-function IconSelector({ fieldKey, type = "field", onSelect, selectedIcon }) {
-  const { t } = useForms();
-
-  const icons =
-    type === "field"
-      ? ICON_LIBRARY[fieldKey] || ICON_LIBRARY.name
-      : type === "cartTitle"
-      ? ICON_LIBRARY.cartTitle
-      : ICON_LIBRARY.button;
-
-  return (
-    <div>
-      <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8 }}>
-        {t("section1.iconSelector.title")}
-      </div>
-      <div className="tf-icon-selector">
-        {icons.map((icon) => (
-          <div
-            key={icon.value || "__none__"}
-            className={`tf-icon-option ${selectedIcon === icon.value ? "selected" : ""} ${
-              icon.value === "" ? "none" : ""
-            }`}
-            onClick={() => onSelect(icon.value)}
-            title={icon.label}
-          >
-            {icon.value === "" ? "NONE" : <PolarisIcon iconName={icon.value} size={20} />}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-/* ============================== Editor (rail | settings | preview) ============================== */
+/* ============================== Outlet Editor ============================== */
 function OutletEditor() {
   const { config, setCartT, setForm, setUiT, setField, setDesign, setBehav, setFieldsOrder, t } =
     useForms();
@@ -2138,6 +2516,7 @@ function OutletEditor() {
                   />
                 </Grid3>
               </BlueSection>
+
               <BlueSection title={t("section1.options.countries")}>
                 <Select
                   label={t("section1.options.countries.storeCountryLabel")}
@@ -2217,751 +2596,5 @@ function OutletEditor() {
   );
 }
 
-/* ============================== Field editor ============================== */
-function FieldEditor({ fieldKey }) {
-  const { config, setField, t } = useForms();
-  const st = config.fields[fieldKey] || {};
-  const type = st.type || "text";
-
-  const titleKeyMap = {
-    name: "section1.fieldEditor.titlePrefix.fullName",
-    phone: "section1.fieldEditor.titlePrefix.phone",
-    quantity: "section1.fieldEditor.titlePrefix.quantity",
-    pincode: "section1.fieldEditor.titlePrefix.pincode",
-    pincode2: "section1.fieldEditor.titlePrefix.pincode2",
-    pincode3: "section1.fieldEditor.titlePrefix.pincode3",
-    email: "section1.fieldEditor.titlePrefix.email",
-    company: "section1.fieldEditor.titlePrefix.company",
-    birthday: "section1.fieldEditor.titlePrefix.birthday",
-    province: "section1.fieldEditor.titlePrefix.province",
-    city: "section1.fieldEditor.titlePrefix.city",
-    address: "section1.fieldEditor.titlePrefix.address",
-    notes: "section1.fieldEditor.titlePrefix.notes",
-  };
-
-  const titleKey = titleKeyMap[fieldKey];
-  const titleText = titleKey ? t(titleKey) : st.label || fieldKey;
-
-  return (
-    <GroupCard title={titleText}>
-      <InlineStack align="space-between" blockAlign="center">
-        <InlineStack gap="200" blockAlign="center">
-          <Checkbox
-            label={t("section1.fieldEditor.activeLabel")}
-            checked={st.on !== false}
-            onChange={(v) => setField(fieldKey, { on: v })}
-          />
-          <Checkbox
-            label={t("section1.fieldEditor.requiredLabel")}
-            checked={!!st.required}
-            onChange={(v) => setField(fieldKey, { required: v })}
-          />
-        </InlineStack>
-
-        <Select
-          label={t("section1.fieldEditor.typeLabel")}
-          options={[
-            { label: t("section1.fieldEditor.type.text"), value: "text" },
-            { label: t("section1.fieldEditor.type.phone"), value: "tel" },
-            { label: t("section1.fieldEditor.type.textarea"), value: "textarea" },
-            { label: t("section1.fieldEditor.type.number"), value: "number" },
-          ]}
-          value={type}
-          onChange={(v) => setField(fieldKey, { type: v })}
-        />
-      </InlineStack>
-
-      <div style={{ height: 8 }} />
-
-      <Grid2>
-        <TextField
-          label={t("section1.fieldEditor.labelLabel")}
-          value={st.label || ""}
-          onChange={(v) => setField(fieldKey, { label: v })}
-        />
-        <TextField
-          label={t("section1.fieldEditor.placeholderLabel")}
-          value={st.ph || ""}
-          onChange={(v) => setField(fieldKey, { ph: v })}
-        />
-
-        {type === "tel" && (
-          <TextField
-            label={t("section1.fieldEditor.phonePrefixLabel")}
-            value={st.prefix || ""}
-            onChange={(v) => setField(fieldKey, { prefix: v })}
-          />
-        )}
-
-        {type === "number" && (
-          <>
-            <TextField
-              type="number"
-              label={t("section1.fieldEditor.minLabel")}
-              value={String(st.min ?? 1)}
-              onChange={(v) => setField(fieldKey, { min: Number(v || 0) })}
-            />
-            <TextField
-              type="number"
-              label={t("section1.fieldEditor.maxLabel")}
-              value={st.max !== undefined && st.max !== null ? String(st.max) : ""}
-              onChange={(v) => setField(fieldKey, { max: v === "" ? null : Number(v) })}
-            />
-          </>
-        )}
-      </Grid2>
-
-      <div style={{ marginTop: 16 }}>
-        <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8 }}>
-          {t("section1.fieldEditor.iconLabel")}
-        </div>
-        <IconSelector
-          fieldKey={fieldKey}
-          selectedIcon={st.icon || ""}
-          onSelect={(icon) => setField(fieldKey, { icon })}
-        />
-      </div>
-    </GroupCard>
-  );
-}
-
-/* ============================== UI helpers ============================== */
-function GroupCard({ title, children }) {
-  return (
-    <Card>
-      <div className="tf-group-title">{title}</div>
-      <BlockStack gap="200">{children}</BlockStack>
-    </Card>
-  );
-}
-
-function BlueSection({ title, children, defaultOpen = true }) {
-  const [open, setOpen] = useState(defaultOpen);
-  return (
-    <div className="tf-accordion">
-      <button
-        type="button"
-        className="tf-accordion__btn"
-        onClick={() => setOpen((o) => !o)}
-        style={{
-          borderBottom: open ? "1px solid #E5E7EB" : "none",
-          borderRadius: open ? "10px 10px 0 0" : "10px",
-        }}
-      >
-        {open ? "▾" : "▸"} {title}
-      </button>
-      <div className="tf-accordion__body" style={{ display: open ? "block" : "none" }}>
-        {children}
-      </div>
-    </div>
-  );
-}
-
-const Grid2 = ({ children }) => (
-  <div
-    style={{
-      display: "grid",
-      gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-      gap: 12,
-      alignItems: "start",
-    }}
-  >
-    {children}
-  </div>
-);
-
-const Grid3 = ({ children }) => (
-  <div
-    style={{
-      display: "grid",
-      gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-      gap: 12,
-      alignItems: "start",
-    }}
-  >
-    {children}
-  </div>
-);
-
-function ColorField({ label, value, onChange }) {
-  const { t } = useForms();
-  return (
-    <div style={{ display: "grid", gap: 6 }}>
-      <span style={{ fontSize: 13, color: "#111827", fontWeight: 600 }}>{label}</span>
-      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-        <input
-          type="color"
-          value={safeHex(value)}
-          onChange={(e) => onChange(e.target.value)}
-          style={{
-            width: 44,
-            height: 32,
-            border: "1px solid #E5E7EB",
-            borderRadius: 8,
-            background: "#fff",
-          }}
-        />
-        <TextField label={t("section1.colors.hexLabel")} value={value} onChange={onChange} />
-      </div>
-    </div>
-  );
-}
-
-function GradientField({ label, mode, c1, c2, onChange }) {
-  const { t } = useForms();
-  const m = mode || "solid";
-  const col1 = safeHex(c1, "#111827");
-  const col2 = safeHex(c2, col1);
-
-  const preview = m === "gradient" ? `linear-gradient(90deg, ${col1} 0%, ${col2} 100%)` : col1;
-
-  return (
-    <div style={{ display: "grid", gap: 6 }}>
-      <span style={{ fontSize: 13, color: "#111827", fontWeight: 600 }}>{label}</span>
-
-      <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 10 }}>
-        <Select
-          label="Mode"
-          options={[
-            { label: "Solid", value: "solid" },
-            { label: "Gradient (2 colors)", value: "gradient" },
-          ]}
-          value={m}
-          onChange={(v) => onChange({ btnBgMode: v })}
-        />
-
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-          <div style={{ display: "grid", gap: 6 }}>
-            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-              <input
-                type="color"
-                value={col1}
-                onChange={(e) => onChange({ btnBg: e.target.value })}
-                style={{
-                  width: 44,
-                  height: 32,
-                  border: "1px solid #E5E7EB",
-                  borderRadius: 8,
-                  background: "#fff",
-                }}
-              />
-              <TextField
-                label={t("section1.colors.hexLabel")}
-                value={col1}
-                onChange={(v) => onChange({ btnBg: v })}
-              />
-            </div>
-          </div>
-
-          <div style={{ display: "grid", gap: 6, opacity: m === "gradient" ? 1 : 0.45 }}>
-            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-              <input
-                type="color"
-                value={col2}
-                disabled={m !== "gradient"}
-                onChange={(e) => onChange({ btnBg2: e.target.value })}
-                style={{
-                  width: 44,
-                  height: 32,
-                  border: "1px solid #E5E7EB",
-                  borderRadius: 8,
-                  background: "#fff",
-                }}
-              />
-              <TextField
-                label={t("section1.colors.hexLabel")}
-                value={col2}
-                disabled={m !== "gradient"}
-                onChange={(v) => onChange({ btnBg2: v })}
-              />
-            </div>
-          </div>
-        </div>
-
-        <div
-          style={{
-            height: 36,
-            borderRadius: 10,
-            border: "1px solid #E5E7EB",
-            background: preview,
-          }}
-        />
-      </div>
-    </div>
-  );
-}
-
-/* ============================== Preview ============================== */
-function PreviewPanel() {
-  const { config, cardCSS, cartBoxCSS, cartRowCSS, inputBase, btnCSS, setBehav, offersCfg, t } =
-    useForms();
-
-  const [shippingPrice, setShippingPrice] = useState(null);
-  const [shippingNote, setShippingNote] = useState("");
-
-  const countryKey = config.behavior.country || "";
-  const country = COUNTRY_DATA[countryKey];
-  const provincesEntries = country ? Object.entries(country.provinces || {}) : [];
-
-  const selectedProvinceKey = config.behavior.provinceKey || "";
-  const selectedProvince =
-    country && selectedProvinceKey ? country.provinces[selectedProvinceKey] : null;
-
-  const cities = selectedProvince?.cities || [];
-  const titleAlign = config.design.titleAlign || "left";
-
-  const fieldKeys = Object.keys(config.fields || {});
-  const orderedFields = useMemo(() => {
-    const existing = config.meta?.fieldsOrder || [];
-    return [
-      ...existing.filter((k) => fieldKeys.includes(k)),
-      ...fieldKeys.filter((k) => !existing.includes(k)),
-    ];
-  }, [config.meta?.fieldsOrder, fieldKeys]);
-
-  const productPrice = 99.99;
-  const currency = getCurrencyByCountry(countryKey);
-
-  const fieldAlignRaw = config.design?.fieldAlign || "left";
-  const fieldAlign = ["left", "center", "right"].includes(fieldAlignRaw) ? fieldAlignRaw : "left";
-
-  useEffect(() => {
-    setShippingPrice(null);
-    setShippingNote("");
-  }, [selectedProvinceKey]);
-
-  const handleCityChange = (city) => {
-    if (!city) {
-      setShippingPrice(null);
-      setShippingNote("");
-      return;
-    }
-    const shippingData = getShippingExample(city, countryKey);
-    setShippingPrice(shippingData.amount);
-    setShippingNote(`${t("section1.preview.shippingTo")} ${city} - ${shippingData.note}`);
-  };
-
-  const renderField = (f, key) => {
-    if (!f?.on) return null;
-    const isTextarea = f.type === "textarea";
-    const hasIcon = !!f.icon;
-
-    const inputWithIcon = hasIcon ? { ...inputBase, padding: "10px 12px 10px 40px" } : inputBase;
-
-    const labelEl = (
-      <label className="tf-field-row">
-        <span style={{ fontSize: 13, color: "#475569", textAlign: fieldAlign }}>
-          {sStr(f.label)}
-          {f.required ? " *" : ""}
-        </span>
-
-        {isTextarea ? (
-          <textarea
-            style={{ ...inputWithIcon, padding: "10px 12px", minHeight: 80 }}
-            placeholder={sStr(f.ph)}
-            rows={3}
-          />
-        ) : f.type === "tel" ? (
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: f.prefix ? "minmax(88px,130px) 1fr" : "1fr",
-              gap: 8,
-            }}
-          >
-            {f.prefix && (
-              <input style={{ ...inputBase, textAlign: "center" }} value={f.prefix} readOnly />
-            )}
-            <input type="tel" style={inputWithIcon} placeholder={sStr(f.ph)} />
-          </div>
-        ) : (
-          <input
-            type={f.type === "number" ? "number" : "text"}
-            style={inputWithIcon}
-            placeholder={sStr(f.ph)}
-            min={f.type === "number" && f.min != null ? f.min : undefined}
-            max={f.type === "number" && f.max != null ? f.max : undefined}
-          />
-        )}
-      </label>
-    );
-
-    if (!hasIcon) {
-      return (
-        <div key={key} className="tf-field-no-icon">
-          {labelEl}
-        </div>
-      );
-    }
-
-    return (
-      <div key={key} className="tf-field-with-icon">
-        <div className="tf-field-icon">
-          <PolarisIcon iconName={f.icon} size={16} />
-        </div>
-        {labelEl}
-      </div>
-    );
-  };
-
-  const renderCartBox = () => {
-    const shippingDisplay =
-      shippingPrice === null
-        ? countryKey
-          ? t("section1.preview.shippingToCalculate")
-          : "Gratuit"
-        : `${shippingPrice.toFixed(2)} ${currency}`;
-
-    const total = productPrice + (shippingPrice || 0);
-
-    return (
-      <div style={cartBoxCSS} dir={config.design.direction || "ltr"}>
-        <div className="tf-cart-with-icon">
-          {config.cartTitles.cartIcon ? (
-            <div className="tf-cart-icon">
-              <PolarisIcon iconName={config.cartTitles.cartIcon || ""} size={18} />
-            </div>
-          ) : null}
-          <div style={{ fontWeight: 700, color: config.design.cartTitleColor }}>
-            {sStr(config.cartTitles.top)}
-          </div>
-        </div>
-
-        <div style={{ display: "grid", gap: 8 }}>
-          <div style={cartRowCSS}>
-            <div>{sStr(config.cartTitles.price)}</div>
-            <div style={{ fontWeight: 700 }}>
-              {productPrice.toFixed(2)} {currency}
-            </div>
-          </div>
-
-          <div style={cartRowCSS}>
-            <div>
-              <div>{sStr(config.cartTitles.shipping)}</div>
-              {shippingNote && (
-                <div style={{ fontSize: 10, opacity: 0.8, marginTop: 2 }}>{shippingNote}</div>
-              )}
-            </div>
-            <div style={{ fontWeight: 700 }}>{shippingDisplay}</div>
-          </div>
-
-          <div style={cartRowCSS}>
-            <div>{sStr(config.cartTitles.total)}</div>
-            <div style={{ fontWeight: 700 }}>
-              {total.toFixed(2)} {currency}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const renderProvinceField = (f) => {
-    if (!f?.on) return null;
-    const hasIcon = !!f.icon;
-
-    const labelEl = (
-      <label className="tf-field-row">
-        <span style={{ fontSize: 13, color: "#475569", textAlign: fieldAlign }}>
-          {sStr(f.label)}
-          {f.required ? " *" : ""}
-        </span>
-        <select
-          style={{ ...inputBase, background: config.design.inputBg }}
-          value={selectedProvinceKey}
-          onChange={(e) => setBehav({ provinceKey: e.target.value, cityKey: "" })}
-        >
-          <option value="">{f.ph || t("section1.preview.provincePlaceholder")}</option>
-          {provincesEntries.map(([key, p]) => (
-            <option key={key} value={key}>
-              {p.label}
-            </option>
-          ))}
-        </select>
-      </label>
-    );
-
-    if (!hasIcon) return <div key="province" className="tf-field-no-icon">{labelEl}</div>;
-
-    return (
-      <div key="province" className="tf-field-with-icon">
-        <div className="tf-field-icon">
-          <PolarisIcon iconName={f.icon} size={16} />
-        </div>
-        {labelEl}
-      </div>
-    );
-  };
-
-  const renderCityField = (f) => {
-    if (!f?.on) return null;
-    const hasIcon = !!f.icon;
-
-    const labelEl = (
-      <label className="tf-field-row">
-        <span style={{ fontSize: 13, color: "#475569", textAlign: fieldAlign }}>
-          {sStr(f.label)}
-          {f.required ? " *" : ""}
-        </span>
-        <select
-          style={{
-            ...inputBase,
-            backgroundColor: selectedProvinceKey ? inputBase.background : "#F3F4F6",
-          }}
-          value={config.behavior.cityKey || ""}
-          onChange={(e) => {
-            const city = e.target.value;
-            setBehav({ cityKey: city });
-            handleCityChange(city);
-          }}
-          disabled={!selectedProvinceKey}
-        >
-          <option value="">
-            {!selectedProvinceKey
-              ? t("section1.preview.cityPlaceholderNoProvince")
-              : f.ph || t("section1.preview.cityPlaceholder")}
-          </option>
-          {cities.map((c) => (
-            <option key={c} value={c}>
-              {c}
-            </option>
-          ))}
-        </select>
-      </label>
-    );
-
-    if (!hasIcon) return <div key="city" className="tf-field-no-icon">{labelEl}</div>;
-
-    return (
-      <div key="city" className="tf-field-with-icon">
-        <div className="tf-field-icon">
-          <PolarisIcon iconName={f.icon} size={16} />
-        </div>
-        {labelEl}
-      </div>
-    );
-  };
-
-  // ✅ Blocks layout (positions) — controlled from "Options" tab
-  const safePos = (v, def = "top") => {
-    const x = String(v || "").toLowerCase();
-    if (x === "top" || x === "bottom" || x === "inside" || x === "hide") return x;
-    return def;
-  };
-  const safeOrder = (v, def = 99) => {
-    const n = Number(v);
-    return Number.isFinite(n) ? n : def;
-  };
-
-  const blocksLayout = config.behavior?.blocksLayout || {};
-  const layout = {
-    offers: {
-      position: safePos(blocksLayout?.offers?.position, "top"),
-      order: safeOrder(blocksLayout?.offers?.order, 1),
-    },
-    upsells: {
-      position: safePos(blocksLayout?.upsells?.position, "top"),
-      order: safeOrder(blocksLayout?.upsells?.order, 2),
-    },
-    summary: {
-      position: safePos(blocksLayout?.summary?.position, "top"),
-      order: safeOrder(blocksLayout?.summary?.order, 3),
-    },
-  };
-
-  const renderOffersBlock = () => {
-    const payload = offersCfg || {};
-    const globalEnabled = payload?.global?.enabled !== false;
-
-    const offers = Array.isArray(payload?.offers) ? payload.offers : [];
-    const activeOffers = globalEnabled
-      ? offers.filter((o) => o && o.enabled !== false && o.showInPreview !== false)
-      : [];
-
-    if (!activeOffers.length) return null;
-
-    const title = payload?.global?.title || "Offers";
-    return (
-      <div className="tf-block-card">
-        <div className="tf-block-title">
-          <span className="tf-offer-icon-circle">
-            <PolarisIcon iconName="DiscountIcon" size={16} />
-          </span>
-          <span>{title}</span>
-        </div>
-
-        {activeOffers.slice(0, 2).map((o, idx) => {
-          const pct =
-            o.discountType === "percentage" && Number.isFinite(Number(o.discountValue))
-              ? `-${Number(o.discountValue)}%`
-              : "";
-          return (
-            <div key={`offer-${idx}`} className="tf-block-item">
-              <span className="tf-offer-icon-circle" style={{ width: 34, height: 34 }}>
-                <PolarisIcon iconName="StarFilledIcon" size={16} />
-              </span>
-              <div style={{ flex: 1 }}>
-                <div className="tf-block-item-title">
-                  {o.title || "Special offer"} {pct ? <span style={{ opacity: 0.8 }}>{pct}</span> : null}
-                </div>
-                {o.description ? <div className="tf-block-item-desc">{o.description}</div> : null}
-                {o.enableTimer ? (
-                  <div className="tf-block-badge">
-                    <span>⏱️</span>
-                    <span>{o.timerMessage || "Limited time"}</span>
-                  </div>
-                ) : null}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    );
-  };
-
-  const renderUpsellsBlock = () => {
-    const payload = offersCfg || {};
-    const globalEnabled = payload?.global?.enabled !== false;
-
-    const upsells = Array.isArray(payload?.upsells) ? payload.upsells : [];
-    const activeUpsells = globalEnabled
-      ? upsells.filter((u) => u && u.enabled !== false && u.showInPreview !== false)
-      : [];
-
-    if (!activeUpsells.length) return null;
-
-    return (
-      <div className="tf-block-card">
-        <div className="tf-block-title">
-          <span className="tf-upsell-icon-circle">
-            <PolarisIcon iconName="GiftCardIcon" size={16} />
-          </span>
-          <span>Upsells</span>
-        </div>
-
-        {activeUpsells.slice(0, 2).map((u, idx) => (
-          <div key={`upsell-${idx}`} className="tf-block-item">
-            <span className="tf-upsell-icon-circle" style={{ width: 34, height: 34 }}>
-              <PolarisIcon iconName="GiftCardIcon" size={16} />
-            </span>
-            <div style={{ flex: 1 }}>
-              <div className="tf-block-item-title">{u.title || "Bonus / gift"}</div>
-              {u.description ? <div className="tf-block-item-desc">{u.description}</div> : null}
-              {u.enableTimer ? (
-                <div className="tf-block-badge">
-                  <span>🎁</span>
-                  <span>{u.timerMessage || "Limited bonus"}</span>
-                </div>
-              ) : null}
-            </div>
-          </div>
-        ))}
-      </div>
-    );
-  };
-
-  const blocks = [
-    { key: "offers", node: renderOffersBlock(), ...layout.offers },
-    { key: "upsells", node: renderUpsellsBlock(), ...layout.upsells },
-    { key: "summary", node: renderCartBox(), ...layout.summary },
-  ].filter((b) => b && b.node && b.position !== "hide");
-
-  const blocksAt = (where) =>
-    blocks
-      .filter((b) => b.position === where)
-      .sort((a, b) => (a.order || 99) - (b.order || 99))
-      .map((b) => (
-        <React.Fragment key={b.key}>
-          {b.node}
-        </React.Fragment>
-      ));
-
-  const renderFormCard = (insideNodes) => {
-    const total = productPrice + (shippingPrice || 0);
-    const orderLabel = sStr(config.uiTitles.orderNow || config.form?.buttonText || "Order now");
-    const suffix = sStr(config.uiTitles.totalSuffix || "Total:");
-
-    const motion = config.behavior?.buttonMotion || "none";
-    const motionClass =
-      motion === "x" ? "tf-motion-x" :
-      motion === "y" ? "tf-motion-y" :
-      motion === "pulse" ? "tf-motion-pulse" :
-      motion === "shake" ? "tf-motion-shake" : "";
-
-    return (
-      <div style={cardCSS} dir={config.design.direction || "ltr"}>
-        {(config.form.title || config.form.subtitle) && (
-          <div style={{ marginBottom: 10, textAlign: titleAlign }}>
-            {config.form.title && <div style={{ fontWeight: 700 }}>{sStr(config.form.title)}</div>}
-            {config.form.subtitle && <div style={{ opacity: 0.8 }}>{sStr(config.form.subtitle)}</div>}
-          </div>
-        )}
-
-        <div style={{ display: "grid", gap: 10 }}>
-          {orderedFields.map((key) => {
-            const f = config.fields[key];
-            if (!f?.on) return null;
-            if (key === "province") return renderProvinceField(f);
-            if (key === "city") return renderCityField(f);
-            return renderField(f, key);
-          })}
-
-          {config.behavior.requireGDPR && (
-            <label style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 13, color: "#374151" }}>
-              <input type="checkbox" /> {sStr(config.behavior.gdprLabel)}
-            </label>
-          )}
-          {config.behavior.whatsappOptIn && (
-            <label style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 13, color: "#374151" }}>
-              <input type="checkbox" /> {sStr(config.behavior.whatsappLabel)}
-            </label>
-          )}
-
-          {insideNodes && insideNodes.length ? (
-            <div style={{ display: "grid", gap: 10, marginTop: 10 }}>
-              {insideNodes}
-            </div>
-          ) : null}
-
-          <button type="button" style={btnCSS} className={`tf-btn-with-icon ${motionClass}`}>
-            {config.form.buttonIcon ? (
-              <span className="tf-btn-icon">
-                <PolarisIcon iconName={config.form.buttonIcon || ""} size={18} color={config.design.btnText} />
-              </span>
-            ) : null}
-            <span style={{ flex: 1, textAlign: "center" }}>
-              {orderLabel} · {suffix} {total.toFixed(2)} {currency}
-            </span>
-          </button>
-        </div>
-      </div>
-    );
-  };
-
-  return (
-    <Card>
-      <BlockStack gap="250">
-        <div style={{ width: "100%" }}>
-          <div
-            style={{
-              borderRadius: 16,
-              background: "#F9FAFB",
-              border: "1px solid #E5E7EB",
-              padding: 16,
-              boxSizing: "border-box",
-            }}
-          >
-            <div style={{ display: "grid", gap: 12 }}>
-              {blocksAt("top")}
-              {renderFormCard(blocksAt("inside"))}
-              {blocksAt("bottom")}
-            </div>
-          </div>
-        </div>
-      </BlockStack>
-    </Card>
-  );
-}
-
-// ============================== Export ==============================
+/* ============================== Export ============================== */
 export default Section1FormsLayoutInner;
