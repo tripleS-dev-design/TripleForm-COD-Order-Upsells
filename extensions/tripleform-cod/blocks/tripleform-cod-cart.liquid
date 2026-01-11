@@ -262,9 +262,12 @@ Tripleform COD – App block (product template)
   data-section-id="{{ section.id }}"
   data-ui-preset="{{ section.settings.ui_preset | default: 'A' }}"
 
-  {%- comment -%} ✅ CORRECT: Always output as valid JSON {%- endcomment -%}
-  data-settings="{{ tf_settings_json | escape }}"
-  data-offers="{{ tf_offers_json_output | escape }}"
+  {%- comment -%} ✅ EMERGENCY FIX: Convert Ruby hash to JSON {%- endcomment -%}
+{%- assign tf_settings_fixed = tf_settings_json | replace: '=&gt;', ':' | replace: '"nil"', 'null' | replace: 'nil', 'null' -%}
+{%- assign tf_offers_fixed = tf_offers_json_output | replace: '=&gt;', ':' | replace: '"nil"', 'null' | replace: 'nil', 'null' -%}
+
+data-settings="{{ tf_settings_fixed | escape }}"
+data-offers="{{ tf_offers_fixed | escape }}"
 
   data-product-id='{{ product.id }}'
   data-variant-id='{{ current_variant.id }}'
