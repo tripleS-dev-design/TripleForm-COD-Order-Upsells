@@ -1,15 +1,18 @@
 {% comment %}
 Tripleform COD – Cart section
-{% endcomment %}
 
-{{ 'tripleform-cod.css' | asset_url | stylesheet_tag }}
-<script src="{{ 'tripleform.js' | asset_url }}" defer></script>
+✅ OLD LOGIC for data-settings / data-offers (no double JSON encoding)
+✅ Adds 3 options from GEO (shop level):
+- ui.enableCouponField
+- ui.enableVariantSelector
+✅ Cart mode true
+✅ Layout fallback
+✅ reCAPTCHA v2 ONLY via data-*
+{% endcomment %}
 
 {%- assign tf_shop_val = shop.metafields.tripleform_cod.settings.value -%}
 
-{%- comment -%}
-✅ reCAPTCHA config
-{%- endcomment -%}
+{%- comment -%} ✅ reCAPTCHA config {%- endcomment -%}
 {%- assign tf_antibot_mf = shop.metafields.tripleform_cod.antibot -%}
 {%- assign tf_recaptcha_site_key = '' -%}
 {%- assign tf_recaptcha_enabled = false -%}
@@ -21,29 +24,20 @@ Tripleform COD – Cart section
   {%- endif -%}
 {%- endif -%}
 
-{%- comment -%}
-✅ UI toggles from GEO config
-{%- endcomment -%}
+{%- comment -%} ✅ UI toggles from GEO (shop) {%- endcomment -%}
 {%- assign tf_geo_shop_val = shop.metafields.tripleform_cod.geo.value -%}
-
 {%- assign tf_ui_coupon = false -%}
 {%- assign tf_ui_variants = false -%}
 
 {%- if tf_geo_shop_val and tf_geo_shop_val != blank -%}
   {%- assign tf_geo = tf_geo_shop_val -%}
   {%- if tf_geo.ui != blank -%}
-    {%- if tf_geo.ui.enableCouponField == true -%}
-      {%- assign tf_ui_coupon = true -%}
-    {%- endif -%}
-    {%- if tf_geo.ui.enableVariantSelector == true -%}
-      {%- assign tf_ui_variants = true -%}
-    {%- endif -%}
+    {%- if tf_geo.ui.enableCouponField == true -%}{%- assign tf_ui_coupon = true -%}{%- endif -%}
+    {%- if tf_geo.ui.enableVariantSelector == true -%}{%- assign tf_ui_variants = true -%}{%- endif -%}
   {%- endif -%}
 {%- endif -%}
 
-{%- comment -%}
-✅ Theme Editor layout defaults
-{%- endcomment -%}
+{%- comment -%} ✅ Theme Editor layout defaults {%- endcomment -%}
 {%- assign tf_summary_position = section.settings.summary_position | default: 'top' -%}
 {%- assign tf_summary_order = section.settings.summary_order | default: 3 -%}
 {%- assign tf_offers_position = section.settings.offers_position | default: 'top' -%}
@@ -51,13 +45,10 @@ Tripleform COD – Cart section
 {%- assign tf_upsells_position = section.settings.upsells_position | default: 'top' -%}
 {%- assign tf_upsells_order = section.settings.upsells_order | default: 2 -%}
 
-{%- comment -%}
-✅ Configuration JSON (boutique)
-{%- endcomment -%}
+{%- comment -%} ✅ Settings JSON (shop > default) {%- endcomment -%}
 {%- if tf_shop_val and tf_shop_val != blank -%}
   {%- assign tf_json = tf_shop_val -%}
 {%- else -%}
-  {%- comment -%}Configuration par défaut...{%- endcomment -%}
   {%- assign shop_country_code = shop.country_code | default: 'MA' -%}
   {%- capture tf_json -%}
   {
@@ -160,9 +151,7 @@ Tripleform COD – Cart section
   {%- endcapture -%}
 {%- endif -%}
 
-{%- comment -%}
-✅ Configuration des offres/upsells
-{%- endcomment -%}
+{%- comment -%} ✅ OFFERS / UPSELL (shop > default) {%- endcomment -%}
 {%- assign tf_offers_shop_val = shop.metafields.tripleform_cod.offers.value -%}
 
 {%- if tf_offers_shop_val and tf_offers_shop_val != blank -%}
@@ -192,16 +181,17 @@ Tripleform COD – Cart section
 <div
   id="tripleform-cod-{{ section.id }}"
   class="tripleform-cod"
+  data-section-id="{{ section.id }}"
 
-  data-settings='{{ tf_json | json | escape }}'
-  data-offers='{{ tf_offers_json | json | escape }}'
+  {%- comment -%} ✅ OLD LOGIC encoding {%- endcomment -%}
+  data-settings='{% if tf_shop_val and tf_shop_val != blank %}{{ tf_json | json | escape }}{% else %}{{ tf_json | strip | strip_newlines | escape }}{% endif %}'
+  data-offers='{% if tf_offers_shop_val and tf_offers_shop_val != blank %}{{ tf_offers_json | json | escape }}{% else %}{{ tf_offers_json | strip | strip_newlines | escape }}{% endif %}'
 
   data-product-id=''
   data-variant-id=''
   data-currency='{{ cart.currency.iso_code | default: shop.currency }}'
   data-locale='{{ request.locale.iso_code }}'
 
-  {%- comment -%} ✅ Layout fallback from Theme Editor {%- endcomment -%}
   data-summary-position="{{ tf_summary_position }}"
   data-summary-order="{{ tf_summary_order }}"
   data-offers-position="{{ tf_offers_position }}"
@@ -220,7 +210,6 @@ Tripleform COD – Cart section
   data-geo-country="{{ shop.country_code | default: 'MA' }}"
   data-geo-endpoint="/apps/tripleform-cod/api/geo/calc"
 
-  {%- comment -%} ✅ UI toggles from GEO config {%- endcomment -%}
   data-ui-coupon="{% if tf_ui_coupon %}true{% else %}false{% endif %}"
   data-ui-variants="{% if tf_ui_variants %}true{% else %}false{% endif %}"
   data-cart-mode="true"
@@ -264,6 +253,8 @@ Tripleform COD – Cart section
   "name": "Tripleform COD (Cart)",
   "target": "section",
   "enabled_on": { "templates": ["cart"] },
+  "stylesheet": "tripleform-cod.css",
+  "javascript": "tripleform.js",
   "settings": [
     {
       "type": "header",
