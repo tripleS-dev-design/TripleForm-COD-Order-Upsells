@@ -1,33 +1,14 @@
 {% comment %}
-Tripleform COD – App block (cart template)
-
-Lit la config form depuis:
-- shop.metafields.tripleform_cod.settings (fallback si pas de produit)
-
-Lit la config OFFRES / UPSELL depuis:
-- shop.metafields.tripleform_cod.offers
-
-✅ Layout blocks (offers / upsells / summary)
-- Priorité: cfg.behavior.blocksLayout (venant du metafield via data-settings)
-- Fallback: data-* du Theme Editor (positions + order)
-
-✅ reCAPTCHA v2 ONLY:
-- lit la config depuis shop.metafields.tripleform_cod.antibot (recaptcha.enabled + recaptcha.siteKey)
-- NE PAS injecter <script google> dans le Liquid (theme-check RemoteAsset)
-- on passe la config au JS via data-*
-
-✅ UI toggles (coupon, variant selector, cart block support)
-- lit la config depuis shop.metafields.tripleform_cod.geo (ui.enableCouponField, ui.enableVariantSelector, ui.enableCartBlock)
-- passe via data-ui-coupon, data-ui-variants, data-cart-mode (true pour le panier)
-
-✅ Injecte le JSON du panier dans un script avec l'ID tf-cart-json-{{ section.id }}
+Tripleform COD – Cart section
 {% endcomment %}
+
+{{ 'tripleform-cod.css' | asset_url | stylesheet_tag }}
+{{ 'tripleform.js' | asset_url | script_tag }}
 
 {%- assign tf_shop_val = shop.metafields.tripleform_cod.settings.value -%}
 
 {%- comment -%}
-✅ reCAPTCHA config (PUBLIC) — source: metafield tripleform_cod.antibot (type json)
-Sans parse_json (theme-check)
+✅ reCAPTCHA config
 {%- endcomment -%}
 {%- assign tf_antibot_mf = shop.metafields.tripleform_cod.antibot -%}
 {%- assign tf_recaptcha_site_key = '' -%}
@@ -41,7 +22,7 @@ Sans parse_json (theme-check)
 {%- endif -%}
 
 {%- comment -%}
-✅ UI toggles from GEO config (shop.metafields.tripleform_cod.geo)
+✅ UI toggles from GEO config
 {%- endcomment -%}
 {%- assign tf_geo_shop_val = shop.metafields.tripleform_cod.geo.value -%}
 
@@ -57,12 +38,11 @@ Sans parse_json (theme-check)
     {%- if tf_geo.ui.enableVariantSelector == true -%}
       {%- assign tf_ui_variants = true -%}
     {%- endif -%}
-  
   {%- endif -%}
 {%- endif -%}
 
 {%- comment -%}
-✅ Theme Editor layout defaults (fallback si cfg.behavior.blocksLayout absent)
+✅ Theme Editor layout defaults
 {%- endcomment -%}
 {%- assign tf_summary_position = section.settings.summary_position | default: 'top' -%}
 {%- assign tf_summary_order = section.settings.summary_order | default: 3 -%}
@@ -71,127 +51,17 @@ Sans parse_json (theme-check)
 {%- assign tf_upsells_position = section.settings.upsells_position | default: 'top' -%}
 {%- assign tf_upsells_order = section.settings.upsells_order | default: 2 -%}
 
+{%- comment -%}
+✅ Configuration JSON (boutique)
+{%- endcomment -%}
 {%- if tf_shop_val and tf_shop_val != blank -%}
   {%- assign tf_json = tf_shop_val -%}
 {%- else -%}
-  {%- comment -%}Déterminer le pays et les valeurs par défaut basées sur la boutique{%- endcomment -%}
+  {%- comment -%}Configuration par défaut...{%- endcomment -%}
   {%- assign shop_country_code = shop.country_code | default: 'MA' -%}
-
-  {%- comment -%}Déterminer le préfixe téléphonique et les labels basés sur le pays{%- endcomment -%}
-  {%- assign phone_prefix = '+212' -%}
-
-  {%- assign province_label = 'Province' -%}
-  {%- assign province_placeholder = 'Select province' -%}
-
-  {%- assign city_label = 'City' -%}
-  {%- assign city_placeholder = 'Select city' -%}
-
-  {%- case shop_country_code -%}
-    {%- when 'MA' -%}
-      {%- assign phone_prefix = '+212' -%}
-      {%- assign province_label = 'Province' -%}
-      {%- assign province_placeholder = 'Select province' -%}
-      {%- assign city_label = 'Ville' -%}
-      {%- assign city_placeholder = 'Choisir une ville' -%}
-    {%- when 'DZ' -%}
-      {%- assign phone_prefix = '+213' -%}
-      {%- assign province_label = 'Wilaya' -%}
-      {%- assign province_placeholder = 'Select wilaya' -%}
-      {%- assign city_label = 'Commune' -%}
-      {%- assign city_placeholder = 'Choisir une commune' -%}
-    {%- when 'TN' -%}
-      {%- assign phone_prefix = '+216' -%}
-      {%- assign province_label = 'Gouvernorat' -%}
-      {%- assign province_placeholder = 'Select gouvernorat' -%}
-      {%- assign city_label = 'Ville' -%}
-      {%- assign city_placeholder = 'Choisir une ville' -%}
-    {%- when 'EG' -%}
-      {%- assign phone_prefix = '+20' -%}
-      {%- assign province_label = 'Governorate' -%}
-      {%- assign province_placeholder = 'Select governorate' -%}
-      {%- assign city_label = 'City' -%}
-      {%- assign city_placeholder = 'Select city' -%}
-    {%- when 'FR' -%}
-      {%- assign phone_prefix = '+33' -%}
-      {%- assign province_label = 'Région' -%}
-      {%- assign province_placeholder = 'Select region' -%}
-      {%- assign city_label = 'Ville' -%}
-      {%- assign city_placeholder = 'Choisir une ville' -%}
-    {%- when 'ES' -%}
-      {%- assign phone_prefix = '+34' -%}
-      {%- assign province_label = 'Provincia' -%}
-      {%- assign province_placeholder = 'Select provincia' -%}
-      {%- assign city_label = 'Ciudad' -%}
-      {%- assign city_placeholder = 'Select city' -%}
-    {%- when 'SA' -%}
-      {%- assign phone_prefix = '+966' -%}
-      {%- assign province_label = 'Province' -%}
-      {%- assign province_placeholder = 'Select province' -%}
-      {%- assign city_label = 'City' -%}
-      {%- assign city_placeholder = 'Select city' -%}
-    {%- when 'AE' -%}
-      {%- assign phone_prefix = '+971' -%}
-      {%- assign province_label = 'Emirate' -%}
-      {%- assign province_placeholder = 'Select emirate' -%}
-      {%- assign city_label = 'City' -%}
-      {%- assign city_placeholder = 'Select city' -%}
-    {%- when 'US' -%}
-      {%- assign phone_prefix = '+1' -%}
-      {%- assign province_label = 'State' -%}
-      {%- assign province_placeholder = 'Select state' -%}
-      {%- assign city_label = 'City' -%}
-      {%- assign city_placeholder = 'Select city' -%}
-    {%- when 'NG' -%}
-      {%- assign phone_prefix = '+234' -%}
-      {%- assign province_label = 'State' -%}
-      {%- assign province_placeholder = 'Select state' -%}
-      {%- assign city_label = 'City' -%}
-      {%- assign city_placeholder = 'Select city' -%}
-    {%- when 'PK' -%}
-      {%- assign phone_prefix = '+92' -%}
-      {%- assign province_label = 'Province' -%}
-      {%- assign province_placeholder = 'Select province' -%}
-      {%- assign city_label = 'City' -%}
-      {%- assign city_placeholder = 'Select city' -%}
-    {%- when 'IN' -%}
-      {%- assign phone_prefix = '+91' -%}
-      {%- assign province_label = 'State' -%}
-      {%- assign province_placeholder = 'Select state' -%}
-      {%- assign city_label = 'City' -%}
-      {%- assign city_placeholder = 'Select city' -%}
-    {%- when 'ID' -%}
-      {%- assign phone_prefix = '+62' -%}
-      {%- assign province_label = 'Province' -%}
-      {%- assign province_placeholder = 'Select province' -%}
-      {%- assign city_label = 'City' -%}
-      {%- assign city_placeholder = 'Select city' -%}
-    {%- when 'TR' -%}
-      {%- assign phone_prefix = '+90' -%}
-      {%- assign province_label = 'Province' -%}
-      {%- assign province_placeholder = 'Select province' -%}
-      {%- assign city_label = 'City' -%}
-      {%- assign city_placeholder = 'Select city' -%}
-    {%- when 'BR' -%}
-      {%- assign phone_prefix = '+55' -%}
-      {%- assign province_label = 'State' -%}
-      {%- assign province_placeholder = "Select state" -%}
-      {%- assign city_label = 'City' -%}
-      {%- assign city_placeholder = 'Select city' -%}
-    {%- else -%}
-      {%- assign phone_prefix = '+212' -%}
-      {%- assign province_label = 'Province' -%}
-      {%- assign province_placeholder = 'Select province' -%}
-      {%- assign city_label = 'City' -%}
-      {%- assign city_placeholder = 'Select city' -%}
-  {%- endcase -%}
-
   {%- capture tf_json -%}
   {
-    "meta": {
-      "version": 1,
-      "preset": "CleanWhite",
-      "fieldsOrder": ["name","phone","quantity","address","city","province","notes"]
-    },
+    "meta": { "version": 1, "preset": "CleanWhite" },
     "form": {
       "style": "inline",
       "title": "Order form",
@@ -261,89 +131,38 @@ Sans parse_json (theme-check)
       "cityKey": ""
     },
     "fields": {
-      "name": {
-        "on": true,
-        "required": true,
-        "type": "text",
-        "label": "Full name",
-        "ph": "Your full name",
-        "icon": "ProfileIcon"
-      },
-      "phone": {
-        "on": true,
-        "required": true,
-        "type": "tel",
-        "label": "Phone (WhatsApp)",
-        "ph": "Phone number",
-        "prefix": "{{ phone_prefix }}",
-        "icon": "PhoneIcon"
-      },
-      "quantity": {
-        "on": true,
-        "required": true,
-        "type": "number",
-        "label": "Quantity",
-        "ph": "1",
-        "min": 1,
-        "max": 10,
-        "icon": "HashtagIcon"
-      },
-      "province": {
-        "on": true,
-        "required": false,
-        "type": "select",
-        "label": "{{ province_label }}",
-        "ph": "{{ province_placeholder }}",
-        "icon": "RegionIcon"
-      },
-      "city": {
-        "on": true,
-        "required": false,
-        "type": "select",
-        "label": "{{ city_label }}",
-        "ph": "{{ city_placeholder }}",
-        "icon": "CityIcon"
-      },
-      "address": {
-        "on": false,
-        "required": false,
-        "type": "text",
-        "label": "Address",
-        "ph": "Full address",
-        "icon": "LocationIcon"
-      },
-      "notes": {
-        "on": false,
-        "required": false,
-        "type": "textarea",
-        "label": "Notes",
-        "ph": "(optional)",
-        "icon": "NoteIcon"
-      }
+      "name": { "on": true, "required": true, "type": "text", "label": "Full name", "ph": "Your full name", "icon": "ProfileIcon" },
+      "phone": { "on": true, "required": true, "type": "tel", "label": "Phone (WhatsApp)", "ph": "Phone number", "prefix": "+212", "icon": "PhoneIcon" },
+      "quantity": { "on": true, "required": true, "type": "number", "label": "Quantity", "ph": "1", "min": 1, "max": 10, "icon": "HashtagIcon" },
+      "province": { "on": true, "required": false, "type": "select", "label": "Province", "ph": "Select province", "icon": "RegionIcon" },
+      "city": { "on": true, "required": false, "type": "select", "label": "City", "ph": "Select city", "icon": "CityIcon" },
+      "address": { "on": false, "required": false, "type": "text", "label": "Address", "ph": "Full address", "icon": "LocationIcon" },
+      "notes": { "on": false, "required": false, "type": "textarea", "label": "Notes", "ph": "(optional)", "icon": "NoteIcon" }
     },
     "cartTitles": {
       "top": "Order summary",
       "price": "Product price",
       "shipping": "Shipping price",
       "total": "Total",
-      "shippingToCalculate": "Livraison à calculer",
+      "shippingToCalculate": "Shipping to calculate",
       "cartIcon": "CartIcon"
     },
     "uiTitles": {
       "applyCoupon": "Apply",
       "orderNow": "Order now",
       "totalSuffix": "Total:"
+    },
+    "ui": {
+      "enableCouponField": {{ tf_ui_coupon | json }},
+      "enableVariantSelector": {{ tf_ui_variants | json }}
     }
   }
   {%- endcapture -%}
 {%- endif -%}
 
-{%- comment %}
-OFFRES / UPSELL
-Ces données sont écrites par /api/save-offers dans:
-- shop.metafields.tripleform_cod.offers (fallback)
+{%- comment -%}
+✅ Configuration des offres/upsells
 {%- endcomment -%}
-
 {%- assign tf_offers_shop_val = shop.metafields.tripleform_cod.offers.value -%}
 
 {%- if tf_offers_shop_val and tf_offers_shop_val != blank -%}
@@ -374,8 +193,8 @@ Ces données sont écrites par /api/save-offers dans:
   id="tripleform-cod-{{ section.id }}"
   class="tripleform-cod"
 
-  data-settings='{% if tf_shop_val and tf_shop_val != blank %}{{ tf_json | json | escape }}{% else %}{{ tf_json | strip | escape }}{% endif %}'
-  data-offers='{% if tf_offers_shop_val and tf_offers_shop_val != blank %}{{ tf_offers_json | json | escape }}{% else %}{{ tf_offers_json | strip | escape }}{% endif %}'
+  data-settings='{{ tf_json | json | escape }}'
+  data-offers='{{ tf_offers_json | json | escape }}'
 
   data-product-id=''
   data-variant-id=''
@@ -445,8 +264,6 @@ Ces données sont écrites par /api/save-offers dans:
   "name": "Tripleform COD (Cart)",
   "target": "section",
   "enabled_on": { "templates": ["cart"] },
-  "stylesheet": "tripleform-cod.css",
-  "javascript": "tripleform.js",
   "settings": [
     {
       "type": "header",
@@ -490,13 +307,7 @@ Ces données sont écrites par /api/save-offers dans:
         { "value": "hide", "label": "Hidden" }
       ]
     },
-    { "type": "range", "id": "summary_order", "label": "Order summary order", "min": 1, "max": 3, "step": 1, "default": 3 },
-    {
-      "type": "text",
-      "id": "note",
-      "label": "Note (facultatif côté thème)",
-      "default": "Tripleform COD"
-    }
+    { "type": "range", "id": "summary_order", "label": "Order summary order", "min": 1, "max": 3, "step": 1, "default": 3 }
   ]
 }
 {% endschema %}
