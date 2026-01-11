@@ -4522,30 +4522,23 @@ let recaptchaToken = null;
     return ds ? String(ds) : "";
   }
 
-   function findProductJsonEl(holder, sectionId) {
-  if (holder) {
-    const inside =
-      holder.querySelector('template[id^="tf-product-json-"]') ||
-      holder.querySelector('template[data-tf-product-json]') ||
-      holder.querySelector('script[id^="tf-product-json-"]') ||
-      holder.querySelector('script[data-tf-product-json]') ||
-      holder.querySelector('script[type="application/json"][data-product-json]') ||
-      null;
-    if (inside) return inside;
+    function findProductJsonEl(holder, sectionId) {
+    if (holder) {
+      const inside =
+        holder.querySelector('script[id^="tf-product-json-"]') ||
+        holder.querySelector('script[data-tf-product-json]') ||
+        holder.querySelector('script[type="application/json"][data-product-json]') ||
+        null;
+      if (inside) return inside;
+    }
+
+    if (sectionId) {
+      const byLegacy = byId(`tf-product-json-${sectionId}`);
+      if (byLegacy) return byLegacy;
+    }
+
+    return document.querySelector('script[id^="tf-product-json-"]') || null;
   }
-
-  if (sectionId) {
-    const byLegacy = document.getElementById(`tf-product-json-${sectionId}`);
-    if (byLegacy) return byLegacy;
-  }
-
-  return (
-    document.querySelector('template[id^="tf-product-json-"]') ||
-    document.querySelector('script[id^="tf-product-json-"]') ||
-    null
-  );
-}
-
 
   function findCartJsonEl(holder, sectionId) {
     if (holder) {
@@ -4565,94 +4558,98 @@ let recaptchaToken = null;
   }
 
 function boot(sectionIdOrEl) {
-  let holder = null;
-  let sectionId = "";
+    let holder = null;
+    let sectionId = "";
 
-  if (sectionIdOrEl && sectionIdOrEl.nodeType === 1) {
-    holder = sectionIdOrEl;
-    sectionId = deriveSectionIdFromHolder(holder);
-  } else {
-    sectionId = String(sectionIdOrEl || "");
-    holder =
-      byId(`tripleform-cod-${sectionId}`) ||
-      document.querySelector(`.tripleform-cod[data-section-id="${sectionId}"]`) ||
-      document.querySelector(".tripleform-cod");
-  }
+    if (sectionIdOrEl && sectionIdOrEl.nodeType === 1) {
+      holder = sectionIdOrEl;
+      sectionId = deriveSectionIdFromHolder(holder);
+    } else {
+      sectionId = String(sectionIdOrEl || "");
+      holder =
+        byId(`tripleform-cod-${sectionId}`) ||
+        document.querySelector(`.tripleform-cod[data-section-id="${sectionId}"]`) ||
+        document.querySelector(".tripleform-cod");
+    }
 
-  if (!holder) return;
+    if (!holder) return;
 
-  // ✅ si déjà rendu (tf-shell existe), on ne refait rien
-  if (holder.getAttribute("data-tf-booted") === "1" && holder.querySelector(".tf-shell")) return;
+    if (holder.getAttribute("data-tf-booted") === "1") return;
+    holder.setAttribute("data-tf-booted", "1");
 
-  injectGlobalCSSOnce();
+    injectGlobalCSSOnce();
 
-  // ✅ IMPORTANT: ne marque "booted" qu'après avoir trouvé product/cart JSON
-  const cfg = parseSettingsAttr(holder);
-  const offersCfg = parseOffersAttr(holder);
+    const cfg = parseSettingsAttr(holder);
+    const offersCfg = parseOffersAttr(holder);
+    const geoCfg = (function () {
+      const base = parseGeoAttr(holder) || {};
+      // New theme-block attributes (preferred)
+      const enabledAttr = holder.getAttribute("data-geo-enabled");
+      if (enabledAttr != null) base.enabled = String(enabledAttr) === "true";
 
-  const geoCfg = (function () {
-    const base = parseGeoAttr(holder) || {};
-    const enabledAttr = holder.getAttribute("data-geo-enabled");
-    if (enabledAttr != null) base.enabled = String(enabledAttr) === "true";
-    const endpointAttr = holder.getAttribute("data-geo-endpoint");
-    if (endpointAttr) base.endpoint = endpointAttr;
-    const countryAttr = holder.getAttribute("data-geo-country") || holder.getAttribute("data-geo-country-code");
-    if (countryAttr) base.country = countryAttr;
-    try { if (cfg && cfg.geo && typeof cfg.geo === "object") Object.assign(base, cfg.geo); } catch {}
-    return Object.keys(base).length ? base : null;
-  })();
+      const endpointAttr = holder.getAttribute("data-geo-endpoint");
+      if (endpointAttr) base.endpoint = endpointAttr;
 
-  const currency = holder.getAttribute("data-currency") || "USD";
-  const locale = holder.getAttribute("data-locale") || "en";
-  const moneyFmt = fmtMoneyFactory(locale, currency);
+      const countryAttr = holder.getAttribute("data-geo-country") || holder.getAttribute("data-geo-country-code");
+      if (countryAttr) base.country = countryAttr;
 
-  const recaptchaEnabledAttr = holder.getAttribute("data-recaptcha-enabled");
-  const recaptchaEnabled = recaptchaEnabledAttr === "true" || recaptchaEnabledAttr === "1" || recaptchaEnabledAttr === "yes";
-  const recaptchaSiteKey = holder.getAttribute("data-recaptcha-site-key") || "";
-  const recaptchaV2Container = holder.getAttribute("data-recaptcha-v2-container") || '[data-tf-recaptcha-v2="1"]';
-  const recaptchaV2Theme = holder.getAttribute("data-recaptcha-v2-theme") || "light";
-  const recaptchaV2Size = holder.getAttribute("data-recaptcha-v2-size") || "normal";
-  const recaptchaCfg = {
-    enabled: recaptchaEnabled && !!recaptchaSiteKey,
-    version: "v2",
-    siteKey: recaptchaSiteKey,
-    v2Container: recaptchaV2Container,
-    v2Theme: recaptchaV2Theme,
-    v2Size: recaptchaV2Size,
-  };
+      // Backward-compat: allow config inside settings JSON (cfg.geo)
+      try {
+        if (cfg && cfg.geo && typeof cfg.geo === "object") {
+          Object.assign(base, cfg.geo);
+        }
+      } catch (e) {}
 
-  const prodEl = findProductJsonEl(holder, sectionId);
-  const cartEl = findCartJsonEl(holder, sectionId);
+      return Object.keys(base).length ? base : null;
+    })();
 
-  if (!prodEl && !cartEl) {
-    console.error("[Tripleform COD] product/cart JSON introuvable");
-    // ✅ ne pas bloquer : on laisse possibilité de relancer boot plus tard
-    holder.removeAttribute("data-tf-booted");
-    return;
-  }
+    const currency = holder.getAttribute("data-currency") || "USD";
+    const locale = holder.getAttribute("data-locale") || "en";
+    const moneyFmt = fmtMoneyFactory(locale, currency);
 
-  // ✅ maintenant OK => on marque booted
-  holder.setAttribute("data-tf-booted", "1");
+    const recaptchaEnabledAttr = holder.getAttribute("data-recaptcha-enabled");
+    const recaptchaEnabled =
+      recaptchaEnabledAttr === "true" ||
+      recaptchaEnabledAttr === "1" ||
+      recaptchaEnabledAttr === "yes";
 
-  let product = null;
-  if (prodEl) {
-    product = safeJsonParse(prodEl.textContent || "{}", { variants: [] });
-  } else {
-    const cart = safeJsonParse(cartEl.textContent || "{}", {});
-    product = { id: null, title: "Cart", variants: [], __cart: cart };
-  }
+    const recaptchaSiteKey = holder.getAttribute("data-recaptcha-site-key") || "";
 
-  const getVariant = () => getSelectedVariantId() || holder.getAttribute("data-variant-id");
+    const recaptchaV2Container =
+      holder.getAttribute("data-recaptcha-v2-container") || '[data-tf-recaptcha-v2="1"]';
+    const recaptchaV2Theme = holder.getAttribute("data-recaptcha-v2-theme") || "light";
+    const recaptchaV2Size = holder.getAttribute("data-recaptcha-v2-size") || "normal";
 
-  try {
+    const recaptchaCfg = {
+      enabled: recaptchaEnabled && !!recaptchaSiteKey,
+      version: "v2",
+      siteKey: recaptchaSiteKey,
+      v2Container: recaptchaV2Container,
+      v2Theme: recaptchaV2Theme,
+      v2Size: recaptchaV2Size,
+    };
+
+    const prodEl = findProductJsonEl(holder, sectionId);
+    const cartEl = findCartJsonEl(holder, sectionId);
+
+    let product = null;
+
+    if (prodEl) {
+      product = safeJsonParse(prodEl.textContent || "{}", { variants: [] });
+    } else if (cartEl) {
+      const cart = safeJsonParse(cartEl.textContent || "{}", {});
+      product = { id: null, title: "Cart", variants: [], __cart: cart };
+    } else {
+      console.error("[Tripleform COD] product/cart JSON introuvable");
+      return;
+    }
+
+    const getVariant = () => getSelectedVariantId() || holder.getAttribute("data-variant-id");
+
     const doUpdate = render(holder, cfg, offersCfg, geoCfg, product, getVariant, moneyFmt, recaptchaCfg);
+
     watchVariantAndQty(() => doUpdate(), holder);
-  } catch (e) {
-    // ✅ si crash, on débloque pour permettre un retry
-    holder.removeAttribute("data-tf-booted");
-    throw e;
   }
-}
 
   function autoBootAll() {
     document.querySelectorAll(".tripleform-cod").forEach((el) => {
@@ -4664,13 +4661,28 @@ function boot(sectionIdOrEl) {
     });
   }
 
+  // ✅ Robust auto-boot (works even if block is injected after the JS loaded)
+  function scheduleAutoBoot() {
+    autoBootAll();
+    setTimeout(autoBootAll, 200);
+    setTimeout(autoBootAll, 800);
+    setTimeout(autoBootAll, 1500);
+  }
+
   if (!window.__TripleformCOD_AutoBooted) {
     window.__TripleformCOD_AutoBooted = true;
+
     if (document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", autoBootAll);
+      document.addEventListener("DOMContentLoaded", scheduleAutoBoot);
     } else {
-      setTimeout(autoBootAll, 0);
+      scheduleAutoBoot();
     }
+
+    // Shopify Theme Editor events + final window load
+    window.addEventListener("load", scheduleAutoBoot);
+    document.addEventListener("shopify:section:load", scheduleAutoBoot);
+    document.addEventListener("shopify:section:select", scheduleAutoBoot);
+    document.addEventListener("shopify:block:select", scheduleAutoBoot);
   }
 
   return { boot };
