@@ -1,18 +1,18 @@
 {% comment %}
-Tripleform COD – Cart section
+Tripleform COD – App block (product template)
 
-✅ OLD LOGIC for data-settings / data-offers (no double JSON encoding)
-✅ Adds 3 options from GEO (shop level):
+✅ CORRECT LOGIC for data-settings / data-offers (no double JSON encoding)
+✅ Adds 3 options from GEO:
 - ui.enableCouponField
 - ui.enableVariantSelector
-✅ Cart mode true
-✅ Layout fallback
+✅ Adds cart compatibility flags + layout fallback
 ✅ reCAPTCHA v2 ONLY via data-*
 {% endcomment %}
 
+{%- assign tf_prod_val = product.metafields.tripleform_cod.settings.value -%}
 {%- assign tf_shop_val = shop.metafields.tripleform_cod.settings.value -%}
 
-{%- comment -%} ✅ reCAPTCHA config {%- endcomment -%}
+{%- comment -%} ✅ reCAPTCHA config (PUBLIC) {%- endcomment -%}
 {%- assign tf_antibot_mf = shop.metafields.tripleform_cod.antibot -%}
 {%- assign tf_recaptcha_site_key = '' -%}
 {%- assign tf_recaptcha_enabled = false -%}
@@ -24,13 +24,22 @@ Tripleform COD – Cart section
   {%- endif -%}
 {%- endif -%}
 
-{%- comment -%} ✅ UI toggles from GEO (shop) {%- endcomment -%}
+{%- comment -%} ✅ UI toggles from GEO config (product > shop fallback) {%- endcomment -%}
+{%- assign tf_geo_prod_val = product.metafields.tripleform_cod.geo.value -%}
 {%- assign tf_geo_shop_val = shop.metafields.tripleform_cod.geo.value -%}
+
 {%- assign tf_ui_coupon = false -%}
 {%- assign tf_ui_variants = false -%}
 
-{%- if tf_geo_shop_val and tf_geo_shop_val != blank -%}
-  {%- assign tf_geo = tf_geo_shop_val -%}
+{%- assign tf_geo_json = blank -%}
+{%- if tf_geo_prod_val and tf_geo_prod_val != blank -%}
+  {%- assign tf_geo_json = tf_geo_prod_val -%}
+{%- elsif tf_geo_shop_val and tf_geo_shop_val != blank -%}
+  {%- assign tf_geo_json = tf_geo_shop_val -%}
+{%- endif -%}
+
+{%- if tf_geo_json and tf_geo_json != blank -%}
+  {%- assign tf_geo = tf_geo_json -%}
   {%- if tf_geo.ui != blank -%}
     {%- if tf_geo.ui.enableCouponField == true -%}{%- assign tf_ui_coupon = true -%}{%- endif -%}
     {%- if tf_geo.ui.enableVariantSelector == true -%}{%- assign tf_ui_variants = true -%}{%- endif -%}
@@ -45,14 +54,65 @@ Tripleform COD – Cart section
 {%- assign tf_upsells_position = section.settings.upsells_position | default: 'top' -%}
 {%- assign tf_upsells_order = section.settings.upsells_order | default: 2 -%}
 
-{%- comment -%} ✅ Settings JSON (shop > default) {%- endcomment -%}
-{%- if tf_shop_val and tf_shop_val != blank -%}
+{%- comment -%} ✅ Settings JSON (product > shop > default) {%- endcomment -%}
+{%- if tf_prod_val and tf_prod_val != blank -%}
+  {%- assign tf_json = tf_prod_val -%}
+{%- elsif tf_shop_val and tf_shop_val != blank -%}
   {%- assign tf_json = tf_shop_val -%}
 {%- else -%}
   {%- assign shop_country_code = shop.country_code | default: 'MA' -%}
+
+  {%- assign phone_prefix = '+212' -%}
+  {%- assign province_label = 'Province' -%}
+  {%- assign province_placeholder = 'Select province' -%}
+  {%- assign city_label = 'City' -%}
+  {%- assign city_placeholder = 'Select city' -%}
+
+  {%- case shop_country_code -%}
+    {%- when 'MA' -%}
+      {%- assign phone_prefix = '+212' -%}
+      {%- assign city_label = 'Ville' -%}
+      {%- assign city_placeholder = 'Choisir une ville' -%}
+    {%- when 'DZ' -%}
+      {%- assign phone_prefix = '+213' -%}
+      {%- assign province_label = 'Wilaya' -%}
+      {%- assign province_placeholder = 'Select wilaya' -%}
+      {%- assign city_label = 'Commune' -%}
+      {%- assign city_placeholder = 'Choisir une commune' -%}
+    {%- when 'TN' -%}
+      {%- assign phone_prefix = '+216' -%}
+      {%- assign province_label = 'Gouvernorat' -%}
+      {%- assign province_placeholder = 'Select gouvernorat' -%}
+      {%- assign city_label = 'Ville' -%}
+      {%- assign city_placeholder = 'Choisir une ville' -%}
+    {%- when 'FR' -%}
+      {%- assign phone_prefix = '+33' -%}
+      {%- assign province_label = 'Région' -%}
+      {%- assign province_placeholder = 'Select region' -%}
+      {%- assign city_label = 'Ville' -%}
+      {%- assign city_placeholder = 'Choisir une ville' -%}
+    {%- when 'ES' -%}
+      {%- assign phone_prefix = '+34' -%}
+      {%- assign province_label = 'Provincia' -%}
+      {%- assign province_placeholder = 'Select provincia' -%}
+      {%- assign city_label = 'Ciudad' -%}
+      {%- assign city_placeholder = 'Select city' -%}
+    {%- when 'US' -%}
+      {%- assign phone_prefix = '+1' -%}
+      {%- assign province_label = 'State' -%}
+      {%- assign province_placeholder = 'Select state' -%}
+    {%- else -%}
+      {%- assign phone_prefix = '+212' -%}
+  {%- endcase -%}
+
   {%- capture tf_json -%}
   {
-    "meta": { "version": 1, "preset": "CleanWhite" },
+    "meta": {
+      "version": 1,
+      "preset": "CleanWhite",
+      "uiPreset": "{{ section.settings.ui_preset | default: 'A' }}",
+      "fieldsOrder": ["name","phone","quantity","address","city","province","notes"]
+    },
     "form": {
       "style": "inline",
       "title": "Order form",
@@ -123,10 +183,10 @@ Tripleform COD – Cart section
     },
     "fields": {
       "name": { "on": true, "required": true, "type": "text", "label": "Full name", "ph": "Your full name", "icon": "ProfileIcon" },
-      "phone": { "on": true, "required": true, "type": "tel", "label": "Phone (WhatsApp)", "ph": "Phone number", "prefix": "+212", "icon": "PhoneIcon" },
+      "phone": { "on": true, "required": true, "type": "tel", "label": "Phone (WhatsApp)", "ph": "Phone number", "prefix": "{{ phone_prefix }}", "icon": "PhoneIcon" },
       "quantity": { "on": true, "required": true, "type": "number", "label": "Quantity", "ph": "1", "min": 1, "max": 10, "icon": "HashtagIcon" },
-      "province": { "on": true, "required": false, "type": "select", "label": "Province", "ph": "Select province", "icon": "RegionIcon" },
-      "city": { "on": true, "required": false, "type": "select", "label": "City", "ph": "Select city", "icon": "CityIcon" },
+      "province": { "on": true, "required": false, "type": "select", "label": "{{ province_label }}", "ph": "{{ province_placeholder }}", "icon": "RegionIcon" },
+      "city": { "on": true, "required": false, "type": "select", "label": "{{ city_label }}", "ph": "{{ city_placeholder }}", "icon": "CityIcon" },
       "address": { "on": false, "required": false, "type": "text", "label": "Address", "ph": "Full address", "icon": "LocationIcon" },
       "notes": { "on": false, "required": false, "type": "textarea", "label": "Notes", "ph": "(optional)", "icon": "NoteIcon" }
     },
@@ -151,10 +211,13 @@ Tripleform COD – Cart section
   {%- endcapture -%}
 {%- endif -%}
 
-{%- comment -%} ✅ OFFERS / UPSELL (shop > default) {%- endcomment -%}
+{%- comment -%} ✅ OFFERS / UPSELL (product > shop > default) {%- endcomment -%}
+{%- assign tf_offers_prod_val = product.metafields.tripleform_cod.offers.value -%}
 {%- assign tf_offers_shop_val = shop.metafields.tripleform_cod.offers.value -%}
 
-{%- if tf_offers_shop_val and tf_offers_shop_val != blank -%}
+{%- if tf_offers_prod_val and tf_offers_prod_val != blank -%}
+  {%- assign tf_offers_json = tf_offers_prod_val -%}
+{%- elsif tf_offers_shop_val and tf_offers_shop_val != blank -%}
   {%- assign tf_offers_json = tf_offers_shop_val -%}
 {%- else -%}
   {%- capture tf_offers_json -%}
@@ -178,20 +241,37 @@ Tripleform COD – Cart section
   {%- endcapture -%}
 {%- endif -%}
 
+{%- comment -%} ✅ CORRECT: Always output as valid JSON {%- endcomment -%}
+{%- if tf_prod_val and tf_prod_val != blank or tf_shop_val and tf_shop_val != blank -%}
+  {%- assign tf_settings_json = tf_json | json -%}
+{%- else -%}
+  {%- assign tf_settings_json = tf_json -%}
+{%- endif -%}
+
+{%- if tf_offers_prod_val and tf_offers_prod_val != blank or tf_offers_shop_val and tf_offers_shop_val != blank -%}
+  {%- assign tf_offers_json_output = tf_offers_json | json -%}
+{%- else -%}
+  {%- assign tf_offers_json_output = tf_offers_json -%}
+{%- endif -%}
+
+{%- assign current_variant = product.selected_or_first_available_variant -%}
+
 <div
   id="tripleform-cod-{{ section.id }}"
   class="tripleform-cod"
   data-section-id="{{ section.id }}"
+  data-ui-preset="{{ section.settings.ui_preset | default: 'A' }}"
 
-  {%- comment -%} ✅ OLD LOGIC encoding {%- endcomment -%}
-  data-settings='{% if tf_shop_val and tf_shop_val != blank %}{{ tf_json | json | escape }}{% else %}{{ tf_json | strip | strip_newlines | escape }}{% endif %}'
-  data-offers='{% if tf_offers_shop_val and tf_offers_shop_val != blank %}{{ tf_offers_json | json | escape }}{% else %}{{ tf_offers_json | strip | strip_newlines | escape }}{% endif %}'
+  {%- comment -%} ✅ CORRECT: Always output as valid JSON {%- endcomment -%}
+  data-settings="{{ tf_settings_json | escape }}"
+  data-offers="{{ tf_offers_json_output | escape }}"
 
-  data-product-id=''
-  data-variant-id=''
+  data-product-id='{{ product.id }}'
+  data-variant-id='{{ current_variant.id }}'
   data-currency='{{ cart.currency.iso_code | default: shop.currency }}'
   data-locale='{{ request.locale.iso_code }}'
 
+  {%- comment -%} ✅ Layout fallback from Theme Editor {%- endcomment -%}
   data-summary-position="{{ tf_summary_position }}"
   data-summary-order="{{ tf_summary_order }}"
   data-offers-position="{{ tf_offers_position }}"
@@ -212,7 +292,7 @@ Tripleform COD – Cart section
 
   data-ui-coupon="{% if tf_ui_coupon %}true{% else %}false{% endif %}"
   data-ui-variants="{% if tf_ui_variants %}true{% else %}false{% endif %}"
-  data-cart-mode="true"
+  data-cart-mode="false"
 >
   <noscript>Enable JavaScript to use the COD form.</noscript>
 
@@ -230,8 +310,8 @@ Tripleform COD – Cart section
   {%- endif -%}
 </div>
 
-<script type="application/json" id="tf-cart-json-{{ section.id }}">
-  {{ cart | json }}
+<script type="application/json" id="tf-product-json-{{ section.id }}">
+  {{ product | json }}
 </script>
 
 <script>
@@ -250,12 +330,23 @@ Tripleform COD – Cart section
 
 {% schema %}
 {
-  "name": "Tripleform COD (Cart)",
+  "name": "Tripleform COD form",
   "target": "section",
-  "enabled_on": { "templates": ["cart"] },
+  "enabled_on": { "templates": ["product"] },
   "stylesheet": "tripleform-cod.css",
   "javascript": "tripleform.js",
   "settings": [
+    {
+      "type": "select",
+      "id": "ui_preset",
+      "label": "UI preset",
+      "default": "A",
+      "options": [
+        { "value": "A", "label": "Preset A — Clean cards" },
+        { "value": "B", "label": "Preset B — Underline + sticky bar" },
+        { "value": "C", "label": "Preset C — Glass + offers inside" }
+      ]
+    },
     {
       "type": "header",
       "content": "Blocks layout (Offers / Upsells / Summary)"
