@@ -4574,10 +4574,13 @@ function boot(sectionIdOrEl) {
 
     if (!holder) return;
 
-    if (holder.getAttribute("data-tf-booted") === "1") return;
-    holder.setAttribute("data-tf-booted", "1");
-
-    injectGlobalCSSOnce();
+    if (holder.getAttribute("data-tf-booted") === "1") {
+      // already rendered? then do nothing
+      if (holder.querySelector(".tf-shell")) return;
+      // booted but no shell (previous crash) => allow retry
+      holder.removeAttribute("data-tf-booted");
+    }
+injectGlobalCSSOnce();
 
     const cfg = parseSettingsAttr(holder);
     const offersCfg = parseOffersAttr(holder);
@@ -4646,10 +4649,31 @@ function boot(sectionIdOrEl) {
 
     const getVariant = () => getSelectedVariantId() || holder.getAttribute("data-variant-id");
 
-    const doUpdate = render(holder, cfg, offersCfg, geoCfg, product, getVariant, moneyFmt, recaptchaCfg);
+    let doUpdate;
+    try {
+      doUpdate = render(holder, cfg, offersCfg, geoCfg, product, getVariant, moneyFmt, recaptchaCfg);
+      // mark booted only after render succeeds
+      holder.setAttribute("data-tf-booted", "1");
+    } catch (e) {
+      // ensure we can retry if render fails
+      holder.removeAttribute("data-tf-booted");
+      console.error("[Tripleform COD] render failed:", e);
+
+      try {
+        const msg = (e && (e.message || String(e))) || "Unknown error";
+        const box = document.createElement("div");
+        box.className = "tf-error";
+        box.style.cssText =
+          "margin-top:12px;padding:10px;border:1px solid #ef4444;border-radius:8px;background:#fef2f2;color:#991b1b;font:12px/1.4 system-ui,sans-serif;white-space:pre-wrap";
+        box.textContent = "Tripleform COD: render failed\n" + msg;
+        holder.appendChild(box);
+      } catch (_) {}
+
+      throw e;
+    }
 
     watchVariantAndQty(() => doUpdate(), holder);
-  }
+}
 
   function autoBootAll() {
     document.querySelectorAll(".tripleform-cod").forEach((el) => {
@@ -4661,28 +4685,26 @@ function boot(sectionIdOrEl) {
     });
   }
 
-  // ✅ Robust auto-boot (works even if block is injected after the JS loaded)
-  function scheduleAutoBoot() {
-    autoBootAll();
-    setTimeout(autoBootAll, 200);
-    setTimeout(autoBootAll, 800);
-    setTimeout(autoBootAll, 1500);
-  }
-
   if (!window.__TripleformCOD_AutoBooted) {
     window.__TripleformCOD_AutoBooted = true;
 
+    const scheduleBoot = () => {
+      autoBootAll();
+      setTimeout(autoBootAll, 200);
+      setTimeout(autoBootAll, 800);
+      setTimeout(autoBootAll, 1500);
+    };
+
     if (document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", scheduleAutoBoot);
+      document.addEventListener("DOMContentLoaded", scheduleBoot);
     } else {
-      scheduleAutoBoot();
+      scheduleBoot();
     }
 
-    // Shopify Theme Editor events + final window load
-    window.addEventListener("load", scheduleAutoBoot);
-    document.addEventListener("shopify:section:load", scheduleAutoBoot);
-    document.addEventListener("shopify:section:select", scheduleAutoBoot);
-    document.addEventListener("shopify:block:select", scheduleAutoBoot);
+    window.addEventListener("load", scheduleBoot);
+    document.addEventListener("shopify:section:load", scheduleBoot);
+    document.addEventListener("shopify:section:select", scheduleBoot);
+    document.addEventListener("shopify:block:select", scheduleBoot);
   }
 
   return { boot };
