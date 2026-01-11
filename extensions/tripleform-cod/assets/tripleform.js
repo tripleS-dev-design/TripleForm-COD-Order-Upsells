@@ -4522,23 +4522,30 @@ let recaptchaToken = null;
     return ds ? String(ds) : "";
   }
 
-    function findProductJsonEl(holder, sectionId) {
-    if (holder) {
-      const inside =
-        holder.querySelector('script[id^="tf-product-json-"]') ||
-        holder.querySelector('script[data-tf-product-json]') ||
-        holder.querySelector('script[type="application/json"][data-product-json]') ||
-        null;
-      if (inside) return inside;
-    }
-
-    if (sectionId) {
-      const byLegacy = byId(`tf-product-json-${sectionId}`);
-      if (byLegacy) return byLegacy;
-    }
-
-    return document.querySelector('script[id^="tf-product-json-"]') || null;
+   function findProductJsonEl(holder, sectionId) {
+  if (holder) {
+    const inside =
+      holder.querySelector('template[id^="tf-product-json-"]') ||
+      holder.querySelector('template[data-tf-product-json]') ||
+      holder.querySelector('script[id^="tf-product-json-"]') ||
+      holder.querySelector('script[data-tf-product-json]') ||
+      holder.querySelector('script[type="application/json"][data-product-json]') ||
+      null;
+    if (inside) return inside;
   }
+
+  if (sectionId) {
+    const byLegacy = document.getElementById(`tf-product-json-${sectionId}`);
+    if (byLegacy) return byLegacy;
+  }
+
+  return (
+    document.querySelector('template[id^="tf-product-json-"]') ||
+    document.querySelector('script[id^="tf-product-json-"]') ||
+    null
+  );
+}
+
 
   function findCartJsonEl(holder, sectionId) {
     if (holder) {
