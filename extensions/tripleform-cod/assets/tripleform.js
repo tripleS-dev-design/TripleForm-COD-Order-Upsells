@@ -3009,6 +3009,10 @@ window.TripleformCOD = (function () {
     // GEO runtime (must be scoped to render, not boot)
     // ------------------------------------------------------------
     const holder = root;
+    const uiCouponEnabled = holder.getAttribute("data-ui-coupon") === "true";
+    const uiVariantsEnabled = holder.getAttribute("data-ui-variants") === "true";
+    const cartModeAttr = holder.getAttribute("data-cart-mode") || "";
+    const isCartMode = cartModeAttr === "true" || cartModeAttr === "1" || !!(product && product.__cart);
     const geoEndpoint = (geoCfg && (geoCfg.endpoint || geoCfg.geoEndpoint)) || holder.getAttribute("data-geo-endpoint") || "";
     const geoCountryAttr = holder.getAttribute("data-geo-country") || holder.getAttribute("data-geo-country-code") || "";
     const __tfGeoRemote = { pending: false, cents: null, error: null };
@@ -3396,6 +3400,52 @@ window.TripleformCOD = (function () {
       `;
     }
 
+    function variantBlockHTML() {
+      if (!uiVariantsEnabled) return "";
+      if (isCartMode) return "";
+      if (!product || !Array.isArray(product.variants) || product.variants.length <= 1) return "";
+
+      const vId = String(getVariant() || (product.variants[0] && product.variants[0].id) || "");
+      const opts = product.variants
+        .map((v) => {
+          const id = String(v.id);
+          const selected = id === vId ? " selected" : "";
+          const label = css(v.title || "Variant");
+          return `<option value="${id}"${selected}>${label}</option>`;
+        })
+        .join("");
+
+      return `
+        <div style="margin-top:10px">
+          <label style="${labelStyle}">${css("Variant")}</label>
+          <select data-tf-variant-select="1" style="${inputStyle}">
+            ${opts}
+          </select>
+        </div>
+      `;
+    }
+
+    function couponBlockHTML() {
+      if (!uiCouponEnabled) return "";
+
+      const btnMini =
+        `background:${css(d.btnBg || "#111827")};color:${css(d.btnText || "#fff")};` +
+        `border:1px solid ${css(d.btnBorder || "#111827")};border-radius:${css(d.btnRadius || 10)}px;` +
+        `padding:0 14px;height:${css(d.btnHeight || 46)}px;cursor:pointer;white-space:nowrap;`;
+
+      return `
+        <div style="margin-top:12px;display:flex;gap:10px;align-items:end;">
+          <div style="flex:1;min-width:0">
+            <label style="${labelStyle}">${css("Coupon / Promo code")}</label>
+            <input data-tf-coupon="1" type="text" style="${inputStyle}" placeholder="${css("Enter code")}" />
+          </div>
+          <button type="button" data-tf-coupon-apply="1" style="${btnMini}">
+            ${css(ui.applyCoupon || "Apply")}
+          </button>
+        </div>
+      `;
+    }
+
     function formCardHTML(ctaKey, isPopupOrDrawer = false) {
       const orderLabel = css(ui.orderNow || cfg.form?.buttonText || "Order now");
       const suffix = css(ui.totalSuffix || "Total:");
@@ -3428,6 +3478,8 @@ window.TripleformCOD = (function () {
 
             ${fieldsBlockHTML()}
 
+            ${variantBlockHTML()}
+
             ${
               beh?.requireGDPR
                 ? `
@@ -3454,6 +3506,8 @@ window.TripleformCOD = (function () {
             }
 
             ${insideBlocksHtml ? `<div style="height:10px"></div>${insideBlocksHtml}` : ""}
+
+            ${couponBlockHTML()}
 
             <button type="button" style="${btnStyle}; margin-top:16px;"
               class="${motionClass}"
@@ -3586,6 +3640,34 @@ window.TripleformCOD = (function () {
 
     root.innerHTML = html;
 
+    // ✅ UI toggles (coupon / variants)
+    try {
+      const vSel = root.querySelector('[data-tf-variant-select="1"]');
+      if (vSel) {
+        vSel.addEventListener('change', (e) => {
+          const v = String(e.target && e.target.value ? e.target.value : '').trim();
+          if (v) root.setAttribute('data-variant-id', v);
+          try { updateMoney(); } catch (err) {}
+        });
+      }
+
+      const couponInp = root.querySelector('[data-tf-coupon="1"]');
+      const couponBtn = root.querySelector('[data-tf-coupon-apply="1"]');
+      if (couponInp) {
+        couponInp.value = root.getAttribute('data-coupon') || '';
+        couponInp.addEventListener('input', () => {
+          root.setAttribute('data-coupon', String(couponInp.value || '').trim());
+        });
+      }
+      if (couponBtn && couponInp) {
+        couponBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          root.setAttribute('data-coupon', String(couponInp.value || '').trim());
+          try { updateMoney(); } catch (err) {}
+        });
+      }
+    } catch (e) {}
+
     // ✅ reCAPTCHA v2: render checkbox widget if enabled
     if (recaptchaCfg && recaptchaCfg.enabled) {
       ensureRecaptchaV2Widget(root, recaptchaCfg);
@@ -3657,6 +3739,20 @@ window.TripleformCOD = (function () {
     }
 
     function computeProductTotals() {
+      // ✅ Cart mode: compute from cart json
+      if (isCartMode && product && product.__cart) {
+        const cart = product.__cart || {};
+        const items = Array.isArray(cart.items) ? cart.items : [];
+        const qty = items.reduce((a, it) => a + Number(it.quantity || 0), 0) || 1;
+
+        const baseTotalCents =
+          Number(cart.items_subtotal_price ?? cart.total_price ?? 0) || 0;
+
+        const priceCents = qty ? Math.round(baseTotalCents / qty) : 0;
+
+        return { priceCents, baseTotalCents, qty, variantId: null, cartItems: items };
+      }
+
       const vId = getVariant();
       const qty = getQty(root);
       const variant =
@@ -4215,6 +4311,21 @@ let recaptchaToken = null;
         recaptchaAction: recaptchaCfg?.expectedAction || recaptchaCfg?.action || "tf_submit",
       };
 
+      // ✅ Extra payload
+      payload.couponCode = uiCouponEnabled ? String(root.getAttribute("data-coupon") || "").trim() : "";
+
+      if (isCartMode && product && product.__cart) {
+        const items = Array.isArray(product.__cart.items) ? product.__cart.items : [];
+        payload.cart = {
+          token: product.__cart.token || null,
+          items: items.map((i) => ({
+            productId: i.product_id,
+            variantId: i.variant_id,
+            quantity: i.quantity,
+          })),
+        };
+      }
+
       const formCard = root.querySelector('[data-tf-role="form-card"]');
       const btn = formCard ? formCard.querySelector('[data-tf-cta="1"]') : null;
       const originalHTML = btn ? btn.innerHTML : "";
@@ -4421,6 +4532,25 @@ let recaptchaToken = null;
       if (inside) return inside;
     }
 
+
+  function findCartJsonEl(holder, sectionId) {
+    if (holder) {
+      const inside =
+        holder.querySelector('script[id^="tf-cart-json-"]') ||
+        holder.querySelector('script[data-tf-cart-json]') ||
+        null;
+      if (inside) return inside;
+    }
+
+    if (sectionId) {
+      const byLegacy = byId(`tf-cart-json-${sectionId}`);
+      if (byLegacy) return byLegacy;
+    }
+
+    return document.querySelector('script[id^="tf-cart-json-"]') || null;
+  }
+
+
     if (sectionId) {
       const byLegacy = byId(`tf-product-json-${sectionId}`);
       if (byLegacy) return byLegacy;
@@ -4502,12 +4632,19 @@ let recaptchaToken = null;
     };
 
     const prodEl = findProductJsonEl(holder, sectionId);
-    if (!prodEl) {
-      console.error("[Tripleform COD] product JSON introuvable");
+    const cartEl = findCartJsonEl(holder, sectionId);
+
+    let product = null;
+
+    if (prodEl) {
+      product = safeJsonParse(prodEl.textContent || "{}", { variants: [] });
+    } else if (cartEl) {
+      const cart = safeJsonParse(cartEl.textContent || "{}", {});
+      product = { id: null, title: "Cart", variants: [], __cart: cart };
+    } else {
+      console.error("[Tripleform COD] product/cart JSON introuvable");
       return;
     }
-
-    const product = safeJsonParse(prodEl.textContent || "{}", { variants: [] });
 
     const getVariant = () => getSelectedVariantId() || holder.getAttribute("data-variant-id");
 

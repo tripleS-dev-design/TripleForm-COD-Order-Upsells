@@ -1,13 +1,11 @@
 {% comment %}
-Tripleform COD – App block (product template)
+Tripleform COD – App block (cart template)
 
 Lit la config form depuis:
-- product.metafields.tripleform_cod.settings (prioritaire)
-- shop.metafields.tripleform_cod.settings (fallback)
+- shop.metafields.tripleform_cod.settings (fallback si pas de produit)
 
 Lit la config OFFRES / UPSELL depuis:
-- product.metafields.tripleform_cod.offers (prioritaire)
-- shop.metafields.tripleform_cod.offers (fallback)
+- shop.metafields.tripleform_cod.offers
 
 ✅ Layout blocks (offers / upsells / summary)
 - Priorité: cfg.behavior.blocksLayout (venant du metafield via data-settings)
@@ -20,10 +18,11 @@ Lit la config OFFRES / UPSELL depuis:
 
 ✅ UI toggles (coupon, variant selector, cart block support)
 - lit la config depuis shop.metafields.tripleform_cod.geo (ui.enableCouponField, ui.enableVariantSelector, ui.enableCartBlock)
-- passe via data-ui-coupon, data-ui-variants, data-cart-mode (toujours false pour le produit)
+- passe via data-ui-coupon, data-ui-variants, data-cart-mode (true pour le panier)
+
+✅ Injecte le JSON du panier dans un script avec l'ID tf-cart-json-{{ section.id }}
 {% endcomment %}
 
-{%- assign tf_prod_val = product.metafields.tripleform_cod.settings.value -%}
 {%- assign tf_shop_val = shop.metafields.tripleform_cod.settings.value -%}
 
 {%- comment -%}
@@ -43,22 +42,14 @@ Sans parse_json (theme-check)
 
 {%- comment -%}
 ✅ UI toggles from GEO config (shop.metafields.tripleform_cod.geo)
-Priorité: product.metafields.tripleform_cod.geo, puis shop.metafields.tripleform_cod.geo
 {%- endcomment -%}
-{%- assign tf_geo_prod_val = product.metafields.tripleform_cod.geo.value -%}
 {%- assign tf_geo_shop_val = shop.metafields.tripleform_cod.geo.value -%}
 
 {%- assign tf_ui_coupon = false -%}
 {%- assign tf_ui_variants = false -%}
 
-{%- if tf_geo_prod_val and tf_geo_prod_val != blank -%}
-  {%- assign tf_geo_json = tf_geo_prod_val -%}
-{%- elsif tf_geo_shop_val and tf_geo_shop_val != blank -%}
-  {%- assign tf_geo_json = tf_geo_shop_val -%}
-{%- endif -%}
-
-{%- if tf_geo_json and tf_geo_json != blank -%}
-  {%- assign tf_geo = tf_geo_json -%}
+{%- if tf_geo_shop_val and tf_geo_shop_val != blank -%}
+  {%- assign tf_geo = tf_geo_shop_val -%}
   {%- if tf_geo.ui != blank -%}
     {%- if tf_geo.ui.enableCouponField == true -%}
       {%- assign tf_ui_coupon = true -%}
@@ -80,9 +71,7 @@ Priorité: product.metafields.tripleform_cod.geo, puis shop.metafields.triplefor
 {%- assign tf_upsells_position = section.settings.upsells_position | default: 'top' -%}
 {%- assign tf_upsells_order = section.settings.upsells_order | default: 2 -%}
 
-{%- if tf_prod_val and tf_prod_val != blank -%}
-  {%- assign tf_json = tf_prod_val -%}
-{%- elsif tf_shop_val and tf_shop_val != blank -%}
+{%- if tf_shop_val and tf_shop_val != blank -%}
   {%- assign tf_json = tf_shop_val -%}
 {%- else -%}
   {%- comment -%}Déterminer le pays et les valeurs par défaut basées sur la boutique{%- endcomment -%}
@@ -185,7 +174,7 @@ Priorité: product.metafields.tripleform_cod.geo, puis shop.metafields.triplefor
     {%- when 'BR' -%}
       {%- assign phone_prefix = '+55' -%}
       {%- assign province_label = 'State' -%}
-      {%- assign province_placeholder = 'Select state' -%}
+      {%- assign province_placeholder = "Select state" -%}
       {%- assign city_label = 'City' -%}
       {%- assign city_placeholder = 'Select city' -%}
     {%- else -%}
@@ -352,16 +341,12 @@ Priorité: product.metafields.tripleform_cod.geo, puis shop.metafields.triplefor
 {%- comment %}
 OFFRES / UPSELL
 Ces données sont écrites par /api/save-offers dans:
-- product.metafields.tripleform_cod.offers (prioritaire)
 - shop.metafields.tripleform_cod.offers (fallback)
 {%- endcomment -%}
 
-{%- assign tf_offers_prod_val = product.metafields.tripleform_cod.offers.value -%}
 {%- assign tf_offers_shop_val = shop.metafields.tripleform_cod.offers.value -%}
 
-{%- if tf_offers_prod_val and tf_offers_prod_val != blank -%}
-  {%- assign tf_offers_json = tf_offers_prod_val -%}
-{%- elsif tf_offers_shop_val and tf_offers_shop_val != blank -%}
+{%- if tf_offers_shop_val and tf_offers_shop_val != blank -%}
   {%- assign tf_offers_json = tf_offers_shop_val -%}
 {%- else -%}
   {%- capture tf_offers_json -%}
@@ -385,17 +370,15 @@ Ces données sont écrites par /api/save-offers dans:
   {%- endcapture -%}
 {%- endif -%}
 
-{%- assign current_variant = product.selected_or_first_available_variant -%}
-
 <div
   id="tripleform-cod-{{ section.id }}"
   class="tripleform-cod"
 
-  data-settings='{% if tf_prod_val and tf_prod_val != blank or tf_shop_val and tf_shop_val != blank %}{{ tf_json | json | escape }}{% else %}{{ tf_json | strip | escape }}{% endif %}'
-  data-offers='{% if tf_offers_prod_val and tf_offers_prod_val != blank or tf_offers_shop_val and tf_offers_shop_val != blank %}{{ tf_offers_json | json | escape }}{% else %}{{ tf_offers_json | strip | escape }}{% endif %}'
+  data-settings='{% if tf_shop_val and tf_shop_val != blank %}{{ tf_json | json | escape }}{% else %}{{ tf_json | strip | escape }}{% endif %}'
+  data-offers='{% if tf_offers_shop_val and tf_offers_shop_val != blank %}{{ tf_offers_json | json | escape }}{% else %}{{ tf_offers_json | strip | escape }}{% endif %}'
 
-  data-product-id='{{ product.id }}'
-  data-variant-id='{{ current_variant.id }}'
+  data-product-id=''
+  data-variant-id=''
   data-currency='{{ cart.currency.iso_code | default: shop.currency }}'
   data-locale='{{ request.locale.iso_code }}'
 
@@ -421,7 +404,7 @@ Ces données sont écrites par /api/save-offers dans:
   {%- comment -%} ✅ UI toggles from GEO config {%- endcomment -%}
   data-ui-coupon="{% if tf_ui_coupon %}true{% else %}false{% endif %}"
   data-ui-variants="{% if tf_ui_variants %}true{% else %}false{% endif %}"
-  data-cart-mode="false"
+  data-cart-mode="true"
 >
   <noscript>Enable JavaScript to use the COD form.</noscript>
 
@@ -439,8 +422,8 @@ Ces données sont écrites par /api/save-offers dans:
   {%- endif -%}
 </div>
 
-<script type="application/json" id="tf-product-json-{{ section.id }}">
-  {{ product | json }}
+<script type="application/json" id="tf-cart-json-{{ section.id }}">
+  {{ cart | json }}
 </script>
 
 <script>
@@ -459,9 +442,9 @@ Ces données sont écrites par /api/save-offers dans:
 
 {% schema %}
 {
-  "name": "Tripleform COD form",
+  "name": "Tripleform COD (Cart)",
   "target": "section",
-  "enabled_on": { "templates": ["product"] },
+  "enabled_on": { "templates": ["cart"] },
   "stylesheet": "tripleform-cod.css",
   "javascript": "tripleform.js",
   "settings": [
