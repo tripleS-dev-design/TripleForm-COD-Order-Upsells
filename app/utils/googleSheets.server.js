@@ -322,6 +322,40 @@ function pickUpsellName(order) {
 }
 
 /**
+ * ✅ NEW: récupère un CODE PROMO de n'importe quel endroit (cart/fields/top-level)
+ */
+function pickCouponCode(order) {
+  const o = order || {};
+  const cart = o.cart || {};
+  const fields = o.fields || {};
+  const ord = o.order || {};
+  const customer = o.customer || {};
+
+  return firstNonEmpty(
+    cart.couponCode,
+    cart.promoCode,
+    cart.discountCode,
+    cart.coupon,
+    cart.promo,
+    cart.discount_code,
+
+    o.couponCode,
+    o.promoCode,
+    o.discountCode,
+
+    fields.couponCode,
+    fields.coupon_code,
+    fields.promoCode,
+    fields.promo_code,
+    fields.discountCode,
+    fields.discount_code,
+
+    customer.couponCode,
+    ord.couponCode
+  );
+}
+
+/**
  * Transforme un appField en vraie valeur
  */
 function resolveAppField(order, appField) {
@@ -359,6 +393,18 @@ function resolveAppField(order, appField) {
       return cart.productTitle || "";
     case "cart.variantTitle":
       return cart.variantTitle || "";
+
+    // ✅ NEW: CODE PROMO / COUPON
+    case "cart.couponCode":
+    case "cart.promoCode":
+    case "cart.discountCode":
+    case "couponCode":
+    case "promoCode":
+    case "discountCode":
+    case "fields.couponCode":
+    case "fields.promoCode":
+    case "fields.discountCode":
+      return pickCouponCode(order);
 
     // ✅ FIX: offers/upsells fallback (accept multiple appField names from UI/old configs)
     case "cart.offerName":

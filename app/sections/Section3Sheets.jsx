@@ -639,6 +639,8 @@ const APP_FIELDS = [
   { label: "section3.fields.cart.currency", value: "cart.currency" },
   { label: "section3.fields.order.id", value: "order.id" },
   { label: "section3.fields.order.date", value: "order.date" },
+  { label: "section3.fields.cart.couponCode", value: "cart.couponCode" },
+
 ];
 
 function inferType(v = "") {

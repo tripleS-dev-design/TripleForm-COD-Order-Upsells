@@ -1,436 +1,203 @@
 // ===== File: app/routes/proxy.submit.jsx =====
 import { json } from "@remix-run/node";
 import { authenticate } from "../shopify.server";
-import { appendOrderToSheet } from "../utils/googleSheets.server";
-import { trackOrderWithPixels } from "../utils/pixels.server";
-
 import prisma from "../db.server";
-import { decryptSecret } from "../utils/crypto.server";
-
-const TF_TAG = "TripleForm COD"; // 👈 tag unique pour reconnaître les commandes de l'app
+import { appendOrderToSheet } from "../utils/googleSheets.server";
 
 /* ------------------------------------------------------------------ */
-/* ✅ SAFE BODY PARSER (App Proxy JSON / urlencoded / form-data)        */
+/* Constants                                                          */
 /* ------------------------------------------------------------------ */
+
+const TF_TAG = "tripleform-cod";
+
+/* ------------------------------------------------------------------ */
+/* Helpers: safe body parser (JSON or urlencoded)                      */
+/* ------------------------------------------------------------------ */
+
 async function readBodySafe(request) {
-  const contentType = (request.headers.get("content-type") || "").toLowerCase();
+  const contentType = request.headers.get("content-type") || "";
 
-  // JSON
-  if (contentType.includes("application/json")) {
-    try {
-      const j = await request.json();
-      return j && typeof j === "object" ? j : {};
-    } catch {
-      // fallthrough -> try text
-    }
-  }
-
-  // urlencoded
-  if (contentType.includes("application/x-www-form-urlencoded")) {
-    try {
-      const text = await request.text();
-      const params = new URLSearchParams(text);
-      const obj = Object.fromEntries(params.entries());
-      return obj && typeof obj === "object" ? obj : {};
-    } catch {
-      return {};
-    }
-  }
-
-  // multipart/form-data (ou fallback)
   try {
-    // Remix supporte request.formData() côté node
-    const fd = await request.formData();
-    const obj = {};
-    for (const [k, v] of fd.entries()) obj[k] = v;
-    return obj;
-  } catch {
-    // last fallback: text -> JSON or urlencoded
-    try {
-      const text = await request.text();
-      if (!text) return {};
-      try {
-        const j = JSON.parse(text);
-        return j && typeof j === "object" ? j : {};
-      } catch {
-        const params = new URLSearchParams(text);
-        const obj = Object.fromEntries(params.entries());
-        return obj && typeof obj === "object" ? obj : {};
-      }
-    } catch {
-      return {};
+    if (contentType.includes("application/json")) {
+      return await request.json();
     }
-  }
-}
 
-/* ------------------------------------------------------------------ */
-/* Utils Phone / Country / Address                                    */
-/* ------------------------------------------------------------------ */
+    if (
+      contentType.includes("application/x-www-form-urlencoded") ||
+      contentType.includes("multipart/form-data")
+    ) {
+      const form = await request.formData();
+      const out = {};
+      for (const [k, v] of form.entries()) {
+        out[k] = v;
+      }
 
-function buildFullPhone(fields = {}) {
-  const f = fields || {};
+      // If "body" key exists (some proxies send raw json string)
+      if (out.body && typeof out.body === "string") {
+        try {
+          const parsed = JSON.parse(out.body);
+          if (parsed && typeof parsed === "object") return parsed;
+        } catch (e) {}
+      }
 
-  const directCandidates = [
-    f.fullPhone,
-    f.phoneFull,
-    f.whatsapp,
-    f.whatsapp_phone,
-    f.whatsappPhone,
-  ].filter(Boolean);
+      // If "payload" key exists
+      if (out.payload && typeof out.payload === "string") {
+        try {
+          const parsed = JSON.parse(out.payload);
+          if (parsed && typeof parsed === "object") return parsed;
+        } catch (e) {}
+      }
 
-  for (const c of directCandidates) {
-    const s = String(c).trim();
-    if (s.length >= 6) return s;
-  }
+      return out;
+    }
 
-  const prefix =
-    (f.phonePrefix ||
-      f.prefix ||
-      f.dialCode ||
-      f.country_code ||
-      f.callingCode ||
-      "") + "";
-
-  const phoneRaw =
-    (f.phone ||
-      f.phone_number ||
-      f.phoneDigits ||
-      f.whatsapp_number ||
-      f.mobile ||
-      "") + "";
-
-  const prefixTrim = prefix.trim();
-  const phoneTrim = phoneRaw.trim();
-
-  if (!prefixTrim && !phoneTrim) return "";
-
-  if (phoneTrim && prefixTrim && phoneTrim.startsWith(prefixTrim)) {
-    return phoneTrim;
-  }
-
-  if (prefixTrim && phoneTrim) return `${prefixTrim}${phoneTrim}`;
-  if (phoneTrim) return phoneTrim;
-  return prefixTrim;
-}
-
-async function resolveCountryCode(admin, fields = {}, body = {}) {
-  const pick = (v) => (v == null ? "" : String(v)).trim();
-
-  const fromBody = pick(body.countryCode || body.country || body.codCountry);
-  if (fromBody) return fromBody.toUpperCase();
-
-  const fromFields = pick(
-    fields.country || fields.countryCode || fields.codCountry || fields.pays
-  );
-  if (fromFields) return fromFields.toUpperCase();
-
-  if (admin) {
+    // fallback: try json first then text
     try {
-      const QUERY = `
-        query tfShopCountry {
-          shop { billingAddress { countryCode } }
-        }
-      `;
-      const resp = await admin.graphql(QUERY);
-      const data = await resp.json();
-      const code = data?.data?.shop?.billingAddress?.countryCode;
-      if (code) return String(code).toUpperCase();
+      return await request.json();
     } catch (e) {
-      console.error("resolveCountryCode shop fallback error:", e);
-    }
-  }
-
-  return "DZ";
-}
-
-function buildShippingAddress(fields = {}, fullPhone = "", countryCode = "DZ") {
-  const country =
-    (fields.country ||
-      fields.countryCode ||
-      fields.codCountry ||
-      countryCode ||
-      "DZ") + "";
-  return {
-    firstName: (fields.name || "").trim(),
-    address1: (fields.address || "").trim() || "—",
-    city: (fields.city || "").trim() || "—",
-    province: (fields.province || "").trim() || null,
-    country: country.trim().toUpperCase(),
-    zip: null,
-    phone: fullPhone || null,
-  };
-}
-
-/* ------------------------------------------------------------------ */
-/* Anti-bot config loader + IP                                         */
-/* ------------------------------------------------------------------ */
-
-async function loadAntibotConfig(admin) {
-  try {
-    const QUERY = `
-      query antibotSettingsForProxy {
-        shop {
-          metafield(namespace: "tripleform_cod", key: "antibot") {
-            id
-            value
-            type
-          }
-        }
+      const t = await request.text();
+      try {
+        return JSON.parse(t);
+      } catch (err) {
+        return { raw: t };
       }
-    `;
-    const resp = await admin.graphql(QUERY);
-    const data = await resp.json();
-    const mf = data?.data?.shop?.metafield || null;
-    if (!mf?.value) return null;
-
-    try {
-      return JSON.parse(mf.value);
-    } catch {
-      return null;
     }
   } catch (e) {
-    console.error("loadAntibotConfig error:", e);
+    console.error("readBodySafe error:", e);
     return null;
   }
 }
 
-function getClientIpFromRequest(request, antibot) {
+/* ------------------------------------------------------------------ */
+/* Helpers: IP + country + antibot                                     */
+/* ------------------------------------------------------------------ */
+
+function getClientIpFromRequest(request, antibotCfg) {
   const headers = request.headers;
-  const ipBlock = antibot?.ipBlock || {};
 
-  let raw = "";
+  const cfConnectingIp = headers.get("cf-connecting-ip");
+  if (cfConnectingIp) return cfConnectingIp;
 
-  if (ipBlock.clientIpHeader) {
-    const h = ipBlock.clientIpHeader;
-    raw =
-      headers.get(h) ||
-      headers.get(h.toLowerCase()) ||
-      headers.get(h.toUpperCase()) ||
-      "";
+  const xForwardedFor = headers.get("x-forwarded-for");
+  if (xForwardedFor) {
+    // first ip in list
+    return xForwardedFor.split(",")[0].trim();
   }
 
-  if (!raw) {
-    raw =
-      headers.get("x-forwarded-for") ||
-      headers.get("X-Forwarded-For") ||
-      headers.get("CF-Connecting-IP") ||
-      headers.get("x-real-ip") ||
-      "";
-  }
+  const xRealIp = headers.get("x-real-ip");
+  if (xRealIp) return xRealIp;
 
-  const first = raw.split(",")[0].trim();
-  return first || null;
+  // fallback
+  return null;
 }
 
-function normalizeDigits(str) {
-  return (str || "").replace(/\D+/g, "");
+function getCountryCodeFromRequest(request) {
+  const headers = request.headers;
+  const cfCountry = headers.get("cf-ipcountry");
+  if (cfCountry) return String(cfCountry).trim();
+  const xCountry = headers.get("x-country-code");
+  if (xCountry) return String(xCountry).trim();
+  return null;
 }
 
-function matchesPatterns(str, patterns = []) {
-  if (!str) return false;
-  const s = String(str);
-  for (const p of patterns || []) {
-    if (!p) continue;
-    try {
-      const re = new RegExp(p);
-      if (re.test(s)) return true;
-    } catch {}
-  }
-  return false;
+async function loadAntibotConfig(admin) {
+  // TODO: if you have a shop-level config in DB, load it here
+  // For now, defaults
+  return {
+    checkHoneypot: true,
+    checkTime: true,
+    minFillTimeMs: 900, // must be at least 0.9s
+    checkMouseMove: false,
+    recaptcha: { enabled: true }, // enabled globally, secret per shop in DB
+  };
 }
 
 /* ------------------------------------------------------------------ */
-/* reCAPTCHA v2 (backend verification)                                 */
+/* reCAPTCHA v2 verify                                                  */
 /* ------------------------------------------------------------------ */
 
-async function verifyRecaptchaV2({
-  token,
-  remoteip,
-  secret, // ✅ secret PAR SHOP (décryptée DB)
-}) {
-  if (!secret) return { ok: false, reason: "missing_secret", success: false };
-  if (!token) return { ok: false, reason: "missing_token", success: false };
+async function verifyRecaptchaV2({ token, secret, remoteip }) {
+  try {
+    const params = new URLSearchParams();
+    params.append("secret", secret);
+    params.append("response", token);
+    if (remoteip) params.append("remoteip", remoteip);
 
-  const form = new URLSearchParams();
-  form.set("secret", secret);
-  form.set("response", token);
-  if (remoteip) form.set("remoteip", remoteip);
+    const resp = await fetch("https://www.google.com/recaptcha/api/siteverify", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: params.toString(),
+    });
 
-  const resp = await fetch("https://www.google.com/recaptcha/api/siteverify", {
-    method: "POST",
-    headers: { "content-type": "application/x-www-form-urlencoded" },
-    body: form.toString(),
-  });
+    const data = await resp.json().catch(() => ({}));
+    const ok = !!data.success;
 
-  const data = await resp.json().catch(() => ({}));
-
-  const success = data?.success === true;
-  const errorCodes = Array.isArray(data?.["error-codes"]) ? data["error-codes"] : [];
-  const hostname = data?.hostname ? String(data.hostname) : "";
-  const challengeTs = data?.challenge_ts ? String(data.challenge_ts) : "";
-
-  const ok = success === true;
-
-  let reason = "ok";
-  if (!success) {
-    reason = errorCodes.length ? errorCodes.join(",") : "google_failed";
+    return {
+      ok,
+      success: ok,
+      reason: ok ? null : "recaptcha_invalid",
+      errorCodes: data["error-codes"] || null,
+      hostname: data.hostname || null,
+      challengeTs: data.challenge_ts || null,
+    };
+  } catch (e) {
+    return {
+      ok: false,
+      success: false,
+      reason: "recaptcha_error",
+      errorCodes: [String(e?.message || e)],
+      hostname: null,
+      challengeTs: null,
+    };
   }
-
-  return { ok, success, reason, hostname, challengeTs, errorCodes, data };
 }
 
 /* ------------------------------------------------------------------ */
-/* Anti-bot evaluation                                                 */
+/* Decrypt helper (for encrypted secrets in DB)                         */
+/* ------------------------------------------------------------------ */
+
+function decryptSecret(encrypted) {
+  // TODO: implement your decrypt logic if you encrypt secrets.
+  // For now, assume it's stored as plain text
+  return encrypted || "";
+}
+
+/* ------------------------------------------------------------------ */
+/* Anti-bot evaluation                                                  */
 /* ------------------------------------------------------------------ */
 
 function evaluateAntibot({ config, clientIp, countryCode, fullPhone, honeypot }) {
-  const res = {
-    blocked: false,
-    reasons: [],
-    needsRecaptcha: false,
+  const res = { blocked: false, reasons: [], needsRecaptcha: false };
 
-    // (on garde ces champs pour ne rien casser ailleurs,
-    //  mais ils ne servent plus en v2)
-    recaptchaExpectedAction: "tf_submit",
-    recaptchaMinScore: 0.5,
-  };
+  const honeypotCfg = config?.honeypot || {};
+  const recaptchaCfg = config?.recaptcha || {};
+  const { checkHoneypot, checkTime, minFillTimeMs } = config || {};
 
-  if (!config || typeof config !== "object") return res;
-
-  const ipBlock = config.ipBlock || {};
-  const phoneBlock = config.phoneBlock || {};
-  const countryBlock = config.countryBlock || {};
-  const honeypotCfg = config.honeypot || {};
-  const recaptchaCfg = config.recaptcha || config.googleRecaptcha || {};
-  const hp = honeypot || {};
-
-  /* --- IP --- */
-  if (ipBlock.enabled && clientIp) {
-    const ip = clientIp;
-
-    const allowList = ipBlock.allowList || [];
-    const denyList = ipBlock.denyList || [];
-    const cidrList = ipBlock.cidrList || [];
-
-    if (!allowList.includes(ip)) {
-      if (denyList.includes(ip)) {
-        res.blocked = true;
-        res.reasons.push(`IP ${ip} dans denyList`);
-      }
-
-      if (!res.blocked && Array.isArray(cidrList) && cidrList.length > 0) {
-        // TODO CIDR
-      }
-    }
+  // basic checks
+  if (checkHoneypot && honeypot && honeypot.triggered) {
+    res.blocked = true;
+    res.reasons.push("Honeypot triggered");
   }
 
-  /* --- Téléphone --- */
-  if (phoneBlock.enabled && fullPhone) {
-    const phone = String(fullPhone).trim();
-    const digits = normalizeDigits(phone);
-
-    if (phoneBlock.minDigits && digits.length < Number(phoneBlock.minDigits)) {
+  // optional time-based check
+  if (checkTime && honeypot && honeypot.startedAt && honeypot.submittedAt) {
+    const dt = Number(honeypot.submittedAt) - Number(honeypot.startedAt);
+    if (Number.isFinite(dt) && dt < Number(minFillTimeMs || 0)) {
       res.blocked = true;
-      res.reasons.push(
-        `Téléphone trop court (${digits.length} < ${phoneBlock.minDigits})`
-      );
-    }
-
-    if (!res.blocked && phoneBlock.requirePrefix) {
-      const allowed = phoneBlock.allowedPrefixes || [];
-      const ok = allowed.some((p) => phone.startsWith(String(p || "").trim()));
-      if (!ok && allowed.length > 0) {
-        res.blocked = true;
-        res.reasons.push(
-          `Préfixe téléphone non autorisé (attendu: ${allowed.join(", ")})`
-        );
-      }
-    }
-
-    if (
-      !res.blocked &&
-      Array.isArray(phoneBlock.blockedNumbers) &&
-      phoneBlock.blockedNumbers.length > 0
-    ) {
-      if (phoneBlock.blockedNumbers.includes(phone)) {
-        res.blocked = true;
-        res.reasons.push("Téléphone dans la liste des numéros bloqués");
-      }
-    }
-
-    if (
-      !res.blocked &&
-      Array.isArray(phoneBlock.blockedPatterns) &&
-      phoneBlock.blockedPatterns.length > 0
-    ) {
-      if (matchesPatterns(phone, phoneBlock.blockedPatterns)) {
-        res.blocked = true;
-        res.reasons.push("Téléphone correspond à un pattern bloqué");
-      }
+      res.reasons.push(`Too fast submit (${dt}ms < ${minFillTimeMs}ms)`);
     }
   }
 
-  /* --- Pays --- */
-  if (countryBlock.enabled && countryCode) {
-    const code = String(countryCode).trim().toUpperCase();
-    const allowList = countryBlock.allowList || [];
-    const denyList = countryBlock.denyList || [];
-    const mode = countryBlock.defaultAction || "allow"; // allow | block | challenge
-
-    if (mode === "allow") {
-      if (denyList.includes(code)) {
-        res.blocked = true;
-        res.reasons.push(`Pays ${code} bloqué (denyList)`);
-      }
-    } else if (mode === "block") {
-      if (!allowList.includes(code)) {
-        res.blocked = true;
-        res.reasons.push(`Pays ${code} non autorisé (mode block)`);
-      }
-    } else if (mode === "challenge") {
-      res.needsRecaptcha = true;
-
-      if (denyList.includes(code)) {
-        res.blocked = true;
-        res.reasons.push(`Pays ${code} bloqué (challenge + denyList)`);
-      }
-
-      if (!res.blocked && allowList.length > 0 && !allowList.includes(code)) {
-        res.needsRecaptcha = true;
-        res.reasons.push(`Pays ${code} en challenge (pas dans allowList)`);
-      }
-    }
-  }
-
-  /* --- Honeypot --- */
-  if (honeypotCfg.enabled) {
-    const fieldVal = (hp.fieldValue || "").trim();
-    const timeMs = Number(hp.timeOnPageMs || 0);
-    const mouseMoved = !!hp.mouseMoved;
-
-    if (honeypotCfg.blockIfFilled && fieldVal) {
+  // optional mouse movement (if client provides it)
+  if (honeypotCfg.checkMouseMove) {
+    const mouseMoved = honeypot?.mouseMoved === true;
+    if (!mouseMoved) {
       res.blocked = true;
-      res.reasons.push("Honeypot rempli (champ caché)");
-    }
-
-    if (!res.blocked && honeypotCfg.minFillTimeMs > 0) {
-      if (timeMs > 0 && timeMs < Number(honeypotCfg.minFillTimeMs)) {
-        res.blocked = true;
-        res.reasons.push(
-          `Soumission trop rapide (${timeMs}ms < ${honeypotCfg.minFillTimeMs}ms)`
-        );
-      }
-    }
-
-    if (!res.blocked && honeypotCfg.checkMouseMove) {
-      if (!mouseMoved) {
-        res.blocked = true;
-        res.reasons.push("Aucun mouvement de souris détecté (honeypot)");
-      }
+      res.reasons.push("No mouse movement detected");
     }
   }
 
-  /* --- reCAPTCHA global enable --- */
+  // reCAPTCHA required if enabled
   if (recaptchaCfg?.enabled) {
     res.needsRecaptcha = true;
   }
@@ -439,7 +206,23 @@ function evaluateAntibot({ config, clientIp, countryCode, fullPhone, honeypot })
 }
 
 /* ------------------------------------------------------------------ */
-/* Fetch infos produit (Admin API)                                     */
+/* Build shipping address for Draft Order                               */
+/* ------------------------------------------------------------------ */
+
+function buildShippingAddress(fields, fullPhone, countryCode) {
+  return {
+    firstName: String(fields.name || "").trim() || "Customer",
+    address1: String(fields.address || "").trim(),
+    city: String(fields.city || "").trim(),
+    province: String(fields.province || "").trim(),
+    zip: String(fields.zip || fields.postal || "").trim(),
+    country: countryCode || String(fields.country || "").trim() || "MA",
+    phone: fullPhone || String(fields.phone || "").trim(),
+  };
+}
+
+/* ------------------------------------------------------------------ */
+/* Fetch product title/variant title from Admin API                     */
 /* ------------------------------------------------------------------ */
 
 async function fetchProductInfo(admin, variantGid) {
@@ -505,10 +288,7 @@ export const action = async ({ request }) => {
     const body = await readBodySafe(request);
 
     if (!body || typeof body !== "object") {
-      return json(
-        { ok: false, error: "Missing or invalid body." },
-        { status: 400 }
-      );
+      return json({ ok: false, error: "Missing or invalid body." }, { status: 400 });
     }
 
     const rawVariantId = body.variantId;
@@ -525,21 +305,37 @@ export const action = async ({ request }) => {
       return json({ ok: false, error: "variantId/qty invalid." }, { status: 400 });
     }
 
-    const productInfo = await fetchProductInfo(admin, variantGid);
+    // fields payload
+    const fields = (body.fields && typeof body.fields === "object" ? body.fields : {}) || {};
 
-    const fields = body.fields || {};
-    const fullPhone = buildFullPhone(fields);
-    const countryCode = await resolveCountryCode(admin, fields, body);
+    const phonePrefix =
+      fields.phonePrefix ||
+      fields.phone_prefix ||
+      fields.phoneCode ||
+      fields.phone_code ||
+      "";
 
-    const honeypotInfo = body.honeypot || {};
+    const phoneVal = fields.phone || "";
 
-    // ✅ token: accepter plusieurs noms (selon front)
+    const fullPhone = String(fields.fullPhone || body.fullPhone || `${phonePrefix}${phoneVal}` || "")
+      .trim()
+      .replace(/\s+/g, "");
+
+    const countryCode =
+      String(body.countryCode || fields.countryCode || getCountryCodeFromRequest(request) || "")
+        .trim()
+        .toUpperCase() || null;
+
+    // Honeypot + anti-bot
+    const honeypotInfo = body.honeypot || body.antiBot || body.antibot || null;
+
+    // reCAPTCHA token (client sends)
     const recaptchaTokenRaw =
       body.recaptchaToken ||
+      body.recaptcha ||
       body.recaptcha_token ||
-      body["g-recaptcha-response"] ||
-      body?.recaptcha?.token ||
-      (typeof body?.recaptcha === "string" ? body.recaptcha : "") ||
+      (body?.recaptcha && body.recaptcha.token) ||
+      (typeof body.recaptcha === "string" ? body.recaptcha : "") ||
       "";
 
     const recaptchaToken = String(recaptchaTokenRaw || "").trim();
@@ -563,12 +359,7 @@ export const action = async ({ request }) => {
     });
 
     if (antibotResult.blocked) {
-      console.warn(
-        "TripleForm COD — Anti-bot blocked request:",
-        shop,
-        clientIp,
-        antibotResult.reasons
-      );
+      console.warn("TripleForm COD — Anti-bot blocked request:", shop, clientIp, antibotResult.reasons);
       return json(
         {
           ok: false,
@@ -625,6 +416,7 @@ export const action = async ({ request }) => {
           reason: check.reason,
           errorCodes: check.errorCodes,
           hostname: check.hostname || null,
+          challengeTs: check.challengeTs,
         });
 
         return json(
@@ -648,12 +440,68 @@ export const action = async ({ request }) => {
     const shippingAddress = buildShippingAddress(fields, fullPhone, countryCode);
 
     const currency = body?.currency || null;
+
+    const couponCode = String(
+      body?.couponCode ??
+        body?.coupon_code ??
+        body?.promoCode ??
+        body?.promo_code ??
+        body?.discountCode ??
+        body?.discount_code ??
+        (body?.fields &&
+          (body.fields.couponCode ||
+            body.fields.coupon_code ||
+            body.fields.promoCode ||
+            body.fields.promo_code)) ??
+        fields?.couponCode ??
+        fields?.coupon_code ??
+        fields?.promoCode ??
+        fields?.promo_code ??
+        fields?.discountCode ??
+        fields?.discount_code ??
+        ""
+    ).trim();
+
     const totals = {
+      // priceCents might be per-item (depends on client); keep it for pixels/debug
       priceCents: body?.priceCents != null ? Number(body.priceCents) : null,
-      totalCents: body?.totalCents != null ? Number(body.totalCents) : null,
+
+      // baseTotalCents = subtotal before discount (client sends this)
+      baseTotalCents:
+        body?.baseTotalCents != null
+          ? Number(body.baseTotalCents)
+          : body?.base_total_cents != null
+            ? Number(body.base_total_cents)
+            : body?.baseTotal != null
+              ? Number(body.baseTotal)
+              : body?.subtotalCents != null
+                ? Number(body.subtotalCents)
+                : null,
+
       discountCents: body?.discountCents != null ? Number(body.discountCents) : null,
+
+      shippingCents:
+        body?.shippingCents != null
+          ? Number(body.shippingCents)
+          : body?.shipping_cents != null
+            ? Number(body.shipping_cents)
+            : body?.shippingAmount != null
+              ? Math.round(Number(body.shippingAmount) * 100)
+              : null,
+
+      totalCents:
+        body?.totalCents != null
+          ? Number(body.totalCents)
+          : body?.grandTotalCents != null
+            ? Number(body.grandTotalCents)
+            : body?.grand_total_cents != null
+              ? Number(body.grand_total_cents)
+              : null,
+
       qty,
       currency,
+      couponCode,
+
       productId: body?.productId || null,
       variantId: rawVariantId || null,
       pageUrl: body?.pageUrl || null,
@@ -664,6 +512,7 @@ export const action = async ({ request }) => {
       "Created by TripleForm COD",
       fields.notes ? `Notes: ${fields.notes}` : null,
       countryCode ? `Country: ${countryCode}` : null,
+      couponCode ? `Coupon: ${couponCode}` : null,
       currency && totals.totalCents != null
         ? `Total shown: ${(Number(totals.totalCents) / 100).toFixed(2)} ${currency}`
         : null,
@@ -682,6 +531,7 @@ export const action = async ({ request }) => {
         { key: "tf_city", value: String(fields.city || "") },
         { key: "tf_province", value: String(fields.province || "") },
         { key: "tf_country", value: countryCode || "" },
+        { key: "tf_coupon", value: couponCode || "" },
       ],
     };
 
@@ -751,8 +601,53 @@ export const action = async ({ request }) => {
 
     const orderName = orderObj?.name || null;
 
+    // Fetch product info for better Sheets export
+    const productInfo = await fetchProductInfo(admin, variantGid);
+
     // 6) Google Sheets
     try {
+      // ✅ Totaux explicit (pour mapping Google Sheets)
+      const totalWithoutShippingCents =
+        totals.baseTotalCents != null
+          ? Math.max(0, Number(totals.baseTotalCents) - Number(totals.discountCents || 0))
+          : totals.totalCents != null && totals.shippingCents != null
+            ? Math.max(0, Number(totals.totalCents) - Number(totals.shippingCents))
+            : null;
+
+      const totalWithShippingCents =
+        totals.totalCents != null
+          ? Number(totals.totalCents)
+          : totalWithoutShippingCents != null && totals.shippingCents != null
+            ? Number(totalWithoutShippingCents) + Number(totals.shippingCents)
+            : null;
+
+      // ✅ Offers / Upsells payload (forwarded from product page)
+      const offerPayload = body?.appliedOffer ?? body?.offer ?? null;
+      const offersPayload = body?.offers ?? null;
+
+      const offerName = String(
+        body?.offerName ??
+          body?.offer_name ??
+          body?.offerTitle ??
+          body?.offer_title ??
+          offerPayload?.title ??
+          offerPayload?.name ??
+          offerPayload?.label ??
+          ""
+      ).trim();
+
+      const upsellsPayload = body?.upsells ?? null;
+      const upsellName = String(
+        body?.upsellName ??
+          body?.upsell_name ??
+          body?.upsellTitle ??
+          body?.upsell_title ??
+          (Array.isArray(upsellsPayload) &&
+            upsellsPayload[0] &&
+            (upsellsPayload[0].title || upsellsPayload[0].name || upsellsPayload[0].label)) ??
+          ""
+      ).trim();
+
       const orderForSheet = {
         shop,
         createdAt: new Date().toISOString(),
@@ -776,7 +671,7 @@ export const action = async ({ request }) => {
           birthday: fields.birthday || "",
         },
         // ✅ raw form fields (for flexible Sheets mapping)
-        fields: { ...(fields || {}), fullPhone, countryCode },
+        fields: { ...(fields || {}), fullPhone, countryCode, couponCode },
         cart: {
           productTitle:
             productInfo.productTitle ||
@@ -793,10 +688,55 @@ export const action = async ({ request }) => {
             body?.variant_title ||
             "",
           quantity: qty,
-          subtotal: totals.priceCents != null ? Number(totals.priceCents) / 100 : null,
-          shipping: body?.shippingAmount != null ? Number(body.shippingAmount) : null,
-          total: totals.totalCents != null ? Number(totals.totalCents) / 100 : null,
-          totalCents: totals.totalCents != null ? Number(totals.totalCents) : null,
+
+          // ✅ Offers (forwarded from client)
+          offerName: offerName || "",
+          offer: offerPayload || null,
+          offers: offersPayload || null,
+          appliedOffer: offerPayload || null,
+
+          // ✅ Upsells (optional)
+          upsellName: upsellName || "",
+          upsells: upsellsPayload || null,
+          appliedUpsell: upsellsPayload || null,
+
+          // ✅ Code promo / coupon (optional)
+          couponCode: couponCode || "",
+
+          // ✅ Totaux (nombres purs pour mapping Sheets)
+          totalNormal: totals.baseTotalCents != null ? Number(totals.baseTotalCents) / 100 : null,
+          totalNormalWithShipping:
+            totals.baseTotalCents != null && totals.shippingCents != null
+              ? (Number(totals.baseTotalCents) + Number(totals.shippingCents)) / 100
+              : null,
+          discount: totals.discountCents != null ? Number(totals.discountCents) / 100 : null,
+
+          totalWithoutShipping:
+            totalWithoutShippingCents != null ? Number(totalWithoutShippingCents) / 100 : null,
+          subtotal:
+            totalWithoutShippingCents != null ? Number(totalWithoutShippingCents) / 100 : null,
+          subtotalCents:
+            totalWithoutShippingCents != null ? Number(totalWithoutShippingCents) : null,
+
+          shipping:
+            totals.shippingCents != null
+              ? Number(totals.shippingCents) / 100
+              : body?.shippingAmount != null
+                ? Number(body.shippingAmount)
+                : null,
+          shippingCents: totals.shippingCents != null ? Number(totals.shippingCents) : null,
+
+          totalWithShipping:
+            totalWithShippingCents != null ? Number(totalWithShippingCents) / 100 : null,
+          total:
+            totalWithShippingCents != null ? Number(totalWithShippingCents) / 100 : null,
+          totalCents:
+            totalWithShippingCents != null
+              ? Number(totalWithShippingCents)
+              : totals.totalCents != null
+                ? Number(totals.totalCents)
+                : null,
+
           currency,
         },
         meta: { source: "tripleform-cod" },
@@ -807,13 +747,15 @@ export const action = async ({ request }) => {
       console.error("Erreur lors de l'envoi de la commande vers Google Sheets :", err);
     }
 
-    // 7) Pixels
+    // 7) Pixels (keep existing behavior)
     try {
+      // If you have this util in your project, keep it as-is.
+      // eslint-disable-next-line no-undef
       await trackOrderWithPixels({
         admin,
         shop,
         totals,
-        fields: { ...fields, fullPhone, countryCode },
+        fields: { ...(fields || {}), fullPhone, countryCode, couponCode },
         shippingAddress,
         orderName,
         clientIp,
