@@ -37,20 +37,35 @@ query ProductCollections($id: ID!) {
 }
 `;
 
-export const loader = async ({ request }) => {
+async function handle(request) {
   const { admin, session } = await authenticate.public.appProxy(request);
   if (!admin || !session?.shop) {
     return json({ ok: false, message: "Unauthorized" }, { status: 401 });
   }
 
   const url = new URL(request.url);
-  const code = (url.searchParams.get("code") || "").trim();
-  const productId = url.searchParams.get("productId");
-  const subtotalCents = Number(url.searchParams.get("subtotalCents") || "0");
-  const qty = Number(url.searchParams.get("qty") || "1");
+
+  // GET params fallback
+  let code = (url.searchParams.get("code") || "").trim();
+  let productId = url.searchParams.get("productId");
+  let subtotalCents = Number(url.searchParams.get("subtotalCents") || "0");
+  let qty = Number(url.searchParams.get("qty") || "1");
+
+  // If POST JSON, override
+  if (request.method === "POST") {
+    try {
+      const body = await request.json();
+      code = (body.code || code || "").trim();
+      productId = body.productId || productId;
+      subtotalCents = Number(body.subtotalCents ?? subtotalCents);
+      qty = Number(body.qty ?? qty);
+    } catch {}
+  }
 
   if (!code) return json({ ok: false, message: "Code vide" }, { status: 400 });
-  if (!productId || subtotalCents <= 0) return json({ ok: false, message: "Bad params" }, { status: 400 });
+  if (!productId || !Number.isFinite(subtotalCents) || subtotalCents <= 0) {
+    return json({ ok: false, message: "Bad params" }, { status: 400 });
+  }
 
   const resp = await admin.graphql(DISCOUNT_QUERY, { variables: { code } });
   const payload = await resp.json();
@@ -59,15 +74,15 @@ export const loader = async ({ request }) => {
   if (!d) return json({ ok: false, message: "Code invalide" });
 
   if (d.__typename !== "DiscountCodeBasic") {
-    return json({ ok: false, message: "Type de réduction non supporté" });
+    return json({ ok: false, message: "Type non supporté" });
   }
 
-  // status / dates (simple)
   const now = Date.now();
   const starts = d.startsAt ? Date.parse(d.startsAt) : null;
   const ends = d.endsAt ? Date.parse(d.endsAt) : null;
+
   if (d.status !== "ACTIVE") return json({ ok: false, message: "Code inactif" });
-  if (starts && now < starts) return json({ ok: false, message: "Code pas encore actif" });
+  if (starts && now < starts) return json({ ok: false, message: "Pas encore actif" });
   if (ends && now > ends) return json({ ok: false, message: "Code expiré" });
 
   // eligibility (All / Products / Collections)
@@ -79,44 +94,39 @@ export const loader = async ({ request }) => {
   if (items?.__typename === "AllDiscountItems") eligible = true;
 
   if (!eligible && items?.__typename === "DiscountProducts") {
-    const ids = (items.products?.nodes || []).map(n => n.id);
+    const ids = (items.products?.nodes || []).map((n) => n.id);
     eligible = ids.includes(productGid);
   }
 
   if (!eligible && items?.__typename === "DiscountCollections") {
-    const colIds = (items.collections?.nodes || []).map(n => n.id);
+    const colIds = (items.collections?.nodes || []).map((n) => n.id);
 
     const pResp = await admin.graphql(PRODUCT_COLLECTIONS_QUERY, { variables: { id: productGid } });
     const pPayload = await pResp.json();
-    const pCols = (pPayload?.data?.product?.collections?.nodes || []).map(n => n.id);
+    const pCols = (pPayload?.data?.product?.collections?.nodes || []).map((n) => n.id);
 
-    eligible = pCols.some(id => colIds.includes(id));
+    eligible = pCols.some((id) => colIds.includes(id));
   }
 
-  if (!eligible) {
-    return json({ ok: false, message: "Code non applicable à ce produit" });
-  }
+  if (!eligible) return json({ ok: false, message: "Code non applicable" });
 
   // compute discount
   const v = d.customerGets?.value;
   let discountCents = 0;
 
   if (v?.__typename === "DiscountPercentage") {
-    // ex: 10% => 0.1 :contentReference[oaicite:8]{index=8}
     discountCents = Math.round(subtotalCents * Number(v.percentage || 0));
   } else if (v?.__typename === "DiscountAmount") {
     const amount = Number(v.amount?.amount || 0);
     const amountCents = Math.round(amount * 100);
-    discountCents = v.appliesOnEachItem ? amountCents * qty : amountCents;
+    discountCents = v.appliesOnEachItem ? amountCents * Math.max(1, qty) : amountCents;
     discountCents = Math.min(discountCents, subtotalCents);
   } else {
     return json({ ok: false, message: "Valeur non supportée" });
   }
 
-  return json({
-    ok: true,
-    code,
-    discountCents,
-    message: `Code appliqué`,
-  });
-};
+  return json({ ok: true, code, discountCents, message: "Code appliqué" });
+}
+
+export const loader = ({ request }) => handle(request);
+export const action = ({ request }) => handle(request);

@@ -268,6 +268,16 @@ const LAYOUT_CSS = `
 
   .tf-shell { padding:16px; }
 
+  /* ✅ FIX: remove big empty space at bottom when UI scale < 1 */
+  @media (min-width: 900px){
+    .tf-shell-fill{
+      background:#F6F7F9;
+      min-height: calc((100vh - 132px) / var(--tf-ui-scale));
+      box-sizing: border-box;
+    }
+  }
+
+
   .tf-editor {
     display:grid;
     grid-template-columns: 420px minmax(0, 3fr) minmax(320px, 1.4fr);
@@ -1554,7 +1564,7 @@ function Section1FormsLayoutInner() {
         t={t}
       />
 
-      <div className="tf-shell">
+      <div className="tf-shell tf-shell-fill">
         <div className="tf-editor">
           <OutletEditor />
         </div>

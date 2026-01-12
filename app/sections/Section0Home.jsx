@@ -149,6 +149,16 @@ const LAYOUT_CSS = `
 
   .tf-shell { padding:16px; }
 
+  /* ✅ FIX: remove big empty space at bottom when UI scale < 1 */
+  @media (min-width: 900px){
+    .tf-shell-fill{
+      background:#F6F7F9;
+      min-height: calc((100vh - 84px) / var(--tf-ui-scale));
+      box-sizing: border-box;
+    }
+  }
+
+
   /* 3 colonnes : gauche | milieu | droite */
   .tf-editor {
     display:grid;
@@ -1276,7 +1286,7 @@ function Section0Inner() {
       </div>
 
       {/* ===== Grille 3 colonnes ===== */}
-      <div className="tf-shell">
+      <div className="tf-shell tf-shell-fill">
         <div className="tf-editor">
           {/* Colonne gauche: WhatsApp ONLY */}
           <div className="tf-rail">
