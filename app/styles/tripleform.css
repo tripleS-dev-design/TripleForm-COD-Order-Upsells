@@ -11,7 +11,7 @@
   --tf-brand-blue: #0B3B82;
   --tf-brand-wine: #7D0031;
 
-  --tf-ui-scale: 0.80; /* ✅ 80% (change à 0.85 si besoin) */
+  --tf-ui-scale: 0.80; /* ✅ 80% */
 }
 
 /* ==============================
@@ -21,9 +21,6 @@ html, body{
   height: 100%;
 }
 
-body{
-  margin: 0;
-}
 
 /* Optional: make images safe */
 img{
@@ -43,14 +40,14 @@ img{
     display:block;
     width:100%;
     box-sizing:border-box;
-    padding-bottom:110px; /* évite que le bas soit caché par le bouton chat */
+    padding-bottom:120px; /* Crisp bouton: évite que le bas soit caché */
   }
 
   /* Fallback for browsers where zoom isn't supported */
   @supports not (zoom: 1){
     .tf-ui-scale{
       transform: scale(var(--tf-ui-scale));
-      transform-origin: top left;
+      transform-origin: top center;
       width: calc(100% / var(--tf-ui-scale));
     }
   }
@@ -130,7 +127,7 @@ img{
 /* ✅ FLAGS BAR (pill scrollable) */
 .tf-flags-wrap{
   display:flex;
-  justify-content:center;
+  justify-content:center
 }
 
 /* ==============================
@@ -150,23 +147,9 @@ img{
   overflow:auto hidden;
   max-width:min(560px, 100%);
 }
-
-/* hide scrollbar (nice) */
 .tf-flags::-webkit-scrollbar{ height:0; }
 .tf-flags{ scrollbar-width:none; }
 
-/* make flags clickable without changing Polaris buttons */
-.tf-flags button,
-.tf-flags a{
-  background:transparent;
-  border:0;
-  padding:0;
-  margin:0;
-  cursor:pointer;
-  line-height:0;
-}
-
-/* flags images (border back) */
 .tf-flags img{
   width:22px;
   height:16px;
