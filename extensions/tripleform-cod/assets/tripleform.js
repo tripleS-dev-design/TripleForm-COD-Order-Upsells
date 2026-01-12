@@ -3143,6 +3143,17 @@ window.TripleformCOD = (function () {
     `;
     const selectStyle = inputStyle;
 
+    // ✅ shared label style (used by variant/coupon blocks too)
+    const labelStyle = `
+      display:block;
+      font-size:${labelFontSize};
+      color:#475569;
+      text-align:${fieldAlign};
+      margin-bottom:4px;
+      font-weight:600;
+    `;
+
+
     const textareaStyle = `
       width:100%;
       padding:12px;
@@ -4661,12 +4672,17 @@ injectGlobalCSSOnce();
 
       try {
         const msg = (e && (e.message || String(e))) || "Unknown error";
-        const box = document.createElement("div");
-        box.className = "tf-error";
-        box.style.cssText =
-          "margin-top:12px;padding:10px;border:1px solid #ef4444;border-radius:8px;background:#fef2f2;color:#991b1b;font:12px/1.4 system-ui,sans-serif;white-space:pre-wrap";
+
+        // ✅ keep a single error box (avoid duplicates on retries)
+        let box = holder.querySelector(".tf-error");
+        if (!box) {
+          box = document.createElement("div");
+          box.className = "tf-error";
+          box.style.cssText =
+            "margin-top:12px;padding:10px;border:1px solid #ef4444;background:#fef2f2;color:#991b1b;font:12px/1.4 system-ui,sans-serif;white-space:pre-wrap;border-radius:10px;";
+          holder.appendChild(box);
+        }
         box.textContent = "Tripleform COD: render failed\n" + msg;
-        holder.appendChild(box);
       } catch (_) {}
 
       throw e;
