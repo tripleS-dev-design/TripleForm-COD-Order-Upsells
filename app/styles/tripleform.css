@@ -11,7 +11,7 @@
   --tf-brand-blue: #0B3B82;
   --tf-brand-wine: #7D0031;
 
-  --tf-ui-scale: 0.80; /* ✅ 80% */
+  --tf-ui-scale: 0.80; /* ✅ 80% (change à 0.85 si besoin) */
 }
 
 /* ==============================
@@ -21,6 +21,9 @@ html, body{
   height: 100%;
 }
 
+body{
+  margin: 0;
+}
 
 /* Optional: make images safe */
 img{
@@ -35,20 +38,21 @@ img{
    - It scales your UI wrapper .tf-ui-scale (added in root.jsx).
    ============================== */
 @media (min-width: 900px){
+  /* ✅ Scale UI without breaking page height */
   .tf-ui-scale{
     zoom: var(--tf-ui-scale);
-    display:block;
     width:100%;
     box-sizing:border-box;
-    padding-bottom:120px; /* Crisp bouton: évite que le bas soit caché */
+    transform:none;
   }
 
-  /* Fallback for browsers where zoom isn't supported */
+  /* ✅ If the browser doesn't support zoom (ex: Firefox),
+     keep normal scale (NO transform) to avoid the big white gap at the bottom. */
   @supports not (zoom: 1){
     .tf-ui-scale{
-      transform: scale(var(--tf-ui-scale));
-      transform-origin: top center;
-      width: calc(100% / var(--tf-ui-scale));
+      zoom: 1;
+      transform:none;
+      width:100%;
     }
   }
 }
@@ -127,7 +131,7 @@ img{
 /* ✅ FLAGS BAR (pill scrollable) */
 .tf-flags-wrap{
   display:flex;
-  justify-content:center
+  justify-content:center;
 }
 
 /* ==============================
@@ -147,9 +151,23 @@ img{
   overflow:auto hidden;
   max-width:min(560px, 100%);
 }
+
+/* hide scrollbar (nice) */
 .tf-flags::-webkit-scrollbar{ height:0; }
 .tf-flags{ scrollbar-width:none; }
 
+/* make flags clickable without changing Polaris buttons */
+.tf-flags button,
+.tf-flags a{
+  background:transparent;
+  border:0;
+  padding:0;
+  margin:0;
+  cursor:pointer;
+  line-height:0;
+}
+
+/* flags images (border back) */
 .tf-flags img{
   width:22px;
   height:16px;
