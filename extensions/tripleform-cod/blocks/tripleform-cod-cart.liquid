@@ -8,6 +8,7 @@ Tripleform COD – Cart section
 ✅ Cart mode true
 ✅ Layout fallback
 ✅ reCAPTCHA v2 ONLY via data-*
+✅ FIX: Provide cart JSON via <script type="application/json" id="tf-cart-json-...">
 {% endcomment %}
 
 {%- assign tf_shop_val = shop.metafields.tripleform_cod.settings.value -%}
@@ -197,11 +198,11 @@ Tripleform COD – Cart section
   data-section-id="{{ section.id }}"
 
   {%- comment -%} ✅ EMERGENCY FIX: Convert Ruby hash to JSON {%- endcomment -%}
-{%- assign tf_settings_fixed = tf_settings_json | replace: '=&gt;', ':' | replace: '"nil"', 'null' | replace: 'nil', 'null' -%}
-{%- assign tf_offers_fixed = tf_offers_json_output | replace: '=&gt;', ':' | replace: '"nil"', 'null' | replace: 'nil', 'null' -%}
+  {%- assign tf_settings_fixed = tf_settings_json | replace: '=&gt;', ':' | replace: '"nil"', 'null' | replace: 'nil', 'null' -%}
+  {%- assign tf_offers_fixed = tf_offers_json_output | replace: '=&gt;', ':' | replace: '"nil"', 'null' | replace: 'nil', 'null' -%}
 
-data-settings="{{ tf_settings_fixed | escape }}"
-data-offers="{{ tf_offers_fixed | escape }}"
+  data-settings="{{ tf_settings_fixed | escape }}"
+  data-offers="{{ tf_offers_fixed | escape }}"
 
   data-product-id=''
   data-variant-id=''
@@ -246,10 +247,17 @@ data-offers="{{ tf_offers_fixed | escape }}"
   {%- endif -%}
 </div>
 
-<template id="tf-product-json-{{ section.id }}" data-tf-product-json="1">
-  {{ product | json }}
-</template>
-
+{%- comment -%}
+✅ IMPORTANT (CART MODE)
+Ton script Tripleform lit le panier depuis un <script type="application/json"> avec id="tf-cart-json-{{ section.id }}"
+{%- endcomment -%}
+<script
+  type="application/json"
+  id="tf-cart-json-{{ section.id }}"
+  data-tf-cart-json="1"
+>
+  {{ cart | json }}
+</script>
 
 <script>
   (function () {
@@ -264,7 +272,6 @@ data-offers="{{ tf_offers_fixed | escape }}"
     document.addEventListener('shopify:block:select', boot);
   })();
 </script>
-
 
 {% schema %}
 {

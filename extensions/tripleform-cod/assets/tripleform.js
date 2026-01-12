@@ -3016,6 +3016,24 @@ window.TripleformCOD = (function () {
     const geoEndpoint = (geoCfg && (geoCfg.endpoint || geoCfg.geoEndpoint)) || holder.getAttribute("data-geo-endpoint") || "";
     const geoCountryAttr = holder.getAttribute("data-geo-country") || holder.getAttribute("data-geo-country-code") || "";
     const __tfGeoRemote = { pending: false, cents: null, error: null };
+// Discount/Coupon endpoint (Shopify discount codes via App Proxy route)
+const discountEndpoint =
+  holder.getAttribute("data-discount-endpoint") ||
+  holder.getAttribute("data-coupon-endpoint") ||
+  "/apps/tripleform-cod/api/discount/calc";
+
+// Coupon runtime (scoped to render, like GEO)
+const __tfCouponRemote = {
+  pending: false,
+  code: "",
+  cents: 0,
+  valid: false,
+  message: "",
+  error: null,
+  lastSubtotal: null,
+  lastQty: null,
+  lastVariantId: null,
+};
 
     setActiveRoot(root);
     const rootId = (root && root.id) ? root.id : "root";
@@ -3437,25 +3455,31 @@ window.TripleformCOD = (function () {
     }
 
     function couponBlockHTML() {
-      if (!uiCouponEnabled) return "";
+  if (!uiCouponEnabled) return "";
 
-      const btnMini =
-        `background:${css(d.btnBg || "#111827")};color:${css(d.btnText || "#fff")};` +
-        `border:1px solid ${css(d.btnBorder || "#111827")};border-radius:${css(d.btnRadius || 10)}px;` +
-        `padding:0 14px;height:${css(d.btnHeight || 46)}px;cursor:pointer;white-space:nowrap;`;
+  const btnMini =
+    `background:${css(d.btnBg || "#111827")};color:${css(d.btnText || "#fff")};` +
+    `border:1px solid ${css(d.btnBorder || "#111827")};border-radius:${css(d.btnRadius || 10)}px;` +
+    `padding:0 14px;height:${css(d.btnHeight || 46)}px;cursor:pointer;white-space:nowrap;`;
 
-      return `
-        <div style="margin-top:12px;display:flex;gap:10px;align-items:end;">
-          <div style="flex:1;min-width:0">
-            <label style="${labelStyle}">${css("Coupon / Promo code")}</label>
-            <input data-tf-coupon="1" type="text" style="${inputStyle}" placeholder="${css("Enter code")}" />
-          </div>
-          <button type="button" data-tf-coupon-apply="1" style="${btnMini}">
-            ${css(ui.applyCoupon || "Apply")}
-          </button>
-        </div>
-      `;
-    }
+  const msgStyle =
+    `margin-top:6px;font-size:12px;line-height:1.2;` +
+    `color:${css(d.text || "#0F172A")};opacity:.85;display:none;`;
+
+  return `
+    <div style="margin-top:12px;display:flex;gap:10px;align-items:end;">
+      <div style="flex:1;min-width:0">
+        <label style="${labelStyle}">${css("Coupon / Promo code")}</label>
+        <input data-tf-coupon="1" type="text" style="${inputStyle}" placeholder="${css("Enter code")}" />
+        <div data-tf-coupon-msg="1" style="${msgStyle}"></div>
+      </div>
+      <button type="button" data-tf-coupon-apply="1" style="${btnMini}">
+        ${css(ui.applyCoupon || "Apply")}
+      </button>
+    </div>
+  `;
+}
+
 
     function formCardHTML(ctaKey, isPopupOrDrawer = false) {
       const orderLabel = css(ui.orderNow || cfg.form?.buttonText || "Order now");
@@ -3668,15 +3692,49 @@ window.TripleformCOD = (function () {
         couponInp.value = root.getAttribute('data-coupon') || '';
         couponInp.addEventListener('input', () => {
           root.setAttribute('data-coupon', String(couponInp.value || '').trim());
+          // edited -> not applied yet
+          root.removeAttribute('data-coupon-applied');
+
+          // reset remote state so we don't keep old discount
+          __tfCouponRemote.pending = false;
+          __tfCouponRemote.code = "";
+          __tfCouponRemote.cents = 0;
+          __tfCouponRemote.valid = false;
+          __tfCouponRemote.message = "";
+          __tfCouponRemote.error = null;
+          __tfCouponRemote.lastSubtotal = null;
+          __tfCouponRemote.lastQty = null;
+          __tfCouponRemote.lastVariantId = null;
+
+          try { updateMoney(); } catch (err) {}
+          try { updateCouponUI(); } catch (err) {}
         });
       }
       if (couponBtn && couponInp) {
         couponBtn.addEventListener('click', (e) => {
           e.preventDefault();
-          root.setAttribute('data-coupon', String(couponInp.value || '').trim());
+          const code = String(couponInp.value || '').trim();
+          root.setAttribute('data-coupon', code);
+
+          if (code) root.setAttribute('data-coupon-applied', '1');
+          else root.removeAttribute('data-coupon-applied');
+
+          // force refresh
+          __tfCouponRemote.pending = false;
+          __tfCouponRemote.code = "";
+          __tfCouponRemote.cents = 0;
+          __tfCouponRemote.valid = false;
+          __tfCouponRemote.message = "";
+          __tfCouponRemote.error = null;
+          __tfCouponRemote.lastSubtotal = null;
+          __tfCouponRemote.lastQty = null;
+          __tfCouponRemote.lastVariantId = null;
+
           try { updateMoney(); } catch (err) {}
+          try { updateCouponUI(); } catch (err) {}
         });
       }
+
     } catch (e) {}
 
     // ✅ reCAPTCHA v2: render checkbox widget if enabled
@@ -3826,6 +3884,269 @@ window.TripleformCOD = (function () {
       if (discount > baseTotalCents) discount = baseTotalCents;
       return discount;
     }
+/* ------------------------------------------------------------------ */
+/* ✅ Coupon / Promo code (Shopify discount codes)                     */
+/*  - Uses App Proxy route: /apps/tripleform-cod/api/discount/calc     */
+/*  - Calculates discount on current subtotal (after offers)           */
+/* ------------------------------------------------------------------ */
+function updateCouponUI() {
+  if (!uiCouponEnabled) return;
+
+  const msgEl = root.querySelector('[data-tf-coupon-msg="1"]');
+  const btnEl = root.querySelector('[data-tf-coupon-apply="1"]');
+
+  const code = String(root.getAttribute("data-coupon") || "").trim();
+  const applied = root.getAttribute("data-coupon-applied") === "1" && !!code;
+
+  const applyLabel = css(ui.applyCoupon || "Apply");
+
+  // reset button state
+  if (btnEl) {
+    btnEl.disabled = false;
+    btnEl.style.opacity = "";
+    btnEl.style.pointerEvents = "";
+  }
+
+  if (!code) {
+    if (msgEl) {
+      msgEl.textContent = "";
+      msgEl.style.display = "none";
+      msgEl.style.color = css(d.text || "#0F172A");
+      msgEl.style.opacity = ".85";
+    }
+    if (btnEl) btnEl.textContent = applyLabel;
+    return;
+  }
+
+  // not applied yet (user just typed)
+  if (!applied) {
+    if (msgEl) {
+      msgEl.textContent = "";
+      msgEl.style.display = "none";
+    }
+    if (btnEl) btnEl.textContent = applyLabel;
+    return;
+  }
+
+  // pending
+  if (__tfCouponRemote.pending) {
+    if (msgEl) {
+      msgEl.textContent = css(__tfCouponRemote.message || "Applying…");
+      msgEl.style.display = "block";
+      msgEl.style.color = css(d.placeholder || "#94A3B8");
+      msgEl.style.opacity = "1";
+    }
+    if (btnEl) {
+      btnEl.textContent = "…";
+      btnEl.disabled = true;
+      btnEl.style.opacity = ".7";
+      btnEl.style.pointerEvents = "none";
+    }
+    return;
+  }
+
+  // error / invalid
+  if (__tfCouponRemote.error || (__tfCouponRemote.code === code && __tfCouponRemote.valid === false)) {
+    const msg = css(__tfCouponRemote.error || __tfCouponRemote.message || "Invalid code");
+    if (msgEl) {
+      msgEl.textContent = msg;
+      msgEl.style.display = "block";
+      msgEl.style.color = "#DC2626";
+      msgEl.style.opacity = "1";
+    }
+    if (btnEl) btnEl.textContent = applyLabel;
+    return;
+  }
+
+  // applied ok
+  if (__tfCouponRemote.valid === true && Number(__tfCouponRemote.cents || 0) > 0) {
+    const msg = css(__tfCouponRemote.message || "Coupon applied");
+    if (msgEl) {
+      msgEl.textContent = msg;
+      msgEl.style.display = "block";
+      msgEl.style.color = "#16A34A";
+      msgEl.style.opacity = "1";
+    }
+    if (btnEl) btnEl.textContent = "Applied";
+    return;
+  }
+
+  // valid but 0 discount (rare)
+  if (msgEl) {
+    msgEl.textContent = css(__tfCouponRemote.message || "No discount");
+    msgEl.style.display = "block";
+    msgEl.style.color = css(d.placeholder || "#94A3B8");
+    msgEl.style.opacity = "1";
+  }
+  if (btnEl) btnEl.textContent = applyLabel;
+}
+
+async function callDiscountAPI(payload) {
+  const url = String(discountEndpoint || "").trim() || "/apps/tripleform-cod/api/discount/calc";
+
+  // POST first (preferred)
+  let res = null;
+  try {
+    res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify(payload || {}),
+    });
+  } catch (e) {
+    res = null;
+  }
+
+  // fallback: GET (if server only allows GET)
+  if (res && res.status === 405) {
+    try {
+      const u = new URL(url, window.location.origin);
+      Object.keys(payload || {}).forEach((k) => {
+        const v = payload[k];
+        if (v == null) return;
+        u.searchParams.set(k, String(v));
+      });
+      res = await fetch(u.toString(), { method: "GET", headers: { Accept: "application/json" } });
+    } catch (e) {
+      // keep res as-is
+    }
+  }
+
+  if (!res) throw new Error("Failed to call discount endpoint");
+
+  const data = await res.json().catch(() => null);
+
+  if (!res.ok) {
+    const msg =
+      (data && (data.error || data.message || data.reason)) || res.statusText || "Invalid code";
+    throw new Error(String(msg));
+  }
+
+  return data || {};
+}
+
+function computeCouponDiscountCents(subtotalCents, qty) {
+  if (!uiCouponEnabled) return 0;
+
+  const code = String(root.getAttribute("data-coupon") || "").trim();
+  const applied = root.getAttribute("data-coupon-applied") === "1";
+  const variantId = String(root.getAttribute("data-variant-id") || "");
+  const productId = String(root.getAttribute("data-product-id") || "");
+  const currencyIso = String(root.getAttribute("data-currency") || "").trim().toUpperCase();
+  const localeIso = String(root.getAttribute("data-locale") || "").trim();
+
+  // Not applied (or empty) -> no discount
+  if (!code || !applied) {
+    __tfCouponRemote.pending = false;
+    __tfCouponRemote.cents = 0;
+    __tfCouponRemote.valid = false;
+    __tfCouponRemote.error = null;
+    if (!code) {
+      __tfCouponRemote.code = "";
+      __tfCouponRemote.message = "";
+      __tfCouponRemote.lastSubtotal = null;
+      __tfCouponRemote.lastQty = null;
+      __tfCouponRemote.lastVariantId = null;
+    }
+    updateCouponUI();
+    return 0;
+  }
+
+  const safeSubtotal = Math.max(0, Math.round(Number(subtotalCents || 0)));
+  const safeQty = Math.max(1, Math.round(Number(qty || 1)));
+
+  // cached result
+  if (
+    __tfCouponRemote.pending === false &&
+    __tfCouponRemote.code === code &&
+    __tfCouponRemote.lastSubtotal === safeSubtotal &&
+    __tfCouponRemote.lastQty === safeQty &&
+    __tfCouponRemote.lastVariantId === variantId
+  ) {
+    updateCouponUI();
+    return Math.max(0, Math.round(Number(__tfCouponRemote.cents || 0)));
+  }
+
+  // already pending for same inputs
+  if (
+    __tfCouponRemote.pending === true &&
+    __tfCouponRemote.code === code &&
+    __tfCouponRemote.lastSubtotal === safeSubtotal &&
+    __tfCouponRemote.lastQty === safeQty &&
+    __tfCouponRemote.lastVariantId === variantId
+  ) {
+    updateCouponUI();
+    return 0;
+  }
+
+  // start new request
+  __tfCouponRemote.pending = true;
+  __tfCouponRemote.code = code;
+  __tfCouponRemote.cents = 0;
+  __tfCouponRemote.valid = false;
+  __tfCouponRemote.error = null;
+  __tfCouponRemote.message = "Applying…";
+  __tfCouponRemote.lastSubtotal = safeSubtotal;
+  __tfCouponRemote.lastQty = safeQty;
+  __tfCouponRemote.lastVariantId = variantId;
+
+  updateCouponUI();
+
+  const payload = {
+    code,
+    variantId,
+    productId,
+    quantity: safeQty,
+    subtotalCents: safeSubtotal,
+    currency: currencyIso || undefined,
+    locale: localeIso || undefined,
+    country: geoCountryAttr || undefined,
+  };
+
+  callDiscountAPI(payload)
+    .then((data) => {
+      const obj = data && typeof data === "object" ? data : {};
+
+      const valid =
+        obj.valid === true ||
+        obj.applied === true ||
+        obj.ok === true ||
+        obj.success === true;
+
+      const centsRaw =
+        obj.discountCents ??
+        obj.discount_cents ??
+        obj.amountCents ??
+        obj.amount_cents ??
+        obj.discount_amount_cents ??
+        0;
+
+      const cents = Math.max(0, Math.round(Number(centsRaw || 0)));
+
+      const msg = String(obj.message || obj.reason || (valid ? "Coupon applied" : "Invalid code") || "");
+
+      __tfCouponRemote.pending = false;
+      __tfCouponRemote.valid = !!valid;
+      __tfCouponRemote.cents = valid ? cents : 0;
+      __tfCouponRemote.message = msg;
+      __tfCouponRemote.error = null;
+
+      updateCouponUI();
+      try { updateMoney(); } catch (e) {}
+    })
+    .catch((err) => {
+      __tfCouponRemote.pending = false;
+      __tfCouponRemote.valid = false;
+      __tfCouponRemote.cents = 0;
+      __tfCouponRemote.message = "";
+      __tfCouponRemote.error = String((err && err.message) || "Invalid code");
+
+      updateCouponUI();
+      try { updateMoney(); } catch (e) {}
+    });
+
+  return 0;
+}
+
 
     function offerSubtotalOverrideCents() {
       const x = currentOffer();
@@ -4116,8 +4437,13 @@ window.TripleformCOD = (function () {
       const discountCents = computeDiscountCents(subtotalBeforeDiscount, qty);
       const discountedSubtotalCents = Math.max(0, subtotalBeforeDiscount - discountCents);
 
-      const shippingCents = computeShippingCents(discountedSubtotalCents);
-      const grandTotalCents = discountedSubtotalCents + (shippingCents || 0);
+      const couponDiscountCents = computeCouponDiscountCents(discountedSubtotalCents, qty);
+      const discountedAfterCouponCents = Math.max(0, discountedSubtotalCents - couponDiscountCents);
+
+      const shippingCents = computeShippingCents(discountedAfterCouponCents);
+      const grandTotalCents = discountedAfterCouponCents + (shippingCents || 0);
+
+      const totalDiscountCents = discountCents + couponDiscountCents;
 
       root.querySelectorAll('[data-tf="price"]').forEach((el) => (el.textContent = moneyFmt(priceCents)));
       root.querySelectorAll('[data-tf="total"]').forEach((el) => (el.textContent = moneyFmt(grandTotalCents)));
@@ -4125,9 +4451,9 @@ window.TripleformCOD = (function () {
       const discountRow = root.querySelector('[data-tf="discount-row"]');
       const discountAmount = root.querySelector('[data-tf="discount"]');
       if (discountRow) {
-        if (discountCents > 0) {
+        if (totalDiscountCents > 0) {
           discountRow.style.display = "grid";
-          if (discountAmount) discountAmount.textContent = "-" + moneyFmt(discountCents);
+          if (discountAmount) discountAmount.textContent = "-" + moneyFmt(totalDiscountCents);
         } else {
           discountRow.style.display = "none";
         }
@@ -4156,6 +4482,8 @@ window.TripleformCOD = (function () {
 
       const mainCta = root.querySelector('[data-tf="launcher"]');
       if (mainCta) mainCta.innerHTML = `${buttonIconHtml}${label} · ${suffix} ${moneyFmt(grandTotalCents)}`;
+
+      try { updateCouponUI(); } catch (e) {}
 
       const buttons = root.querySelectorAll("[data-tf-offer-toggle]");
       buttons.forEach((btn) => {

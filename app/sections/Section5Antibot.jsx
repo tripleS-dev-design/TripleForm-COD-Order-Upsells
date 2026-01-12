@@ -112,6 +112,25 @@ function useInjectCss() {
   }, []);
 }
 
+/* ======================= ✅ Crisp Chat (inject once) ======================= */
+function useCrispChat(websiteId) {
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    window.$crisp = window.$crisp || [];
+    window.CRISP_WEBSITE_ID = websiteId;
+
+    if (document.getElementById("crisp-chat-script")) return;
+
+    const s = document.createElement("script");
+    s.id = "crisp-chat-script";
+    s.type = "text/javascript";
+    s.src = "https://client.crisp.chat/l.js";
+    s.async = true;
+    document.head.appendChild(s);
+  }, [websiteId]);
+}
+
 /* ============================== UI helpers ============================== */
 function GroupCard({ title, children, tr }) {
   return (
@@ -335,6 +354,9 @@ function getProvinceLabel(cc, prov) {
 
 export default function Section5Antibot() {
   useInjectCss();
+
+  // ✅ Crisp (AntiBot only)
+  useCrispChat("7ea27a85-6b6c-4a48-8381-6c0fdc94c1ea");
 
   const navigate = useNavigate();
   const { tr, tAdapter } = useT();
