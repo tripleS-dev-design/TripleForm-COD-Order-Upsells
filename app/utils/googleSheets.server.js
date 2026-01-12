@@ -211,7 +211,11 @@ function firstNonEmpty(...vals) {
 
 function nameFromAny(x) {
   if (x == null) return "";
-  if (typeof x === "string" || typeof x === "number") return String(x);
+  // ✅ IMPORTANT: ignore numbers so "Offer" doesn't become totals/prices
+  if (typeof x === "string") return String(x).trim();
+  if (typeof x === "number") return "";
+  if (typeof x !== "object") return "";
+
   return (
     x.title ||
     x.name ||
@@ -220,6 +224,8 @@ function nameFromAny(x) {
     x.upsellName ||
     x.productTitle ||
     x.variantTitle ||
+    x.text ||
+    x.value ||
     ""
   );
 }
@@ -256,6 +262,20 @@ function pickOfferName(order) {
     nameFromAny(cart.appliedOffer),
     nameFromAny(ord.appliedOffer)
   );
+
+  // ✅ If an offer exists but has no "name/title/label", don't keep the cell empty
+  const hasOffer =
+    (Array.isArray(o.offers) && o.offers.length) ||
+    (Array.isArray(cart.offers) && cart.offers.length) ||
+    (Array.isArray(ord.offers) && ord.offers.length) ||
+    !!o.offer ||
+    !!cart.offer ||
+    !!ord.offer ||
+    !!o.appliedOffer ||
+    !!cart.appliedOffer ||
+    !!ord.appliedOffer;
+
+  if (!fromObjects && hasOffer) return "Offer applied";
   return fromObjects || "";
 }
 
@@ -285,6 +305,19 @@ function pickUpsellName(order) {
     nameFromAny(cart.appliedUpsell),
     nameFromAny(ord.appliedUpsell)
   );
+
+  const hasUpsell =
+    (Array.isArray(o.upsells) && o.upsells.length) ||
+    (Array.isArray(cart.upsells) && cart.upsells.length) ||
+    (Array.isArray(ord.upsells) && ord.upsells.length) ||
+    !!o.upsell ||
+    !!cart.upsell ||
+    !!ord.upsell ||
+    !!o.appliedUpsell ||
+    !!cart.appliedUpsell ||
+    !!ord.appliedUpsell;
+
+  if (!fromObjects && hasUpsell) return "Upsell applied";
   return fromObjects || "";
 }
 
@@ -327,28 +360,83 @@ function resolveAppField(order, appField) {
     case "cart.variantTitle":
       return cart.variantTitle || "";
 
-    // ✅ FIX: offers/upsells fallback
+    // ✅ FIX: offers/upsells fallback (accept multiple appField names from UI/old configs)
     case "cart.offerName":
+    case "offerName":
+    case "offer":
+    case "offers":
+    case "cart.offer":
+    case "cart.offers":
+    case "cart.appliedOffer":
+    case "appliedOffer":
       return pickOfferName(order);
+
     case "cart.upsellName":
+    case "upsellName":
+    case "upsell":
+    case "upsells":
+    case "cart.upsell":
+    case "cart.upsells":
+    case "cart.appliedUpsell":
+    case "appliedUpsell":
       return pickUpsellName(order);
 
+    // ✅ totals (support multiple naming styles from the product page/form)
     case "cart.subtotal":
-      return cart.subtotal ?? "";
+    case "cart.totalWithoutShipping":
+    case "cart.totalWithoutChipping": {
+      const v =
+        cart.totalWithoutShipping ??
+        cart.totalWithoutChipping ??
+        cart.subtotal ??
+        cart.subTotal ??
+        cart.sub_total ??
+        (cart.subtotalCents != null ? cart.subtotalCents / 100 : null);
+      return v ?? "";
+    }
+
     case "cart.shipping":
-      return cart.shipping ?? "";
+    case "cart.chipping":
+    case "cart.shiping": {
+      const v =
+        cart.shipping ??
+        cart.shippingPrice ??
+        cart.shipping_cost ??
+        cart.shippingCost ??
+        (cart.shippingCents != null ? cart.shippingCents / 100 : null);
+      return v ?? "";
+    }
 
     case "cart.total":
-    case "cart.totalWithShipping": {
-      if (cart.total != null) {
-        const cur = cart.currency || "";
-        return `${cart.total} ${cur}`.trim();
-      }
-      if (cart.totalCents != null) {
-        const cur = cart.currency || "";
-        return `${cart.totalCents / 100} ${cur}`.trim();
-      }
-      return "";
+    case "cart.totalWithShipping":
+    case "cart.totalWithChipping": {
+      const cur = cart.currency || "";
+      const amount =
+        cart.totalWithShipping ??
+        cart.totalWithChipping ??
+        cart.total ??
+        (cart.totalCents != null ? cart.totalCents / 100 : null) ??
+        (cart.subtotal != null && cart.shipping != null
+          ? Number(cart.subtotal) + Number(cart.shipping)
+          : null);
+
+      if (amount == null || amount === "") return "";
+      return `${amount} ${cur}`.trim();
+    }
+
+    // ✅ optional extra fields (won't hurt if not used)
+    case "cart.totalNormal":
+    case "cart.totalNormalWithShipping": {
+      const cur = cart.currency || "";
+      const amount =
+        cart.totalNormalWithShipping ??
+        cart.totalNormal ??
+        cart.normalTotal ??
+        cart.normal_total ??
+        null;
+
+      if (amount == null || amount === "") return "";
+      return `${amount} ${cur}`.trim();
     }
 
     case "cart.currency":

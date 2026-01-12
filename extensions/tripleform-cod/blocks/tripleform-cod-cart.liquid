@@ -248,6 +248,31 @@ Tripleform COD – Cart section
 </div>
 
 {%- comment -%}
+✅ ONLY HIDE (CART PAGE):
+- Quantity field
+- Product price row
+No JS changes.
+{%- endcomment -%}
+<style>
+  /* Hide Product price row (the row that contains the value [data-tf="price"]) */
+  #tripleform-cod-{{ section.id }} div:has(> [data-tf="price"]) {
+    display: none !important;
+  }
+
+  /* Hide Quantity field wrapper (targets input) */
+  #tripleform-cod-{{ section.id }} div:has(> div > input[data-tf-field="quantity"]),
+  #tripleform-cod-{{ section.id }} div:has(> div > input[data-tf-role="quantity"]) {
+    display: none !important;
+  }
+
+  /* Fallback: hide the quantity input itself (if :has not supported) */
+  #tripleform-cod-{{ section.id }} input[data-tf-field="quantity"],
+  #tripleform-cod-{{ section.id }} input[data-tf-role="quantity"] {
+    display: none !important;
+  }
+</style>
+
+{%- comment -%}
 ✅ IMPORTANT (CART MODE)
 Ton script Tripleform lit le panier depuis un <script type="application/json"> avec id="tf-cart-json-{{ section.id }}"
 {%- endcomment -%}
