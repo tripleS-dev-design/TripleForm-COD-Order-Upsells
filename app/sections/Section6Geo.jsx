@@ -8,7 +8,6 @@ import {
   Text,
   TextField,
   Select,
-  Checkbox,
   Button,
   Badge,
   Divider,
@@ -265,6 +264,29 @@ function useInjectCss() {
   }, []);
 }
 
+/* ======================= ✅ currency from COUNTRY_DATA ======================= */
+function getCurrencyForCountry(iso2) {
+  const code = (iso2 || "").toUpperCase().slice(0, 2);
+  const raw = COUNTRY_DATA?.[code] || COUNTRY_DATA?.[code.toLowerCase()];
+  if (!raw) return "";
+
+  const candidates = [
+    raw.currency,
+    raw.currencyCode,
+    raw.currency_code,
+    raw.currencycode,
+    raw?.currency?.code,
+    raw?.money?.code,
+  ];
+
+  for (const v of candidates) {
+    if (typeof v === "string" && v.trim()) return v.trim().toUpperCase();
+    if (Array.isArray(v) && typeof v[0] === "string" && v[0].trim())
+      return v[0].trim().toUpperCase();
+  }
+  return "";
+}
+
 /* ======================= COUNTRY_DATA -> GEO_COUNTRIES ======================= */
 const GEO_COUNTRIES = Object.keys(COUNTRY_DATA || {}).reduce((acc, countryCode) => {
   const country = COUNTRY_DATA[countryCode];
@@ -340,7 +362,8 @@ function defaultCfg() {
   return {
     meta: { version: 2 },
     country: "MA",
-    currency: "MAD",
+    // ✅ auto currency from country data
+    currency: getCurrencyForCountry("MA") || "MAD",
 
     isFree: false,
     mode: "province", // price | province | city
@@ -377,6 +400,11 @@ function normalizeGeoCfg(cfg) {
   const allCountries = Object.keys(GEO_COUNTRIES);
 
   const next = { ...defaultCfg(), ...x };
+
+  // ✅ normalize country + auto currency
+  next.country = (next.country || "MA").toUpperCase().slice(0, 2) || "MA";
+  next.currency = getCurrencyForCountry(next.country) || next.currency || "MAD";
+
   if (!next.provinceRates) next.provinceRates = {};
   if (!next.cityRates) next.cityRates = {};
 
@@ -520,8 +548,9 @@ export default function Section6Geo() {
 
   const setCountry = (iso2) => {
     const code = (iso2 || "").toUpperCase().slice(0, 2) || "MA";
+    const autoCurrency = getCurrencyForCountry(code) || "";
     setCfg((c) => {
-      const next = { ...c, country: code };
+      const next = { ...c, country: code, currency: autoCurrency || c.currency || "MAD" };
       if (!next.provinceRates[code]) next.provinceRates[code] = [];
       if (!next.cityRates[code]) next.cityRates[code] = [];
       return next;
@@ -630,7 +659,11 @@ export default function Section6Geo() {
       <div className="tf-shell">
         {/* ✅ Top tabs bar (centered + boxed like Pixels) */}
         <div className="tf-topnav">
-          <Tabs tabs={tabs} selected={selectedTabIndex} onSelect={(idx) => setView(tabs[idx]?.id || "province")} />
+          <Tabs
+            tabs={tabs}
+            selected={selectedTabIndex}
+            onSelect={(idx) => setView(tabs[idx]?.id || "province")}
+          />
         </div>
 
         <div className="tf-editor">
@@ -661,16 +694,13 @@ export default function Section6Geo() {
                       },
                       ...countryOptions,
                     ]}
-                    helpText={tr("section6.general.countryHelp", "This will be the default geo for rates.")}
+                    helpText={tr(
+                      "section6.general.countryHelp",
+                      "This will be the default geo for rates."
+                    )}
                   />
 
-                  <TextField
-                    label={tr("section6.general.currency", "Currency")}
-                    value={cfg.currency}
-                    onChange={(v) => setRoot({ currency: v })}
-                    autoComplete="off"
-                    helpText={tr("section6.general.currencyHelp", "Example: MAD, DZD, EUR...")}
-                  />
+                  {/* ✅ Currency field removed (auto from country) */}
                 </Grid3>
 
                 {!cfg.isFree ? (
@@ -691,7 +721,10 @@ export default function Section6Geo() {
                   </Grid3>
                 ) : (
                   <Text tone="subdued" as="p">
-                    {tr("section6.general.freeShippingInfo", "Free shipping enabled: rates are ignored.")}
+                    {tr(
+                      "section6.general.freeShippingInfo",
+                      "Free shipping enabled: rates are ignored."
+                    )}
                   </Text>
                 )}
               </GroupCard>
@@ -743,7 +776,9 @@ export default function Section6Geo() {
                       </div>
                     ))}
 
-                    <Button onClick={addProv}>{tr("section6.buttons.addProvince", "Add province")}</Button>
+                    <Button onClick={addProv}>
+                      {tr("section6.buttons.addProvince", "Add province")}
+                    </Button>
                   </BlockStack>
                 </GroupCard>
               )}
@@ -757,7 +792,10 @@ export default function Section6Geo() {
                   tr={tr}
                 >
                   <Text tone="subdued" as="p">
-                    {tr("section6.city.description", "Define shipping rate per city inside a province.")}
+                    {tr(
+                      "section6.city.description",
+                      "Define shipping rate per city inside a province."
+                    )}
                   </Text>
 
                   <BlockStack gap="200">
@@ -851,7 +889,9 @@ export default function Section6Geo() {
                       </div>
                     ))}
 
-                    <Button onClick={addBracket}>{tr("section6.buttons.addBracket", "Add bracket")}</Button>
+                    <Button onClick={addBracket}>
+                      {tr("section6.buttons.addBracket", "Add bracket")}
+                    </Button>
                   </BlockStack>
                 </GroupCard>
               )}
@@ -874,8 +914,12 @@ export default function Section6Geo() {
                       label={tr("section6.advanced.freeThreshold", "Free threshold ({{currency}})", {
                         currency: cfg.currency,
                       })}
-                      value={cfg.advanced.freeThreshold == null ? "" : String(cfg.advanced.freeThreshold)}
-                      onChange={(v) => setAdvanced({ freeThreshold: v === "" ? null : Number(v) })}
+                      value={
+                        cfg.advanced.freeThreshold == null ? "" : String(cfg.advanced.freeThreshold)
+                      }
+                      onChange={(v) =>
+                        setAdvanced({ freeThreshold: v === "" ? null : Number(v) })
+                      }
                       autoComplete="off"
                     />
                     <TextField
@@ -935,7 +979,9 @@ export default function Section6Geo() {
               <BlockStack gap="150" style={{ marginTop: 10 }}>
                 <InlineStack align="space-between">
                   <Text as="span">{tr("section6.rail.type", "Shipping")}</Text>
-                  <Badge>{cfg.isFree ? tr("section6.rail.free", "Free") : tr("section6.rail.paid", "Paid")}</Badge>
+                  <Badge>
+                    {cfg.isFree ? tr("section6.rail.free", "Free") : tr("section6.rail.paid", "Paid")}
+                  </Badge>
                 </InlineStack>
 
                 {!cfg.isFree ? (
@@ -964,7 +1010,12 @@ export default function Section6Geo() {
 
               <ol className="tf-guide-ol">
                 <li>{tr("section6.guide.step1", "Choose your shipping type (free/paid).")}</li>
-                <li>{tr("section6.guide.step2", "Pick a pricing mode: province, city, or cart amount.")}</li>
+                <li>
+                  {tr(
+                    "section6.guide.step2",
+                    "Pick a pricing mode: province, city, or cart amount."
+                  )}
+                </li>
                 <li>{tr("section6.guide.step3", "Add rates and keep entries clean.")}</li>
                 <li>{tr("section6.guide.step4", "Use Advanced only if you need global rules.")}</li>
                 <li>{tr("section6.guide.step5", "When leaving the section, save if needed.")}</li>
