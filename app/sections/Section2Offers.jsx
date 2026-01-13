@@ -698,10 +698,7 @@ function SettingTileCard({
 
 /* ============================== Layout style options (4) ============================== */
 const LAYOUT_STYLE_OPTIONS = [
-  { label: "Image left · Text right", value: "image-left" },
   { label: "Image right · Text left", value: "image-right" },
-  { label: "Image big top · Text bottom", value: "image-top" },
-  { label: "Image big bottom · Text small", value: "image-bottom" },
 ];
 
 /* ============================== Discount options ============================== */
