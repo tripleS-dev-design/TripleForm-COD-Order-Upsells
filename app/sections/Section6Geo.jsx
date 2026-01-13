@@ -630,11 +630,7 @@ export default function Section6Geo() {
       <div className="tf-shell">
         {/* ✅ Top tabs bar (centered + boxed like Pixels) */}
         <div className="tf-topnav">
-          <Tabs
-            tabs={tabs}
-            selected={selectedTabIndex}
-            onSelect={(idx) => setView(tabs[idx]?.id || "province")}
-          />
+          <Tabs tabs={tabs} selected={selectedTabIndex} onSelect={(idx) => setView(tabs[idx]?.id || "province")} />
         </div>
 
         <div className="tf-editor">
@@ -665,10 +661,7 @@ export default function Section6Geo() {
                       },
                       ...countryOptions,
                     ]}
-                    helpText={tr(
-                      "section6.general.countryHelp",
-                      "This will be the default geo for rates."
-                    )}
+                    helpText={tr("section6.general.countryHelp", "This will be the default geo for rates.")}
                   />
 
                   <TextField
@@ -698,10 +691,7 @@ export default function Section6Geo() {
                   </Grid3>
                 ) : (
                   <Text tone="subdued" as="p">
-                    {tr(
-                      "section6.general.freeShippingInfo",
-                      "Free shipping enabled: rates are ignored."
-                    )}
+                    {tr("section6.general.freeShippingInfo", "Free shipping enabled: rates are ignored.")}
                   </Text>
                 )}
               </GroupCard>
@@ -767,10 +757,7 @@ export default function Section6Geo() {
                   tr={tr}
                 >
                   <Text tone="subdued" as="p">
-                    {tr(
-                      "section6.city.description",
-                      "Define shipping rate per city inside a province."
-                    )}
+                    {tr("section6.city.description", "Define shipping rate per city inside a province.")}
                   </Text>
 
                   <BlockStack gap="200">

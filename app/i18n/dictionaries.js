@@ -1955,7 +1955,11 @@ const EN = {
 "section0.wa.sessions.title": "WhatsApp sessions",
 "section0.wa.sessions.live": "LIVE",
 "section0.wa.mainSession": "Main session",
-"section0.wa.user.fallbackName": "Session {n}"
+"section0.wa.user.fallbackName": "Session {n}",
+"section1.options.stickyIcon": "Sticky Icon",
+"section3.sheetsConfiguration.actions": "Actions"
+
+
 
 
 
@@ -3895,7 +3899,13 @@ const FR = {
 "section0.wa.sessions.title": "Sessions WhatsApp",
 "section0.wa.sessions.live": "EN DIRECT",
 "section0.wa.mainSession": "Session principale",
-"section0.wa.user.fallbackName": "Session {n}"
+"section0.wa.user.fallbackName": "Session {n}",
+
+"section1.options.stickyIcon": "Icône épinglée",
+"section3.sheetsConfiguration.actions": "Actions"
+
+
+
 
 
 
@@ -5821,7 +5831,11 @@ const ES = {
 "section0.wa.sessions.title": "Sesiones de WhatsApp",
 "section0.wa.sessions.live": "EN VIVO",
 "section0.wa.mainSession": "Sesión principal",
-"section0.wa.user.fallbackName": "Sesión {n}"
+"section0.wa.user.fallbackName": "Sesión {n}",
+"section1.options.stickyIcon": "Icono fijo",
+"section3.sheetsConfiguration.actions": "Acciones"
+
+
 
 
 
@@ -7756,7 +7770,13 @@ const AR = {
 "section0.wa.sessions.title": "جلسات واتساب",
 "section0.wa.sessions.live": "مباشر",
 "section0.wa.mainSession": "الجلسة الرئيسية",
-"section0.wa.user.fallbackName": "جلسة {n}"
+"section0.wa.user.fallbackName": "جلسة {n}",
+"section3.sheetsConfiguration.actions": "إجراءات",
+"section1.options.stickyIcon": "أيقونة مثبتة"
+
+
+
+
 
 };
 
