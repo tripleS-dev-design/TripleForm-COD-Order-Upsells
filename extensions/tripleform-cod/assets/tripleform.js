@@ -2574,8 +2574,58 @@ window.TripleformCOD = (function () {
   /* ------------------------------------------------------------------ */
   /* Offers activation (SCOPED PER ROOT)                                */
   /* ------------------------------------------------------------------ */
+  function tfShopId(id) {
+    const s = String(id ?? "").trim();
+    if (!s) return "";
+    const m = s.match(/(\d+)\s*$/);
+    return m ? m[1] : s;
+  }
+
+  function tfRootEl(rootOrId) {
+    if (!rootOrId) return null;
+    return typeof rootOrId === "string" ? document.getElementById(rootOrId) : rootOrId;
+  }
+
+  function tfCurrentProductId(rootOrId) {
+    const el = tfRootEl(rootOrId);
+    return el ? tfShopId(el.getAttribute("data-product-id") || "") : "";
+  }
+
+  function tfGetScopeProductId(item, isOffer) {
+    if (!item) return "";
+    const explicit =
+      item.showOnProductId ||
+      item.targetProductId ||
+      item.forProductId ||
+      item.appliesToProductId ||
+      item.productScopeId ||
+      item.scopeProductId ||
+      item.parentProductId ||
+      "";
+    const expId = tfShopId(explicit);
+    if (expId) return expId;
+
+    // Backward compatible: OFFERS use `productId` as "show on product"
+    if (isOffer) {
+      const legacy = item.productId || item.product_id || item.product || "";
+      return tfShopId(legacy);
+    }
+
+    // UPSELLS keep `productId` for the upsell product itself (do NOT use it as scope)
+    return "";
+  }
+
+  function tfMatchesCurrentProduct(item, currentProductId, isOffer) {
+    const cur = tfShopId(currentProductId);
+    const scope = tfGetScopeProductId(item, isOffer);
+    if (!scope) return true; // no scope => global
+    if (!cur) return true; // unknown/cart mode => keep visible
+    return scope === cur;
+  }
+
   function lsKey(rootId, name) {
-    return `tf_${name}_${rootId}`;
+    const pid = tfCurrentProductId(rootId) || "0";
+    return `tf_${name}_${rootId}_${pid}`;
   }
 
   function getActiveOfferData(rootId) {
@@ -2753,14 +2803,16 @@ window.TripleformCOD = (function () {
     const offers = Array.isArray(offersCfg.offers) ? offersCfg.offers : [];
     const upsells = Array.isArray(offersCfg.upsells) ? offersCfg.upsells : [];
 
+    const currentProductId = tfCurrentProductId(rootId);
+
     const showOffers = mode === "all" || mode === "offers";
     const showUpsells = mode === "all" || mode === "upsells";
 
     const activeOffers = showOffers
-      ? offers.filter((o) => o && o.enabled !== false && o.showInPreview !== false)
+      ? offers.filter((o) => o && o.enabled !== false && o.showInPreview !== false && tfMatchesCurrentProduct(o, currentProductId, true))
       : [];
     const activeUpsells = showUpsells
-      ? upsells.filter((u) => u && u.enabled !== false && u.showInPreview !== false)
+      ? upsells.filter((u) => u && u.enabled !== false && u.showInPreview !== false && tfMatchesCurrentProduct(u, currentProductId, false))
       : [];
 
     if (!activeOffers.length && !activeUpsells.length) return "";
@@ -2914,9 +2966,11 @@ window.TripleformCOD = (function () {
 
   function initializeTimers(root, offersCfg) {
     if (!offersCfg || typeof offersCfg !== "object") return;
+    const currentProductId = String(root.getAttribute("data-product-id") || "").trim();
     const offers = Array.isArray(offersCfg.offers) ? offersCfg.offers : [];
     offers
       .filter((o) => o && o.enabled !== false && o.showInPreview !== false)
+      .filter((o) => tfMatchesCurrentProduct(o, currentProductId, true))
       .forEach((offer, idx) => {
         if (offer.enableTimer) {
           const holder = root.querySelector(`[data-tf-timer-offer="${idx}"]`);
@@ -3835,10 +3889,17 @@ const __tfCouponRemote = {
     }
 
     /* --------------------- Offers & packs: sync qty ----------------- */
-    const offersVisible = Array.isArray(offersCfg?.offers) ? offersCfg.offers : [];
+    const __currentProductId = String(root.getAttribute("data-product-id") || "").trim();
+
+    const offersVisible = Array.isArray(offersCfg?.offers)
+      ? offersCfg.offers.filter((o) => tfMatchesCurrentProduct(o, __currentProductId, true))
+      : [];
     const activeOffersOnly = offersVisible.filter((o) => o && o.enabled !== false && o.showInPreview !== false);
 
-    const upsellsVisible = Array.isArray(offersCfg?.upsells) ? offersCfg.upsells : [];
+    // Upsells: `productId` is the upsell product itself, so we only scope if you set `showOnProductId` (or similar)
+    const upsellsVisible = Array.isArray(offersCfg?.upsells)
+      ? offersCfg.upsells.filter((u) => tfMatchesCurrentProduct(u, __currentProductId, false))
+      : [];
     const activeUpsellsOnly = upsellsVisible.filter((u) => u && u.enabled !== false && u.showInPreview !== false);
 
 

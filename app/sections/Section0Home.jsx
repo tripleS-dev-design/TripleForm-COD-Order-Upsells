@@ -158,7 +158,6 @@ const LAYOUT_CSS = `
     }
   }
 
-
   /* 3 colonnes : gauche | milieu | droite */
   .tf-editor {
     display:grid;
@@ -734,6 +733,8 @@ function PlanCard({
 
 /* ====================== WhatsApp Monitor (LIVE) ====================== */
 function WhatsAppMonitorPanel({ stats, wa, loading }) {
+  const { t } = useI18n();
+
   const orders = Number(stats?.orders || 0);
   const abandoned = Number(stats?.abandoned || 0);
   const recovered = Number(stats?.recovered || 0);
@@ -743,11 +744,13 @@ function WhatsAppMonitorPanel({ stats, wa, loading }) {
   const lastConnected = wa?.lastConnected ? new Date(wa.lastConnected).toLocaleString() : null;
   const users = Array.isArray(wa?.users) ? wa.users : null;
 
+  const dash = "—";
+
   return (
     <div className="wa-card">
       <div className="wa-head">
         <div className="wa-head-left">
-          <div className="wa-logo" title="WhatsApp">
+          <div className="wa-logo" title={t("section0.wa.brandTitle")}>
             <svg width="18" height="18" viewBox="0 0 32 32" fill="none" aria-hidden="true">
               <path
                 d="M16 4C9.373 4 4 9.149 4 15.5c0 2.39.786 4.61 2.13 6.42L5 28l6.41-1.99A12.5 12.5 0 0 0 16 27c6.627 0 12-5.149 12-11.5S22.627 4 16 4Z"
@@ -762,16 +765,16 @@ function WhatsAppMonitorPanel({ stats, wa, loading }) {
           </div>
 
           <div className="wa-title">
-            <b>WhatsApp Monitor</b>
+            <b>{t("section0.wa.title")}</b>
           </div>
 
           <div style={{ marginLeft: 6 }}>
             {loading ? (
-              <Badge tone="info">Loading</Badge>
+              <Badge tone="info">{t("section0.wa.badge.loading")}</Badge>
             ) : connected ? (
-              <Badge tone="success">Connected</Badge>
+              <Badge tone="success">{t("section0.wa.badge.connected")}</Badge>
             ) : (
-              <Badge tone="critical">Not connected</Badge>
+              <Badge tone="critical">{t("section0.wa.badge.notConnected")}</Badge>
             )}
           </div>
         </div>
@@ -784,9 +787,15 @@ function WhatsAppMonitorPanel({ stats, wa, loading }) {
               <SafeIcon name="PhoneIcon" fallback="MobileIcon" />
             </div>
             <div className="wa-meta">
-              <div className="k">{connected ? "Connected number" : "WhatsApp status"}</div>
+              <div className="k">
+                {connected ? t("section0.wa.status.connectedNumber") : t("section0.wa.status.whatsappStatus")}
+              </div>
               <div className="s">
-                {loading ? "Loading live status..." : connected ? phoneNumber || "—" : "Scan QR from WhatsApp settings"}
+                {loading
+                  ? t("section0.wa.status.loading")
+                  : connected
+                  ? phoneNumber || dash
+                  : t("section0.wa.status.scanQr")}
               </div>
             </div>
           </div>
@@ -801,7 +810,7 @@ function WhatsAppMonitorPanel({ stats, wa, loading }) {
         {lastConnected && (
           <div className="wa-mini">
             <div className="wa-mini-line">
-              <span>Last connected</span>
+              <span>{t("section0.wa.lastConnected")}</span>
               <b>{lastConnected}</b>
             </div>
           </div>
@@ -813,8 +822,8 @@ function WhatsAppMonitorPanel({ stats, wa, loading }) {
               <SafeIcon name="OrdersIcon" fallback="CartIcon" />
             </div>
             <div className="wa-meta">
-              <div className="k">Orders</div>
-              <div className="s">Confirmed COD orders</div>
+              <div className="k">{t("section0.wa.orders.title")}</div>
+              <div className="s">{t("section0.wa.orders.sub")}</div>
             </div>
           </div>
           <div className="wa-val">{orders}</div>
@@ -826,8 +835,8 @@ function WhatsAppMonitorPanel({ stats, wa, loading }) {
               <SafeIcon name="CartIcon" fallback="CartIcon" />
             </div>
             <div className="wa-meta">
-              <div className="k">Abandoned</div>
-              <div className="s">Left without checkout</div>
+              <div className="k">{t("section0.wa.abandoned.title")}</div>
+              <div className="s">{t("section0.wa.abandoned.sub")}</div>
             </div>
           </div>
           <div className="wa-val">{abandoned}</div>
@@ -839,8 +848,8 @@ function WhatsAppMonitorPanel({ stats, wa, loading }) {
               <SafeIcon name="ArrowRightIcon" fallback="ArrowRightIcon" />
             </div>
             <div className="wa-meta">
-              <div className="k">Recovered</div>
-              <div className="s">Recovered via WhatsApp</div>
+              <div className="k">{t("section0.wa.recovered.title")}</div>
+              <div className="s">{t("section0.wa.recovered.sub")}</div>
             </div>
           </div>
           <div className="wa-val">{recovered}</div>
@@ -848,14 +857,14 @@ function WhatsAppMonitorPanel({ stats, wa, loading }) {
 
         <div className="wa-users">
           <div className="wa-users-head">
-            <span>WhatsApp sessions</span>
-            <span style={{ color: "#6B7280", fontWeight: 700, fontSize: 11 }}>LIVE</span>
+            <span>{t("section0.wa.sessions.title")}</span>
+            <span style={{ color: "#6B7280", fontWeight: 700, fontSize: 11 }}>{t("section0.wa.sessions.live")}</span>
           </div>
 
           {users && users.length ? (
             users.map((u, idx) => {
               const on = !!u.connected;
-              const label = u.name || `User ${idx + 1}`;
+              const label = u.name || t("section0.wa.user.fallbackName", { n: idx + 1 });
               const phone = u.phone || u.phoneNumber || "";
               return (
                 <div className="wa-user" key={idx}>
@@ -863,10 +872,12 @@ function WhatsAppMonitorPanel({ stats, wa, loading }) {
                     <div className={`wa-user-dot ${on ? "" : "off"}`} />
                     <div className="wa-user-meta">
                       <b>{label}</b>
-                      <span>{phone || "—"}</span>
+                      <span>{phone || dash}</span>
                     </div>
                   </div>
-                  <Badge tone={on ? "success" : "critical"}>{on ? "Connected" : "Offline"}</Badge>
+                  <Badge tone={on ? "success" : "critical"}>
+                    {on ? t("section0.wa.badge.connected") : t("section0.wa.badge.offline")}
+                  </Badge>
                 </div>
               );
             })
@@ -875,11 +886,13 @@ function WhatsAppMonitorPanel({ stats, wa, loading }) {
               <div className="wa-user-left">
                 <div className={`wa-user-dot ${connected ? "" : "off"}`} />
                 <div className="wa-user-meta">
-                  <b>Main session</b>
-                  <span>{phoneNumber || "—"}</span>
+                  <b>{t("section0.wa.mainSession")}</b>
+                  <span>{phoneNumber || dash}</span>
                 </div>
               </div>
-              <Badge tone={connected ? "success" : "critical"}>{connected ? "Connected" : "Offline"}</Badge>
+              <Badge tone={connected ? "success" : "critical"}>
+                {connected ? t("section0.wa.badge.connected") : t("section0.wa.badge.offline")}
+              </Badge>
             </div>
           )}
         </div>
@@ -896,26 +909,29 @@ function SingleVideoPreview({ onOpen }) {
       <div className="tf-video-hero-top">
         <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
           <Icon source={PI.PlayIcon} />
-          <span>Video guide</span>
+          <span>{t("section0.video.guide")}</span>
         </span>
-        <span style={{ opacity: 0.9, fontWeight: 700 }}>TripleForm COD</span>
+        <span style={{ opacity: 0.9, fontWeight: 700 }}>{t("section0.header.title")}</span>
       </div>
 
       <div className="tf-video-hero-body">
-        <div className="tf-video-screen" role="button" tabIndex={0} onClick={onOpen} onKeyDown={(e) => e.key === "Enter" && onOpen?.()}>
+        <div
+          className="tf-video-screen"
+          role="button"
+          tabIndex={0}
+          onClick={onOpen}
+          onKeyDown={(e) => e.key === "Enter" && onOpen?.()}
+          aria-label={t("section0.video.open")}
+        >
           <div className="tf-video-play">▶</div>
         </div>
-        <div className="tf-video-hero-title">
-          {t?.("section0.videos.item.intro.title") || "Introduction - Full walkthrough"}
-        </div>
-        <div className="tf-video-hero-sub">
-          {t?.("section0.videos.item.intro.sub") ||
-            "Installation, settings, sheets, pixels, anti-bot, WhatsApp (one complete guide)."}
-        </div>
+
+        <div className="tf-video-hero-title">{t("section0.videos.item.intro.title")}</div>
+        <div className="tf-video-hero-sub">{t("section0.videos.item.intro.sub")}</div>
 
         <div style={{ marginTop: 10 }}>
           <Button onClick={onOpen} fullWidth variant="primary">
-            Watch now
+            {t("section0.video.watchNow")}
           </Button>
         </div>
       </div>
@@ -1009,8 +1025,8 @@ function Section0Inner() {
     if (!testEmbed) {
       setVideoBanner({
         tone: "critical",
-        title: "Invalid YouTube link",
-        body: "Please paste a valid YouTube URL (watch?v=..., youtu.be/..., shorts/...).",
+        title: t("section0.video.banner.invalid.title"),
+        body: t("section0.video.banner.invalid.body"),
       });
       return;
     }
@@ -1039,8 +1055,8 @@ function Section0Inner() {
     setVideoSaving(false);
     setVideoBanner({
       tone: "success",
-      title: "Saved",
-      body: "Video link updated successfully.",
+      title: t("section0.video.banner.saved.title"),
+      body: t("section0.video.banner.saved.body"),
     });
   }
 
@@ -1170,13 +1186,13 @@ function Section0Inner() {
 
       if (!res.ok || !data?.ok) {
         console.error("Billing request failed:", data);
-        alert("Erreur lors de la création de l'abonnement. Regarde la console.");
+        alert(t("section0.billing.alert.createFailed"));
         return;
       }
       window.top.location.href = data.confirmationUrl;
     } catch (e) {
       console.error(e);
-      alert("Erreur réseau pendant la création du plan d'abonnement.");
+      alert(t("section0.billing.alert.networkError"));
     }
   }
   const handleBuyMonthly = (plan) => openBilling(plan, "monthly");
@@ -1199,16 +1215,16 @@ function Section0Inner() {
       <Modal
         open={videoModalOpen}
         onClose={closeVideo}
-        title="Video guide"
+        title={t("section0.video.modal.title")}
         primaryAction={{
-          content: "Close",
+          content: t("section0.video.modal.close"),
           onAction: closeVideo,
         }}
       >
         <Modal.Section>
           {!embedUrl ? (
-            <Banner tone="critical" title="Invalid YouTube link">
-              <p>Please update the link from the interface (right panel).</p>
+            <Banner tone="critical" title={t("section0.video.modal.invalid.title")}>
+              <p>{t("section0.video.modal.invalid.body")}</p>
             </Banner>
           ) : (
             <div className="tf-yt-wrap">
@@ -1216,7 +1232,7 @@ function Section0Inner() {
                 <iframe
                   className="tf-yt-iframe"
                   src={embedUrl}
-                  title="TripleForm COD - Video guide"
+                  title={t("section0.video.modal.iframeTitle")}
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                   allowFullScreen
                 />
@@ -1226,7 +1242,7 @@ function Section0Inner() {
 
           <div style={{ marginTop: 10 }}>
             <Text as="p" tone="subdued">
-              Current link: <b>{videoUrl}</b>
+              {t("section0.video.modal.currentLink")} <b>{videoUrl}</b>
             </Text>
           </div>
         </Modal.Section>
@@ -1251,7 +1267,7 @@ function Section0Inner() {
             >
               <img
                 src="/tripleform-cod-icon.png"
-                alt="TripleForm COD"
+                alt={t("section0.header.title")}
                 style={{ width: "100%", height: "100%", display: "block", objectFit: "cover" }}
               />
             </div>
@@ -1266,7 +1282,7 @@ function Section0Inner() {
               <span style={{ display: "inline-flex" }}>
                 <Icon source={PI.PlayIcon} />
               </span>
-              <span>Video guide</span>
+              <span>{t("section0.video.guide")}</span>
             </button>
           </div>
 
@@ -1439,23 +1455,29 @@ function Section0Inner() {
                 <Card>
                   <div style={{ padding: 12 }}>
                     <Text as="p" variant="headingSm">
-                      Video link (Home)
+                      {t("section0.video.settings.title")}
                     </Text>
+
                     <div style={{ marginTop: 10 }}>
                       <TextField
-                        label="YouTube URL"
+                        label={t("section0.video.settings.label")}
                         value={videoDraft}
                         onChange={(v) => setVideoDraft(v)}
                         autoComplete="off"
-                        placeholder="https://www.youtube.com/watch?v=..."
+                        placeholder={t("section0.video.settings.placeholder")}
                       />
                     </div>
 
-                   
+                    {/* ✅ SAVE BUTTON (was missing in original UI) */}
+                    <div style={{ marginTop: 10 }}>
+                      <Button onClick={saveVideoUrl} loading={videoSaving} fullWidth variant="primary">
+                        {t("section0.video.settings.save")}
+                      </Button>
+                    </div>
 
                     <div style={{ marginTop: 8 }}>
                       <Text as="p" tone="subdued">
-                        Tip: click “Video guide” in the header to open the popup.
+                        {t("section0.video.settings.tip")}
                       </Text>
                     </div>
                   </div>
