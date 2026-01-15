@@ -1216,7 +1216,7 @@ const EN = {
 "section6.province.provinceHelp": "Select a province or enter a custom name",
 "section6.province.codeLabel": "Code",
 "section6.province.codeHelp": "Optional code (ex: MA-01, DZ-16)",
-"section6.province.rateLabel": "Rate ({currency})",
+"section6.province.rateLabel": "Rate ",
 "section6.province.rateHelp": "Shipping fee for this province",
 
 "section6.city.title": "Shipping rates by city — {country}",
@@ -3159,7 +3159,7 @@ const FR = {
 "section6.province.provinceHelp": "Sélectionnez une province ou entrez un nom personnalisé",
 "section6.province.codeLabel": "Code",
 "section6.province.codeHelp": "Code optionnel (ex : MA-01, DZ-16)",
-"section6.province.rateLabel": "Tarif ({currency})",
+"section6.province.rateLabel": "Tarif ",
 "section6.province.rateHelp": "Frais de livraison pour cette province",
 
 "section6.city.title": "Tarifs de livraison par ville — {country}",
@@ -5120,7 +5120,7 @@ const ES = {
 "section6.province.provinceHelp": "Selecciona una provincia o introduce un nombre personalizado",
 "section6.province.codeLabel": "Código",
 "section6.province.codeHelp": "Código opcional (ej: MA-01, DZ-16)",
-"section6.province.rateLabel": "Tarifa ({currency})",
+"section6.province.rateLabel": "Tarifa ",
 "section6.province.rateHelp": "Coste de envío para esta provincia",
 
 "section6.city.title": "Tarifas de envío por ciudad — {country}",
@@ -7046,7 +7046,7 @@ const AR = {
 "section6.province.provinceHelp": "اختر ولاية أو أدخل اسم مخصص",
 "section6.province.codeLabel": "الرمز",
 "section6.province.codeHelp": "رمز اختياري (مثال: MA-01, DZ-16)",
-"section6.province.rateLabel": "السعر ({currency})",
+"section6.province.rateLabel": "السعر ",
 "section6.province.rateHelp": "رسوم الشحن لهذه الولاية",
 
 "section6.city.title": "أسعار الشحن حسب المدينة — {country}",
