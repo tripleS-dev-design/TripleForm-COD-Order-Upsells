@@ -4691,7 +4691,12 @@ let recaptchaToken = null;
 
       const activeOfferData = getActiveOfferData(rootId);
 
+      // ✅ Country from settings (Form Settings)
+      const countryCodeFromSettings = String(cfg?.behavior?.country || "MA").trim().toUpperCase();
+
       const payload = {
+        countryCode: countryCodeFromSettings, // ✅ IMPORTANT (backend must trust this)
+        country: countryCodeFromSettings,     // ✅ optional (compat)
         fields: buildFieldsPayload(), // ✅ ALL fields
         productId: root.getAttribute("data-product-id") || null,
         variantId,

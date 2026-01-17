@@ -1894,7 +1894,6 @@ function OutletEditor() {
                 <TextField label={t("section1.buttons.totalSuffixLabel")} value={config.uiTitles.totalSuffix} onChange={(v) => setUiT({ totalSuffix: v })} />
                 <TextField label={t("section1.buttons.successTextLabel")} value={config.form.successText} onChange={(v) => setForm({ successText: v })} />
                 <div style={{ display: "grid", gap: 8 }}>
-                  <div style={{ fontSize: 13, fontWeight: 600 }}>{t("section1.buttons.buttonIcon")}</div>
                   <IconSelector type="button" selectedIcon={config.form.buttonIcon} onSelect={(icon) => setForm({ buttonIcon: icon })} />
                 </div>
 
