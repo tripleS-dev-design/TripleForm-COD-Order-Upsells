@@ -353,10 +353,17 @@ export const action = async ({ request }) => {
       .trim()
       .replace(/\s+/g, "");
 
-    const countryCode =
-      String(body.countryCode || fields.countryCode || getCountryCodeFromRequest(request) || "")
-        .trim()
-        .toUpperCase() || null;
+    const countryCode = String(
+  body?.countryCode ||
+  body?.country ||
+  fields?.countryCode ||
+  fields?.country ||
+  getCountryCodeFromRequest(request) ||
+  "MA"
+)
+  .trim()
+  .toUpperCase();
+
 
     // Honeypot + anti-bot
     const honeypotInfo = body.honeypot || body.antiBot || body.antibot || null;
