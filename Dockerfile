@@ -32,10 +32,6 @@ RUN echo "=== VÉRIFICATION DU BUILD ===" && \
     ls -la build/client/ && \
     ls -la build/client/assets/ | head -5
 
-# Commande de démarrage
-CMD ["sh", "-c", "npx prisma migrate deploy && echo '✅ Migrations appliquées' && node server.js"]
-
-
 # Installe les dépendances système pour Puppeteer et WhatsApp
 RUN apk add --no-cache \
     openssl \
@@ -57,4 +53,6 @@ RUN apk add --no-cache \
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 ENV CHROMIUM_PATH=/usr/bin/chromium-browser
-ENV NODE_ENV=production
+
+# Commande de démarrage (migration désactivée temporairement)
+CMD ["sh", "-c", "echo '⚠️ Migration désactivée pour le debug' && node server.js"]
