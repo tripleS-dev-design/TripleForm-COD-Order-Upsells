@@ -1,0 +1,45 @@
+# shopify.app.toml - Configuration pour TripleForm COD Order Upsells sur Fly.io
+
+client_id = "ac6bf0c04b992f852be8538ab90a4691"
+name = "TripleForm COD Order - Upsells"
+application_url = "https://tripleform-cod-order-upsells.fly.dev"
+embedded = true
+handle = "tripleform-cod"
+
+[build]
+  automatically_update_urls_on_dev = false
+
+[webhooks]
+  api_version = "2024-10"
+
+[[webhooks.subscriptions]]
+  uri = "/webhooks/compliance"
+  compliance_topics = [ "customers/data_request", "customers/redact", "shop/redact" ]
+
+[[webhooks.subscriptions]]
+  topics = [ "app/scopes_update" ]
+  uri = "/webhooks/app/scopes_update"
+
+[[webhooks.subscriptions]]
+  topics = [ "app/uninstalled" ]
+  uri = "/webhooks/app/uninstalled"
+
+[access_scopes]
+  scopes = "read_customers,write_draft_orders,read_orders,write_products,read_products,read_content,write_content,read_discounts"
+  optional_scopes = [ ]
+  use_legacy_install_flow = false
+
+[auth]
+  redirect_urls = [
+    "https://tripleform-cod-order-upsells.fly.dev/auth/callback",
+    "https://tripleform-cod-order-upsells.fly.dev/api/auth/callback",
+    "https://tripleform-cod-order-upsells.fly.dev/auth/shopify/callback"
+  ]
+
+[app_proxy]
+  url = "https://tripleform-cod-order-upsells.fly.dev"
+  subpath = "tripleform-cod"
+  prefix = "apps"
+
+[pos]
+  embedded = false
