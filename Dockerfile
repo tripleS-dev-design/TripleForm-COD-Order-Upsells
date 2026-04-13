@@ -1,38 +1,8 @@
 FROM node:20-alpine
 
-# Installer openssl
-RUN apk add --no-cache openssl
-
-# Définir le dossier de travail
 WORKDIR /app
 
-ENV NODE_ENV=production
-
-# Copier package.json et package-lock.json
-COPY package.json package-lock.json* ./
-
-# Installer TOUTES les dépendances
-RUN npm install && npm cache clean --force
-
-# Supprimer Shopify CLI si inutile en production
-RUN npm remove @shopify/cli
-
-# Copier le reste du code
-COPY . .
-
-# Générer Prisma client
-RUN npx prisma generate
-
-# Build Remix pour la production
-RUN npm run build
-
-# Vérifier que le build existe
-RUN echo "=== VÉRIFICATION DU BUILD ===" && \
-    ls -la build/ && \
-    ls -la build/client/ && \
-    ls -la build/client/assets/ | head -5
-
-# Installe les dépendances système pour Puppeteer et WhatsApp
+# Installer les dépendances système (une seule fois)
 RUN apk add --no-cache \
     openssl \
     chromium \
@@ -42,17 +12,33 @@ RUN apk add --no-cache \
     ca-certificates \
     ttf-freefont \
     font-noto-emoji \
-    && apk add --no-cache --virtual .build-deps \
-    curl \
-    && rm -rf /var/lib/apt/lists/* \
-    /var/cache/apk/* \
-    /usr/share/man \
-    /tmp/*
+    && rm -rf /var/lib/apt/lists/* /var/cache/apk/* /usr/share/man /tmp/*
 
-# Définit l'environnement pour Puppeteer
+ENV NODE_ENV=production
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 ENV CHROMIUM_PATH=/usr/bin/chromium-browser
 
-# Commande de démarrage (migration désactivée temporairement)
-CMD ["sh", "-c", "echo '⚠️ Migration désactivée pour le debug' && node server.js"]
+# Copier les fichiers de dépendances (pour bénéficier du cache)
+COPY package.json package-lock.json* ./
+
+# Installer les dépendances npm
+RUN npm install && npm cache clean --force
+
+# Supprimer Shopify CLI si inutile
+RUN npm remove @shopify/cli
+
+# Copier le reste du code source
+COPY . .
+
+# Générer le client Prisma
+RUN npx prisma generate
+
+# Build Remix
+RUN npm run build
+
+# Vérification rapide
+RUN echo "=== BUILD OK ==="
+
+# Commande de démarrage (migration désactivée)
+CMD ["sh", "-c", "echo '⚠️ Migration désactivée' && node server.js"]
