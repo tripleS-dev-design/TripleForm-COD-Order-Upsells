@@ -26,7 +26,7 @@ handle = "tripleform-cod"
 
 [access_scopes]
   scopes = "read_customers,write_draft_orders,read_orders,write_products,read_products,read_content,write_content,read_discounts"
-  optional_scopes = [ ]
+  optional_scopes = []
   use_legacy_install_flow = false
 
 [auth]
