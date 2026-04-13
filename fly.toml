@@ -1,12 +1,9 @@
-# fly.toml app configuration file generated for app-autumn-grass-4323 on 2026-04-13T12:38:25Z
-#
-# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
-#
-
+# fly.toml configuration file for tripleform-cod-order-upsells
 app = 'tripleform-cod-order-upsells'
 primary_region = 'iad'
 
 [build]
+  dockerfile = "Dockerfile"
 
 [http_service]
   internal_port = 8080
@@ -20,4 +17,3 @@ primary_region = 'iad'
   memory = '1gb'
   cpu_kind = 'shared'
   cpus = 1
-  memory_mb = 256
