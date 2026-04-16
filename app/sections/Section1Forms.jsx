@@ -1,6 +1,6 @@
 // ===== File: app/sections/Section1Forms.jsx =====
-// ✅ Version conforme Shopify : tous les champs de données personnelles ont été supprimés
-// Seuls les champs non‑personnels sont conservés : quantity, pincode, pincode2, pincode3, notes
+// ✅ Version conforme Shopify : tous les champs de données personnelles supprimés
+// ✅ Nettoyage automatique des anciennes configurations
 
 import React, {
   createContext,
@@ -817,7 +817,7 @@ const DESIGN_PRESETS = {
   },
 };
 
-/* ============================== Icons library (clean) ============================== */
+/* ============================== Icons library ============================== */
 const NONE_ICON = { value: "", label: "Aucun" };
 
 // ✅ Seuls les champs conservés ont leur bibliothèque d'icônes
@@ -1026,6 +1026,42 @@ function PolarisIcon({
   );
 }
 
+/* ============================== ✅ NOUVEAU : Nettoyage des champs interdits ============================== */
+// Liste blanche des champs autorisés (tout le reste sera supprimé)
+const ALLOWED_FIELDS = ["quantity", "pincode", "pincode2", "pincode3", "notes"];
+
+// Fonction de nettoyage d'une configuration chargée
+function cleanConfig(rawConfig) {
+  if (!rawConfig) return rawConfig;
+  
+  const cleaned = { ...rawConfig };
+  
+  // 1. Supprimer les champs non autorisés
+  if (cleaned.fields) {
+    const filteredFields = {};
+    ALLOWED_FIELDS.forEach(key => {
+      if (cleaned.fields[key]) {
+        filteredFields[key] = cleaned.fields[key];
+      }
+    });
+    cleaned.fields = filteredFields;
+  }
+  
+  // 2. Forcer fieldsOrder à ne contenir que les champs autorisés
+  if (cleaned.meta?.fieldsOrder) {
+    cleaned.meta.fieldsOrder = cleaned.meta.fieldsOrder.filter(k => ALLOWED_FIELDS.includes(k));
+  } else if (cleaned.meta) {
+    cleaned.meta.fieldsOrder = [...ALLOWED_FIELDS];
+  }
+  
+  // 3. Incrémenter la version pour forcer la mise à jour
+  if (cleaned.meta) {
+    cleaned.meta.version = (cleaned.meta.version || 3) + 1;
+  }
+  
+  return cleaned;
+}
+
 /* ============================== Page ============================== */
 function Section1FormsLayoutInner() {
   useInjectCss();
@@ -1053,12 +1089,11 @@ function Section1FormsLayoutInner() {
     [hostB64, apiKey]
   );
 
-  // ✅ Configuration initiale sans aucun champ personnel
-  const [config, setConfig] = useState(() => ({
+  // ✅ Configuration par défaut SANS AUCUN CHAMP PERSONNEL
+  const DEFAULT_CONFIG = {
     meta: {
-      version: 3,
+      version: 4, // ← version incrémentée pour forcer la mise à jour
       preset: "CleanWhite",
-      // Seulement les champs non‑personnels
       fieldsOrder: ["quantity", "pincode", "pincode2", "pincode3", "notes"],
     },
     form: {
@@ -1126,8 +1161,9 @@ function Section1FormsLayoutInner() {
       enableCouponField: false,
       enableVariantSelector: false,
     },
-  }));
+  };
 
+  const [config, setConfig] = useState(() => DEFAULT_CONFIG);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
   const [showPreview, setShowPreview] = useState(false);
@@ -1147,7 +1183,8 @@ function Section1FormsLayoutInner() {
         if (res.ok) {
           const j = await res.json();
           if (j?.ok && j.settings) {
-            const clean = sanitizeDeep(j.settings);
+            // Nettoyer les anciennes données avant fusion
+            const clean = cleanConfig(sanitizeDeep(j.settings));
             if (!cancelled) {
               setConfig((prev) => ({
                 ...prev,
@@ -1177,7 +1214,7 @@ function Section1FormsLayoutInner() {
             ? window.localStorage.getItem("tripleform_cod_config")
             : null;
         if (s && !cancelled) {
-          const parsed = sanitizeDeep(JSON.parse(s));
+          const parsed = cleanConfig(sanitizeDeep(JSON.parse(s)));
           setConfig((prev) => ({
             ...prev,
             ...parsed,
@@ -2207,7 +2244,6 @@ function FieldEditor({ fieldKey }) {
   const st = config.fields[fieldKey] || {};
   const type = st.type || "text";
 
-  // ✅ Mise à jour pour les champs conservés uniquement
   const titleKeyMap = {
     quantity: "section1.fieldEditor.titlePrefix.quantity",
     pincode: "section1.fieldEditor.titlePrefix.pincode",
@@ -2633,9 +2669,6 @@ function PreviewPanel() {
     );
   };
 
-  // Comme province et city ne sont plus dans fields, on les retire de la prévisualisation
-  // On garde la logique pour les pays mais sans affichage
-
   // ✅ Ajout du champ coupon si activé
   const renderCouponField = () => {
     if (!config.ui?.enableCouponField) return null;
@@ -2856,7 +2889,6 @@ function PreviewPanel() {
           {orderedFields.map((key) => {
             const f = config.fields[key];
             if (!f?.on) return null;
-            // Aucun champ province/city à traiter
             return renderField(f, key);
           })}
 
