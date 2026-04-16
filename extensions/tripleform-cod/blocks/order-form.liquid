@@ -1,12 +1,10 @@
 {% comment %}
 Tripleform COD – App block (product template)
 
-✅ CORRECT LOGIC for data-settings / data-offers (no double JSON encoding)
-✅ Adds 3 options from GEO:
-- ui.enableCouponField
-- ui.enableVariantSelector
-✅ Adds cart compatibility flags + layout fallback
-✅ reCAPTCHA v2 ONLY via data-*
+✅ CONFORME SHOPIFY – Aucune donnée personnelle collectée
+✅ Champs autorisés : quantity, pincode, pincode2, pincode3, notes
+✅ Carrier Service pour les frais de livraison (pas de calcul front-end)
+✅ reCAPTCHA v2 uniquement via data-*
 {% endcomment %}
 
 {%- assign tf_prod_val = product.metafields.tripleform_cod.settings.value -%}
@@ -24,7 +22,7 @@ Tripleform COD – App block (product template)
   {%- endif -%}
 {%- endif -%}
 
-{%- comment -%} ✅ UI toggles from GEO config (product > shop fallback) {%- endcomment -%}
+{%- comment -%} ✅ UI toggles from GEO config (product > shop fallback) – seulement coupon et variantes {%- endcomment -%}
 {%- assign tf_geo_prod_val = product.metafields.tripleform_cod.geo.value -%}
 {%- assign tf_geo_shop_val = shop.metafields.tripleform_cod.geo.value -%}
 
@@ -54,69 +52,24 @@ Tripleform COD – App block (product template)
 {%- assign tf_upsells_position = section.settings.upsells_position | default: 'top' -%}
 {%- assign tf_upsells_order = section.settings.upsells_order | default: 2 -%}
 
-{%- comment -%} ✅ Settings JSON (product > shop > default) {%- endcomment -%}
+{%- comment -%} ✅ Settings JSON (product > shop > default) – SANS CHAMPS PERSONNELS {%- endcomment -%}
 {%- if tf_prod_val and tf_prod_val != blank -%}
   {%- assign tf_json = tf_prod_val -%}
 {%- elsif tf_shop_val and tf_shop_val != blank -%}
   {%- assign tf_json = tf_shop_val -%}
 {%- else -%}
-  {%- assign shop_country_code = shop.country_code | default: 'MA' -%}
-
-  {%- assign phone_prefix = '+212' -%}
-  {%- assign province_label = 'Province' -%}
-  {%- assign province_placeholder = 'Select province' -%}
-  {%- assign city_label = 'City' -%}
-  {%- assign city_placeholder = 'Select city' -%}
-
-  {%- case shop_country_code -%}
-    {%- when 'MA' -%}
-      {%- assign phone_prefix = '+212' -%}
-      {%- assign city_label = 'Ville' -%}
-      {%- assign city_placeholder = 'Choisir une ville' -%}
-    {%- when 'DZ' -%}
-      {%- assign phone_prefix = '+213' -%}
-      {%- assign province_label = 'Wilaya' -%}
-      {%- assign province_placeholder = 'Select wilaya' -%}
-      {%- assign city_label = 'Commune' -%}
-      {%- assign city_placeholder = 'Choisir une commune' -%}
-    {%- when 'TN' -%}
-      {%- assign phone_prefix = '+216' -%}
-      {%- assign province_label = 'Gouvernorat' -%}
-      {%- assign province_placeholder = 'Select gouvernorat' -%}
-      {%- assign city_label = 'Ville' -%}
-      {%- assign city_placeholder = 'Choisir une ville' -%}
-    {%- when 'FR' -%}
-      {%- assign phone_prefix = '+33' -%}
-      {%- assign province_label = 'Région' -%}
-      {%- assign province_placeholder = 'Select region' -%}
-      {%- assign city_label = 'Ville' -%}
-      {%- assign city_placeholder = 'Choisir une ville' -%}
-    {%- when 'ES' -%}
-      {%- assign phone_prefix = '+34' -%}
-      {%- assign province_label = 'Provincia' -%}
-      {%- assign province_placeholder = 'Select provincia' -%}
-      {%- assign city_label = 'Ciudad' -%}
-      {%- assign city_placeholder = 'Select city' -%}
-    {%- when 'US' -%}
-      {%- assign phone_prefix = '+1' -%}
-      {%- assign province_label = 'State' -%}
-      {%- assign province_placeholder = 'Select state' -%}
-    {%- else -%}
-      {%- assign phone_prefix = '+212' -%}
-  {%- endcase -%}
-
   {%- capture tf_json -%}
   {
     "meta": {
-      "version": 1,
+      "version": 5,
       "preset": "CleanWhite",
       "uiPreset": "{{ section.settings.ui_preset | default: 'A' }}",
-      "fieldsOrder": ["name","phone","quantity","address","city","province","notes"]
+      "fieldsOrder": ["quantity","pincode","pincode2","pincode3","notes"]
     },
     "form": {
       "style": "inline",
       "title": "Order form",
-      "subtitle": "Please enter your contact information",
+      "subtitle": "Enter quantity and delivery details",
       "buttonText": "Order now",
       "successText": "Thanks! We'll contact you",
       "buttonIcon": "CartIcon"
@@ -176,26 +129,22 @@ Tripleform COD – App block (product template)
       "drawerSize": "md",
       "overlayColor": "#020617",
       "overlayOpacity": 70,
-      "country": "{{ shop_country_code }}",
-      "codCountry": "{{ shop_country_code }}",
-      "provinceKey": "",
-      "cityKey": ""
+      "country": "{{ shop.country_code | default: 'MA' }}",
+      "codCountry": "{{ shop.country_code | default: 'MA' }}"
     },
     "fields": {
-      "name": { "on": true, "required": true, "type": "text", "label": "Full name", "ph": "Your full name", "icon": "ProfileIcon" },
-      "phone": { "on": true, "required": true, "type": "tel", "label": "Phone (WhatsApp)", "ph": "Phone number", "prefix": "{{ phone_prefix }}", "icon": "PhoneIcon" },
       "quantity": { "on": true, "required": true, "type": "number", "label": "Quantity", "ph": "1", "min": 1, "max": 10, "icon": "HashtagIcon" },
-      "province": { "on": true, "required": false, "type": "select", "label": "{{ province_label }}", "ph": "{{ province_placeholder }}", "icon": "RegionIcon" },
-      "city": { "on": true, "required": false, "type": "select", "label": "{{ city_label }}", "ph": "{{ city_placeholder }}", "icon": "CityIcon" },
-      "address": { "on": false, "required": false, "type": "text", "label": "Address", "ph": "Full address", "icon": "LocationIcon" },
-      "notes": { "on": false, "required": false, "type": "textarea", "label": "Notes", "ph": "(optional)", "icon": "NoteIcon" }
+      "pincode": { "on": true, "required": false, "type": "text", "label": "Pincode / Postal code", "ph": "e.g., 75001", "icon": "MapPinIcon" },
+      "pincode2": { "on": false, "required": false, "type": "text", "label": "Additional pincode", "ph": "(optional)", "icon": "MapPinIcon" },
+      "pincode3": { "on": false, "required": false, "type": "text", "label": "Extra pincode", "ph": "(optional)", "icon": "MapPinIcon" },
+      "notes": { "on": false, "required": false, "type": "textarea", "label": "Order notes", "ph": "(optional)", "icon": "NoteIcon" }
     },
     "cartTitles": {
       "top": "Order summary",
       "price": "Product price",
       "shipping": "Shipping price",
       "total": "Total",
-      "shippingToCalculate": "Shipping to calculate",
+      "shippingToCalculate": "Calculated at checkout",
       "cartIcon": "CartIcon"
     },
     "uiTitles": {
@@ -241,18 +190,9 @@ Tripleform COD – App block (product template)
   {%- endcapture -%}
 {%- endif -%}
 
-{%- comment -%} ✅ CORRECT: Always output as valid JSON {%- endcomment -%}
-{%- if tf_prod_val and tf_prod_val != blank or tf_shop_val and tf_shop_val != blank -%}
-  {%- assign tf_settings_json = tf_json | json -%}
-{%- else -%}
-  {%- assign tf_settings_json = tf_json -%}
-{%- endif -%}
-
-{%- if tf_offers_prod_val and tf_offers_prod_val != blank or tf_offers_shop_val and tf_offers_shop_val != blank -%}
-  {%- assign tf_offers_json_output = tf_offers_json | json -%}
-{%- else -%}
-  {%- assign tf_offers_json_output = tf_offers_json -%}
-{%- endif -%}
+{%- comment -%} ✅ Correction des éventuels caractères Ruby hash {%- endcomment -%}
+{%- assign tf_settings_fixed = tf_json | replace: '=&gt;', ':' | replace: '"nil"', 'null' | replace: 'nil', 'null' -%}
+{%- assign tf_offers_fixed = tf_offers_json | replace: '=&gt;', ':' | replace: '"nil"', 'null' | replace: 'nil', 'null' -%}
 
 {%- assign current_variant = product.selected_or_first_available_variant -%}
 
@@ -261,20 +201,13 @@ Tripleform COD – App block (product template)
   class="tripleform-cod"
   data-section-id="{{ section.id }}"
   data-ui-preset="{{ section.settings.ui_preset | default: 'A' }}"
-
-  {%- comment -%} ✅ EMERGENCY FIX: Convert Ruby hash to JSON {%- endcomment -%}
-{%- assign tf_settings_fixed = tf_settings_json | replace: '=&gt;', ':' | replace: '"nil"', 'null' | replace: 'nil', 'null' -%}
-{%- assign tf_offers_fixed = tf_offers_json_output | replace: '=&gt;', ':' | replace: '"nil"', 'null' | replace: 'nil', 'null' -%}
-
-data-settings="{{ tf_settings_fixed | escape }}"
-data-offers="{{ tf_offers_fixed | escape }}"
-
+  data-settings="{{ tf_settings_fixed | escape }}"
+  data-offers="{{ tf_offers_fixed | escape }}"
   data-product-id='{{ product.id }}'
   data-variant-id='{{ current_variant.id }}'
   data-currency='{{ cart.currency.iso_code | default: shop.currency }}'
   data-locale='{{ request.locale.iso_code }}'
 
-  {%- comment -%} ✅ Layout fallback from Theme Editor {%- endcomment -%}
   data-summary-position="{{ tf_summary_position }}"
   data-summary-order="{{ tf_summary_order }}"
   data-offers-position="{{ tf_offers_position }}"
@@ -289,9 +222,10 @@ data-offers="{{ tf_offers_fixed | escape }}"
   data-recaptcha-v2-theme="light"
   data-recaptcha-v2-container="#tf-recaptcha-v2-{{ section.id }}"
 
-  data-geo-enabled="true"
+  {%- comment -%} ✅ GEO désactivé pour le front – le Carrier Service gère les frais {%- endcomment -%}
+  data-geo-enabled="false"
   data-geo-country="{{ shop.country_code | default: 'MA' }}"
-  data-geo-endpoint="/apps/tripleform-cod/api/geo/calc"
+  data-geo-endpoint=""
 
   data-ui-coupon="{% if tf_ui_coupon %}true{% else %}false{% endif %}"
   data-ui-variants="{% if tf_ui_variants %}true{% else %}false{% endif %}"
@@ -323,7 +257,6 @@ data-offers="{{ tf_offers_fixed | escape }}"
       const el = document.getElementById('tripleform-cod-{{ section.id }}');
       if (!el || !window.TripleformCOD || typeof window.TripleformCOD.boot !== 'function') return;
 
-      // si déjà rendu, stop
       if (el.getAttribute('data-tf-booted') === '1' && el.querySelector('.tf-shell')) return;
 
       try {
@@ -348,7 +281,6 @@ data-offers="{{ tf_offers_fixed | escape }}"
     document.addEventListener('shopify:block:select', schedule);
   })();
 </script>
-
 
 {% schema %}
 {
