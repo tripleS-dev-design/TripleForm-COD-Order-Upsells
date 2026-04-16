@@ -1,4 +1,7 @@
-// ===== File: app/sections/Section1FormsLayout.jsx =====
+// ===== File: app/sections/Section1Forms.jsx =====
+// ✅ Version conforme Shopify : tous les champs de données personnelles ont été supprimés
+// Seuls les champs non‑personnels sont conservés : quantity, pincode, pincode2, pincode3, notes
+
 import React, {
   createContext,
   useContext,
@@ -817,23 +820,13 @@ const DESIGN_PRESETS = {
 /* ============================== Icons library (clean) ============================== */
 const NONE_ICON = { value: "", label: "Aucun" };
 
+// ✅ Seuls les champs conservés ont leur bibliothèque d'icônes
 const ICON_LIBRARY = {
   cartTitle: [
     NONE_ICON,
     { value: "CartIcon", label: "Panier" },
     { value: "ReceiptIcon", label: "Reçu" },
     { value: "NoteIcon", label: "Note" },
-  ],
-  name: [
-    NONE_ICON,
-    { value: "PersonIcon", label: "Personne" },
-    { value: "ProfileIcon", label: "Profil" },
-  ],
-  phone: [
-    NONE_ICON,
-    { value: "PhoneIcon", label: "Téléphone" },
-    { value: "MobileIcon", label: "Mobile" },
-    { value: "ChatIcon", label: "WhatsApp" },
   ],
   quantity: [
     NONE_ICON,
@@ -856,25 +849,6 @@ const ICON_LIBRARY = {
     { value: "HashtagIcon", label: "Hashtag" },
     { value: "CircleInformationIcon", label: "Information" },
     { value: "LocationIcon", label: "Marqueur" },
-  ],
-  email: [NONE_ICON, { value: "EmailIcon", label: "Email" }],
-  company: [NONE_ICON, { value: "StoreIcon", label: "Magasin" }],
-  birthday: [NONE_ICON, { value: "CalendarIcon", label: "Calendrier" }],
-  address: [
-    NONE_ICON,
-    { value: "HomeIcon", label: "Maison" },
-    { value: "LocationIcon", label: "Localisation" },
-    { value: "PinIcon", label: "Épingle" },
-  ],
-  city: [
-    NONE_ICON,
-    { value: "LocationIcon", label: "Localisation" },
-    { value: "GlobeIcon", label: "Globe" },
-  ],
-  province: [
-    NONE_ICON,
-    { value: "GlobeIcon", label: "Globe" },
-    { value: "LocationIcon", label: "Localisation" },
   ],
   notes: [
     NONE_ICON,
@@ -1079,25 +1053,13 @@ function Section1FormsLayoutInner() {
     [hostB64, apiKey]
   );
 
+  // ✅ Configuration initiale sans aucun champ personnel
   const [config, setConfig] = useState(() => ({
     meta: {
       version: 3,
       preset: "CleanWhite",
-      fieldsOrder: [
-        "name",
-        "phone",
-        "quantity",
-        "pincode",
-        "pincode2",
-        "pincode3",
-        "email",
-        "company",
-        "birthday",
-        "province",
-        "city",
-        "address",
-        "notes",
-      ],
+      // Seulement les champs non‑personnels
+      fieldsOrder: ["quantity", "pincode", "pincode2", "pincode3", "notes"],
     },
     form: {
       style: "inline",
@@ -1133,26 +1095,19 @@ function Section1FormsLayoutInner() {
       country: "MA",
       provinceKey: "",
       cityKey: "",
-      buttonMotion: "none", // none | x | y | pulse | shake
+      buttonMotion: "none",
       blocksLayout: {
         offers: { position: "top", order: 1 },
         upsells: { position: "top", order: 2 },
         summary: { position: "top", order: 3 },
       },
     },
+    // ✅ Seuls les champs non‑personnels sont définis
     fields: {
-      name: { on: true, required: true, type: "text", label: "Full name", ph: "Your full name", icon: "PersonIcon" },
-      phone: { on: true, required: true, type: "tel", label: "Phone (WhatsApp)", ph: "Phone number", prefix: "+212", icon: "PhoneIcon" },
       quantity: { on: true, required: true, type: "number", label: "Quantity", ph: "1", min: 1, max: 10, icon: "HashtagIcon" },
       pincode: { on: true, required: true, type: "text", label: "Pincode", ph: "Enter pincode", icon: "LocationIcon" },
       pincode2: { on: true, required: false, type: "text", label: "Pincode 2", ph: "Additional pincode", icon: "" },
       pincode3: { on: true, required: false, type: "text", label: "Pincode 3", ph: "Extra pincode info", icon: "CircleInformationIcon" },
-      email: { on: true, required: true, type: "text", label: "Email", ph: "your.email@example.com", icon: "EmailIcon" },
-      company: { on: true, required: false, type: "text", label: "Company", ph: "Your company name", icon: "StoreIcon" },
-      birthday: { on: true, required: false, type: "text", label: "Birthday", ph: "DD/MM/YYYY", icon: "CalendarIcon" },
-      province: { on: true, required: false, type: "text", label: "Wilaya / Province", ph: "Select province", icon: "GlobeIcon" },
-      city: { on: true, required: false, type: "text", label: "City", ph: "Select city", icon: "LocationIcon" },
-      address: { on: true, required: false, type: "text", label: "Address", ph: "Full address", icon: "HomeIcon" },
       notes: { on: true, required: false, type: "textarea", label: "Notes", ph: "(optional)", icon: "NoteIcon" },
     },
     cartTitles: {
@@ -1167,7 +1122,6 @@ function Section1FormsLayoutInner() {
       orderNow: "Order now",
       totalSuffix: "Total:",
     },
-    // ✅ NOUVEAU: Ajout des paramètres UI pour coupon et variants
     ui: {
       enableCouponField: false,
       enableVariantSelector: false,
@@ -1201,7 +1155,7 @@ function Section1FormsLayoutInner() {
                 behavior: { ...prev.behavior, ...(clean.behavior || {}) },
                 form: { ...prev.form, ...(clean.form || {}) },
                 design: { ...prev.design, ...(clean.design || {}) },
-                ui: { ...prev.ui, ...(clean.ui || {}) }, // ✅ Charger les paramètres UI
+                ui: { ...prev.ui, ...(clean.ui || {}) },
               }));
               try {
                 localStorage.setItem("tripleform_cod_config", JSON.stringify(clean));
@@ -1230,7 +1184,7 @@ function Section1FormsLayoutInner() {
             behavior: { ...prev.behavior, ...(parsed.behavior || {}) },
             form: { ...prev.form, ...(parsed.form || {}) },
             design: { ...prev.design, ...(parsed.design || {}) },
-            ui: { ...prev.ui, ...(parsed.ui || {}) }, // ✅ Charger les paramètres UI depuis localStorage
+            ui: { ...prev.ui, ...(parsed.ui || {}) },
           }));
           lastSavedRef.current = JSON.stringify(parsed);
           setDirty(false);
@@ -1640,7 +1594,7 @@ function IconSelector({ fieldKey, type = "field", onSelect, selectedIcon }) {
 
   const icons =
     type === "field"
-      ? ICON_LIBRARY[fieldKey] || ICON_LIBRARY.name
+      ? ICON_LIBRARY[fieldKey] || ICON_LIBRARY.quantity // fallback sécurisé
       : type === "cartTitle"
       ? ICON_LIBRARY.cartTitle
       : ICON_LIBRARY.button;
@@ -2253,19 +2207,12 @@ function FieldEditor({ fieldKey }) {
   const st = config.fields[fieldKey] || {};
   const type = st.type || "text";
 
+  // ✅ Mise à jour pour les champs conservés uniquement
   const titleKeyMap = {
-    name: "section1.fieldEditor.titlePrefix.fullName",
-    phone: "section1.fieldEditor.titlePrefix.phone",
     quantity: "section1.fieldEditor.titlePrefix.quantity",
     pincode: "section1.fieldEditor.titlePrefix.pincode",
     pincode2: "section1.fieldEditor.titlePrefix.pincode2",
     pincode3: "section1.fieldEditor.titlePrefix.pincode3",
-    email: "section1.fieldEditor.titlePrefix.email",
-    company: "section1.fieldEditor.titlePrefix.company",
-    birthday: "section1.fieldEditor.titlePrefix.birthday",
-    province: "section1.fieldEditor.titlePrefix.province",
-    city: "section1.fieldEditor.titlePrefix.city",
-    address: "section1.fieldEditor.titlePrefix.address",
     notes: "section1.fieldEditor.titlePrefix.notes",
   };
 
@@ -2686,91 +2633,8 @@ function PreviewPanel() {
     );
   };
 
-  const renderProvinceField = (f) => {
-    if (!f?.on) return null;
-    const hasIcon = !!f.icon;
-
-    const labelEl = (
-      <label className="tf-field-row">
-        <span style={{ fontSize: 13, color: "#475569", textAlign: fieldAlign }}>
-          {sStr(f.label)}
-          {f.required ? " *" : ""}
-        </span>
-        <select
-          style={{ ...inputBase, background: config.design.inputBg }}
-          value={selectedProvinceKey}
-          onChange={(e) => setBehav({ provinceKey: e.target.value, cityKey: "" })}
-        >
-          <option value="">{f.ph || t("section1.preview.provincePlaceholder")}</option>
-          {provincesEntries.map(([key, p]) => (
-            <option key={key} value={key}>
-              {p.label}
-            </option>
-          ))}
-        </select>
-      </label>
-    );
-
-    if (!hasIcon) return <div key="province" className="tf-field-no-icon">{labelEl}</div>;
-
-    return (
-      <div key="province" className="tf-field-with-icon">
-        <div className="tf-field-icon">
-          <PolarisIcon iconName={f.icon} size={16} />
-        </div>
-        {labelEl}
-      </div>
-    );
-  };
-
-  const renderCityField = (f) => {
-    if (!f?.on) return null;
-    const hasIcon = !!f.icon;
-
-    const labelEl = (
-      <label className="tf-field-row">
-        <span style={{ fontSize: 13, color: "#475569", textAlign: fieldAlign }}>
-          {sStr(f.label)}
-          {f.required ? " *" : ""}
-        </span>
-        <select
-          style={{
-            ...inputBase,
-            backgroundColor: selectedProvinceKey ? inputBase.background : "#F3F4F6",
-          }}
-          value={config.behavior.cityKey || ""}
-          onChange={(e) => {
-            const city = e.target.value;
-            setBehav({ cityKey: city });
-            handleCityChange(city);
-          }}
-          disabled={!selectedProvinceKey}
-        >
-          <option value="">
-            {!selectedProvinceKey
-              ? t("section1.preview.cityPlaceholderNoProvince")
-              : f.ph || t("section1.preview.cityPlaceholder")}
-          </option>
-          {cities.map((c) => (
-            <option key={c} value={c}>
-              {c}
-            </option>
-          ))}
-        </select>
-      </label>
-    );
-
-    if (!hasIcon) return <div key="city" className="tf-field-no-icon">{labelEl}</div>;
-
-    return (
-      <div key="city" className="tf-field-with-icon">
-        <div className="tf-field-icon">
-          <PolarisIcon iconName={f.icon} size={16} />
-        </div>
-        {labelEl}
-      </div>
-    );
-  };
+  // Comme province et city ne sont plus dans fields, on les retire de la prévisualisation
+  // On garde la logique pour les pays mais sans affichage
 
   // ✅ Ajout du champ coupon si activé
   const renderCouponField = () => {
@@ -2992,8 +2856,7 @@ function PreviewPanel() {
           {orderedFields.map((key) => {
             const f = config.fields[key];
             if (!f?.on) return null;
-            if (key === "province") return renderProvinceField(f);
-            if (key === "city") return renderCityField(f);
+            // Aucun champ province/city à traiter
             return renderField(f, key);
           })}
 
