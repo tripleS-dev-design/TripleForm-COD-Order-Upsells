@@ -7,7 +7,7 @@ import { trackOrderWithPixels } from "../utils/pixels.server";
 import prisma from "../db.server";
 import { decryptSecret } from "../utils/crypto.server";
 
-const TF_TAG = "tripleform-cod"; // 👈 tag unique pour reconnaître les commandes de l'app
+const TF_TAG = "tripleform-cod";
 
 /* ------------------------------------------------------------------ */
 /* ✅ SAFE BODY PARSER (App Proxy JSON / urlencoded / form-data)        */
@@ -15,25 +15,21 @@ const TF_TAG = "tripleform-cod"; // 👈 tag unique pour reconnaître les comman
 async function readBodySafe(request) {
   const contentType = (request.headers.get("content-type") || "").toLowerCase();
 
-  // JSON
   if (contentType.includes("application/json")) {
     try {
       const j = await request.json();
       return j && typeof j === "object" ? j : {};
     } catch {
-      // fallthrough -> try text
+      // fallthrough
     }
   }
 
-  // urlencoded
   if (contentType.includes("application/x-www-form-urlencoded")) {
     try {
       const text = await request.text();
       const params = new URLSearchParams(text);
       const out = {};
       for (const [k, v] of params.entries()) out[k] = v;
-
-      // if proxy sends a raw json string inside "body" or "payload"
       if (typeof out.body === "string") {
         try {
           const parsed = JSON.parse(out.body);
@@ -46,20 +42,17 @@ async function readBodySafe(request) {
           if (parsed && typeof parsed === "object") return parsed;
         } catch {}
       }
-
       return out;
     } catch {
       // fallthrough
     }
   }
 
-  // multipart/form-data
   if (contentType.includes("multipart/form-data")) {
     try {
       const form = await request.formData();
       const out = {};
       for (const [k, v] of form.entries()) out[k] = v;
-
       if (typeof out.body === "string") {
         try {
           const parsed = JSON.parse(out.body);
@@ -72,14 +65,12 @@ async function readBodySafe(request) {
           if (parsed && typeof parsed === "object") return parsed;
         } catch {}
       }
-
       return out;
     } catch {
       // fallthrough
     }
   }
 
-  // fallback: try json then text
   try {
     const j = await request.json();
     return j && typeof j === "object" ? j : {};
@@ -109,13 +100,10 @@ function getClientIpFromRequest(request) {
   const headers = request.headers;
   const cfConnectingIp = headerAny(headers, "cf-connecting-ip");
   if (cfConnectingIp) return cfConnectingIp;
-
   const xForwardedFor = headerAny(headers, "x-forwarded-for");
   if (xForwardedFor) return xForwardedFor.split(",")[0].trim();
-
   const xRealIp = headerAny(headers, "x-real-ip");
   if (xRealIp) return xRealIp;
-
   return "";
 }
 
@@ -148,7 +136,6 @@ async function loadAntibotConfig(admin) {
     const data = await resp.json();
     const mf = data?.data?.shop?.metafield || null;
     if (!mf?.value) return null;
-
     try {
       return JSON.parse(mf.value);
     } catch {
@@ -165,20 +152,17 @@ async function loadAntibotConfig(admin) {
 /* ------------------------------------------------------------------ */
 function evaluateAntibot({ config, clientIp, countryCode, fullPhone, honeypot }) {
   const res = { blocked: false, reasons: [], needsRecaptcha: false };
-
   if (!config || typeof config !== "object") return res;
 
   const honeypotCfg = config?.honeypot || {};
   const recaptchaCfg = config?.recaptcha || config?.googleRecaptcha || {};
   const { checkHoneypot, checkTime, minFillTimeMs } = config || {};
 
-  // basic honeypot checks
   if (checkHoneypot && honeypot && honeypot.triggered) {
     res.blocked = true;
     res.reasons.push("Honeypot triggered");
   }
 
-  // time-based check
   if (checkTime && honeypot && honeypot.startedAt && honeypot.submittedAt) {
     const dt = Number(honeypot.submittedAt) - Number(honeypot.startedAt);
     if (Number.isFinite(dt) && dt < Number(minFillTimeMs || 0)) {
@@ -187,7 +171,6 @@ function evaluateAntibot({ config, clientIp, countryCode, fullPhone, honeypot })
     }
   }
 
-  // optional mouse move check (if config asks and client provides)
   if (honeypotCfg?.checkMouseMove) {
     const mouseMoved = honeypot?.mouseMoved === true;
     if (!mouseMoved) {
@@ -196,7 +179,6 @@ function evaluateAntibot({ config, clientIp, countryCode, fullPhone, honeypot })
     }
   }
 
-  // recaptcha only if enabled in config
   if (recaptchaCfg?.enabled) {
     res.needsRecaptcha = true;
   }
@@ -226,69 +208,33 @@ async function verifyRecaptchaV2({ token, remoteip, secret }) {
     const data = await resp.json().catch(() => ({}));
     const success = data?.success === true;
     const errorCodes = Array.isArray(data?.["error-codes"]) ? data["error-codes"] : [];
-    const hostname = data?.hostname ? String(data.hostname) : "";
-    const challengeTs = data?.challenge_ts ? String(data.challenge_ts) : "";
-
     const ok = success === true;
     let reason = "ok";
-    if (!success) {
-      reason = errorCodes.length ? errorCodes.join(",") : "google_failed";
-    }
-
-    return { ok, success, reason, hostname, challengeTs, errorCodes, data };
+    if (!success) reason = errorCodes.length ? errorCodes.join(",") : "google_failed";
+    return { ok, success, reason, hostname: data?.hostname, challengeTs: data?.challenge_ts, errorCodes };
   } catch (e) {
     return { ok: false, success: false, reason: String(e?.message || e), errorCodes: [] };
   }
 }
 
 /* ------------------------------------------------------------------ */
-/* Build shipping address for Draft Order                               */
+/* Build a generic (non‑personal) shipping address for draft order     */
 /* ------------------------------------------------------------------ */
-function buildShippingAddress(fields, fullPhone, countryCode) {
+function buildGenericShippingAddress(countryCode) {
   return {
-    firstName: String(fields.name || "").trim() || "Customer",
-    address1: String(fields.address || "").trim(),
-    city: String(fields.city || "").trim(),
-    province: String(fields.province || "").trim(),
-    zip: String(fields.zip || fields.postal || "").trim(),
-    country: countryCode || String(fields.country || "").trim() || "MA",
-    phone: fullPhone || String(fields.phone || "").trim(),
+    firstName: "COD",
+    lastName: "Customer",
+    address1: "N/A",
+    city: "N/A",
+    province: "N/A",
+    zip: "00000",
+    country: countryCode || "MA",
+    phone: "0000000000",
   };
 }
 
 /* ------------------------------------------------------------------ */
-/* Fetch product title/variant title from Admin API                     */
-/* ------------------------------------------------------------------ */
-async function fetchProductInfo(admin, variantGid) {
-  if (!admin || !variantGid) return { productTitle: null, variantTitle: null };
-
-  try {
-    const QUERY = `
-      query tfProductInfo($id: ID!) {
-        productVariant(id: $id) {
-          id
-          title
-          product { id title }
-        }
-      }
-    `;
-    const resp = await admin.graphql(QUERY, { variables: { id: variantGid } });
-    const j = await resp.json();
-    const pv = j?.data?.productVariant;
-    if (!pv) return { productTitle: null, variantTitle: null };
-
-    return {
-      productTitle: pv.product?.title || null,
-      variantTitle: pv.title || null,
-    };
-  } catch (e) {
-    console.error("fetchProductInfo error:", e);
-    return { productTitle: null, variantTitle: null };
-  }
-}
-
-/* ------------------------------------------------------------------ */
-/* ACTION (submit COD)                                                 */
+/* ACTION (submit COD) – NO PERSONAL DATA COLLECTED                    */
 /* ------------------------------------------------------------------ */
 export const action = async ({ request }) => {
   try {
@@ -299,8 +245,7 @@ export const action = async ({ request }) => {
       return json(
         {
           ok: false,
-          error:
-            "No session for this shop via app proxy. Ouvre l'app depuis l'admin une fois puis réessaie.",
+          error: "No session for this shop via app proxy. Please install the app first.",
         },
         { status: 401 }
       );
@@ -308,67 +253,49 @@ export const action = async ({ request }) => {
 
     if (!admin) {
       return json(
-        {
-          ok: false,
-          error: "Admin API client unavailable for this shop (no offline session).",
-        },
+        { ok: false, error: "Admin API client unavailable for this shop." },
         { status: 401 }
       );
     }
 
-    // ✅ App Proxy body can be JSON or urlencoded -> use safe parser
     const body = await readBodySafe(request);
-
     if (!body || typeof body !== "object") {
       return json({ ok: false, error: "Missing or invalid body." }, { status: 400 });
     }
 
+    // ✅ Only non‑personal fields are allowed
+    const fields = (body.fields && typeof body.fields === "object" ? body.fields : {}) || {};
+    const allowedFieldKeys = ["quantity", "pincode", "pincode2", "pincode3", "notes"];
+    const cleanFields = {};
+    for (const key of allowedFieldKeys) {
+      if (fields[key] !== undefined) cleanFields[key] = String(fields[key] || "").trim();
+    }
+
     const rawVariantId = body.variantId;
     let variantGid = null;
-
     if (rawVariantId) {
       const s = String(rawVariantId);
       variantGid = s.startsWith("gid://") ? s : `gid://shopify/ProductVariant/${s}`;
     }
-
-    const qty = Number(body.qty || 1);
-
+    const qty = Number(body.qty || cleanFields.quantity || 1);
     if (!variantGid || !(qty > 0)) {
       return json({ ok: false, error: "variantId/qty invalid." }, { status: 400 });
     }
 
-    // fields payload
-    const fields = (body.fields && typeof body.fields === "object" ? body.fields : {}) || {};
-
-    const phonePrefix =
-      fields.phonePrefix ||
-      fields.phone_prefix ||
-      fields.phoneCode ||
-      fields.phone_code ||
-      "";
-
-    const phoneVal = fields.phone || "";
-
-    const fullPhone = String(fields.fullPhone || body.fullPhone || `${phonePrefix}${phoneVal}` || "")
-      .trim()
-      .replace(/\s+/g, "");
-
     const countryCode = String(
-  body?.countryCode ||
-  body?.country ||
-  fields?.countryCode ||
-  fields?.country ||
-  getCountryCodeFromRequest(request) ||
-  "MA"
-)
-  .trim()
-  .toUpperCase();
+      body?.countryCode ||
+        body?.country ||
+        fields?.countryCode ||
+        fields?.country ||
+        getCountryCodeFromRequest(request) ||
+        "MA"
+    )
+      .trim()
+      .toUpperCase();
 
-
-    // Honeypot + anti-bot
+    // Honeypot + anti‑bot
     const honeypotInfo = body.honeypot || body.antiBot || body.antibot || null;
 
-    // ✅ reCAPTCHA token (v2 checkbox => g-recaptcha-response)
     const recaptchaTokenRaw =
       body.recaptchaToken ||
       body.recaptcha_token ||
@@ -377,15 +304,12 @@ export const action = async ({ request }) => {
       body?.recaptcha?.token ||
       (typeof body?.recaptcha === "string" ? body.recaptcha : "") ||
       "";
-
     const recaptchaToken = String(recaptchaTokenRaw || "").trim();
-
     const clientRecaptchaAction = String(
       body.recaptchaAction || body.recaptcha_action || body?.recaptcha?.action || ""
     ).trim();
 
     const antibotCfg = await loadAntibotConfig(admin);
-
     const clientIp = getClientIpFromRequest(request);
     const userAgent = request.headers.get("user-agent") || null;
 
@@ -393,7 +317,7 @@ export const action = async ({ request }) => {
       config: antibotCfg,
       clientIp,
       countryCode,
-      fullPhone,
+      fullPhone: "", // no phone collected
       honeypot: honeypotInfo,
     });
 
@@ -410,13 +334,12 @@ export const action = async ({ request }) => {
       );
     }
 
-    // ✅ reCAPTCHA check (v2) — secret par shop depuis DB
+    // reCAPTCHA check (v2)
     if (antibotResult.needsRecaptcha) {
       const row = await prisma.shopAntibotSettings.findUnique({
         where: { shopDomain: shop },
         select: { recaptchaSecretEnc: true },
       });
-
       let secret = "";
       if (row?.recaptchaSecretEnc) {
         try {
@@ -426,7 +349,6 @@ export const action = async ({ request }) => {
           secret = "";
         }
       }
-
       if (!secret) {
         return json(
           {
@@ -437,13 +359,11 @@ export const action = async ({ request }) => {
           { status: 403 }
         );
       }
-
       const check = await verifyRecaptchaV2({
         token: recaptchaToken,
         remoteip: clientIp,
         secret,
       });
-
       if (!check.ok) {
         console.warn("TripleForm COD — reCAPTCHA v2 failed:", {
           shop,
@@ -452,33 +372,20 @@ export const action = async ({ request }) => {
           success: check.success,
           reason: check.reason,
           errorCodes: check.errorCodes,
-          hostname: check.hostname || null,
-          challengeTs: check.challengeTs,
         });
-
         return json(
           {
             ok: false,
             code: "RECAPTCHA_FAILED",
             error: "Recaptcha verification failed.",
-            details: {
-              reason: check.reason,
-              success: check.success,
-              errorCodes: check.errorCodes,
-              hostname: check.hostname,
-              challengeTs: check.challengeTs,
-            },
+            details: { reason: check.reason, success: check.success, errorCodes: check.errorCodes },
           },
           { status: 403 }
         );
       }
     }
 
-    const shippingAddress = buildShippingAddress(fields, fullPhone, countryCode);
-
-    const currency = body?.currency || null;
-
-    // ✅ Coupon / Promo code (optional)
+    // Coupon code (optional, non‑personal)
     const couponCode = String(
       body?.couponCode ??
         body?.coupon_code ??
@@ -495,10 +402,6 @@ export const action = async ({ request }) => {
             body.fields.discount_code)) ??
         fields?.couponCode ??
         fields?.coupon_code ??
-        fields?.promoCode ??
-        fields?.promo_code ??
-        fields?.discountCode ??
-        fields?.discount_code ??
         ""
     ).trim();
 
@@ -507,7 +410,7 @@ export const action = async ({ request }) => {
       totalCents: body?.totalCents != null ? Number(body.totalCents) : null,
       discountCents: body?.discountCents != null ? Number(body.discountCents) : null,
       qty,
-      currency,
+      currency: body?.currency || null,
       couponCode,
       productId: body?.productId || null,
       variantId: rawVariantId || null,
@@ -515,33 +418,40 @@ export const action = async ({ request }) => {
       eventId: body?.eventId || null,
     };
 
+    // Note – contains only non‑personal info
     const note = [
       "Created by TripleForm COD",
-      fields.notes ? `Notes: ${fields.notes}` : null,
+      cleanFields.notes ? `Notes: ${cleanFields.notes}` : null,
       countryCode ? `Country: ${countryCode}` : null,
       couponCode ? `Coupon: ${couponCode}` : null,
-      currency && totals.totalCents != null
-        ? `Total shown: ${(Number(totals.totalCents) / 100).toFixed(2)} ${currency}`
-        : null,
+      cleanFields.pincode ? `Pincode: ${cleanFields.pincode}` : null,
+      cleanFields.pincode2 ? `Pincode2: ${cleanFields.pincode2}` : null,
+      cleanFields.pincode3 ? `Pincode3: ${cleanFields.pincode3}` : null,
     ]
       .filter(Boolean)
       .join(" | ");
+
+    // Custom attributes – only non‑personal fields
+    const customAttributes = [
+      { key: "tf_quantity", value: String(qty) },
+      { key: "tf_pincode", value: cleanFields.pincode || "" },
+      { key: "tf_pincode2", value: cleanFields.pincode2 || "" },
+      { key: "tf_pincode3", value: cleanFields.pincode3 || "" },
+      { key: "tf_notes", value: cleanFields.notes || "" },
+      { key: "tf_coupon", value: couponCode || "" },
+    ];
+
+    const shippingAddress = buildGenericShippingAddress(countryCode);
 
     const input = {
       lineItems: [{ variantId: variantGid, quantity: qty }],
       shippingAddress,
       tags: [TF_TAG],
       note,
-      customAttributes: [
-        { key: "tf_name", value: String(fields.name || "") },
-        { key: "tf_phone", value: fullPhone },
-        { key: "tf_city", value: String(fields.city || "") },
-        { key: "tf_province", value: String(fields.province || "") },
-        { key: "tf_country", value: countryCode || "" },
-        { key: "tf_coupon", value: couponCode || "" },
-      ],
+      customAttributes,
     };
 
+    // Create draft order (without personal data)
     const CREATE = `
       mutation draftOrderCreate($input: DraftOrderInput!) {
         draftOrderCreate(input: $input) {
@@ -550,7 +460,6 @@ export const action = async ({ request }) => {
         }
       }
     `;
-
     const createResp = await admin.graphql(CREATE, { variables: { input } });
     const createJson = await createResp.json();
     const createData = createJson?.data?.draftOrderCreate;
@@ -559,15 +468,10 @@ export const action = async ({ request }) => {
 
     if (userErrA.length) {
       return json(
-        {
-          ok: false,
-          error: userErrA[0]?.message || "draftOrderCreate error",
-          details: userErrA,
-        },
+        { ok: false, error: userErrA[0]?.message || "draftOrderCreate error", details: userErrA },
         { status: 400 }
       );
     }
-
     if (!draft?.id) {
       return json({ ok: false, error: "No draft order id returned." }, { status: 500 });
     }
@@ -584,11 +488,9 @@ export const action = async ({ request }) => {
         }
       }
     `;
-
     const compResp = await admin.graphql(COMPLETE, {
       variables: { id: draft.id, paymentPending: true },
     });
-
     const compJson = await compResp.json();
     const compData = compJson?.data?.draftOrderComplete;
     const userErrB = compData?.userErrors || [];
@@ -607,54 +509,38 @@ export const action = async ({ request }) => {
     }
 
     const orderName = orderObj?.name || null;
+    const invoiceUrl = completedDraft?.invoiceUrl || draft?.invoiceUrl || null;
 
-    // Fetch product info for better Sheets export
-    const productInfo = await fetchProductInfo(admin, variantGid);
-
-    // 6) Google Sheets
+    // Google Sheets – only non‑personal data
     try {
-      // ✅ Totaux explicit (pour mapping Google Sheets)
       const shippingCents =
         body?.shippingCents != null
           ? Number(body.shippingCents)
           : body?.shipping_cents != null
-            ? Number(body.shipping_cents)
-            : body?.shippingAmount != null
-              ? Math.round(Number(body.shippingAmount) * 100)
-              : null;
-
+          ? Number(body.shipping_cents)
+          : null;
       const baseTotalCents =
         body?.baseTotalCents != null
           ? Number(body.baseTotalCents)
           : body?.base_total_cents != null
-            ? Number(body.base_total_cents)
-            : body?.baseTotal != null
-              ? Math.round(Number(body.baseTotal) * 100)
-              : null;
-
+          ? Number(body.base_total_cents)
+          : null;
       const totalWithShippingCents =
         totals.totalCents != null
           ? Number(totals.totalCents)
           : body?.grandTotalCents != null
-            ? Number(body.grandTotalCents)
-            : body?.grand_total_cents != null
-              ? Number(body.grand_total_cents)
-              : null;
-
-      // total without shipping = (base - discount) OR (total - shipping) fallback
+          ? Number(body.grandTotalCents)
+          : null;
       const totalWithoutShippingCents =
         baseTotalCents != null
           ? Math.max(0, Number(baseTotalCents) - Number(totals.discountCents || 0))
           : totalWithShippingCents != null && shippingCents != null
-            ? Math.max(0, Number(totalWithShippingCents) - Number(shippingCents))
-            : totals.priceCents != null
-              ? Number(totals.priceCents)
-              : null;
+          ? Math.max(0, Number(totalWithShippingCents) - Number(shippingCents))
+          : totals.priceCents != null
+          ? Number(totals.priceCents)
+          : null;
 
-      // ✅ Offers / Upsells payload (forwarded from product page)
       const offerPayload = body?.appliedOffer ?? body?.offer ?? null;
-      const offersPayload = body?.offers ?? null;
-
       const offerName = String(
         body?.offerName ??
           body?.offer_name ??
@@ -662,12 +548,9 @@ export const action = async ({ request }) => {
           body?.offer_title ??
           offerPayload?.title ??
           offerPayload?.name ??
-          offerPayload?.label ??
           ""
       ).trim();
-
       const upsellsPayload = body?.upsells ?? null;
-
       const upsellName = String(
         body?.upsellName ??
           body?.upsell_name ??
@@ -675,138 +558,84 @@ export const action = async ({ request }) => {
           body?.upsell_title ??
           (Array.isArray(upsellsPayload) &&
             upsellsPayload[0] &&
-            (upsellsPayload[0].title || upsellsPayload[0].name || upsellsPayload[0].label)) ??
+            (upsellsPayload[0].title || upsellsPayload[0].name)) ??
           ""
       ).trim();
-
-      const appliedUpsellPayload = body?.appliedUpsell ?? null;
 
       const orderForSheet = {
         shop,
         createdAt: new Date().toISOString(),
         order: {
-          id: orderObj?.id || completedDraft?.id || draft.id || null,
+          id: orderObj?.id || completedDraft?.id || draft.id,
           name: orderName,
         },
         customer: {
-          name: fields.name || "",
-          phone: fullPhone,
-          city: fields.city || "",
-          province: fields.province || "",
-          address: fields.address || "",
-          country: countryCode || "",
-          notes: fields.notes || "",
-          email: fields.email || "",
-          pincode: fields.pincode || "",
-          pincode2: fields.pincode2 || "",
-          pincode3: fields.pincode3 || "",
-          company: fields.company || "",
-          birthday: fields.birthday || "",
+          // No personal data – only pincodes and notes
+          pincode: cleanFields.pincode || "",
+          pincode2: cleanFields.pincode2 || "",
+          pincode3: cleanFields.pincode3 || "",
+          notes: cleanFields.notes || "",
         },
-        // ✅ raw form fields (for flexible Sheets mapping)
-        fields: { ...fields, fullPhone, countryCode, couponCode },
+        fields: { ...cleanFields, couponCode, countryCode },
         cart: {
-          productTitle:
-            productInfo.productTitle ||
-            body?.productTitle ||
-            body?.product_title ||
-            body?.productName ||
-            body?.product_name ||
-            body?.title ||
-            (body?.product && (body.product.title || body.product.name)) ||
-            "",
-          variantTitle:
-            productInfo.variantTitle ||
-            body?.variantTitle ||
-            body?.variant_title ||
-            "",
+          productTitle: body?.productTitle || body?.product_title || body?.productName || "",
+          variantTitle: body?.variantTitle || body?.variant_title || "",
           quantity: qty,
-
-          // ✅ OFFERS / UPSELLS / COUPON
-          offerName: offerName || "",
+          offerName,
           offer: offerPayload || null,
-          offers: offersPayload || null,
+          offers: body?.offers || null,
           appliedOffer: offerPayload || null,
-
-          upsellName: upsellName || "",
+          upsellName,
           upsells: upsellsPayload || null,
-          appliedUpsell: appliedUpsellPayload || null,
-
-          couponCode: couponCode || "",
-
-          // ✅ Totaux (nombres purs pour mapping Sheets)
+          appliedUpsell: body?.appliedUpsell || null,
+          couponCode,
           totalNormal: baseTotalCents != null ? Number(baseTotalCents) / 100 : null,
-          totalNormalWithShipping:
-            baseTotalCents != null && shippingCents != null
-              ? (Number(baseTotalCents) + Number(shippingCents)) / 100
-              : null,
           discount: totals.discountCents != null ? Number(totals.discountCents) / 100 : null,
-
           totalWithoutShipping:
             totalWithoutShippingCents != null ? Number(totalWithoutShippingCents) / 100 : null,
-          subtotal:
-            totalWithoutShippingCents != null ? Number(totalWithoutShippingCents) / 100 : null,
-          subtotalCents:
-            totalWithoutShippingCents != null ? Number(totalWithoutShippingCents) : null,
-
-          shipping:
-            shippingCents != null
-              ? Number(shippingCents) / 100
-              : body?.shippingAmount != null
-                ? Number(body.shippingAmount)
-                : null,
+          subtotal: totalWithoutShippingCents != null ? Number(totalWithoutShippingCents) / 100 : null,
+          subtotalCents: totalWithoutShippingCents != null ? Number(totalWithoutShippingCents) : null,
+          shipping: shippingCents != null ? Number(shippingCents) / 100 : null,
           shippingCents: shippingCents != null ? Number(shippingCents) : null,
-
           totalWithShipping:
             totalWithShippingCents != null ? Number(totalWithShippingCents) / 100 : null,
-          total:
-            totalWithShippingCents != null ? Number(totalWithShippingCents) / 100 : null,
-          totalCents:
-            totalWithShippingCents != null
-              ? Number(totalWithShippingCents)
-              : totals.totalCents != null
-                ? Number(totals.totalCents)
-                : null,
-
-          currency,
+          total: totalWithShippingCents != null ? Number(totalWithShippingCents) / 100 : null,
+          totalCents: totalWithShippingCents != null ? Number(totalWithShippingCents) : totals.totalCents,
+          currency: totals.currency,
         },
         meta: { source: "tripleform-cod" },
       };
-
       await appendOrderToSheet({ shop, order: orderForSheet });
     } catch (err) {
-      console.error("Erreur lors de l'envoi de la commande vers Google Sheets :", err);
+      console.error("Erreur Google Sheets:", err);
     }
 
-    // 7) Pixels
+    // Pixels tracking (no personal data)
     try {
       await trackOrderWithPixels({
         admin,
         shop,
         totals,
-        fields: { ...fields, fullPhone, countryCode, couponCode },
+        fields: { ...cleanFields, couponCode, countryCode },
         shippingAddress,
         orderName,
         clientIp,
         userAgent,
       });
     } catch (err) {
-      console.error("Erreur tracking pixels Tripleform COD :", err);
+      console.error("Erreur tracking pixels:", err);
     }
 
     return json({
       ok: true,
+      redirectUrl: invoiceUrl, // used by front to redirect to checkout
       draftId: completedDraft?.id || draft.id,
-      draftInvoiceUrl: completedDraft?.invoiceUrl || draft?.invoiceUrl || null,
+      draftInvoiceUrl: invoiceUrl,
       orderName,
     });
   } catch (e) {
     console.error("proxy.submit error:", e);
-    const msg =
-      e?.message ||
-      (e?.response?.errors && JSON.stringify(e.response.errors)) ||
-      String(e);
-    return json({ ok: false, error: msg }, { status: 500 });
+    return json({ ok: false, error: String(e?.message || e) }, { status: 500 });
   }
 };
 
