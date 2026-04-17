@@ -218,24 +218,7 @@ async function verifyRecaptchaV2({ token, remoteip, secret }) {
 }
 
 /* ------------------------------------------------------------------ */
-/* Build a realistic shipping address for draft order                  */
-/* ------------------------------------------------------------------ */
-function buildGenericShippingAddress(countryCode) {
-  // Adresse générique mais réaliste pour éviter les erreurs Shopify
-  return {
-    firstName: "COD",
-    lastName: "Customer",
-    address1: "123 Main Street",
-    city: "Casablanca",
-    province: "Casablanca-Settat",
-    zip: "20000",
-    country: countryCode || "MA",
-    phone: "+212600000000",
-  };
-}
-
-/* ------------------------------------------------------------------ */
-/* ACTION (submit COD) – NO PERSONAL DATA COLLECTED                    */
+/* ACTION (submit COD) – NO PERSONAL DATA COLLECTED, NO DRAFT ORDER   */
 /* ------------------------------------------------------------------ */
 export const action = async ({ request }) => {
   try {
@@ -419,8 +402,7 @@ export const action = async ({ request }) => {
       eventId: body?.eventId || null,
     };
 
-    // ✅ Ajout d'un timestamp unique pour forcer un nouveau draft
-    const uniqueId = Date.now() + '-' + Math.random().toString(36).substr(2, 8);
+    // Note – used only for logs, not for draft order
     const note = [
       "Created by TripleForm COD",
       cleanFields.notes ? `Notes: ${cleanFields.notes}` : null,
@@ -429,126 +411,18 @@ export const action = async ({ request }) => {
       cleanFields.pincode ? `Pincode: ${cleanFields.pincode}` : null,
       cleanFields.pincode2 ? `Pincode2: ${cleanFields.pincode2}` : null,
       cleanFields.pincode3 ? `Pincode3: ${cleanFields.pincode3}` : null,
-      `UID: ${uniqueId}`,
     ]
       .filter(Boolean)
       .join(" | ");
 
-    // Custom attributes – only non‑personal fields
-    const customAttributes = [
-      { key: "tf_quantity", value: String(qty) },
-      { key: "tf_pincode", value: cleanFields.pincode || "" },
-      { key: "tf_pincode2", value: cleanFields.pincode2 || "" },
-      { key: "tf_pincode3", value: cleanFields.pincode3 || "" },
-      { key: "tf_notes", value: cleanFields.notes || "" },
-      { key: "tf_coupon", value: couponCode || "" },
-    ];
-
-    const shippingAddress = buildGenericShippingAddress(countryCode);
-
-    const input = {
-      lineItems: [{ variantId: variantGid, quantity: qty }],
-      shippingAddress,
-      tags: [TF_TAG],
-      note,
-      customAttributes,
-    };
-
-    // ✅ Log avant création
-    console.log("📦 Creating new draft order for shop:", shop, "variantId:", variantGid, "qty:", qty);
-
-    // Create draft order (without personal data)
-    const CREATE = `
-      mutation draftOrderCreate($input: DraftOrderInput!) {
-        draftOrderCreate(input: $input) {
-          draftOrder { id invoiceUrl }
-          userErrors { field message }
-        }
-      }
-    `;
-    const createResp = await admin.graphql(CREATE, { variables: { input } });
-    const createJson = await createResp.json();
-    const createData = createJson?.data?.draftOrderCreate;
-    const userErrA = createData?.userErrors || [];
-    const draft = createData?.draftOrder || null;
-
-    if (userErrA.length) {
-      console.error("draftOrderCreate userErrors:", userErrA);
-      return json(
-        { ok: false, error: userErrA[0]?.message || "draftOrderCreate error", details: userErrA },
-        { status: 400 }
-      );
-    }
-    if (!draft?.id) {
-      console.error("No draft order id returned.");
-      return json({ ok: false, error: "No draft order id returned." }, { status: 500 });
-    }
-
-    console.log("✅ Draft order created with ID:", draft.id, "invoiceUrl:", draft.invoiceUrl);
-
-    // ✅ Compléter le draft
-    const COMPLETE = `
-      mutation draftOrderComplete($id: ID!, $paymentPending: Boolean) {
-        draftOrderComplete(id: $id, paymentPending: $paymentPending) {
-          draftOrder {
-            id
-            invoiceUrl
-            order { id name }
-          }
-          userErrors { field message }
-        }
-      }
-    `;
-    const compResp = await admin.graphql(COMPLETE, {
-      variables: { id: draft.id, paymentPending: true },
-    });
-    const compJson = await compResp.json();
-    const compData = compJson?.data?.draftOrderComplete;
-    const userErrB = compData?.userErrors || [];
-    const completedDraft = compData?.draftOrder || null;
-    const orderObj = completedDraft?.order || null;
-
-    if (userErrB.length) {
-      console.error("draftOrderComplete userErrors:", userErrB);
-      return json(
-        {
-          ok: false,
-          error: userErrB[0]?.message || "draftOrderComplete error",
-          draftInvoiceUrl: draft?.invoiceUrl || null,
-        },
-        { status: 400 }
-      );
-    }
-
-    const orderName = orderObj?.name || null;
-    const invoiceUrl = completedDraft?.invoiceUrl || draft?.invoiceUrl || null;
-    console.log("🏁 Draft completed, order:", orderName, "final invoiceUrl:", invoiceUrl);
-
-    // Google Sheets – only non‑personal data
+    // ✅ Google Sheets – only non‑personal data
     try {
-      const shippingCents =
-        body?.shippingCents != null
-          ? Number(body.shippingCents)
-          : body?.shipping_cents != null
-          ? Number(body.shipping_cents)
-          : null;
-      const baseTotalCents =
-        body?.baseTotalCents != null
-          ? Number(body.baseTotalCents)
-          : body?.base_total_cents != null
-          ? Number(body.base_total_cents)
-          : null;
-      const totalWithShippingCents =
-        totals.totalCents != null
-          ? Number(totals.totalCents)
-          : body?.grandTotalCents != null
-          ? Number(body.grandTotalCents)
-          : null;
+      const shippingCents = body?.shippingCents != null ? Number(body.shippingCents) : null;
+      const baseTotalCents = body?.baseTotalCents != null ? Number(body.baseTotalCents) : null;
+      const totalWithShippingCents = totals.totalCents != null ? Number(totals.totalCents) : null;
       const totalWithoutShippingCents =
         baseTotalCents != null
           ? Math.max(0, Number(baseTotalCents) - Number(totals.discountCents || 0))
-          : totalWithShippingCents != null && shippingCents != null
-          ? Math.max(0, Number(totalWithShippingCents) - Number(shippingCents))
           : totals.priceCents != null
           ? Number(totals.priceCents)
           : null;
@@ -575,12 +449,14 @@ export const action = async ({ request }) => {
           ""
       ).trim();
 
+      // We don't have a real order ID yet – use a temporary placeholder
+      const pendingOrderId = `pending_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
       const orderForSheet = {
         shop,
         createdAt: new Date().toISOString(),
         order: {
-          id: orderObj?.id || completedDraft?.id || draft.id,
-          name: orderName,
+          id: pendingOrderId,
+          name: null,
         },
         customer: {
           pincode: cleanFields.pincode || "",
@@ -615,22 +491,22 @@ export const action = async ({ request }) => {
           totalCents: totalWithShippingCents != null ? Number(totalWithShippingCents) : totals.totalCents,
           currency: totals.currency,
         },
-        meta: { source: "tripleform-cod" },
+        meta: { source: "tripleform-cod", status: "pending_checkout" },
       };
       await appendOrderToSheet({ shop, order: orderForSheet });
     } catch (err) {
       console.error("Erreur Google Sheets:", err);
     }
 
-    // Pixels tracking (no personal data)
+    // ✅ Pixels tracking (no personal data)
     try {
       await trackOrderWithPixels({
         admin,
         shop,
         totals,
         fields: { ...cleanFields, couponCode, countryCode },
-        shippingAddress,
-        orderName,
+        shippingAddress: null, // no address collected
+        orderName: null,
         clientIp,
         userAgent,
       });
@@ -638,16 +514,8 @@ export const action = async ({ request }) => {
       console.error("Erreur tracking pixels:", err);
     }
 
-    // ✅ Retourner l'URL de checkout avec un timestamp pour éviter le cache
-    const finalRedirectUrl = invoiceUrl ? invoiceUrl + (invoiceUrl.includes('?') ? '&' : '?') + '_=' + Date.now() : null;
-
-    return json({
-      ok: true,
-      redirectUrl: finalRedirectUrl,
-      draftId: completedDraft?.id || draft.id,
-      draftInvoiceUrl: finalRedirectUrl,
-      orderName,
-    });
+    // ✅ Return success – front will redirect to /checkout after cart update
+    return json({ ok: true });
   } catch (e) {
     console.error("proxy.submit error:", e);
     return json({ ok: false, error: String(e?.message || e) }, { status: 500 });
