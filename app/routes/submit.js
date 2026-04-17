@@ -218,18 +218,19 @@ async function verifyRecaptchaV2({ token, remoteip, secret }) {
 }
 
 /* ------------------------------------------------------------------ */
-/* Build a generic (non‑personal) shipping address for draft order     */
+/* Build a realistic shipping address for draft order                  */
 /* ------------------------------------------------------------------ */
 function buildGenericShippingAddress(countryCode) {
+  // Adresse générique mais réaliste pour éviter les erreurs Shopify
   return {
     firstName: "COD",
     lastName: "Customer",
-    address1: "N/A",
-    city: "N/A",
-    province: "N/A",
-    zip: "00000",
+    address1: "123 Main Street",
+    city: "Casablanca",
+    province: "Casablanca-Settat",
+    zip: "20000",
     country: countryCode || "MA",
-    phone: "0000000000",
+    phone: "+212600000000",
   };
 }
 
@@ -418,7 +419,8 @@ export const action = async ({ request }) => {
       eventId: body?.eventId || null,
     };
 
-    // Note – contains only non‑personal info
+    // ✅ Ajout d'un timestamp unique pour forcer un nouveau draft
+    const uniqueId = Date.now() + '-' + Math.random().toString(36).substr(2, 8);
     const note = [
       "Created by TripleForm COD",
       cleanFields.notes ? `Notes: ${cleanFields.notes}` : null,
@@ -427,6 +429,7 @@ export const action = async ({ request }) => {
       cleanFields.pincode ? `Pincode: ${cleanFields.pincode}` : null,
       cleanFields.pincode2 ? `Pincode2: ${cleanFields.pincode2}` : null,
       cleanFields.pincode3 ? `Pincode3: ${cleanFields.pincode3}` : null,
+      `UID: ${uniqueId}`,
     ]
       .filter(Boolean)
       .join(" | ");
@@ -451,6 +454,9 @@ export const action = async ({ request }) => {
       customAttributes,
     };
 
+    // ✅ Log avant création
+    console.log("📦 Creating new draft order for shop:", shop, "variantId:", variantGid, "qty:", qty);
+
     // Create draft order (without personal data)
     const CREATE = `
       mutation draftOrderCreate($input: DraftOrderInput!) {
@@ -467,15 +473,20 @@ export const action = async ({ request }) => {
     const draft = createData?.draftOrder || null;
 
     if (userErrA.length) {
+      console.error("draftOrderCreate userErrors:", userErrA);
       return json(
         { ok: false, error: userErrA[0]?.message || "draftOrderCreate error", details: userErrA },
         { status: 400 }
       );
     }
     if (!draft?.id) {
+      console.error("No draft order id returned.");
       return json({ ok: false, error: "No draft order id returned." }, { status: 500 });
     }
 
+    console.log("✅ Draft order created with ID:", draft.id, "invoiceUrl:", draft.invoiceUrl);
+
+    // ✅ Compléter le draft
     const COMPLETE = `
       mutation draftOrderComplete($id: ID!, $paymentPending: Boolean) {
         draftOrderComplete(id: $id, paymentPending: $paymentPending) {
@@ -498,6 +509,7 @@ export const action = async ({ request }) => {
     const orderObj = completedDraft?.order || null;
 
     if (userErrB.length) {
+      console.error("draftOrderComplete userErrors:", userErrB);
       return json(
         {
           ok: false,
@@ -510,6 +522,7 @@ export const action = async ({ request }) => {
 
     const orderName = orderObj?.name || null;
     const invoiceUrl = completedDraft?.invoiceUrl || draft?.invoiceUrl || null;
+    console.log("🏁 Draft completed, order:", orderName, "final invoiceUrl:", invoiceUrl);
 
     // Google Sheets – only non‑personal data
     try {
@@ -570,7 +583,6 @@ export const action = async ({ request }) => {
           name: orderName,
         },
         customer: {
-          // No personal data – only pincodes and notes
           pincode: cleanFields.pincode || "",
           pincode2: cleanFields.pincode2 || "",
           pincode3: cleanFields.pincode3 || "",
@@ -626,11 +638,14 @@ export const action = async ({ request }) => {
       console.error("Erreur tracking pixels:", err);
     }
 
+    // ✅ Retourner l'URL de checkout avec un timestamp pour éviter le cache
+    const finalRedirectUrl = invoiceUrl ? invoiceUrl + (invoiceUrl.includes('?') ? '&' : '?') + '_=' + Date.now() : null;
+
     return json({
       ok: true,
-      redirectUrl: invoiceUrl, // used by front to redirect to checkout
+      redirectUrl: finalRedirectUrl,
       draftId: completedDraft?.id || draft.id,
-      draftInvoiceUrl: invoiceUrl,
+      draftInvoiceUrl: finalRedirectUrl,
       orderName,
     });
   } catch (e) {
