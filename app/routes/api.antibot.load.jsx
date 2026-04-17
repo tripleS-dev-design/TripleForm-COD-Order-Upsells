@@ -1,20 +1,14 @@
 import { json } from "@remix-run/node";
 import { authenticate } from "../shopify.server";
-import prisma from "../db.server";
 
 export const loader = async ({ request }) => {
   try {
-    const { admin, session } = await authenticate.admin(request);
+    const { admin } = await authenticate.admin(request);
     if (!admin) {
       return json({ ok: false, error: "Unauthorized" }, { status: 401 });
     }
 
-    const shopDomain = session?.shop;
-    if (!shopDomain) {
-      return json({ ok: false, error: "Missing shopDomain" }, { status: 400 });
-    }
-
-    // Charger metafield public
+    // Lire metafield
     const query = `
       query {
         shop {
@@ -42,19 +36,13 @@ export const loader = async ({ request }) => {
       antibot.recaptcha.version = "v2";
       delete antibot.recaptcha.secretKey;
       delete antibot.recaptcha.expectedAction;
-      delete antibot.recaptcha.minScore;
     }
 
-    // Vérifier si un secret est présent en base
-    const dbRow = await prisma.shopAntibotSettings.findUnique({
-      where: { shopDomain },
-      select: { recaptchaSecretEnc: true },
-    });
-
+    // Indiquer qu'il n'y a pas de secret en base (on ne stocke plus le secret, seulement la config publique)
     return json({
       ok: true,
       antibot: antibot || null,
-      hasRecaptchaSecret: !!dbRow?.recaptchaSecretEnc,
+      hasRecaptchaSecret: false,
     });
   } catch (error) {
     console.error("api.antibot.load error:", error);
