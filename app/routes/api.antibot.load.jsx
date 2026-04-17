@@ -1,82 +1,63 @@
-// ===== File: app/routes/api.antibot.load.jsx =====
 import { json } from "@remix-run/node";
 import { authenticate } from "../shopify.server";
 import prisma from "../db.server";
 
-/**
- * GET /api/antibot/load
- * - Lit metafield tripleform_cod.antibot (config publique)
- * - Ajoute hasRecaptchaSecret (depuis DB), sans renvoyer le secret
- *
- * ✅ V2 ONLY
- */
 export const loader = async ({ request }) => {
   try {
     const { admin, session } = await authenticate.admin(request);
-
     if (!admin) {
-      return json(
-        { ok: false, error: "Unauthorized: no admin session" },
-        { status: 401 }
-      );
+      return json({ ok: false, error: "Unauthorized" }, { status: 401 });
     }
 
     const shopDomain = session?.shop;
     if (!shopDomain) {
-      return json(
-        { ok: false, error: "Missing shopDomain in session" },
-        { status: 400 }
-      );
+      return json({ ok: false, error: "Missing shopDomain" }, { status: 400 });
     }
 
-    const QUERY = `
-      query antibotSettings {
+    // Charger metafield public
+    const query = `
+      query {
         shop {
           metafield(namespace: "tripleform_cod", key: "antibot") {
-            id
             value
-            type
           }
         }
       }
     `;
-
-    const resp = await admin.graphql(QUERY);
+    const resp = await admin.graphql(query);
     const data = await resp.json();
-    const mf = data?.data?.shop?.metafield || null;
-
+    const metafield = data?.data?.shop?.metafield;
     let antibot = null;
-    if (mf?.value) {
+    if (metafield?.value) {
       try {
-        antibot = JSON.parse(mf.value);
-      } catch {
+        antibot = JSON.parse(metafield.value);
+      } catch (e) {
         antibot = null;
       }
     }
 
-    // ✅ V2 ONLY: normalize response
+    // Normalisation v2
     if (antibot && typeof antibot === "object") {
       if (!antibot.recaptcha) antibot.recaptcha = {};
       antibot.recaptcha.version = "v2";
-      delete antibot.recaptcha.expectedAction;
-      delete antibot.recaptcha.action;
-      delete antibot.recaptcha.minScore;
-      delete antibot.recaptcha.score;
       delete antibot.recaptcha.secretKey;
+      delete antibot.recaptcha.expectedAction;
+      delete antibot.recaptcha.minScore;
     }
 
-    const row = await prisma.shopAntibotSettings.findUnique({
+    // Vérifier si un secret est présent en base
+    const dbRow = await prisma.shopAntibotSettings.findUnique({
       where: { shopDomain },
       select: { recaptchaSecretEnc: true },
     });
 
     return json({
       ok: true,
-      antibot,
-      hasRecaptchaSecret: !!row?.recaptchaSecretEnc,
+      antibot: antibot || null,
+      hasRecaptchaSecret: !!dbRow?.recaptchaSecretEnc,
     });
-  } catch (e) {
-    console.error("api.antibot.load error:", e);
-    return json({ ok: false, error: e?.message || String(e) }, { status: 500 });
+  } catch (error) {
+    console.error("api.antibot.load error:", error);
+    return json({ ok: false, error: error.message || String(error) }, { status: 500 });
   }
 };
