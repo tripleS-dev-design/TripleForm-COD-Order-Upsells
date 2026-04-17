@@ -1,8 +1,8 @@
-// ===== app/routes/api.save-settings.jsx =====
+// ===== File: app/routes/api.save-settings.jsx =====
 import { json } from "@remix-run/node";
 import { authenticate } from "../shopify.server";
 
-// ✅ Fonction de nettoyage (identique à celle du front)
+// ✅ Même fonction de nettoyage (vous pouvez la mutualiser dans un utilitaire)
 function cleanSettings(settings) {
   if (!settings || typeof settings !== "object") return settings;
   const forbiddenFields = [
@@ -10,7 +10,6 @@ function cleanSettings(settings) {
     "zip", "postal_code", "postal", "company", "birthday"
   ];
 
-  // Nettoyer les champs du formulaire
   if (settings.fields && typeof settings.fields === "object") {
     const newFields = {};
     for (const [key, value] of Object.entries(settings.fields)) {
@@ -21,12 +20,10 @@ function cleanSettings(settings) {
     settings.fields = newFields;
   }
 
-  // Nettoyer l'ordre des champs
   if (settings.meta && settings.meta.fieldsOrder && Array.isArray(settings.meta.fieldsOrder)) {
     settings.meta.fieldsOrder = settings.meta.fieldsOrder.filter(k => !forbiddenFields.includes(k));
   }
 
-  // Forcer une version récente pour indiquer que la config est propre
   if (settings.meta) {
     settings.meta.version = 5;
   }
@@ -48,15 +45,11 @@ export const action = async ({ request }) => {
       return json({ ok: false, error: "Missing settings object" }, { status: 400 });
     }
 
-    // ✅ APPLIQUER LE NETTOYAGE AVANT SAUVEGARDE
+    // ✅ Nettoyage obligatoire
     settings = cleanSettings(settings);
 
-    // Normalisation layout etc. (votre code existant)
+    // (Conservez la suite de votre code : normalisation layout, taille, sauvegarde...)
     // ...
-
-    // Sérialisation et sauvegarde
-    const value = JSON.stringify(settings);
-    // ... (suite de votre code)
   } catch (e) {
     return json({ ok: false, error: String(e?.message || e) }, { status: 500 });
   }
