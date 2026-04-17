@@ -35,10 +35,10 @@ export const action = async ({ request }) => {
       return json({ ok: false, error: "Missing settings object" }, { status: 400 });
     }
 
-    // Nettoyage des champs interdits
+    // ✅ Nettoyage
     settings = cleanSettings(settings);
 
-    // Normalisation des positions et ordres (layout)
+    // ✅ Normalisation du layout
     if (settings?.meta?.layout) {
       const normOrder = (v, fallback) => { const n = Number(v); if (!Number.isFinite(n)) return fallback; return Math.max(1, Math.min(3, Math.round(n))); };
       const normPos = (v, fallback) => { const s = String(v || "").toLowerCase(); if (s === "top" || s === "bottom" || s === "hide") return s; return fallback; };
@@ -48,21 +48,21 @@ export const action = async ({ request }) => {
       if (l.upsells) { l.upsells.order = normOrder(l.upsells.order, 3); l.upsells.position = normPos(l.upsells.position, "top"); }
     }
 
-    // Récupérer l'ID de la boutique
+    // ✅ Récupérer shopId
     const shopRes = await admin.graphql(`{ shop { id } }`);
     const shopJson = await shopRes.json();
     const shopId = shopJson?.data?.shop?.id;
     if (!shopId) return json({ ok: false, error: "No shopId" }, { status: 400 });
 
-    // Sérialiser
+    // ✅ Sérialiser
     let value = "";
     try { value = JSON.stringify(settings); } catch (e) { return json({ ok: false, error: "Settings not serializable" }, { status: 400 }); }
 
-    // Vérifier taille
+    // ✅ Vérifier taille
     const bytes = typeof Buffer !== "undefined" ? Buffer.byteLength(value, "utf8") : new TextEncoder().encode(value).length;
     if (bytes > 65000) return json({ ok: false, error: `Settings too large (${bytes} bytes)`, bytes }, { status: 413 });
 
-    // Sauvegarder dans le metafield
+    // ✅ Sauvegarde via GraphQL
     const mfRes = await admin.graphql(
       `mutation metafieldsSet($metafields:[MetafieldsSetInput!]!) {
         metafieldsSet(metafields:$metafields) {
