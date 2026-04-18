@@ -5,6 +5,7 @@ Tripleform COD – App block (product template)
 ✅ Champs autorisés : quantity, pincode, pincode2, pincode3, notes
 ✅ Carrier Service pour les frais de livraison (pas de calcul front-end)
 ✅ reCAPTCHA v2 uniquement via data-*
+✅ Popup "Thank you" désactivée
 {% endcomment %}
 
 {%- assign tf_prod_val = product.metafields.tripleform_cod.settings.value -%}
@@ -52,7 +53,7 @@ Tripleform COD – App block (product template)
 {%- assign tf_upsells_position = section.settings.upsells_position | default: 'top' -%}
 {%- assign tf_upsells_order = section.settings.upsells_order | default: 2 -%}
 
-{%- comment -%} ✅ Settings JSON (product > shop > default) – SANS CHAMPS PERSONNELS {%- endcomment -%}
+{%- comment -%} ✅ Settings JSON (product > shop > default) – SANS CHAMPS PERSONNELS – POPUP DÉSACTIVÉE {%- endcomment -%}
 {%- if tf_prod_val and tf_prod_val != blank -%}
   {%- assign tf_json = tf_prod_val -%}
 {%- elsif tf_shop_val and tf_shop_val != blank -%}
@@ -75,15 +76,7 @@ Tripleform COD – App block (product template)
       "buttonIcon": "CartIcon"
     },
     "thankyou": {
-      "enabled": true,
-      "mode": "popup",
-      "title": "Thank you!",
-      "text": "Your order has been received. We will contact you soon.",
-      "primaryLabel": "Continue shopping",
-      "primaryUrl": "/",
-      "secondaryLabel": "Close",
-      "secondaryAction": "close",
-      "autoCloseMs": 0
+      "enabled": false
     },
     "design": {
       "bg": "#FFFFFF",
