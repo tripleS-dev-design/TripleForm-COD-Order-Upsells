@@ -9,6 +9,7 @@ Tripleform COD – Cart section
 ✅ Layout fallback
 ✅ reCAPTCHA v2 ONLY via data-*
 ✅ FIX: Provide cart JSON via <script type="application/json" id="tf-cart-json-...">
+✅ Popup "Thank you" désactivée
 {% endcomment %}
 
 {%- assign tf_shop_val = shop.metafields.tripleform_cod.settings.value -%}
@@ -46,7 +47,7 @@ Tripleform COD – Cart section
 {%- assign tf_upsells_position = section.settings.upsells_position | default: 'top' -%}
 {%- assign tf_upsells_order = section.settings.upsells_order | default: 2 -%}
 
-{%- comment -%} ✅ Settings JSON (shop > default) {%- endcomment -%}
+{%- comment -%} ✅ Settings JSON (shop > default) – POPUP DÉSACTIVÉE {%- endcomment -%}
 {%- if tf_shop_val and tf_shop_val != blank -%}
   {%- assign tf_json = tf_shop_val -%}
 {%- else -%}
@@ -63,15 +64,7 @@ Tripleform COD – Cart section
       "buttonIcon": "CartIcon"
     },
     "thankyou": {
-      "enabled": true,
-      "mode": "popup",
-      "title": "Thank you!",
-      "text": "Your order has been received. We will contact you soon.",
-      "primaryLabel": "Continue shopping",
-      "primaryUrl": "/",
-      "secondaryLabel": "Close",
-      "secondaryAction": "close",
-      "autoCloseMs": 0
+      "enabled": false
     },
     "design": {
       "bg": "#FFFFFF",
