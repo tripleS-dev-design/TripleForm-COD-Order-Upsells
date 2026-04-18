@@ -602,7 +602,6 @@ window.TripleformCOD = (function () {
       if (!checkAntibotFront().ok) return;
       if (!validateRequiredFields()) return;
 
-      // Récupérer les champs non-personnels
       const cleanFields = {};
       const allowedKeys = ["quantity", "pincode", "pincode2", "pincode3", "notes"];
       for (const key of allowedKeys) {
@@ -616,7 +615,6 @@ window.TripleformCOD = (function () {
         return;
       }
 
-      // 1. Ajouter au panier via /cart/add.js
       const formData = new URLSearchParams();
       formData.append("id", variantId);
       formData.append("quantity", qty);
@@ -642,7 +640,7 @@ window.TripleformCOD = (function () {
         return;
       }
 
-      // 2. Rediriger vers le checkout IMMÉDIATEMENT (sans appel backend)
+      // Redirection immédiate vers le checkout (sans appel backend)
       window.location.href = "/checkout";
     }
 
