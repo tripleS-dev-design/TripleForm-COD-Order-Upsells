@@ -1,7 +1,7 @@
 /* =========================================================================
    TripleForm COD — OFFERS + UPSELLS (FINAL COMPLIANT VERSION)
    ✅ No personal data collected (only quantity, pincode, notes)
-   ✅ Redirects to /checkout after adding to cart
+   ✅ Redirects to /checkout after adding to cart (NO backend call)
    ========================================================================= */
 
 window.TripleformCOD = (function () {
@@ -597,7 +597,7 @@ window.TripleformCOD = (function () {
     function validateRequiredFields() { return true; }
     function checkAntibotFront() { return { ok: true }; }
 
-    // ✅ NOUVELLE VERSION : ajout au panier + redirection vers /checkout
+    // ✅ VERSION CORRIGÉE : ajout au panier + redirection vers /checkout (SANS appel backend)
     async function onSubmitClick() {
       if (!checkAntibotFront().ok) return;
       if (!validateRequiredFields()) return;
@@ -642,22 +642,7 @@ window.TripleformCOD = (function () {
         return;
       }
 
-      // 2. Appeler le backend pour la traçabilité (ne pas attendre)
-      const payload = {
-        fields: cleanFields,
-        variantId,
-        qty,
-        productId: root.getAttribute("data-product-id"),
-        currency: root.getAttribute("data-currency"),
-        locale: root.getAttribute("data-locale"),
-      };
-      fetch("/apps/tripleform-cod/submit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      }).catch(e => console.error("Erreur submit:", e));
-
-      // 3. Rediriger vers le checkout
+      // 2. Rediriger vers le checkout IMMÉDIATEMENT (sans appel backend)
       window.location.href = "/checkout";
     }
 
